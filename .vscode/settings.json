@@ -1,0 +1,8 @@
+{
+    "jules-extension.apiKey": "AQ.Ab8RN6Lq7qc-p0gFr6VJRJ8m4wsChs3tIePJEIB8VaENxcNwnQ",
+    "jules-extension.customPrompt": "Always get it done",
+    "jules-extension.hideClosedPRSessions": true,
+    "files.autoSave": "afterDelay",
+    "editor.formatOnSave": true,
+    "editor.aiStats.enabled": true
+}
