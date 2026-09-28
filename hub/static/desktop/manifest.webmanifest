@@ -18,6 +18,8 @@
     {"name": "Venice", "url": "/app/desktop/#venice"},
     {"name": "Renders", "url": "/app/desktop/#renders"},
     {"name": "Colab", "url": "/app/desktop/#colab"},
+    {"name": "LTX", "url": "/app/desktop/#ltx"},
+    {"name": "Setup", "url": "/app/desktop/#setup"},
     {"name": "Thunder", "url": "/app/desktop/#thunder"},
     {"name": "Terminal", "url": "/app/desktop/#term"}
   ]

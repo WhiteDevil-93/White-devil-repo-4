@@ -44,6 +44,8 @@ Chats auto-save after each turn (phone `localStorage` plus `~/.venice_chats.json
 
 `/app/term/` wraps ttyd (`/laptop/term/`). Long-press / clipboard-read paste is blocked; swipe scrolls the xterm buffer; an explicit Paste sheet is the only way text enters the shell.
 
+**LTX 2.5 LoRAs (Setup):** the 11 official Lightricks files (distilled 450 + 8 IC LoRAs + slow-motion + cinemagraph) are the Setup pack. Open **Setup** → **Save all 11**. The LTX screen then loads the whole list. Download onto the laptop with Setup → Download (Shell pastes `~/civitai_dl/ltx-2.5/`). CoachBate Penis LTX-2.5 is extra content, not a substitute for this pack.
+
 **Civitai LoRAs (phone or laptop Terminal):** Terminal → **Civitai LoRAs** → optional extra model IDs → Send. Default is CoachBate Penis LTX-2.5 (`2851705`). The downloader now takes **every LoRA file on every version** of each id (Wan 2.2, LTX-2, LTX-2.5, …), not a single LTX 2.5 file. Weights land in `~/civitai_dl/<id>_<base>/`. Copy every `.safetensors` into Thunder ComfyUI `models/loras/` and stack them — one LoRA loader per file. Do not scp to the phone.
 
 Civitai requires an API token in `~/.civitai_token` (or `CIVITAI_TOKEN`); if the run 401s, paste this in the sheet first (token stays in the terminal, not in chat):

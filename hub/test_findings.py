@@ -104,7 +104,7 @@ def test_desktop_app_caching_and_manifest():
     assert res_manifest.status_code == 200
     assert "no-store" in res_manifest.headers.get("Cache-Control", "")
     manifest_data = res_manifest.json()
-    assert manifest_data.get("web_rev") == 10
+    assert manifest_data.get("web_rev") == 11
 
     # Desktop HTML should return no-store
     res_desktop = client.get("/app/desktop/index.html")
@@ -128,4 +128,40 @@ def test_desktop_app_caching_and_manifest():
     assert res_js.status_code == 200
     assert "no-store" not in res_js.headers.get("Cache-Control", "")
     assert "no-cache" in res_js.headers.get("Cache-Control", "")
+
+
+def test_setup_saves_all_eleven_ltx_loras(monkeypatch, tmp_path):
+    import setup as setup_mod
+    monkeypatch.setattr(setup_mod, "STATE", tmp_path / "forge_setup.json")
+    client = TestClient(app)
+
+    ids = [s["id"] for s in client.get("/api/manifest").json()["screens"]]
+    assert "setup" in ids and "ltx" in ids
+
+    empty = client.get("/api/setup")
+    assert empty.status_code == 200
+    data = empty.json()
+    assert data["count"] == 11
+    assert data["saved"] is False
+    assert data["enabled"] == 0
+    names = [r["name"] for r in data["loras"]]
+    assert "Distilled 450" in names
+    assert "Cinemagraph" in names
+    assert len({r["id"] for r in data["loras"]}) == 11
+
+    saved = client.post("/api/setup", json={})
+    assert saved.status_code == 200
+    body = saved.json()
+    assert body["saved"] is True
+    assert body["enabled"] == 11
+    assert all(r["enabled"] for r in body["loras"])
+
+    ltx = client.get("/app/ltx/")
+    assert ltx.status_code == 200
+    assert "LoRAs from Setup" in ltx.text
+
+    sh = client.get("/api/setup/download.sh")
+    assert sh.status_code == 200
+    assert sh.text.count("huggingface.co/Lightricks/") == 11
+
 

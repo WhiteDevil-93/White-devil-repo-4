@@ -19,6 +19,7 @@ from thunder import router as thunder_router
 from gen import router as gen_router
 from venice import router as venice_router
 from laptop import router as laptop_router
+from setup import router as setup_router
 
 HUB = Path(__file__).resolve().parent
 WAN = Path.home() / "wan"
@@ -33,6 +34,7 @@ app.include_router(thunder_router)
 app.include_router(gen_router)
 app.include_router(venice_router)
 app.include_router(laptop_router)
+app.include_router(setup_router)
 
 
 @app.middleware("http")
@@ -40,7 +42,7 @@ async def no_store_hub(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
     is_static_asset = any(path.endswith(ext) for ext in (".css", ".js", ".svg", ".png", ".jpg", ".jpeg", ".ico", ".woff", ".woff2"))
-    if not is_static_asset and (path.startswith("/app/") or path.startswith("/api/manifest") or path.startswith("/api/venice") or path.startswith("/api/laptop/") or path == "/generator.html" or path.startswith("/shotwriter")):
+    if not is_static_asset and (path.startswith("/app/") or path.startswith("/api/manifest") or path.startswith("/api/venice") or path.startswith("/api/laptop/") or path.startswith("/api/setup") or path == "/generator.html" or path.startswith("/shotwriter")):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     elif is_static_asset:
         response.headers["Cache-Control"] = "no-cache, must-revalidate"

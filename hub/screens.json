@@ -2,62 +2,20 @@
   "apk_version": 8,
   "apk_url": "/app/forgehub.apk",
   "force_update": true,
-  "web_rev": 10,
+  "web_rev": 11,
   "screens": [
-    {
-      "id": "home",
-      "title": "Home",
-      "icon": "home",
-      "url": "/app/home/"
-    },
-    {
-      "id": "venice",
-      "title": "Venice",
-      "icon": "venice",
-      "url": "/app/venice/"
-    },
-    {
-      "id": "renders",
-      "title": "Renders",
-      "icon": "movie",
-      "url": "/app/renders/"
-    },
-    {
-      "id": "hypno",
-      "title": "HypnoForge",
-      "icon": "hypno",
-      "url": "/app/hypno/"
-    },
-    {
-      "id": "colab",
-      "title": "Colab",
-      "icon": "cloud",
-      "url": "/app/colab/"
-    },
-    {
-      "id": "thunder",
-      "title": "Thunder",
-      "icon": "bolt",
-      "url": "/app/thunder/"
-    },
-    {
-      "id": "shotwriter",
-      "title": "Shotwriter",
-      "icon": "pen",
-      "url": "/shotwriter/index.html",
-      "group": "Prompt creator"
-    },
-    {
-      "id": "files",
-      "title": "Files",
-      "icon": "folder",
-      "url": "/laptop/files/"
-    },
-    {
-      "id": "term",
-      "title": "Terminal",
-      "icon": "terminal",
-      "url": "/app/term/"
-    }
+    {"id": "home", "title": "Home", "icon": "home", "url": "/app/home/"},
+    {"id": "renders", "title": "Renders", "icon": "movie", "url": "/app/renders/"},
+    {"id": "gallery", "title": "Gallery", "icon": "gallery", "url": "/app/gallery/"},
+    {"id": "hypno", "title": "HypnoForge", "icon": "hypno", "url": "/app/hypno/"},
+    {"id": "term", "title": "Shell", "icon": "terminal", "url": "/app/term/", "group": "Laptop"},
+    {"id": "colab", "title": "Colab", "icon": "cloud", "url": "/app/colab/"},
+    {"id": "ltx", "title": "LTX", "icon": "ltx", "url": "/app/ltx/"},
+    {"id": "thunder", "title": "Thunder", "icon": "bolt", "url": "/app/thunder/"},
+    {"id": "vast", "title": "Vast", "icon": "vast", "url": "/app/vast/"},
+    {"id": "setup", "title": "Setup", "icon": "setup", "url": "/app/setup/"},
+    {"id": "venice", "title": "Venice", "icon": "venice", "url": "/app/venice/"},
+    {"id": "files", "title": "Files", "icon": "folder", "url": "/laptop/files/"},
+    {"id": "shotwriter", "title": "Shotwriter", "icon": "pen", "url": "/shotwriter/index.html", "group": "Prompt creator"}
   ]
 }

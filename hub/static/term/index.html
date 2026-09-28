@@ -146,6 +146,22 @@ async function openUpdate() {
 }
 $('updateHub').onclick = openUpdate;
 if (/[?&]update=1(?:&|$)/.test(location.search)) openUpdate();
+
+async function openSetupDl() {
+  $('sheet').classList.add('on');
+  $('loraIdsWrap').hidden = true;
+  $('sheetHint').textContent = 'Downloads all 11 LTX 2.5 LoRAs from Setup into ~/civitai_dl/ltx-2.5/. Send, then they stay on the laptop.';
+  $('clip').value = 'loading Setup LoRA download…';
+  try {
+    const r = await fetch('/api/setup/download.sh', {cache: 'no-store'});
+    if (!r.ok) throw new Error('missing download script');
+    $('clip').value = (await r.text()).replace(/\s+$/, '') + '\n';
+  } catch (e) {
+    $('clip').value = '# could not load /api/setup/download.sh\n';
+  }
+  $('clip').focus();
+}
+if (/[?&]setupdl=1(?:&|$)/.test(location.search)) openSetupDl();
 </script>
 </body>
 </html>
