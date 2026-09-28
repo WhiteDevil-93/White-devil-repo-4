@@ -39,8 +39,11 @@ app.include_router(laptop_router)
 async def no_store_hub(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
-    if path.startswith("/app/") or path.startswith("/api/manifest") or path.startswith("/api/venice") or path.startswith("/api/laptop/") or path == "/generator.html" or path.startswith("/shotwriter"):
-        response.headers["Cache-Control"] = "no-store"
+    is_static_asset = any(path.endswith(ext) for ext in (".css", ".js", ".svg", ".png", ".jpg", ".jpeg", ".ico", ".woff", ".woff2"))
+    if not is_static_asset and (path.startswith("/app/") or path.startswith("/api/manifest") or path.startswith("/api/venice") or path.startswith("/api/laptop/") or path == "/generator.html" or path.startswith("/shotwriter")):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    elif is_static_asset:
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
     return response
 
 

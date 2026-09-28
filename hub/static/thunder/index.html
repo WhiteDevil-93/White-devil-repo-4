@@ -285,6 +285,8 @@ async function send14(){
 }
 
 F.pull(() => Promise.all([load(), load14()]));
-load(); load14(); setInterval(() => { if (!document.hidden && !document.querySelector('.viewer')) { load(); load14(); } }, 30000);
+load(); load14();
+setInterval(() => { if (F.isVisible() && !document.querySelector('.viewer')) { load(); load14(); } }, 30000);
+F.onVisible && F.onVisible(() => { load(); load14(); });
 </script>
 </body></html>

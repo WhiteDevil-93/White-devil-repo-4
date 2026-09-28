@@ -101,14 +101,22 @@ def thumb(name: str):
     out = THUMBS / (name + ".jpg")
     if not out.exists() or out.stat().st_mtime < src.stat().st_mtime:
         THUMBS.mkdir(exist_ok=True)
-        tmp = out.with_suffix(".tmp.jpg")
+        tmp = out.with_suffix(f".{time.time_ns()}.tmp.jpg")
         with _ffmpeg:
+            # Re-check in case another worker already generated it while waiting for semaphore
+            if out.exists() and out.stat().st_mtime >= src.stat().st_mtime:
+                return FileResponse(out, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=604800, immutable"})
             for ss in ("1.5", "0"):
-                r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", ss, "-i", str(src), "-frames:v", "1",
-                                    "-vf", "scale=480:-2", "-q:v", "5", str(tmp)], capture_output=True, timeout=60)
-                if r.returncode == 0 and tmp.exists() and tmp.stat().st_size:
-                    tmp.replace(out)
-                    break
+                try:
+                    r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", ss, "-i", str(src), "-frames:v", "1",
+                                        "-vf", "scale=480:-2", "-q:v", "5", str(tmp)], capture_output=True, timeout=20)
+                    if r.returncode == 0 and tmp.exists() and tmp.stat().st_size:
+                        tmp.replace(out)
+                        break
+                except subprocess.TimeoutExpired:
+                    if tmp.exists():
+                        tmp.unlink(missing_ok=True)
+                    continue
         if not out.exists():
             raise HTTPException(500, "thumbnail failed")
-    return FileResponse(out, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=604800"})
+    return FileResponse(out, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=604800, immutable"})

@@ -95,3 +95,30 @@ def test_m1_venice_model_default():
 def test_m2_gitignore_credentials():
     gitignore = (Path(__file__).parent.parent / ".gitignore").read_text()
     assert "credentials.json" in gitignore
+
+
+def test_desktop_app_caching_and_manifest():
+    client = TestClient(app)
+    # Manifest endpoint should return no-store
+    res_manifest = client.get("/api/manifest")
+    assert res_manifest.status_code == 200
+    assert "no-store" in res_manifest.headers.get("Cache-Control", "")
+    manifest_data = res_manifest.json()
+    assert manifest_data.get("web_rev") == 8 or manifest_data.get("web_rev") == 9
+
+    # Desktop HTML should return no-store
+    res_desktop = client.get("/app/desktop/index.html")
+    assert res_desktop.status_code == 200
+    assert "no-store" in res_desktop.headers.get("Cache-Control", "")
+
+    # Static CSS and JS assets under /app/ should return no-cache (allowing 304 validation)
+    res_css = client.get("/app/ui/forge.css")
+    assert res_css.status_code == 200
+    assert "no-store" not in res_css.headers.get("Cache-Control", "")
+    assert "no-cache" in res_css.headers.get("Cache-Control", "")
+
+    res_js = client.get("/app/ui/forge.js")
+    assert res_js.status_code == 200
+    assert "no-store" not in res_js.headers.get("Cache-Control", "")
+    assert "no-cache" in res_js.headers.get("Cache-Control", "")
+

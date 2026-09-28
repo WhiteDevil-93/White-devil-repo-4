@@ -147,7 +147,15 @@ function show(id, reload) {
   } else if (reload) {
     $('load').classList.add('go'); f.contentWindow.location.reload();
   }
-  for (const [k, el] of Object.entries(frames)) el.classList.toggle('on', k === s.id);
+  for (const [k, el] of Object.entries(frames)) {
+    const isTarget = k === s.id;
+    el.classList.toggle('on', isTarget);
+    try {
+      if (isTarget && el.contentWindow) {
+        el.contentWindow.postMessage('forge:shown', '*');
+      }
+    } catch (e) {}
+  }
   document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.id === s.id));
   $('title').textContent = s.title;
   document.title = s.title + ' · Forge Hub';
@@ -162,20 +170,27 @@ function keys(e) {
 }
 
 async function status() {
+  if (document.hidden) return;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const s = await (await fetch('/api/status', {cache: 'no-store'})).json();
+    const s = await (await fetch('/api/status', {cache: 'no-store', signal: controller.signal})).json();
     const age = s.newest_age_min;
     $('foot').innerHTML =
       `<div><span class="dot ${age != null && age < 30 ? 'ok' : 'bad'}"></span>Newest clip ${age == null ? '—' : age < 1 ? 'just now' : age + ' min ago'}</div>` +
       `<div><span class="dot ${s.laptop && s.laptop.online ? 'ok' : ''}"></span>${s.clips} clips on relay</div>`;
   } catch (e) {
     $('foot').innerHTML = '<div><span class="dot bad"></span>Relay unreachable</div>';
+  } finally {
+    clearTimeout(timer);
   }
 }
 
 async function boot() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const m = await (await fetch('/api/manifest', {cache: 'no-store'})).json();
+    const m = await (await fetch('/api/manifest', {cache: 'no-store', signal: controller.signal})).json();
     const main = m.screens.filter(s => s.group !== 'bots');
     const pc = main.filter(s => s.group === 'Prompt creator');
     screens = [...main.filter(s => s.group !== 'Prompt creator'), ...EXTRA, ...pc, ...m.screens.filter(s => s.group === 'bots')];
@@ -183,6 +198,8 @@ async function boot() {
   } catch (e) {
     screens = JSON.parse(localStorage.getItem('desk_manifest') || '[]');
     if (!screens.length) { $('frames').innerHTML = '<div class="err">Relay unreachable. Check your connection and reload.</div>'; return; }
+  } finally {
+    clearTimeout(timer);
   }
   buildNav();
   show(location.hash.slice(1) || localStorage.getItem('desk_screen') || screens[0].id);

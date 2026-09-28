@@ -14,8 +14,11 @@
     {"src": "/app/desktop/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
   ],
   "shortcuts": [
+    {"name": "Home", "url": "/app/desktop/#home"},
+    {"name": "Venice", "url": "/app/desktop/#venice"},
     {"name": "Renders", "url": "/app/desktop/#renders"},
     {"name": "Colab", "url": "/app/desktop/#colab"},
-    {"name": "Thunder", "url": "/app/desktop/#thunder"}
+    {"name": "Thunder", "url": "/app/desktop/#thunder"},
+    {"name": "Terminal", "url": "/app/desktop/#term"}
   ]
 }

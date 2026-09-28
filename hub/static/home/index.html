@@ -138,6 +138,8 @@ async function load(){
   if (bad) F.toast('Some info failed to load: ' + bad.reason.message);
 }
 F.pull(load);
-load(); setInterval(() => { if (!document.hidden) load(); }, 30000);
+load();
+setInterval(() => { if (F.isVisible()) load(); }, 30000);
+F.onVisible && F.onVisible(load);
 </script>
 </body></html>

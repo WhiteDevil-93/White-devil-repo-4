@@ -7,14 +7,57 @@
   F.$ = id => document.getElementById(id);
   F.esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 
-  F.api = async (path, opts) => {
-    const r = await fetch(path, Object.assign({credentials: 'same-origin'}, opts || {}));
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.detail || ('HTTP ' + r.status));
-    return j;
+  F.isVisible = () => {
+    if (document.hidden) return false;
+    try {
+      if (window.frameElement) {
+        const fe = window.frameElement;
+        if (fe.style.display === 'none' || fe.style.visibility === 'hidden' || !fe.classList.contains('on')) {
+          return false;
+        }
+      }
+    } catch (e) {}
+    return true;
   };
-  F.post = (path, body) => F.api(path, {method: 'POST', headers: {'Content-Type': 'application/json'},
-                                        body: body === undefined ? undefined : JSON.stringify(body)});
+
+  let lastActive = Date.now();
+  F.onVisible = fn => {
+    const check = () => {
+      if (F.isVisible() && Date.now() - lastActive > 20000) {
+        lastActive = Date.now();
+        fn();
+      }
+    };
+    document.addEventListener('visibilitychange', check);
+    window.addEventListener('focus', check);
+    window.addEventListener('message', e => {
+      if (e.data === 'forge:shown') check();
+    });
+  };
+
+  F.api = async (path, opts) => {
+    const timeout = (opts && opts.timeout) || 15000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+      const fetchOpts = Object.assign({credentials: 'same-origin', signal: controller.signal}, opts || {});
+      delete fetchOpts.timeout;
+      const r = await fetch(path, fetchOpts);
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.detail || ('HTTP ' + r.status));
+      return j;
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error('Request timed out');
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+  F.post = (path, body, opts) => F.api(path, Object.assign({
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: body === undefined ? undefined : JSON.stringify(body)
+  }, opts || {}));
 
   F.ago = t => {
     if (!t) return '—';
@@ -34,7 +77,7 @@
   F.isNew = c => Date.now() / 1000 - c.mtime < 3600;
 
   F.thumb = (c, label) => `<div class="thumb" data-clip="${F.esc(c.name)}">
-      <img loading="lazy" src="${F.thumbUrl(c.name)}" onload="this.classList.add('ld')" alt="">
+      <img loading="lazy" src="${F.thumbUrl(c.name)}" onload="this.classList.add('ld')" onerror="this.classList.add('ld');this.style.opacity='.25'" alt="">
       ${label ? `<span class="badge">${F.esc(label)}</span>` : ''}${F.isNew(c) ? '<span class="new">NEW</span>' : ''}</div>`;
 
   let toastEl;
@@ -82,7 +125,13 @@
       v.querySelector('[data-s]').textContent = `${i + 1} of ${clips.length} · ${F.ago(c.mtime)} · ${c.mb ?? '?'} MB`;
       v.querySelector('[data-a=dl]').href = c.url || F.clipUrl(c.name);
     };
-    const close = () => { vid.pause(); vid.removeAttribute('src'); v.remove(); history.state?.viewer && history.back(); };
+    const close = () => {
+      vid.pause();
+      vid.removeAttribute('src');
+      vid.load();
+      v.remove();
+      history.state?.viewer && history.back();
+    };
     v.addEventListener('click', e => {
       const a = e.target.closest('[data-a]')?.dataset.a;
       if (a === 'close') close(); else if (a === 'prev') show(i - 1); else if (a === 'next') show(i + 1);
@@ -95,7 +144,15 @@
       if (Math.abs(dx) > 60) show(dx < 0 ? i + 1 : i - 1);
     });
     history.pushState({viewer: 1}, '');
-    const onPop = () => { removeEventListener('popstate', onPop); if (v.isConnected) { vid.pause(); v.remove(); } };
+    const onPop = () => {
+      removeEventListener('popstate', onPop);
+      if (v.isConnected) {
+        vid.pause();
+        vid.removeAttribute('src');
+        vid.load();
+        v.remove();
+      }
+    };
     addEventListener('popstate', onPop);
     show(i);
   };
