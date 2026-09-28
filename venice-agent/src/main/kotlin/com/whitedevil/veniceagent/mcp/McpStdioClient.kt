@@ -303,10 +303,15 @@ class McpStdioClient(
         // previous cache, mapping, and "changed" flag are left untouched, so a stale result
         // is never served and the next call retries the refresh instead of silently going stale.
         val newExposedToOriginal = mutableMapOf<String, String>()
-        val definitions = rawTools.mapNotNull { tool ->
-            val name = (tool["name"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+        val definitions = rawTools.map { tool ->
+            // A tool entry missing a name, or with a malformed inputSchema, is a failed page too
+            // (see the comment above): silently dropping the entry or substituting a generic
+            // schema would commit an incomplete or inaccurate tool list instead of retrying.
+            val name = (tool["name"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+                ?: throw McpException("MCP server '$serverName' tools/list returned a tool entry with a missing or malformed 'name'")
             val description = (tool["description"] as? JsonPrimitive)?.contentOrNull ?: ""
-            val schema = (tool["inputSchema"] as? JsonObject) ?: buildJsonObject { put("type", "object") }
+            val schema = tool["inputSchema"] as? JsonObject
+                ?: throw McpException("MCP server '$serverName' tools/list returned a malformed 'inputSchema' for tool '$name'")
             ToolDefinition(
                 function = ToolFunctionSpec(
                     name = namespacedName(name, newExposedToOriginal),

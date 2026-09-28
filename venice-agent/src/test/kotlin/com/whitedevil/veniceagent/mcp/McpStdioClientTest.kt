@@ -296,6 +296,14 @@ class McpStdioClientTest {
         assertRejectsMalformedPage("fake__trigger_malformed_next_cursor")
 
     @Test
+    fun `rejects a tools list entry with a missing name instead of silently dropping it`() =
+        assertRejectsMalformedPage("fake__trigger_malformed_tool_name")
+
+    @Test
+    fun `rejects a tools list entry with a non-object inputSchema instead of substituting a generic one`() =
+        assertRejectsMalformedPage("fake__trigger_malformed_tool_schema")
+
+    @Test
     fun `rejects non-object tool arguments instead of substituting defaults`() = runBlocking {
         assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
 

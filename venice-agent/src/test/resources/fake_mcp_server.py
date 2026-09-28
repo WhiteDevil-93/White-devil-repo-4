@@ -45,6 +45,14 @@ for line in sys.stdin:
                 state["malformed_next_cursor"] = False
                 send({"jsonrpc": "2.0", "id": msg["id"], "result": {"tools": [], "nextCursor": 12345}})
                 continue
+            if state.get("malformed_tool_name"):
+                state["malformed_tool_name"] = False
+                send({"jsonrpc": "2.0", "id": msg["id"], "result": {"tools": [{"description": "no name field", "inputSchema": {"type": "object"}}]}})
+                continue
+            if state.get("malformed_tool_schema"):
+                state["malformed_tool_schema"] = False
+                send({"jsonrpc": "2.0", "id": msg["id"], "result": {"tools": [{"name": "bad_schema_tool", "description": "bad schema", "inputSchema": "not an object"}]}})
+                continue
             # First page: one tool, plus a cursor pointing at a second page. After a
             # notifications/tools/list_changed has been sent, a new tool also appears here,
             # to prove a fresh tools/list is actually issued rather than serving a stale cache.
@@ -114,6 +122,14 @@ for line in sys.stdin:
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
         elif name == "trigger_malformed_next_cursor":
             state["malformed_next_cursor"] = True
+            send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "trigger_malformed_tool_name":
+            state["malformed_tool_name"] = True
+            send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "trigger_malformed_tool_schema":
+            state["malformed_tool_schema"] = True
             send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
         elif name == "trigger_cursor_loop":

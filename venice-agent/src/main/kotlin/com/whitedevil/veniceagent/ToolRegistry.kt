@@ -84,6 +84,13 @@ class ToolRegistry(private val providers: List<ToolProvider>) : AutoCloseable {
     }
 
     override fun close() {
-        providers.forEach { it.close() }
+        // One provider's close() throwing must not stop the rest from being closed, or every
+        // provider after it in the list (e.g. other MCP subprocesses) is left running past
+        // shutdown, and the exception would also replace whatever the caller was already
+        // handling (e.g. a failure from runCli).
+        for (provider in providers) {
+            runCatching { provider.close() }
+                .onFailure { System.err.println("Warning: a tool provider failed to close cleanly: ${it.message}") }
+        }
     }
 }

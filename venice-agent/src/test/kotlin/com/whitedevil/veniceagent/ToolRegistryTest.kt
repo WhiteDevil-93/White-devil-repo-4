@@ -16,8 +16,11 @@ private fun emptyObjectSchema(): JsonObject = buildJsonObject { put("type", "obj
 private class FakeToolProvider(
     private val toolNames: List<String>,
     private var failNextDefinitionsCall: Boolean = false,
+    private val closeShouldThrow: Boolean = false,
 ) : ToolProvider {
     var definitionsCallCount = 0
+        private set
+    var closeCalled = false
         private set
 
     override suspend fun definitions(): List<ToolDefinition> {
@@ -32,6 +35,11 @@ private class FakeToolProvider(
     }
 
     override suspend fun execute(name: String, argumentsJson: String): String = "executed:$name"
+
+    override fun close() {
+        closeCalled = true
+        if (closeShouldThrow) throw RuntimeException("simulated close failure")
+    }
 }
 
 class ToolRegistryTest {
@@ -98,6 +106,18 @@ class ToolRegistryTest {
         // Routing must still reach the provider using its own original (unsanitized) name.
         assertEquals("executed:weird.name with spaces", registry.execute(names[0], "{}"))
         assertEquals("executed:${"a".repeat(100)}", registry.execute(names[1], "{}"))
+    }
+
+    @Test
+    fun `closes every provider even when one close throws`() {
+        val failing = FakeToolProvider(listOf("a"), closeShouldThrow = true)
+        val healthy = FakeToolProvider(listOf("b"))
+        val registry = ToolRegistry(listOf(failing, healthy))
+
+        registry.close()
+
+        assertTrue(failing.closeCalled)
+        assertTrue(healthy.closeCalled, "a later provider's close() must still run even if an earlier one throws")
     }
 
     @Test
