@@ -3,70 +3,84 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0c">
+<meta name="theme-color" content="#141110">
 <title>Venice Agent</title>
 <link rel="stylesheet" href="/app/ui/forge.css">
 <script src="/app/ui/forge.js"></script>
 <style>
-html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;background:#0b0b0c}
+html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;background:var(--bg)}
 .shell{display:flex;flex-direction:column;height:100%;min-height:0}
-.head{flex:none;padding:14px 16px 10px;background:linear-gradient(#141416,rgba(11,11,12,.92))}
-.brand{font-size:18px;font-weight:700;letter-spacing:-.03em;color:#f4f1ea}
-.brand span{color:var(--mut);font-weight:500;font-size:13px;margin-left:8px}
+.head{flex:none;padding:8px 16px;min-height:52px;display:flex;flex-direction:column;justify-content:center;
+  background:rgba(20,17,16,.95);border-bottom:1px solid var(--line)}
+.brand{font-size:14px;font-weight:600;letter-spacing:-.02em;color:var(--strong)}
+.brand span{color:var(--dim);font-weight:500;font-size:12px;margin-left:8px}
 .status{text-align:right}
-.log{flex:1;min-height:0;overflow:auto;padding:10px 16px 16px;-webkit-overflow-scrolling:touch}
-.msg{max-width:92%;margin:0 0 10px;padding:11px 13px;border-radius:16px;line-height:1.45;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text}
-.msg.user{margin-left:auto;background:rgba(205,184,143,.16);border:1px solid rgba(205,184,143,.38);border-bottom-right-radius:6px}
-.msg.assistant,.msg.venice{background:var(--glass);border:1px solid var(--line);border-bottom-left-radius:6px}
-.msg.err,.msg.error{border-color:rgba(217,147,147,.45);background:rgba(68,33,33,.35);color:var(--bad)}
-.msg.laptop{border-color:rgba(147,187,163,.35);background:rgba(147,187,163,.08)}
-.msg.tool_call{max-width:100%;margin-left:12px;margin-right:12px;background:rgba(31,46,61,.55);border:1px solid #5c8bb5;border-radius:12px;font:12px/1.4 ui-monospace,monospace;color:#c5dcf0}
-.msg.tool,.msg.tool_output{max-width:100%;margin-left:12px;margin-right:12px;background:rgba(29,29,36,.7);border:1px solid var(--line);border-radius:12px;font:12px/1.4 ui-monospace,monospace;color:var(--mut)}
+.log{flex:1;min-height:0;overflow:auto;padding:18px 22px 20px;-webkit-overflow-scrolling:touch}
+.msg{max-width:62%;margin:0 0 14px;padding:12px 16px;border-radius:16px;line-height:1.5;font-size:13.5px;
+  white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text}
+.msg.user{margin-left:auto;background:linear-gradient(135deg,#2a231a,#221c15);border:1px solid rgba(253,242,214,.14);
+  border-top-right-radius:6px;box-shadow:var(--shadow);color:var(--strong)}
+.msg.assistant,.msg.venice{background:var(--panel);border:1px solid rgba(253,242,214,.08);border-top-left-radius:6px;color:#dcd4c8}
+.msg.err,.msg.error{max-width:70%;border:1px solid rgba(217,147,147,.28);background:rgba(217,147,147,.06);color:#e0aeae;
+  border-radius:12px;font:12px/1.5 var(--mono)}
+.msg.laptop{max-width:70%;border-color:rgba(155,191,160,.28);background:rgba(155,191,160,.06)}
+.msg.tool_call{max-width:70%;margin-left:0;background:rgba(127,168,224,.05);border:1px solid rgba(127,168,224,.28);
+  border-radius:12px;font:12px/1.5 var(--mono);color:#b8cdec}
+.msg.tool,.msg.tool_output{max-width:70%;margin-left:0;background:#0f0d0b;border:1px solid rgba(253,242,214,.08);
+  border-radius:12px;font:11.5px/1.5 var(--mono);color:#8a8178}
 .msg .acts{display:flex;gap:6px;flex:none;flex-wrap:wrap}
-.msg .who-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
-.msg .who{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
-.msg.user .who{color:var(--acc)}
-.msg.assistant .who,.msg.venice .who{color:var(--strong)}
-.msg.tool_call .who{color:#82b6e8}
-.msg.tool .who,.msg.tool_output .who{color:var(--mut)}
+.msg .who-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-2px 0 8px}
+.msg .who{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--mut)}
+.msg.user .who{color:var(--mut)}
+.msg.assistant .who,.msg.venice .who{color:var(--mut)}
+.msg.tool_call .who{color:#7fa8e0}
+.msg.tool .who,.msg.tool_output .who{color:#65656c}
 .msg.laptop .who{color:var(--ok)}
-.msg.error .who,.msg.err .who{color:#ff6b6b}
-.msg .copy{appearance:none;border:0;background:rgba(205,184,143,.12);color:var(--acc);font:700 11px system-ui;
-  letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;min-height:32px;border-radius:999px;flex:none}
+.msg.error .who,.msg.err .who{color:var(--bad)}
+.msg .copy{appearance:none;border:0;background:rgba(253,242,214,.08);color:var(--acc);font:600 10.5px "Inter",system-ui;
+  letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;min-height:28px;border-radius:9px;flex:none}
 .msg .copy:active{transform:scale(.96)}
 .msg .copy[disabled]{opacity:.35}
-.empty{padding:36px 10px 18px;text-align:center}
-.empty h2{font-size:22px;letter-spacing:-.03em;text-transform:none;color:#f4f1ea;margin:0 0 10px;font-weight:700}
-.composer{flex:none;padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#121110}
-.composer textarea{min-height:48px;max-height:140px;resize:none}
-.controls{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
-.controls input[type=range]{flex:1;min-width:80px;accent-color:var(--acc)}
-.keystrip{flex:none;padding:10px 12px 12px;background:#161412;border-bottom:1px solid var(--line)}
-.keystrip label{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
-.keystrip input{width:100%;font:15px ui-monospace,monospace;padding:12px;border-radius:12px;border:1px solid rgba(205,184,143,.35);
-  background:#0b0b0c;color:#ededea}
-.btn.gold,.btn.primary{background:var(--strong);color:#111;border-color:transparent;font-weight:700}
-.thread{font-size:12px;color:var(--mut);margin-top:4px;max-width:58vw}
-.prog{height:3px;background:transparent;flex:none}
+.empty{padding:48px 10px 18px;text-align:center}
+.empty h2{font-size:20px;letter-spacing:-.03em;text-transform:none;color:var(--strong);margin:0 0 10px;font-weight:600}
+.composer{flex:none;padding:12px 22px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#161210}
+.composer textarea{min-height:44px;max-height:140px;resize:none;background:transparent;border:0;padding:0;font-size:13.5px}
+.composer .box{flex:1;border-radius:12px;border:1px solid rgba(253,242,214,.12);background:rgba(253,242,214,.03);padding:12px 16px}
+.composer .box:focus-within{border-color:rgba(201,184,150,.4)}
+.controls{display:flex;gap:14px;align-items:center;margin:0 0 12px;flex-wrap:wrap}
+.controls input[type=range]{width:96px;flex:none;accent-color:var(--acc)}
+.keystrip{flex:none;padding:10px 16px 12px;background:rgba(155,191,160,.06);border-bottom:1px solid rgba(155,191,160,.14)}
+.keystrip label{display:block;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
+.keystrip input{width:100%;font:14px var(--mono);padding:12px;border-radius:12px;border:1px solid rgba(253,242,214,.14);
+  background:rgba(20,17,16,.7);color:var(--fg)}
+.thread{font-size:11.5px;color:var(--dim);margin-top:2px;max-width:48vw}
+.prog{height:2px;background:transparent;flex:none}
 .prog i{display:block;height:100%;width:40%;background:linear-gradient(90deg,var(--acc2),var(--acc3));animation:slide 1.1s infinite}
 .prog.off{visibility:hidden}
 @keyframes slide{0%{margin-left:-40%}100%{margin-left:100%}}
 .drawer{position:absolute;inset:0;z-index:6;background:rgba(0,0,0,.55);display:none}
 .drawer.on{display:block}
-.drawer .panel{position:absolute;inset:0;background:#121110;display:flex;flex-direction:column;
+.drawer .panel{position:absolute;inset:0;background:var(--panel);display:flex;flex-direction:column;
   padding:14px 14px calc(14px + env(safe-area-inset-bottom))}
-.drawer h2{font-size:22px;letter-spacing:-.03em;text-transform:none;color:#f4f1ea;margin:0;font-weight:700}
+.drawer h2{font-size:20px;letter-spacing:-.03em;text-transform:none;color:var(--strong);margin:0;font-weight:600}
 .chatlist{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;margin-top:12px}
 .chatrow{display:flex;gap:10px;align-items:center;padding:12px 4px;border-top:1px solid var(--line)}
 .chatrow:first-child{border-top:0}
 .chatrow .grow{min-width:0}
-.chatrow .t{font-weight:650;color:#f4f1ea}
+.chatrow .t{font-weight:600;color:var(--strong)}
 .chatrow.on .t{color:var(--acc)}
 .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);user-select:none}
-.toggle input{accent-color:var(--acc)}
-.head .row{flex-wrap:wrap;gap:8px}
-#model{max-width:160px}
-@media (max-width:640px){#model{max-width:120px}}
+.toggle input{accent-color:var(--acc2)}
+.head .row{flex-wrap:wrap;gap:8px;align-items:center}
+#model{max-width:180px;padding:6px 28px 6px 10px;font-size:12px;border-radius:9px;background:rgba(253,242,214,.03)}
+#go.send{height:44px;min-width:44px;width:44px;padding:0;border-radius:12px;font-size:0;background:linear-gradient(180deg,var(--gold-from),var(--gold-to));
+  color:var(--ink);box-shadow:var(--shadow);position:relative}
+#go.send::after{content:"↑";font-size:16px;font-weight:600}
+@media (max-width:720px){.msg{max-width:92%}.log,.composer{padding-left:14px;padding-right:14px}#go.send{width:auto;min-width:72px;font-size:13.5px}
+  #go.send::after{content:"Send";font-size:13.5px}#model{max-width:120px}}
+.desk .head{min-height:48px;padding:6px 18px}
+.desk .brand span{display:none}
+.desk #base{display:none}
 </style>
 </head>
 <body>
@@ -77,17 +91,15 @@ html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;backgroun
         <div class="brand">Venice Agent<span>tools + Shell</span></div>
         <div class="thread trunc" id="threadTitle">New chat</div>
       </div>
+      <select class="input" id="model"></select>
       <div class="status">
         <div class="pill bad" id="st">Need key</div>
         <div class="tiny mut" id="base">https://api.venice.ai/api/v1</div>
       </div>
-    </div>
-    <div class="row wrap" style="margin-top:10px">
-      <select class="input" id="model"></select>
       <button class="btn sm" id="openPrompt">Prompt</button>
       <button class="btn sm" id="newChat">Clear</button>
       <button class="btn sm" id="openChats">Chats</button>
-      <button class="btn sm" id="openShell">Shell</button>
+      <button class="btn sm gold" id="openShell">Shell</button>
     </div>
   </div>
 
@@ -106,7 +118,7 @@ html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;backgroun
 
   <div class="composer">
     <div class="controls">
-      <span class="tiny mut">temp</span>
+      <span class="tiny mut" style="letter-spacing:.1em;text-transform:uppercase">Temp</span>
       <input type="range" id="temp" min="0" max="1.5" step="0.05" value="0.7">
       <span class="tiny" id="tempv">0.70</span>
       <label class="toggle" title="After a laptop command, also print it in the live Shell"><input type="checkbox" id="toTerm" checked> Show in Shell</label>
@@ -114,9 +126,9 @@ html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;backgroun
       <button class="btn sm" id="copyLast">Copy</button>
       <button class="btn sm" id="stop" disabled>Stop</button>
     </div>
-    <div class="row" style="margin-top:8px;align-items:flex-end">
-      <textarea class="input grow" id="idea" rows="2" placeholder="Ask Venice or give a task…"></textarea>
-      <button class="btn gold send" id="go" style="height:44px">Send</button>
+    <div class="row" style="align-items:flex-end;gap:12px">
+      <div class="box"><textarea class="input grow" id="idea" rows="2" placeholder="Ask Venice or give a task…"></textarea></div>
+      <button class="btn gold send" id="go">Send</button>
     </div>
   </div>
 

@@ -104,7 +104,7 @@ def test_desktop_app_caching_and_manifest():
     assert res_manifest.status_code == 200
     assert "no-store" in res_manifest.headers.get("Cache-Control", "")
     manifest_data = res_manifest.json()
-    assert manifest_data.get("web_rev") == 13
+    assert manifest_data.get("web_rev") == 14
 
     # Desktop HTML should return no-store
     res_desktop = client.get("/app/desktop/index.html")

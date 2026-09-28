@@ -4,55 +4,70 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Forge Hub</title>
-<meta name="theme-color" content="#0b0b0c">
+<meta name="theme-color" content="#141110">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="/app/desktop/manifest.webmanifest" crossorigin="use-credentials">
 <link rel="icon" href="/app/desktop/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/app/desktop/icon-192.png">
 <style>
-:root{--bg:#0b0b0c;--side:#101012;--fg:#ededea;--mut:#9b9ba1;--dim:#65656c;--strong:#f4f1ea;--acc:#cdb88f;
-  --line:rgba(255,255,255,.075);--hover:rgba(255,255,255,.045);--on:rgba(255,255,255,.085);--ok:#93bba3;--bad:#d99393}
+:root{--bg:#141110;--side:#17130f;--fg:#f0e9e0;--mut:#c9c2b8;--dim:#7a7168;--strong:#f5efe6;--acc:#c9b896;
+  --line:rgba(253,242,214,.08);--hover:rgba(253,242,214,.05);--on:rgba(253,242,214,.08);--ok:#9bbfa0;--bad:#d99393;
+  --gold-from:#fdf2d6;--gold-to:#e7d19f;--ink:#1a1410}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden;
-  font:14px/1.4 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  font:13.5px/1.4 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.011em}
 .shell{display:grid;grid-template-columns:236px minmax(0,1fr);height:100%}
 aside{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
-.brand{display:flex;align-items:center;gap:10px;padding:20px 18px 18px;font-weight:600;letter-spacing:-.02em;font-size:15px}
-.brand img{width:26px;height:26px}
-nav{flex:1;overflow:auto;padding:4px 10px}
-.sec{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:18px 10px 6px}
-nav a{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:10px;color:var(--mut);text-decoration:none;
-  font-weight:500;cursor:pointer;user-select:none}
+.brand{display:flex;align-items:center;gap:10px;height:52px;padding:0 20px;font-weight:600;letter-spacing:-.02em;font-size:13.5px;
+  color:var(--strong);border-bottom:1px solid var(--line);flex:none}
+.brand .mark{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none;
+  background:linear-gradient(135deg,var(--gold-from),#c9a35c);box-shadow:1px 1px 16px -2px hsl(0 63% 18% / .3)}
+.brand img{width:18px;height:18px}
+nav{flex:1;overflow:auto;padding:16px 12px}
+.sec{font-size:10.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#65656c;margin:16px 10px 8px}
+nav .sec:first-child{margin-top:0}
+nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--mut);text-decoration:none;
+  font-weight:500;font-size:13px;cursor:pointer;user-select:none;position:relative;transition:background .15s,color .15s}
 nav a:hover{background:var(--hover);color:var(--fg)}
 nav a.on{background:var(--on);color:var(--strong)}
-nav a svg{width:18px;height:18px;flex:none;opacity:.9}
-nav a .k{margin-left:auto;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
-.foot{border-top:1px solid var(--line);padding:12px 18px 14px;font-size:12px;color:var(--mut);display:grid;gap:6px}
+nav a.on::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:99px;
+  background:linear-gradient(180deg,var(--gold-from),#c9a35c)}
+nav a svg{width:16px;height:16px;flex:none;opacity:.72;color:#8a8178}
+nav a.on svg{opacity:1;color:#e7dbbf}
+nav a .k{margin-left:auto;font-size:10.5px;color:#65656c;font-variant-numeric:tabular-nums}
+.foot{margin:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(253,242,214,.04);
+  font-size:12px;color:var(--dim);display:grid;gap:5px;flex:none}
 .foot .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--dim);margin-right:7px;vertical-align:1px}
-.foot .dot.ok{background:var(--ok)}.foot .dot.bad{background:var(--bad)}
-main{display:flex;flex-direction:column;min-width:0;min-height:0}
-.bar{display:flex;align-items:center;gap:8px;height:52px;padding:0 14px 0 22px;border-bottom:1px solid var(--line);flex:none}
-.bar h1{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foot .dot.ok{background:var(--ok);box-shadow:0 0 6px rgba(155,191,160,.7)}.foot .dot.bad{background:var(--bad)}
+main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
+.bar{display:flex;align-items:center;gap:8px;height:52px;padding:0 16px 0 20px;border-bottom:1px solid var(--line);flex:none;
+  background:rgba(20,17,16,.95)}
+.bar h1{font-size:14px;font-weight:600;margin:0;letter-spacing:-.02em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--strong)}
 .bar button{background:transparent;border:1px solid transparent;color:var(--mut);border-radius:9px;height:32px;min-width:32px;
-  padding:0 9px;cursor:pointer;display:grid;place-items:center;font:inherit}
-.bar button.text{display:inline-flex;align-items:center;gap:0;font-size:12.5px;font-weight:600;padding:0 11px;border-color:var(--line);color:var(--fg)}
+  padding:0 9px;cursor:pointer;display:grid;place-items:center;font:inherit;transition:background .15s,color .15s,border-color .15s}
+.bar button.text{display:inline-flex;align-items:center;gap:0;font-size:12.5px;font-weight:600;padding:0 12px;border-color:var(--line);color:var(--fg)}
+.bar button.gold{background:linear-gradient(180deg,var(--gold-from),var(--gold-to));color:var(--ink);border-color:transparent;
+  box-shadow:1px 1px 16px -2px hsl(0 63% 18% / .22)}
 .bar button:hover{background:var(--hover);color:var(--fg);border-color:var(--line)}
-.bar svg{width:17px;height:17px}
+.bar button.gold:hover{background:linear-gradient(180deg,#fff6e0,var(--gold-to));border-color:transparent;color:var(--ink);filter:brightness(1.04)}
+.bar svg{width:16px;height:16px}
 .frames{position:relative;flex:1;min-height:0}
 .frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg);visibility:hidden}
 .frames iframe.on{visibility:visible}
-.load{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--acc),#a8916a);width:0;opacity:0;transition:width .6s,opacity .3s;z-index:3}
+.load{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,#c9a35c,var(--gold-from));width:0;opacity:0;transition:width .6s,opacity .3s;z-index:3}
 .load.go{width:70%;opacity:1}
-.err{padding:60px;color:var(--mut);text-align:center}
-@media (max-width:860px){.shell{grid-template-columns:64px minmax(0,1fr)}.brand span,nav a span,nav a .k,.sec,.foot{display:none}
-  nav a{justify-content:center}.brand{justify-content:center;padding:18px 0}}
+.err{padding:60px;color:var(--dim);text-align:center}
+@media (max-width:860px){.shell{grid-template-columns:64px minmax(0,1fr)}.brand>span:last-child,nav a span,nav a .k,.sec,.foot{display:none}
+  nav a{justify-content:center}.brand{justify-content:center;padding:0}}
 html.app #pop{display:none}
-
 </style>
 </head>
 <body>
 <div class="shell">
   <aside>
-    <div class="brand"><img src="/app/desktop/icon.svg" alt=""><span>Forge Hub</span></div>
+    <div class="brand"><span class="mark"><img src="/app/desktop/icon.svg" alt=""></span><span>Forge Hub</span></div>
     <nav id="nav"></nav>
     <div class="foot" id="foot"><div><span class="dot"></span>Connecting…</div></div>
   </aside>
@@ -60,7 +75,7 @@ html.app #pop{display:none}
     <div class="bar">
       <h1 id="title">Forge Hub</h1>
       <button id="reload" title="Reload screen (Ctrl+R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
-      <button id="updateHub" class="text" title="Publish this Hub to wan-relay">Update Hub</button>
+      <button id="updateHub" class="text gold" title="Publish this Hub to wan-relay">Update Hub</button>
       <button id="pop" title="Open in a browser tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>
     </div>
     <div class="frames" id="frames"><div class="load" id="load"></div></div>

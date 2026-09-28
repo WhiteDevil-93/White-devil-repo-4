@@ -1,11 +1,12 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0c"><title>Forge Hub</title>
+<meta name="theme-color" content="#141110"><title>Forge Hub</title>
 <link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
 </head><body>
 
-<div class="row" style="margin:4px 2px 12px">
-  <div class="grow"><div class="tiny mut" id="hello">Forge Hub</div><h1 style="margin:2px 0 0">Overview</h1></div>
+<div class="row" style="margin:2px 2px 4px">
+  <div class="grow"><div class="tiny mut" id="hello">Forge Hub</div><h1 style="margin:2px 0 0">Overview</h1>
+    <p class="lead" id="sub">Here's what the render farm has been up to.</p></div>
   <span id="live" class="pill">…</span>
 </div>
 
@@ -13,13 +14,16 @@
 
 <div id="alerts"></div>
 
-<div class="card tight" style="margin:0 0 14px">
-  <div class="tiny mut" id="hubWhere">Laptop app</div>
-  <div style="font-weight:650;margin:4px 0 6px">Update Hub publishes this UI to the relay.</div>
-  <div class="small mut">Open Terminal, Send the script, wait for “Done!”, then reload. That is the laptop via ttyd — no extra keyboard.</div>
-  <div class="row wrap" style="margin-top:10px">
-    <a class="btn primary grow" href="/app/term/?update=1">Update Hub</a>
-    <a class="btn grow" href="/app/term/">Open Terminal</a>
+<div class="cta">
+  <div class="mark">↻</div>
+  <div class="grow">
+    <div class="tiny mut" id="hubWhere">Laptop app</div>
+    <div class="t">Update Hub publishes this UI to the relay.</div>
+    <div class="small mut" style="margin-top:4px">Open Terminal, Send the script, wait for “Done!”, then reload. That is the laptop via ttyd — no extra keyboard.</div>
+  </div>
+  <div class="row wrap">
+    <a class="btn primary" href="/app/term/?update=1">Update Hub</a>
+    <a class="btn" href="/app/term/">Open Terminal</a>
   </div>
 </div>
 
@@ -31,7 +35,7 @@
 
 <div id="nextWrap" style="display:none"><h2>Up next</h2><div class="card tight" id="next"></div></div>
 
-<div class="row" style="margin:22px 4px 10px"><h2 class="grow" style="margin:0">Latest clips</h2><a class="small" href="/app/renders/">See all</a></div>
+<div class="row" style="margin:22px 4px 10px"><h2 class="grow" style="margin:0;font-size:13.5px;letter-spacing:-.02em;text-transform:none;color:var(--strong)">Latest clips</h2><a class="small" href="/app/renders/">See all</a></div>
 <div class="strip" id="latest"><div class="thumb skel"></div><div class="thumb skel"></div></div>
 
 <script>
