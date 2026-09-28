@@ -24,7 +24,7 @@ class ToolBox(
     private val workspaceDir: File,
     private val allowShell: Boolean,
     private val relayBaseUrl: String = System.getenv("RELAY_BASE_URL") ?: "https://84-12-112-249.sslip.io",
-    private val relayUser: String = System.getenv("RELAY_USER") ?: "anon3",
+    private val relayUser: String = System.getenv("RELAY_USER") ?: "",
     private val relayPass: String = System.getenv("RELAY_PASS") ?: "",
 ) : ToolProvider {
     private val json = Json { ignoreUnknownKeys = true }
@@ -217,8 +217,8 @@ class ToolBox(
     // ---------- Forge Hub & Relay Tool Handlers ----------
 
     private fun relayHttp(path: String, method: String = "GET", postBody: String? = null): String {
-        if (relayPass.isBlank()) {
-            return "Error: RELAY_PASS environment variable is not configured."
+        if (relayUser.isBlank() || relayPass.isBlank()) {
+            return "Error: RELAY_USER and RELAY_PASS environment variables must both be configured."
         }
         val url = java.net.URI("${relayBaseUrl.trimEnd('/')}$path").toURL()
         val conn = url.openConnection() as HttpURLConnection

@@ -37,4 +37,28 @@ class ToolBoxTest {
         val outsideResult = runBlocking { box.execute("read_file", """{"path": "../secret.txt"}""") }
         assertTrue(outsideResult.contains("Error") || outsideResult.contains("Path escapes workspace"))
     }
+
+    @Test
+    fun testDownloadCivitaiLoraRequiresModelId(@TempDir tempDir: File) {
+        val box = ToolBox(workspaceDir = tempDir, allowShell = false)
+
+        val result = runBlocking { box.execute("download_civitai_lora", """{"slug": "demo"}""") }
+
+        assertEquals("Error: 'model_id' argument is required.", result)
+    }
+
+    @Test
+    fun testRelayToolsRequireCredentials(@TempDir tempDir: File) {
+        val box = ToolBox(
+            workspaceDir = tempDir,
+            allowShell = false,
+            relayBaseUrl = "https://example.invalid",
+            relayUser = "",
+            relayPass = "",
+        )
+
+        val result = runBlocking { box.execute("get_render_status", "{}") }
+
+        assertTrue(result.contains("RELAY_USER and RELAY_PASS"))
+    }
 }
