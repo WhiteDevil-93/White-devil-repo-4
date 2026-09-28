@@ -1,6 +1,6 @@
 # WhiteDevil UI preview (Compose shell)
 
-Static preview of the **Agent / Hub / You** layout after the Jetpack Compose migration and Agent polish pass.
+Static preview of **Agent / Hub / You** with **AMOLED black** (`#000000`) and single accent **`#D9BF8C`**.
 
 ## See it now
 

@@ -3,226 +3,144 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WhiteDevil UI Preview</title>
+  <title>WhiteDevil — AMOLED mockup</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #000000;
+      --surface: #121212;
+      --elevated: #0a0a0a;
+      --accent: #d9bf8c;
+      --on-accent: #000000;
+      --text: #f5f5f5;
+      --muted: #8e8e93;
+      --dim: #636366;
+    }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: #1a1a1e;
-      color: #ededea;
-      padding: 32px 24px;
-      min-height: 100vh;
+      background: #1a1a1a;
+      color: var(--text);
+      padding: 28px 16px;
     }
-    h1 {
-      text-align: center;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #cdb88f;
-      margin-bottom: 8px;
-      letter-spacing: 0.02em;
-    }
-    p.sub {
-      text-align: center;
-      color: #888;
-      font-size: 0.85rem;
-      margin-bottom: 28px;
-    }
-    .row {
-      display: flex;
-      gap: 24px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
+    h1 { text-align: center; font-size: 1.1rem; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+    p.sub { text-align: center; color: var(--muted); font-size: 0.8rem; margin-bottom: 24px; }
+    .row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
     .phone {
-      width: 320px;
-      height: 640px;
-      border-radius: 28px;
-      overflow: hidden;
-      border: 2px solid #2a2a30;
-      box-shadow: 0 24px 48px rgba(0,0,0,0.5);
-      display: flex;
-      flex-direction: column;
-      background: linear-gradient(180deg, #141210 0%, #0b0b0c 55%, #080809 100%);
+      width: 300px; height: 620px;
+      border-radius: 26px; overflow: hidden;
+      border: 1px solid #222;
+      background: var(--bg);
+      display: flex; flex-direction: column;
     }
-    .label {
-      text-align: center;
-      font-size: 0.75rem;
-      color: #666;
-      margin-top: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-    }
-    .status { font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 10px; }
-    .status.setup { background: rgba(204,85,85,0.16); color: #e85d5d; }
-    .status.ready { background: rgba(26,26,30,0.4); color: #cdb88f; }
-    .header { padding: 14px 16px 8px; }
-    .header h2 { font-size: 22px; font-weight: 700; }
-    .header .subt { font-size: 12px; color: #888; margin-top: 2px; }
-    .header-row { display: flex; align-items: flex-start; justify-content: space-between; }
-    .model { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600;
-      background: rgba(26,26,30,0.5); padding: 7px 12px; border-radius: 12px; }
-    .chat { flex: 1; padding: 8px 12px; overflow: hidden; }
-    .bubble-row { display: flex; gap: 8px; align-items: flex-start; max-width: 100%; }
-    .avatar {
-      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-      background: rgba(61,53,40,0.45); color: #cdb88f; font-size: 14px;
-      display: flex; align-items: center; justify-content: center; font-weight: 700;
-    }
-    .bubble {
-      background: rgba(30,24,16,0.65); border-radius: 18px 18px 18px 6px;
-      padding: 14px; max-width: 240px;
-    }
-    .bubble .title { color: #cdb88f; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
-    .bubble .body { color: #d8d2c8; font-size: 13px; line-height: 1.45; }
-    .dock {
-      background: rgba(18,18,22,0.94);
-      border-top: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px 20px 0 0;
-      padding: 10px;
-    }
-    .dock-hint {
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 12px; color: #888; padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px;
-    }
-    .dock-hint button {
-      background: none; border: none; color: #cdb88f; font-weight: 700; font-size: 13px; cursor: default;
-    }
-    .input-row { display: flex; align-items: flex-end; gap: 4px; }
-    .icon-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 18px; }
-    .icon-btn.accent { color: #cdb88f; }
-    .field { flex: 1; padding: 10px 0; color: #666; font-size: 15px; }
-    .send {
-      width: 44px; height: 44px; border-radius: 50%; background: #cdb88f;
-      display: flex; align-items: center; justify-content: center; color: #111; font-size: 16px;
-    }
-    .nav {
-      display: flex; background: rgba(16,16,18,0.96);
-      border-top: 1px solid rgba(255,255,255,0.06);
-      padding: 8px 0 12px;
-    }
-    .nav-item { flex: 1; text-align: center; font-size: 11px; color: #888; }
-    .nav-item span.icon {
-      display: inline-flex; width: 56px; height: 32px; border-radius: 16px;
-      align-items: center; justify-content: center; margin-bottom: 4px; font-size: 18px;
-    }
-    .nav-item.active { color: #ededea; }
-    .nav-item.active span.icon { background: rgba(205,184,143,0.2); }
-    .hub-banner { background: #ededea; color: #111; font-size: 13px; font-weight: 700; padding: 10px 16px; }
-    .hub-head { padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
-    .hub-head h2 { font-size: 20px; flex: 1; }
-    .pill { font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 12px; background: rgba(26,26,30,0.5); color: #888; }
-    .chips { display: flex; gap: 8px; padding: 4px 8px 8px; overflow-x: auto; }
-    .chip { font-size: 13px; padding: 8px 16px; border-radius: 16px; white-space: nowrap;
-      background: rgba(26,26,30,0.5); color: #888; }
-    .chip.on { background: rgba(255,255,255,0.15); color: #ededea; font-weight: 700; }
-    .webview { flex: 1; margin: 0 8px 8px; border-radius: 12px; background: rgba(0,0,0,0.35);
-      border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center;
-      color: #555; font-size: 12px; }
-    .you-card {
-      margin: 16px; padding: 16px; border-radius: 16px;
-      background: rgba(26,26,30,0.45); border: 1px solid rgba(255,255,255,0.08);
-    }
-    .you-card h3 { font-size: 15px; margin-bottom: 8px; }
-    .you-card p { font-size: 13px; color: #888; line-height: 1.5; }
-    .you-actions { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
-    .btn {
-      padding: 14px 16px; border-radius: 16px; text-align: center; font-weight: 600; font-size: 14px;
-      background: rgba(26,26,30,0.5); border: 1px solid rgba(255,255,255,0.08);
-    }
-    .btn.primary { background: #cdb88f; color: #111; border: none; }
+    .label { text-align: center; font-size: 0.65rem; color: var(--dim); margin-top: 8px; letter-spacing: 0.14em; text-transform: uppercase; }
+    .hdr { padding: 14px 18px 8px; }
+    .hdr h2 { font-size: 20px; font-weight: 600; }
+    .hdr .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .hdr-row { display: flex; align-items: flex-start; justify-content: space-between; }
+    .live { font-size: 11px; font-weight: 600; color: var(--accent); }
+    .model { font-size: 12px; color: var(--accent); margin-top: 8px; }
+    .chat { flex: 1; padding: 8px 14px; }
+    .sys { text-align: center; padding: 16px 12px; }
+    .sys .k { font-size: 10px; letter-spacing: 0.12em; color: var(--accent); opacity: 0.55; }
+    .sys .b { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+    .bubble { max-width: 85%; background: var(--surface); border-radius: 18px 18px 18px 4px; padding: 12px 14px; font-size: 14px; line-height: 1.4; }
+    .dock { background: var(--elevated); padding: 10px 12px 8px; }
+    .dock-hint { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .dock-hint a { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .field { display: flex; align-items: center; background: var(--surface); border-radius: 22px; padding: 4px 6px 4px 4px; }
+    .field span { flex: 1; padding: 10px 8px; color: var(--dim); font-size: 15px; }
+    .send { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; color: var(--on-accent); font-size: 14px; }
+    .nav { display: flex; background: var(--elevated); padding: 8px 0 10px; border-top: 1px solid #141414; }
+    .nav-item { flex: 1; text-align: center; font-size: 10px; color: var(--dim); }
+    .nav-item.on { color: var(--text); }
+    .nav-item .ico { font-size: 18px; margin-bottom: 2px; color: var(--dim); }
+    .nav-item.on .ico { color: var(--accent); }
+    .banner { background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 600; padding: 9px 16px; }
+    .chips { display: flex; gap: 6px; padding: 6px 14px; overflow-x: auto; }
+    .chip { font-size: 12px; padding: 7px 12px; border-radius: 10px; color: var(--dim); white-space: nowrap; }
+    .chip.on { background: var(--surface); color: var(--text); font-weight: 600; }
+    .wv { flex: 1; margin: 0 8px 8px; background: #000; border-radius: 14px 14px 0 0; border: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: center; color: #444; font-size: 11px; }
+    .card { margin: 0 16px 10px; background: var(--surface); border-radius: 18px; padding: 16px; }
+    .card h3 { font-size: 15px; margin-bottom: 8px; }
+    .card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .card .link { color: var(--accent); font-size: 12px; font-weight: 600; margin-top: 10px; display: block; }
+    .navrow { margin: 0 16px 8px; background: var(--surface); border-radius: 18px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .navrow .t { font-size: 15px; font-weight: 600; }
+    .navrow .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .pill { font-size: 10px; font-weight: 600; color: var(--accent); }
   </style>
 </head>
 <body>
-  <h1>WhiteDevil — Compose UI (preview)</h1>
-  <p class="sub">Agent polish branch · unified composer · left-aligned welcome · nav capsules</p>
+  <h1>WhiteDevil — AMOLED + accent mockup</h1>
+  <p class="sub">#000000 · accent #D9BF8C · branch cursor/full-device-integration-1b6f</p>
   <div class="row">
     <div>
       <div class="phone">
-        <div class="header">
-          <div class="header-row">
-            <div>
-              <h2>Venice</h2>
-              <div class="subt">On-device agent</div>
-            </div>
-            <span class="status setup">Setup</span>
+        <div class="hdr">
+          <div class="hdr-row">
+            <div><h2>Venice</h2><div class="sub">On-device agent</div></div>
+            <span class="live">Setup</span>
           </div>
-          <span class="model">GLM 5.2 ▾</span>
+          <div class="model">GLM 5.2 ▾</div>
         </div>
         <div class="chat">
-          <div class="bubble-row">
-            <div class="avatar">✦</div>
-            <div class="bubble">
-              <div class="title">Ready for beta</div>
-              <div class="body">Chat with Venice on-device, attach photos and files, and run tools against your workspace and relay.</div>
-            </div>
+          <div class="sys">
+            <div class="k">READY FOR BETA</div>
+            <div class="b">Chat with Venice on-device, attach files, and run tools against your workspace and relay.</div>
           </div>
         </div>
         <div class="dock">
-          <div class="dock-hint">
-            <span>Add a Venice API key to start chatting</span>
-            <button type="button">Add key</button>
-          </div>
-          <div class="input-row">
-            <div class="icon-btn accent">📎</div>
-            <div class="icon-btn">📋</div>
-            <div class="field">Message Venice…</div>
+          <div class="dock-hint"><span>Venice API key required</span><a href="#">Add key</a></div>
+          <div class="field">
+            <span style="width:32px;flex:0;text-align:center;color:var(--muted)">📎</span>
+            <span>Message</span>
             <div class="send">➤</div>
           </div>
         </div>
         <div class="nav">
-          <div class="nav-item active"><span class="icon">✦</span><br/>Agent</div>
-          <div class="nav-item"><span class="icon">⌂</span><br/>Hub</div>
-          <div class="nav-item"><span class="icon">⚙</span><br/>You</div>
+          <div class="nav-item on"><div class="ico">✦</div>Agent</div>
+          <div class="nav-item"><div class="ico">⌂</div>Hub</div>
+          <div class="nav-item"><div class="ico">⚙</div>You</div>
         </div>
       </div>
       <div class="label">Agent</div>
     </div>
     <div>
       <div class="phone">
-        <div class="hub-banner">Forge Hub update v10 available. Tap to install.</div>
-        <div class="hub-head">
-          <div>
-            <h2>Forge Hub</h2>
-            <div class="subt" style="font-size:12px;color:#888">Relay tools &amp; dashboards</div>
+        <div class="banner">Forge Hub update available · tap to install</div>
+        <div class="hdr">
+          <div class="hdr-row">
+            <div><h2>Hub</h2><div class="sub">Relay dashboards</div></div>
+            <span class="pill">Online</span>
           </div>
-          <span class="pill">Online</span>
-          <span style="color:#cdb88f">↻</span>
         </div>
         <div class="chips">
-          <span class="chip on">Home</span>
-          <span class="chip">Files</span>
-          <span class="chip">Forge</span>
+          <span class="chip on">Home</span><span class="chip">Files</span><span class="chip">Forge</span>
         </div>
-        <div class="webview">WebView · Hub screen</div>
+        <div class="wv">WebView</div>
         <div class="nav">
-          <div class="nav-item"><span class="icon">✦</span><br/>Agent</div>
-          <div class="nav-item active"><span class="icon">⌂</span><br/>Hub</div>
-          <div class="nav-item"><span class="icon">⚙</span><br/>You</div>
+          <div class="nav-item"><div class="ico">✦</div>Agent</div>
+          <div class="nav-item on"><div class="ico">⌂</div>Hub</div>
+          <div class="nav-item"><div class="ico">⚙</div>You</div>
         </div>
       </div>
-      <div class="label">Forge Hub</div>
+      <div class="label">Hub</div>
     </div>
     <div>
       <div class="phone">
-        <div class="header">
-          <h2 style="font-size:26px">You</h2>
-          <div class="subt" style="margin-top:4px">Terminal, settings, connections</div>
+        <div class="hdr"><h2>You</h2><div class="sub">Terminal, settings, health</div></div>
+        <div class="card">
+          <h3>Connections</h3>
+          <p>Venice: not configured<br/>Relay: reachable</p>
+          <span class="link">Run test</span>
         </div>
-        <div class="you-card">
-          <h3>Connection health</h3>
-          <p>Venice: not configured<br/>Relay: reachable<br/>Laptop tunnel: optional</p>
-        </div>
-        <div class="you-actions">
-          <div class="btn">Open Terminal</div>
-          <div class="btn">Settings</div>
-          <div class="btn primary">Test connections</div>
-        </div>
+        <div class="navrow"><div><div class="t">Terminal</div><div class="s">Relay shell</div></div><span style="color:var(--dim)">›</span></div>
+        <div class="navrow"><div><div class="t">Settings</div><div class="s">Keys & relay</div></div><span style="color:var(--dim)">›</span></div>
         <div style="flex:1"></div>
         <div class="nav">
-          <div class="nav-item"><span class="icon">✦</span><br/>Agent</div>
-          <div class="nav-item"><span class="icon">⌂</span><br/>Hub</div>
-          <div class="nav-item active"><span class="icon">⚙</span><br/>You</div>
+          <div class="nav-item"><div class="ico">✦</div>Agent</div>
+          <div class="nav-item"><div class="ico">⌂</div>Hub</div>
+          <div class="nav-item on"><div class="ico">⚙</div>You</div>
         </div>
       </div>
       <div class="label">You</div>
