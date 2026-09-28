@@ -8,6 +8,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -127,11 +128,35 @@ class ToolBox(
             ToolDefinition(
                 function = ToolFunctionSpec(
                     name = "run_laptop_command",
-                    description = "Execute a bash or python command on the user's WSL laptop via the relay SSH bridge in ~/venice_run.",
-                    parameters = objectSchema(
-                        "code" to "The shell command or python script code to execute.",
-                        "lang" to "Execution language: 'bash' or 'python'. Defaults to 'bash'.",
-                    ),
+                    description = "Execute code directly in the user's connected WSL laptop terminal through the relay SSH bridge and return stdout, stderr, exit code, and working directory. Use this proactively when the user asks you to run, test, build, inspect, or debug code on their laptop; do not merely print commands for them to copy.",
+                    parameters = buildJsonObject {
+                        put("type", "object")
+                        putJsonObject("properties") {
+                            putJsonObject("code") {
+                                put("type", "string")
+                                put("description", "The complete bash command/script or Python source to execute.")
+                            }
+                            putJsonObject("lang") {
+                                put("type", "string")
+                                put("enum", buildJsonArray {
+                                    add(JsonPrimitive("bash"))
+                                    add(JsonPrimitive("python"))
+                                })
+                                put("description", "Execution language. Defaults to bash.")
+                            }
+                            putJsonObject("cwd") {
+                                put("type", "string")
+                                put("description", "Optional working directory relative to the laptop home, for example 'projects/my-app'. Defaults to 'venice_run'.")
+                            }
+                            putJsonObject("timeout_seconds") {
+                                put("type", "integer")
+                                put("minimum", 10)
+                                put("maximum", 180)
+                                put("description", "Optional execution timeout. Defaults to 90 seconds.")
+                            }
+                        }
+                        put("required", buildJsonArray { add(JsonPrimitive("code")) })
+                    },
                 ),
             ),
         )
@@ -243,7 +268,8 @@ class ToolBox(
         }
         val code = conn.responseCode
         val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-        return stream?.bufferedReader()?.readText() ?: "HTTP $code"
+        val body = stream?.bufferedReader()?.readText().orEmpty()
+        return if (code in 200..299) body else "Error: HTTP $code${if (body.isBlank()) "" else ": $body"}"
     }
 
     private fun relayBytes(path: String): Pair<String, ByteArray> {
@@ -326,10 +352,13 @@ class ToolBox(
             val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
             val code = args.stringOrNull("code") ?: return "Error: 'code' argument is required."
             val lang = args.stringOrNull("lang") ?: "bash"
+            val cwd = args.stringOrNull("cwd") ?: "venice_run"
+            val timeout = (args["timeout_seconds"] as? JsonPrimitive)?.intOrNull?.coerceIn(10, 180) ?: 90
             val payload = buildJsonObject {
                 put("lang", lang)
                 put("code", code)
-                put("timeout", 90)
+                put("cwd", cwd)
+                put("timeout", timeout)
             }.toString()
             relayHttp("/api/laptop/run", method = "POST", postBody = payload)
         } catch (e: Exception) {

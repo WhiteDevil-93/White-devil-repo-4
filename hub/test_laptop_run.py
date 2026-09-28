@@ -10,6 +10,8 @@ def test_run_rejects_empty_and_bad_lang():
     client = TestClient(app)
     assert client.post("/api/laptop/run", json={"lang": "bash", "code": "  "}).status_code == 400
     assert client.post("/api/laptop/run", json={"lang": "ruby", "code": "puts 1"}).status_code == 400
+    assert client.post("/api/laptop/run", json={"lang": "bash", "code": "pwd", "cwd": "../etc"}).status_code == 400
+    assert client.post("/api/laptop/run", json={"lang": "bash", "code": "pwd", "cwd": "/tmp"}).status_code == 400
 
 
 def test_run_ssh_payload(monkeypatch):
@@ -23,11 +25,16 @@ def test_run_ssh_payload(monkeypatch):
 
     monkeypatch.setattr(laptop, "ssh", fake_ssh)
     client = TestClient(app)
-    j = client.post("/api/laptop/run", json={"lang": "python", "code": "print(1)"}).json()
+    j = client.post(
+        "/api/laptop/run",
+        json={"lang": "python", "code": "print(1)", "cwd": "projects/demo", "timeout": 120},
+    ).json()
     assert j["ok"] is True
     assert j["exit"] == 0
-    assert j["cwd"] == "~/venice_run"
+    assert j["cwd"] == "~/projects/demo"
     assert "last.py" in seen["cmd"] and "python3" in seen["cmd"]
+    assert "$HOME/projects/demo" in seen["cmd"]
+    assert seen["timeout"] == 120
     assert seen["stdin"].startswith("print(1)")
 
 

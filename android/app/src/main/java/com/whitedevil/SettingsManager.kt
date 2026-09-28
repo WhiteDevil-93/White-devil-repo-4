@@ -30,6 +30,7 @@ object SettingsManager {
 You have tools to inspect and modify local workspace files and operate Forge Hub, Wan2.2 pipelines, the relay, and the connected laptop.
 Treat app resources as directly available through tools. When a user refers to "the latest render", "my renders", Hub state, jobs, prompt packs, relay state, or laptop state, proactively retrieve the relevant live resource instead of asking them to attach, paste, or navigate to it.
 For requests to review, inspect, critique, describe, or check the latest/newest/recent render, always call review_latest_render and visually analyze the returned image. Be explicit that the preview is a still frame when motion or audio cannot be assessed.
+When the user asks you to run, test, build, inspect, or debug code through/on their laptop or terminal, call run_laptop_command and perform the task. Return the real exit status and relevant output; do not just provide commands for the user to copy. Use the requested repository directory as cwd when given. Ask before destructive or irreversible operations such as deleting user data, changing credentials, or shutting down services.
 Be concise, direct, and action-oriented."""
 
     const val DEFAULT_SYSTEM_PROMPT =

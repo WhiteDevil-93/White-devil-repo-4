@@ -87,6 +87,56 @@ class ToolBoxTest {
     }
 
     @Test
+    fun testLaptopCommandForwardsCwdLanguageAndTimeout() {
+        val server = ServerSocket(0)
+        var postedBody = ""
+        val serving = thread(start = true, isDaemon = true) {
+            server.accept().use { socket ->
+                val reader = socket.getInputStream().bufferedReader()
+                reader.readLine()
+                var contentLength = 0
+                while (true) {
+                    val line = reader.readLine()
+                    if (line.isEmpty()) break
+                    if (line.startsWith("Content-Length:", ignoreCase = true)) {
+                        contentLength = line.substringAfter(":").trim().toInt()
+                    }
+                }
+                val chars = CharArray(contentLength)
+                reader.read(chars)
+                postedBody = String(chars)
+                val response = """{"ok":true,"exit":0,"cwd":"~/projects/demo","output":"tests passed"}""".toByteArray()
+                socket.getOutputStream().use { output ->
+                    output.write(
+                        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${response.size}\r\nConnection: close\r\n\r\n".toByteArray(),
+                    )
+                    output.write(response)
+                }
+            }
+        }
+        try {
+            val box = ToolBox(
+                workspaceDir = folder.newFolder("laptop_command"),
+                relayBaseUrl = "http://127.0.0.1:${server.localPort}",
+                relayUser = "",
+                relayPass = "",
+            )
+            val result = box.execute(
+                "run_laptop_command",
+                """{"code":"pytest -q","lang":"bash","cwd":"projects/demo","timeout_seconds":120}""",
+            )
+            serving.join(1000)
+
+            assertTrue(result.contains("tests passed"))
+            assertTrue(postedBody.contains("\"code\":\"pytest -q\""))
+            assertTrue(postedBody.contains("\"cwd\":\"projects/demo\""))
+            assertTrue(postedBody.contains("\"timeout\":120"))
+        } finally {
+            server.close()
+        }
+    }
+
+    @Test
     fun testFileOperationsAndSandboxing() {
         val dir = folder.newFolder("workspace_sandbox")
         val box = ToolBox(

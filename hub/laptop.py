@@ -1,7 +1,7 @@
 """Run a Venice snippet on the laptop over `ssh laptop` (same path as HypnoForge).
 
-Nothing auto-executes. The Venice tab POSTs here after an explicit Run tap.
-Scripts land in ~/venice_run on the WSL laptop.
+The native Android agent and Hub terminal use this endpoint. Scripts are staged in
+~/venice_run and may execute from a caller-selected directory under the laptop home.
 """
 from __future__ import annotations
 
@@ -61,6 +61,7 @@ class RunIn(BaseModel):
     lang: str = "bash"
     code: str
     timeout: int = Field(default=90, ge=10, le=180)
+    cwd: str = Field(default="venice_run", max_length=240)
 
 
 @router.post("/run")
@@ -77,8 +78,26 @@ def run(body: RunIn):
         raise HTTPException(400, "Nothing to run.")
     if len(code) > MAX_CODE:
         raise HTTPException(400, "That snippet is too large.")
+    cwd_input = (body.cwd or "venice_run").strip().replace("\\", "/")
+    if cwd_input.startswith("/"):
+        raise HTTPException(400, "cwd must be relative to the laptop home directory.")
+    if cwd_input.startswith("~/"):
+        cwd_input = cwd_input[2:]
+    cwd = cwd_input.strip("/")
+    if not cwd:
+        cwd = "venice_run"
+    parts = cwd.split("/")
+    if any(part in ("", ".", "..") for part in parts) or not all(
+        part.replace("-", "").replace("_", "").replace(".", "").isalnum() for part in parts
+    ):
+        raise HTTPException(400, "cwd must be a safe path relative to the laptop home directory.")
     name, exe = LANGS[lang]
-    remote = f"mkdir -p ~/venice_run && cd ~/venice_run && cat > {name} && {exe}"
+    staged = f"$HOME/venice_run/{name}"
+    workdir = "$HOME/" + cwd
+    remote = (
+        f"mkdir -p \"$HOME/venice_run\" && cat > \"{staged}\" && "
+        f"test -d \"{workdir}\" && cd \"{workdir}\" && {exe.replace(name, staged)}"
+    )
     r = ssh(remote, timeout=body.timeout, stdin=code if code.endswith("\n") else code + "\n")
     out = (r.stdout or "").strip()
     err = (r.stderr or "").strip()
@@ -87,7 +106,7 @@ def run(body: RunIn):
         "ok": r.returncode == 0,
         "exit": r.returncode,
         "lang": lang,
-        "cwd": "~/venice_run",
+        "cwd": f"~/{cwd}",
         "output": text[-24000:],
         "stdout": (r.stdout or "")[-20000:],
         "stderr": (r.stderr or "")[-8000:],

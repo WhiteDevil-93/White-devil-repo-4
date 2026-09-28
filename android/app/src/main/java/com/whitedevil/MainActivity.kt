@@ -634,7 +634,7 @@ class MainActivity : ComponentActivity() {
             ?: SettingsManager.DEFAULT_SYSTEM_PROMPT
         val sysPrompt = buildString {
             append(savedPrompt.trim())
-            if (!savedPrompt.contains("review_latest_render")) {
+            if (!savedPrompt.contains("review_latest_render") || !savedPrompt.contains("run_laptop_command")) {
                 append("\n\n")
                 append(SettingsManager.AGENT_INTEGRATION_PROMPT)
             }
