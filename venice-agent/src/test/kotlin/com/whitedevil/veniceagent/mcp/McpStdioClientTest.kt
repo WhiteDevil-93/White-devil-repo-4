@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -67,6 +68,29 @@ class McpStdioClientTest {
 
             val after = client.definitions().map { it.function.name }
             assertTrue("fake__new_tool" in after, "expected the cache to be rebuilt with new_tool: $after")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `retries after a failed refresh instead of caching the gap or losing the pending change`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
+        try {
+            val before = client.definitions().map { it.function.name }
+            assertTrue("fake__new_tool" !in before, "new_tool shouldn't exist yet: $before")
+
+            // The server accepts this, but the refresh attempt it triggers fails once.
+            client.execute("fake__trigger_list_changed_with_failure", "{}")
+            assertFailsWith<McpException> { client.definitions() }
+
+            // The failed attempt must not have cleared the pending-change flag: the next call
+            // has to retry rather than silently serving the stale pre-change list forever.
+            val after = client.definitions().map { it.function.name }
+            assertTrue("fake__new_tool" in after, "expected the retry to pick up new_tool: $after")
         } finally {
             client.close()
         }

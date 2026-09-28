@@ -20,6 +20,10 @@ for line in sys.stdin:
         params = msg.get("params") or {}
         cursor = params.get("cursor")
         if cursor is None:
+            if state.get("fail_next_list"):
+                state["fail_next_list"] = False
+                send({"jsonrpc": "2.0", "id": msg["id"], "error": {"code": -32000, "message": "simulated transient tools/list failure"}})
+                continue
             # First page: one tool, plus a cursor pointing at a second page. After a
             # notifications/tools/list_changed has been sent, a new tool also appears here,
             # to prove a fresh tools/list is actually issued rather than serving a stale cache.
@@ -58,6 +62,11 @@ for line in sys.stdin:
         args = msg["params"]["arguments"]
         if name == "trigger_list_changed":
             state["list_version"] = 2
+            send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "trigger_list_changed_with_failure":
+            state["list_version"] = 2
+            state["fail_next_list"] = True
             send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
         elif name == "fail":

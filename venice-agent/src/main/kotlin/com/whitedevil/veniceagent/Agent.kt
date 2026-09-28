@@ -22,56 +22,66 @@ class Agent(
      * the caller retrying and repeating a write/deployment/etc. This also keeps every tool_call
      * in an assistant message answered, which chat-completion APIs require.
      *
-     * If `client.chatCompletion()` itself throws, no message has been added for that iteration
-     * yet, so history is left exactly as it was through the last complete exchange — nothing
-     * is rolled back, and nothing already recorded is lost.
+     * If `client.chatCompletion()` itself throws before any progress was made on this turn
+     * (its very first call, before any assistant message was added), the just-added user
+     * message is removed so a retried [send] doesn't leave it dangling unanswered alongside
+     * the next prompt. If some progress was already made (a prior iteration's tool exchange
+     * completed), history is left exactly as it was — nothing already recorded is lost.
      */
     suspend fun send(userMessage: String): String {
+        val sizeBeforeUserMessage = history.size
         history.add(ChatMessage(role = "user", content = userMessage))
 
-        repeat(maxToolIterations) {
-            val response = client.chatCompletion(
-                ChatCompletionRequest(
-                    model = model,
-                    messages = history,
-                    tools = tools.definitions().ifEmpty { null },
-                    veniceParameters = if (enableWebSearch) {
-                        VeniceParameters(enableWebSearch = "on")
-                    } else {
-                        null
-                    },
-                ),
-            )
-
-            val choice = response.choices.firstOrNull()
-                ?: return "Error: Venice API returned no choices."
-            val message = choice.message
-            history.add(message)
-
-            val toolCalls = message.toolCalls
-            if (toolCalls.isNullOrEmpty()) {
-                return message.content ?: ""
-            }
-
-            for (call in toolCalls) {
-                onToolCall(call.function.name, call.function.arguments)
-                val result = try {
-                    tools.execute(call.function.name, call.function.arguments)
-                } catch (e: Exception) {
-                    "Error: tool '${call.function.name}' threw an unexpected exception: ${e.message}"
-                }
-                onToolResult(call.function.name, result)
-                history.add(
-                    ChatMessage(
-                        role = "tool",
-                        content = result,
-                        toolCallId = call.id,
-                        name = call.function.name,
+        try {
+            repeat(maxToolIterations) {
+                val response = client.chatCompletion(
+                    ChatCompletionRequest(
+                        model = model,
+                        messages = history,
+                        tools = tools.definitions().ifEmpty { null },
+                        veniceParameters = if (enableWebSearch) {
+                            VeniceParameters(enableWebSearch = "on")
+                        } else {
+                            null
+                        },
                     ),
                 )
-            }
-        }
 
-        return "Error: reached the maximum number of tool iterations ($maxToolIterations) without a final answer."
+                val choice = response.choices.firstOrNull()
+                    ?: return "Error: Venice API returned no choices."
+                val message = choice.message
+                history.add(message)
+
+                val toolCalls = message.toolCalls
+                if (toolCalls.isNullOrEmpty()) {
+                    return message.content ?: ""
+                }
+
+                for (call in toolCalls) {
+                    onToolCall(call.function.name, call.function.arguments)
+                    val result = try {
+                        tools.execute(call.function.name, call.function.arguments)
+                    } catch (e: Exception) {
+                        "Error: tool '${call.function.name}' threw an unexpected exception: ${e.message}"
+                    }
+                    onToolResult(call.function.name, result)
+                    history.add(
+                        ChatMessage(
+                            role = "tool",
+                            content = result,
+                            toolCallId = call.id,
+                            name = call.function.name,
+                        ),
+                    )
+                }
+            }
+
+            return "Error: reached the maximum number of tool iterations ($maxToolIterations) without a final answer."
+        } catch (e: Exception) {
+            if (history.size == sizeBeforeUserMessage + 1) {
+                history.removeAt(history.lastIndex)
+            }
+            throw e
+        }
     }
 }

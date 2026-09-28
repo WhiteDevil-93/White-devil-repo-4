@@ -170,8 +170,6 @@ class McpStdioClient(
 
     override suspend fun definitions(): List<ToolDefinition> {
         if (cachedDefinitions != null && !toolsChanged.get()) return cachedDefinitions!!
-        toolsChanged.set(false)
-        exposedToOriginal.clear()
         ensureInitialized()
 
         val rawTools = mutableListOf<JsonObject>()
@@ -185,19 +183,28 @@ class McpStdioClient(
             cursor = (result["nextCursor"] as? JsonPrimitive)?.contentOrNull
         } while (cursor != null)
 
+        // Build into fresh local state and only commit once every page has been fetched
+        // successfully. If tools/list throws partway through (a timeout, a bad page), the
+        // previous cache, mapping, and "changed" flag are left untouched, so a stale result
+        // is never served and the next call retries the refresh instead of silently going stale.
+        val newExposedToOriginal = mutableMapOf<String, String>()
         val definitions = rawTools.mapNotNull { tool ->
             val name = (tool["name"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
             val description = (tool["description"] as? JsonPrimitive)?.contentOrNull ?: ""
             val schema = (tool["inputSchema"] as? JsonObject) ?: buildJsonObject { put("type", "object") }
             ToolDefinition(
                 function = ToolFunctionSpec(
-                    name = namespacedName(name),
+                    name = namespacedName(name, newExposedToOriginal),
                     description = description,
                     parameters = schema,
                 ),
             )
         }
+
+        exposedToOriginal.clear()
+        exposedToOriginal.putAll(newExposedToOriginal)
         cachedDefinitions = definitions
+        toolsChanged.set(false)
         return definitions
     }
 
@@ -244,16 +251,16 @@ class McpStdioClient(
      * can collide. When that happens, later ones get a numeric suffix so every tool this
      * provider exposes still gets a distinct, valid name.
      */
-    private fun namespacedName(toolName: String): String {
+    private fun namespacedName(toolName: String, target: MutableMap<String, String>): String {
         val base = "${serverName}__$toolName".replace(Regex("[^a-zA-Z0-9_-]"), "_")
         var candidate = base.take(64)
         var suffix = 1
-        while (exposedToOriginal[candidate]?.let { it != toolName } == true) {
+        while (target[candidate]?.let { it != toolName } == true) {
             val suffixText = "_$suffix"
             candidate = base.take((64 - suffixText.length).coerceAtLeast(0)) + suffixText
             suffix++
         }
-        exposedToOriginal[candidate] = toolName
+        target[candidate] = toolName
         return candidate
     }
 
