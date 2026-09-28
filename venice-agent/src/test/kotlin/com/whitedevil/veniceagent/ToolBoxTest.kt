@@ -10,8 +10,7 @@ import java.io.File
 class ToolBoxTest {
 
     @Test
-    fun testToolDefinitionsList() {
-        val tempDir = File(System.getProperty("java.io.tmpdir"), "test-venice-workspace-${System.currentTimeMillis()}")
+    fun testToolDefinitionsList(@TempDir tempDir: File) {
         val box = ToolBox(workspaceDir = tempDir, allowShell = true)
         val names = runBlocking { box.definitions() }.map { it.function.name }
 
@@ -23,7 +22,6 @@ class ToolBoxTest {
         assertTrue(names.contains("list_prompt_packs"))
         assertTrue(names.contains("run_laptop_command"))
         assertTrue(names.contains("download_civitai_lora"))
-        tempDir.deleteRecursively()
     }
 
     @Test
