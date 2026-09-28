@@ -1,0 +1,73 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c"><title>Setup</title>
+<link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
+<style>
+.lora{padding:12px 0;border-top:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.lora:first-child{border-top:0;padding-top:2px}
+.lora b{display:block;font-size:14px}
+.kind{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+</style>
+</head><body>
+
+<div class="row" style="margin:4px 2px 12px">
+  <div class="grow"><div class="tiny mut">LTX 2.5 pack</div><h1 style="margin:2px 0 0">Setup</h1></div>
+  <span id="st" class="pill">…</span>
+</div>
+
+<div class="card">
+  <div class="small mut">All <b>11</b> official Lightricks LTX 2.5 LoRAs live here. Saving writes the whole list so LTX loads every file — not just the one Civitai LoRA.</div>
+  <div class="row wrap" style="margin-top:14px">
+    <button class="btn primary grow" id="save">Save all 11 to Setup</button>
+    <a class="btn grow" href="/app/term/?setupdl=1">Download on laptop</a>
+  </div>
+  <div class="tiny mut" id="hint" style="margin-top:10px"></div>
+</div>
+
+<h2>LoRAs · <span id="n">11</span></h2>
+<div class="card" id="list"><div class="skel" style="height:80px"></div></div>
+
+<script>
+const {$, esc} = F;
+let S = null;
+
+function pill(){
+  if (!S) return;
+  const n = S.enabled, t = S.count;
+  $('st').textContent = S.saved ? (n + ' / ' + t + ' on LTX') : 'Not saved';
+  $('st').className = 'pill ' + (S.saved && n === t ? 'ok' : S.saved ? 'warn' : 'bad');
+  $('n').textContent = t;
+  $('hint').textContent = S.saved
+    ? 'Saved on the relay. LTX 2.5 reads this list. Weights download to ' + S.dest
+    : 'Nothing is on LTX 2.5 yet. Save all 11.';
+}
+
+function draw(){
+  $('list').innerHTML = (S.loras || []).map(r => `
+    <label class="lora">
+      <input type="checkbox" data-id="${esc(r.id)}" ${r.enabled ? 'checked' : ''}>
+      <div class="grow">
+        <span class="kind">${esc(r.kind)} · ${esc(r.target)}</span>
+        <b>${esc(r.name)}</b>
+        <div class="tiny mut trunc">${esc(r.filename)}</div>
+      </div>
+    </label>`).join('') || '<div class="empty">Catalog missing.</div>';
+  pill();
+}
+
+async function load(){
+  try { S = await F.api('/api/setup'); draw(); }
+  catch (e) { $('list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; $('st').textContent = 'Error'; $('st').className = 'pill bad'; }
+}
+
+$('save').onclick = async () => {
+  const enabled = [...document.querySelectorAll('#list input[type=checkbox]')].filter(x => x.checked).map(x => x.dataset.id);
+  try {
+    S = await F.post('/api/setup', {enabled: enabled.length ? enabled : null});
+    draw(); F.toast('Saved all ' + S.enabled + ' LoRAs to Setup. LTX 2.5 uses this list.');
+  } catch (e) { F.toast(e.message); }
+};
+
+load();
+</script>
+</body></html>

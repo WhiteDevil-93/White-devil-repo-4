@@ -1,0 +1,31 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c"><title>Gallery</title>
+<link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
+</head><body>
+<div class="row" style="margin:4px 2px 12px">
+  <div class="grow"><div class="tiny mut" id="sum">Clips</div><h1 style="margin:2px 0 0">Gallery</h1></div>
+</div>
+<div class="strip" id="strip"><div class="thumb skel"></div><div class="thumb skel"></div></div>
+<div id="empty" class="empty" hidden>No clips on the relay yet.</div>
+<script>
+const {$, esc} = F;
+let latest = [];
+async function load(){
+  try {
+    const lib = await F.api('/api/media/library');
+    latest = lib.flatMap(g => g.clips.map(c => Object.assign({group: g.title}, c))).sort((a,b) => b.mtime - a.mtime).slice(0, 40);
+    $('sum').textContent = latest.length + ' recent';
+    $('strip').innerHTML = latest.length ? latest.map(c => F.thumb(c, c.idx ? 'Clip ' + c.idx : '')).join('') : '';
+    $('empty').hidden = !!latest.length;
+  } catch (e) { $('sum').textContent = 'Unreachable'; F.toast(e.message); }
+}
+$('strip').addEventListener('click', e => {
+  const n = e.target.closest('.thumb')?.dataset.clip; if (!n) return;
+  F.viewer(latest, latest.findIndex(c => c.name === n), c => c.group + (c.idx ? ' · clip ' + c.idx : ''));
+});
+F.pull(load); load();
+setInterval(() => { if (F.isVisible()) load(); }, 30000);
+F.onVisible && F.onVisible(load);
+</script>
+</body></html>

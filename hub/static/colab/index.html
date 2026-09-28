@@ -136,6 +136,8 @@ async function queueSel(){
   finally { btn.disabled = false; selChanged(); }
 }
 F.pull(load);
-load(); setInterval(() => { if (!document.hidden && !document.querySelector('.viewer')) load(); }, 30000);
+load();
+setInterval(() => { if (F.isVisible() && !document.querySelector('.viewer')) load(); }, 30000);
+F.onVisible && F.onVisible(load);
 </script>
 </body></html>

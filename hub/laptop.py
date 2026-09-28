@@ -1,7 +1,9 @@
 """Run a Venice snippet on the laptop over `ssh laptop` (same path as HypnoForge).
 
-The native Android agent and Hub terminal use this endpoint. Scripts are staged in
-~/venice_run and may execute from a caller-selected directory under the laptop home.
+The native Android agent and Hub terminal POST here (run_laptop_command / Run sheet).
+Scripts land in ~/venice_run on the WSL laptop and may execute from a caller-selected
+directory under the laptop home. Live Shell paste is separate (ttyd via forge:term-paste)
+so the user can watch commands in the Terminal tab.
 """
 from __future__ import annotations
 

@@ -1,0 +1,54 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c"><title>LTX</title>
+<link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
+</head><body>
+
+<div class="row" style="margin:4px 2px 12px">
+  <div class="grow"><div class="tiny mut">Lightricks 22B</div><h1 style="margin:2px 0 0">LTX 2.5</h1></div>
+  <span id="st" class="pill">…</span>
+</div>
+
+<div class="card" id="hero">
+  <div class="skel" style="height:70px"></div>
+</div>
+
+<h2>LoRAs from Setup</h2>
+<div class="card" id="loras"><div class="skel" style="height:60px"></div></div>
+
+<div class="tiny mut" style="margin:14px 4px">LTX 2.5 reads the Setup pack. If you only see one LoRA, open Setup and Save all 11.</div>
+
+<script>
+const {$, esc} = F;
+async function load(){
+  try {
+    const S = await F.api('/api/setup');
+    const n = S.enabled, t = S.count;
+    $('st').textContent = S.saved ? n + ' / ' + t : 'Setup empty';
+    $('st').className = 'pill ' + (S.saved && n === t ? 'ok' : S.saved ? 'warn' : 'bad');
+    $('hero').innerHTML = S.saved && n === t
+      ? `<div style="font-weight:700">All ${t} Setup LoRAs are on LTX 2.5</div>
+         <div class="small mut" style="margin-top:6px">Distilled speed LoRA plus the 8 IC LoRAs and 2 controls. Content LoRAs (CoachBate penis, …) stack on top from ~/civitai_dl.</div>`
+      : `<div style="font-weight:700">${S.saved ? n + ' of ' + t + ' LoRAs enabled' : 'No pack saved'}</div>
+         <div class="small mut" style="margin-top:6px">Only a single Civitai file used to land here. Save the full pack in Setup.</div>
+         <div style="margin-top:12px"><a class="btn primary" href="/app/setup/">Open Setup</a></div>`;
+    $('loras').innerHTML = (S.loras || []).map(r => `
+      <div class="item">
+        <div class="ico">${r.enabled ? '●' : '○'}</div>
+        <div class="grow">
+          <div class="trunc" style="font-weight:600">${esc(r.name)}</div>
+          <div class="tiny mut">${esc(r.kind)} · ${esc(r.filename)}</div>
+        </div>
+        <span class="pill ${r.enabled ? 'ok' : ''}">${r.enabled ? 'on' : 'off'}</span>
+      </div>`).join('') || '<div class="empty">Setup catalog missing.</div>';
+  } catch (e) {
+    $('st').textContent = 'Error'; $('st').className = 'pill bad';
+    $('hero').innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
+    $('loras').innerHTML = '';
+  }
+}
+F.pull(load);
+load();
+F.onVisible && F.onVisible(load);
+</script>
+</body></html>

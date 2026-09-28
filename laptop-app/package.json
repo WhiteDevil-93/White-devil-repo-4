@@ -1,0 +1,49 @@
+{
+  "name": "forge-hub-laptop",
+  "productName": "Forge Hub",
+  "version": "1.0.0",
+  "description": "Native laptop app for Forge Hub — Venice Agent, Shell, renders, and the relay.",
+  "main": "main.cjs",
+  "author": "WhiteDevil",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/config.test.cjs",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win nsis",
+    "dist:linux": "electron-builder --linux AppImage"
+  },
+  "devDependencies": {
+    "electron": "^37.7.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.whitedevil.forgehub",
+    "productName": "Forge Hub",
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "config.cjs",
+      "settings.html",
+      "icon.png",
+      "icon.svg"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Utility",
+      "icon": "icon.png"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

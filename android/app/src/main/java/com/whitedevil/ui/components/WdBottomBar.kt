@@ -37,8 +37,8 @@ data class WdTabItem(val id: String, val label: String, val iconRes: Int)
 private data class TabDef(val id: String, val label: String, val icon: ImageVector)
 
 private val tabDefs = listOf(
-    TabDef("agent", "Agent", Icons.AutoMirrored.Outlined.Chat),
-    TabDef("hub", "Hub", Icons.Outlined.GridView),
+    TabDef("agent", "Agent", Icons.Outlined.Bolt),
+    TabDef("hub", "Hub", Icons.Outlined.Layers),
     TabDef("you", "You", Icons.Outlined.PersonOutline),
 )
 

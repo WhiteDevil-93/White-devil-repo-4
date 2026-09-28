@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forge Hub settings</title>
+<style>
+:root{--bg:#141110;--fg:#f0e9e0;--mut:#a89e93;--dim:#7a7168;--strong:#f5efe6;--acc:#c9b896;
+  --line:rgba(253,242,214,.10);--glass:rgba(253,242,214,.04);--ok:#9bbfa0;--bad:#d99393}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);
+  font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+body{padding:22px 22px 28px}
+h1{font-size:20px;font-weight:650;letter-spacing:-.03em;margin:0 0 6px}
+.lead{color:var(--mut);font-size:13px;margin:0 0 18px}
+label{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:14px 0 6px}
+input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#1b1714;color:var(--fg);font:14px inherit}
+input:focus{outline:none;border-color:rgba(205,184,143,.45)}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.btns{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+button{appearance:none;border:1px solid var(--line);background:var(--glass);color:var(--fg);border-radius:999px;
+  padding:10px 16px;font:600 13px inherit;cursor:pointer}
+button.primary{background:var(--strong);color:#111;border-color:transparent}
+#msg{margin-top:14px;font-size:13px;color:var(--mut);min-height:1.4em}
+#msg.ok{color:var(--ok)}#msg.bad{color:var(--bad)}
+.hint{font-size:12px;color:var(--dim);margin-top:4px}
+</style>
+</head>
+<body>
+  <h1>Laptop app</h1>
+  <p class="lead">This window is Forge Hub on your machine. Point it at the relay, or at a local hub while you develop.</p>
+
+  <label for="hubUrl">Hub URL</label>
+  <input id="hubUrl" spellcheck="false" placeholder="https://84-12-112-249.sslip.io/app/desktop/">
+  <div class="hint">Relay phone site, or http://127.0.0.1:43173/app/desktop/ for a local hub.</div>
+
+  <div class="row">
+    <div>
+      <label for="relayUser">Relay user</label>
+      <input id="relayUser" autocomplete="username">
+    </div>
+    <div>
+      <label for="relayPass">Relay password</label>
+      <input id="relayPass" type="password" autocomplete="current-password">
+    </div>
+  </div>
+  <div class="hint">Caddy basic auth for the public site. Leave password blank for a local hub.</div>
+
+  <div class="row">
+    <div>
+      <label for="laptopUser">Laptop user</label>
+      <input id="laptopUser">
+    </div>
+    <div>
+      <label for="laptopPass">Laptop password</label>
+      <input id="laptopPass" type="password">
+    </div>
+  </div>
+  <div class="hint">Used only for /laptop/term/ and /laptop/files/ on the relay.</div>
+
+  <div class="btns">
+    <button class="primary" id="save">Save and open</button>
+    <button id="test">Test connection</button>
+  </div>
+  <div id="msg"></div>
+<script>
+const api = window.forgeDesktop;
+const $ = id => document.getElementById(id);
+function readForm() {
+  return {
+    hubUrl: $('hubUrl').value,
+    relayUser: $('relayUser').value,
+    relayPass: $('relayPass').value,
+    laptopUser: $('laptopUser').value,
+    laptopPass: $('laptopPass').value,
+  };
+}
+function show(text, kind) {
+  $('msg').textContent = text;
+  $('msg').className = kind || '';
+}
+api.getSettings().then(s => {
+  $('hubUrl').value = s.hubUrl || '';
+  $('relayUser').value = s.relayUser || '';
+  $('relayPass').value = s.relayPass || '';
+  $('laptopUser').value = s.laptopUser || '';
+  $('laptopPass').value = s.laptopPass || '';
+});
+$('test').onclick = async () => {
+  show('Checking…');
+  const r = await api.testHub(readForm());
+  show(r.message, r.ok ? 'ok' : 'bad');
+};
+$('save').onclick = async () => {
+  await api.saveSettings(readForm());
+  show('Saved. Opening Forge Hub…', 'ok');
+  await api.openHub();
+};
+</script>
+</body>
+</html>

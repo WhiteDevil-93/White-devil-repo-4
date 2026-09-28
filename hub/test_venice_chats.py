@@ -15,7 +15,7 @@ def test_normalize_drops_junk_and_keeps_order(tmp_path, monkeypatch):
             {"id": "old", "title": "older", "updated": 1, "messages": [{"role": "user", "content": "a"}]},
             {"id": "keep", "title": "newer", "updated": 9, "messages": [{"role": "user", "content": "b"}, {"role": "assistant", "content": "c"}]},
             {"id": "empty", "title": "nope", "updated": 8, "messages": []},
-            {"id": "bad", "messages": [{"role": "tool", "content": "x"}]},
+            {"id": "bad", "messages": [{"role": "nope", "content": "x"}]},
         ],
     }
     out = venice.normalize_store(raw)

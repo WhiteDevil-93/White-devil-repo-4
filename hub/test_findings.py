@@ -95,3 +95,105 @@ def test_m1_venice_model_default():
 def test_m2_gitignore_credentials():
     gitignore = (Path(__file__).parent.parent / ".gitignore").read_text()
     assert "credentials.json" in gitignore
+
+
+def test_desktop_app_caching_and_manifest():
+    client = TestClient(app)
+    # Manifest endpoint should return no-store
+    res_manifest = client.get("/api/manifest")
+    assert res_manifest.status_code == 200
+    assert "no-store" in res_manifest.headers.get("Cache-Control", "")
+    manifest_data = res_manifest.json()
+    assert manifest_data.get("web_rev") == 15
+
+    # Desktop HTML should return no-store
+    res_desktop = client.get("/app/desktop/index.html")
+    assert res_desktop.status_code == 200
+    assert "no-store" in res_desktop.headers.get("Cache-Control", "")
+    assert "Update Hub" in res_desktop.text
+    assert "/app/term/?update=1" in res_desktop.text
+    assert "ForgeDesktopTermPaste" in res_desktop.text
+    assert "html.app #pop" in res_desktop.text
+    assert "forge:term-paste" in res_desktop.text
+    assert "Operator" in res_desktop.text
+    assert "local session" in res_desktop.text
+    assert "venice-chrome" in res_desktop.text
+
+    res_home = client.get("/app/home/")
+    assert res_home.status_code == 200
+    assert "Welcome back" in res_home.text
+    assert "Here's what the render farm has been up to." in res_home.text
+    assert "Newest clip" in res_home.text
+    assert "Render queue" in res_home.text
+    assert "Storage used" in res_home.text
+    assert "Update available" in res_home.text
+    assert "/app/term/?update=1" in res_home.text
+    assert "Open Gallery" in res_home.text
+    assert "now-banner" in res_home.text
+
+    res_term = client.get("/app/term/")
+    assert res_term.status_code == 200
+    assert "loraIds" in res_term.text
+    assert "every LoRA file" in res_term.text
+    assert "ForgeTermReceive" in res_term.text
+    assert "forge:term-paste" in res_term.text
+
+    res_venice = client.get("/app/venice/")
+    assert res_venice.status_code == 200
+    assert "Venice Agent" in res_venice.text
+    assert "Venice Bench" not in res_venice.text
+    assert "run_laptop_command" in res_venice.text
+    assert "run_in_terminal" in res_venice.text
+    assert "forge:term-paste" in res_venice.text
+    assert "Ask Venice or give a task" in res_venice.text
+    assert "API key saved" in res_venice.text
+    assert "changeKey" in res_venice.text
+    assert "Show in Shell" in res_venice.text
+
+    # Static CSS and JS assets under /app/ should return no-cache (allowing 304 validation)
+    res_css = client.get("/app/ui/forge.css")
+    assert res_css.status_code == 200
+    assert "no-store" not in res_css.headers.get("Cache-Control", "")
+    assert "no-cache" in res_css.headers.get("Cache-Control", "")
+
+    res_js = client.get("/app/ui/forge.js")
+    assert res_js.status_code == 200
+    assert "no-store" not in res_js.headers.get("Cache-Control", "")
+    assert "no-cache" in res_js.headers.get("Cache-Control", "")
+
+
+def test_setup_saves_all_eleven_ltx_loras(monkeypatch, tmp_path):
+    import setup as setup_mod
+    monkeypatch.setattr(setup_mod, "STATE", tmp_path / "forge_setup.json")
+    client = TestClient(app)
+
+    ids = [s["id"] for s in client.get("/api/manifest").json()["screens"]]
+    assert "setup" in ids and "ltx" in ids
+
+    empty = client.get("/api/setup")
+    assert empty.status_code == 200
+    data = empty.json()
+    assert data["count"] == 11
+    assert data["saved"] is False
+    assert data["enabled"] == 0
+    names = [r["name"] for r in data["loras"]]
+    assert "Distilled 450" in names
+    assert "Cinemagraph" in names
+    assert len({r["id"] for r in data["loras"]}) == 11
+
+    saved = client.post("/api/setup", json={})
+    assert saved.status_code == 200
+    body = saved.json()
+    assert body["saved"] is True
+    assert body["enabled"] == 11
+    assert all(r["enabled"] for r in body["loras"])
+
+    ltx = client.get("/app/ltx/")
+    assert ltx.status_code == 200
+    assert "LoRAs from Setup" in ltx.text
+
+    sh = client.get("/api/setup/download.sh")
+    assert sh.status_code == 200
+    assert sh.text.count("huggingface.co/Lightricks/") == 11
+
+

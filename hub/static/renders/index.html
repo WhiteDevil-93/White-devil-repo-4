@@ -76,6 +76,8 @@ async function load(){
   } catch (e) { F.toast('Load failed: ' + e.message); }
 }
 F.pull(() => { load.sig = null; return load(); });
-load(); setInterval(() => { if (!document.hidden && !document.querySelector('.viewer')) load(); }, 60000);
+load();
+setInterval(() => { if (F.isVisible() && !document.querySelector('.viewer')) load(); }, 60000);
+F.onVisible && F.onVisible(load);
 </script>
 </body></html>

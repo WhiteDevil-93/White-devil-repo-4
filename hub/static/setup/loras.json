@@ -1,0 +1,90 @@
+[
+  {
+    "id": "distilled",
+    "name": "Distilled 450",
+    "kind": "speed",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5",
+    "file": "loras/ltx-2.5-22b-distilled-lora-450-bf16.safetensors"
+  },
+  {
+    "id": "pixel-upscaler",
+    "name": "IC Pixel Spatial Upscaler",
+    "kind": "ic",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5-22b-IC-LoRA-Pixel-Spatial-Upscaler",
+    "file": "ltx-2.5-22b-ic-lora-pixel-spatial-upscaler-x2-1.0.safetensors"
+  },
+  {
+    "id": "ingredients",
+    "name": "IC Ingredients",
+    "kind": "ic",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5-22b-IC-LoRA-Ingredients",
+    "file": "ltx-2.5-22b-ic-lora-ingredients-0.9.safetensors"
+  },
+  {
+    "id": "day-to-night",
+    "name": "IC Day to Night",
+    "kind": "ic",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5-22b-IC-LoRA-Day-To-Night",
+    "file": "ltx-2.5-22b-ic-lora-day-to-night-0.9.safetensors"
+  },
+  {
+    "id": "colorization",
+    "name": "IC Colorization",
+    "kind": "ic",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5-22b-IC-LoRA-Colorization",
+    "file": "ltx-2.5-22b-ic-lora-colorization-0.9.safetensors"
+  },
+  {
+    "id": "water",
+    "name": "IC Water Simulation",
+    "kind": "ic",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5-22b-IC-LoRA-Water-Simulation",
+    "file": "ltx-2.5-22b-ic-lora-water-simulation-0.9.safetensors"
+  },
+  {
+    "id": "clean-plate",
+    "name": "IC Clean Plate",
+    "kind": "ic",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5-22b-IC-LoRA-Clean-Plate",
+    "file": "ltx-2.5-22b-ic-lora-clean-plate-1.0.safetensors"
+  },
+  {
+    "id": "deblur",
+    "name": "IC Deblur",
+    "kind": "ic",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5-22b-IC-LoRA-Deblur",
+    "file": "ltx-2.5-22b-ic-lora-deblur-0.9.safetensors"
+  },
+  {
+    "id": "decompression",
+    "name": "IC Decompression",
+    "kind": "ic",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5-22b-IC-LoRA-Decompression",
+    "file": "ltx-2.5-22b-ic-lora-decompression-0.9.safetensors"
+  },
+  {
+    "id": "slow-motion",
+    "name": "Slow Motion Control",
+    "kind": "control",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5-22b-LoRA-Slow-Motion-Control",
+    "file": "ltx-2.5-22b-lora-slow-motion-control-1.0.safetensors"
+  },
+  {
+    "id": "cinemagraph",
+    "name": "Cinemagraph",
+    "kind": "control",
+    "target": "ltx-2.5",
+    "repo": "Lightricks/LTX-2.5-22b-LoRA-Cinemagraph",
+    "file": "ltx-2.5-22b-lora-cinemagraph-0.9.safetensors"
+  }
+]

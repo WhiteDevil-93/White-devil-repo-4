@@ -20,6 +20,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0b0
 .sheet textarea{min-height:88px}
 .offline{position:absolute;inset:0;display:none;place-items:center;padding:28px;text-align:center;z-index:3}
 .offline.on{display:grid}
+#loraIdsWrap:not([hidden]){display:block;margin:8px 0 10px}
 </style>
 </head>
 <body>
@@ -28,7 +29,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0b0
     <div class="grow"><div class="tiny mut">Laptop</div><h1>Terminal</h1></div>
     <button class="btn sm" id="paste">Paste</button>
     <button class="btn sm" id="updateHub">Update Hub</button>
-    <button class="btn sm" id="lora">Civitai LoRA</button>
+    <button class="btn sm" id="lora">Civitai LoRAs</button>
     <button class="btn sm ghost" id="top">Top</button>
     <button class="btn sm ghost" id="bot">Bottom</button>
   </div>
@@ -42,7 +43,11 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0b0
       </div>
     </div>
     <div class="card sheet" id="sheet">
-      <div class="small mut">Paste lands here, not in the shell — so a copied API key or prompt cannot dump into the terminal by itself.</div>
+      <div class="small mut" id="sheetHint">Paste lands here, not in the shell — so a copied API key or prompt cannot dump into the terminal by itself.</div>
+      <label id="loraIdsWrap" hidden>
+        <span class="tiny mut">Extra Civitai model IDs (Wan 2.2, LTX-2, distilled, …). Default already includes Penis LTX-2.5. Space or comma separated.</span>
+        <input class="input" id="loraIds" placeholder="e.g. 1234567 2345678" style="margin-top:6px">
+      </label>
       <textarea class="input" id="clip" placeholder="Paste here, then send"></textarea>
       <div class="row wrap" style="margin-top:10px">
         <button class="btn primary grow" id="send">Send to terminal</button>
@@ -76,40 +81,66 @@ $('bot').onclick = () => { const w = win(); w && w.ForgeTermScroll && w.ForgeTer
 
 $('paste').onclick = () => {
   $('sheet').classList.add('on');
+  $('loraIdsWrap').hidden = true;
+  $('sheetHint').textContent = 'Paste lands here, not in the shell — so a copied API key or prompt cannot dump into the terminal by itself.';
   $('clip').value = '';
   $('clip').focus();
 };
-$('cancel').onclick = () => $('sheet').classList.remove('on');
-$('send').onclick = () => {
-  let text = $('clip').value;
-  if (text && !text.endsWith('\n')) text += '\n';
-  $('sheet').classList.remove('on');
+$('cancel').onclick = () => { $('sheet').classList.remove('on'); $('loraIdsWrap').hidden = true; };
+function pasteText(text) {
+  let s = String(text || '');
+  if (s && !s.endsWith('\n')) s += '\n';
+  if (!s) return false;
+  patch();
   const w = win();
-  if (w && w.ForgeTermPaste) w.ForgeTermPaste(text);
+  if (w && w.ForgeTermPaste) { w.ForgeTermPaste(s); return true; }
+  return false;
+}
+window.ForgeTermReceive = pasteText;
+window.addEventListener('message', ev => {
+  const d = ev.data;
+  if (d && d.type === 'forge:term-paste' && d.text) pasteText(d.text);
+});
+$('send').onclick = () => {
+  const text = $('clip').value;
+  $('sheet').classList.remove('on');
+  $('loraIdsWrap').hidden = true;
+  pasteText(text);
 };
 
+function extraLoraFlags() {
+  const raw = ($('loraIds').value || '').trim();
+  if (!raw) return '';
+  return raw.split(/[\s,;]+/).filter(Boolean).map(id => '--id ' + id.replace(/[^0-9A-Za-z:/.~_-]/g, '')).join(' ');
+}
 async function civitaiCmd() {
   const r = await fetch('civitai_red_dl.py', {cache: 'no-store'});
   if (!r.ok) throw new Error('missing civitai_red_dl.py');
   const src = await r.text();
+  const extra = extraLoraFlags();
   return [
     'mkdir -p ~/civitai_dl',
     '(command -v pip3 >/dev/null || (sudo apt-get update && sudo apt-get install -y python3-pip))',
-    'python3 - <<\'PY\'',
+    `python3 - --id 2851705${extra ? ' ' + extra : ''} <<'PY'`,
     src.replace(/\s+$/, ''),
     'PY'
   ].join('\n') + '\n';
 }
 $('lora').onclick = async () => {
   $('sheet').classList.add('on');
+  $('loraIdsWrap').hidden = false;
+  $('sheetHint').textContent = 'Downloads every LoRA file on every version of each model — not just the one LTX 2.5 file. Add more Civitai IDs, then Send.';
   $('clip').value = 'loading Civitai LoRA command…';
   try {
     $('clip').value = await civitaiCmd();
   } catch (e) {
     $('clip').value = '# could not load civitai_red_dl.py — paste the command from chat instead\n';
   }
-  $('clip').focus();
+  $('loraIds').focus();
 };
+$('loraIds').addEventListener('input', async () => {
+  try { $('clip').value = await civitaiCmd(); } catch (e) {}
+});
 
 async function updateCmd() {
   const r = await fetch('phone_publish.sh', {cache: 'no-store'});
@@ -118,6 +149,8 @@ async function updateCmd() {
 }
 async function openUpdate() {
   $('sheet').classList.add('on');
+  $('loraIdsWrap').hidden = true;
+  $('sheetHint').textContent = 'This publishes Forge Hub (the laptop app) to wan-relay. Send, wait for “Done!”, then reload this tab.';
   $('clip').value = 'loading Update Hub command…';
   try { $('clip').value = await updateCmd(); }
   catch (e) { $('clip').value = '# could not load phone_publish.sh — paste it from chat this once\n'; }
@@ -125,6 +158,22 @@ async function openUpdate() {
 }
 $('updateHub').onclick = openUpdate;
 if (/[?&]update=1(?:&|$)/.test(location.search)) openUpdate();
+
+async function openSetupDl() {
+  $('sheet').classList.add('on');
+  $('loraIdsWrap').hidden = true;
+  $('sheetHint').textContent = 'Downloads all 11 LTX 2.5 LoRAs from Setup into ~/civitai_dl/ltx-2.5/. Send, then they stay on the laptop.';
+  $('clip').value = 'loading Setup LoRA download…';
+  try {
+    const r = await fetch('/api/setup/download.sh', {cache: 'no-store'});
+    if (!r.ok) throw new Error('missing download script');
+    $('clip').value = (await r.text()).replace(/\s+$/, '') + '\n';
+  } catch (e) {
+    $('clip').value = '# could not load /api/setup/download.sh\n';
+  }
+  $('clip').focus();
+}
+if (/[?&]setupdl=1(?:&|$)/.test(location.search)) openSetupDl();
 </script>
 </body>
 </html>

@@ -2,7 +2,17 @@
 
 Phone + desktop shell for the Wan relay. The Android app builds its tabs from `GET /api/manifest` (`hub/screens.json`), so new screens like Venice show up without waiting on an APK — unless the native shell itself changed (icons, terminal WebView).
 
-App **v8** is a forced update: `force_update` + `apk_version` 8 in the manifest blocks older installs until they tap Download. From the **phone**, Home → **Update Hub** (or Terminal → **Update Hub**) publishes `relay/phone_publish.sh` to the relay over `ssh wan-relay`. That is the laptop via ttyd — no desk keyboard. Optional APK: `bash android/build_and_publish.sh` in the same Terminal after the hub files are on the relay.
+App **v8** is a forced update: `force_update` + `apk_version` 8 in the manifest blocks older installs until they tap Download.
+
+**Update the laptop app (Forge Hub Desktop `/app/desktop/`):**
+
+1. Wake WSL if Terminal says offline.
+2. In Forge Hub, click **Update Hub** (top bar on desktop, or Home / Terminal).
+3. Tap **Send**. That pastes `phone_publish.sh` into the laptop ttyd shell and `ssh`es the Hub tarball to `wan-relay`.
+4. Wait for `Done! Forge Hub updated on the relay.`
+5. Reload the desktop tab (or pull-to-refresh on the phone). Manifest `web_rev` should be **10**.
+
+Optional APK: `bash android/build_and_publish.sh` in the same Terminal after the hub files are on the relay.
 
 ## Run locally
 
@@ -34,10 +44,14 @@ Chats auto-save after each turn (phone `localStorage` plus `~/.venice_chats.json
 
 `/app/term/` wraps ttyd (`/laptop/term/`). Long-press / clipboard-read paste is blocked; swipe scrolls the xterm buffer; an explicit Paste sheet is the only way text enters the shell.
 
-**Civitai LoRA (phone):** Terminal → **Civitai LoRA** → Send. Weights land in `~/civitai_dl/` on the laptop (~672 MB for Penis LTX-2.5). Open them from **Files** → `/home/<wsl-user>/civitai_dl`. Do not scp to the phone. Civitai requires an API token in `~/.civitai_token` (or `CIVITAI_TOKEN`); if the run 401s, paste this in the sheet first (token stays in the terminal, not in chat):
+**LTX 2.5 LoRAs (Setup):** the 11 official Lightricks files (distilled 450 + 8 IC LoRAs + slow-motion + cinemagraph) are the Setup pack. Open **Setup** → **Save all 11**. The LTX screen then loads the whole list. Download onto the laptop with Setup → Download (Shell pastes `~/civitai_dl/ltx-2.5/`). CoachBate Penis LTX-2.5 is extra content, not a substitute for this pack.
+
+**Civitai LoRAs (phone or laptop Terminal):** Terminal → **Civitai LoRAs** → optional extra model IDs → Send. Default is CoachBate Penis LTX-2.5 (`2851705`). The downloader now takes **every LoRA file on every version** of each id (Wan 2.2, LTX-2, LTX-2.5, …), not a single LTX 2.5 file. Weights land in `~/civitai_dl/<id>_<base>/`. Copy every `.safetensors` into Thunder ComfyUI `models/loras/` and stack them — one LoRA loader per file. Do not scp to the phone.
+
+Civitai requires an API token in `~/.civitai_token` (or `CIVITAI_TOKEN`); if the run 401s, paste this in the sheet first (token stays in the terminal, not in chat):
 
 ```bash
 printf '%s\n' 'YOUR_CIVITAI_API_TOKEN' > ~/.civitai_token && chmod 600 ~/.civitai_token
 ```
 
-Same downloader: `tools/civitai_red_dl.py` (defaults `--id 2851705`).
+Same downloader: `tools/civitai_red_dl.py`. Repeat `--id` for more models. `--primary-only` restores the old one-file behaviour.

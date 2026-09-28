@@ -4,7 +4,8 @@ Unified multi-component platform containing:
 1. **Autonomous Venice Agent (`venice-agent/`)**: Kotlin/JVM autonomous tool-calling CLI agent with native tools for file management, shell execution, Wan2.2 rendering pipeline control, and remote WSL laptop SSH execution.
 2. **Forge Hub Backend (`hub/`)**: FastAPI-based management hub serving dynamic screens, Wan2.2 Colab/ThunderCompute runners, HypnoForge bridge, and OpenAI-compatible Venice proxy.
 3. **WhiteDevil Android App (`android/`)**: Independent native application (`com.whitedevil`) with modern dark glass design, 4-tab native bottom navigation (Agent, Forge Hub, Terminal, Settings), native Venice Agent coroutines/chat interface, isolated WebView Forge Hub container, safe terminal shell wrapper, and EncryptedSharedPreferences.
-4. **Tools (`tools/`)**: Civitai LoRA downloader (`civitai_red_dl.py`) and Wan2.2 prompt pack ingest utilities.
+4. **Laptop app (`laptop-app/`)**: Electron desktop window for the same Forge Hub on the WSL/Windows PC.
+5. **Tools (`tools/`)**: Civitai LoRA downloader (`civitai_red_dl.py`) and Wan2.2 prompt pack ingest utilities.
 
 ---
 
@@ -26,6 +27,7 @@ White-devil-repo-4/
 │   ├── venice.py                        # Venice relay proxy & persistent chat threads
 │   ├── laptop.py                        # SSH bridge to laptop WSL (~/venice_run)
 │   └── static/                          # Mobile web UIs (venice, term, renders, etc.)
+├── laptop-app/                          # Native Electron laptop app (Forge Hub window)
 ├── android/                             # WhiteDevil Native Android Client (`com.whitedevil`)
 │   ├── app/src/main/
 │   │   ├── AndroidManifest.xml
@@ -79,8 +81,9 @@ FastAPI server providing endpoints for the Android app and web interface:
 - **Dynamic manifest**: `GET /api/manifest` (serves `hub/screens.json`)
 - **Status & health**: `GET /api/status`
 - **Colab GPU & Wan2.2 runner state**: `/api/colab/*`
-- **Venice chat proxy & thread persistence**: `/api/venice/*`
+- **Venice chat proxy, agent tools, and thread persistence**: `/api/venice/*` (`/tools`, `/tool`, `/chat`)
 - **Remote laptop execution**: `/api/laptop/*`
+- **Laptop Venice tab** (`/app/venice/`): same Agent loop as the Android app (You / Venice / Tool Call / Output), including `run_laptop_command` in `~/venice_run` and `run_in_terminal` which types into the live Shell (ttyd).
 
 ### Running Forge Hub
 
@@ -116,7 +119,31 @@ cd android
 
 ## 4. Tools (`tools/`)
 
-- **`civitai_red_dl.py`**: Downloads Civitai mirror models directly to the WSL laptop (`~/civitai_dl`).
+- **`civitai_red_dl.py`**: Downloads Civitai LoRA files to the WSL laptop (`~/civitai_dl/<id>_<base>/`). Pass multiple `--id` values to pull Wan 2.2 + LTX-2 + LTX-2.5, not a single LTX 2.5 file.
+- **`wan_ingest.py`**: Validates, merges, and queues prompt packs for the Wan2.2 video pipeline.
+
+---
+
+## 5. Laptop app (`laptop-app/`)
+
+Native Electron window for Forge Hub on the WSL/Windows laptop (Venice Agent, Shell, renders). Not a browser tab.
+
+`cd laptop-app` from `~` fails — that folder is not in your home directory. On WhiteDevil:
+
+```bash
+git clone https://github.com/WhiteDevil-93/White-devil-repo-4.git ~/White-devil-repo-4
+~/White-devil-repo-4/laptop-app/install-home.sh
+cd ~/laptop-app
+npm start
+```
+
+Later launches: `cd ~/laptop-app && npm start`, or `forge-hub` after install. Settings (`Ctrl+,`) store the hub URL and relay/laptop passwords in the OS user-data folder. See `laptop-app/README.md`. Windows installer: `npm run dist:win`.
+
+---
+
+## Security Note
+
+- **`civitai_red_dl.py`**: Downloads Civitai LoRA files to the WSL laptop (`~/civitai_dl/<id>_<base>/`). Pass multiple `--id` values to pull Wan 2.2 + LTX-2 + LTX-2.5, not a single LTX 2.5 file.
 - **`wan_ingest.py`**: Validates, merges, and queues prompt packs for the Wan2.2 video pipeline.
 
 ---
