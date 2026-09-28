@@ -222,7 +222,12 @@ class ToolBox(
         }
         val code = conn.responseCode
         val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-        return stream?.bufferedReader()?.readText() ?: "HTTP $code"
+        val body = stream?.bufferedReader()?.readText().orEmpty()
+        return if (code in 200..299) {
+            body.ifBlank { "HTTP $code" }
+        } else {
+            "HTTP $code${if (body.isNotBlank()) ": $body" else ""}"
+        }
     }
 
     private fun getRenderStatus(): String {
