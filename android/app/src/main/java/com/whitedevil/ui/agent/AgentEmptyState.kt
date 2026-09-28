@@ -22,17 +22,17 @@ fun AgentSetupEmptyState(onAddKey: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp),
+            .padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("Connect Venice", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(12.dp))
+        Text("Connect Venice", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(8.dp))
         Text(
-            "Add your API key to chat on-device, attach files, and run tools against your workspace and relay.",
+            "Add an API key to chat on-device and use tools on your relay.",
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(20.dp))
         Button(
             onClick = onAddKey,
             shape = RoundedCornerShape(12.dp),
@@ -48,13 +48,13 @@ fun AgentReadyEmptyState(modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp),
+            .padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("Start a conversation", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+        Text("Start a conversation", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Ask Venice anything, attach a photo or file, or share content from another app.",
+            "Message Venice below — attach a file from the clip icon.",
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
         )

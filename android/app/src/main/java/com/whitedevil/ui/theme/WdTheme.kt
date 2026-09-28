@@ -43,9 +43,9 @@ private val wdTypography = Typography(
     headlineLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
-        fontSize = 34.sp,
-        lineHeight = 40.sp,
-        letterSpacing = (-0.5).sp,
+        fontSize = 28.sp,
+        lineHeight = 34.sp,
+        letterSpacing = (-0.3).sp,
         color = WdPalette.text,
     ),
     titleLarge = TextStyle(

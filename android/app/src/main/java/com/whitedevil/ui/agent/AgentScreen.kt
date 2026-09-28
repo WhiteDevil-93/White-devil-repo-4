@@ -1,6 +1,6 @@
 package com.whitedevil.ui.agent
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +47,7 @@ import com.whitedevil.UiPolish
 import com.whitedevil.ui.app.AttachmentUi
 import com.whitedevil.ui.chat.AgentChatScreen
 import com.whitedevil.ui.components.WdScreenBackground
+import com.whitedevil.ui.components.WdScreenTitle
 import com.whitedevil.ui.theme.WdPalette
 
 @Composable
@@ -62,15 +63,12 @@ fun AgentScreen(host: MainActivity) {
                     .statusBarsPadding()
                     .padding(horizontal = 20.dp, vertical = 8.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Venice", style = MaterialTheme.typography.headlineLarge)
-                        Text(
-                            host.agentStatusSubtitlePublic(),
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 4.dp),
-                        )
-                    }
+                Row(verticalAlignment = Alignment.Top) {
+                    WdScreenTitle(
+                        title = "Venice",
+                        subtitle = host.agentStatusSubtitlePublic(),
+                        modifier = Modifier.weight(1f),
+                    )
                     Box {
                         IconButton(onClick = { overflowOpen = true }) {
                             Icon(Icons.Outlined.MoreHoriz, null, tint = WdPalette.textSecondary)
@@ -97,7 +95,7 @@ fun AgentScreen(host: MainActivity) {
                     color = WdPalette.accent,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
-                        .padding(top = 12.dp)
+                        .padding(top = 8.dp)
                         .clickable { host.showModelPicker() }
                         .semantics { contentDescription = "Choose model" },
                 )
@@ -112,8 +110,9 @@ fun AgentScreen(host: MainActivity) {
             Box(
                 Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center,
+                    .fillMaxWidth()
+                    .padding(top = 48.dp),
+                contentAlignment = Alignment.TopCenter,
             ) {
                 when {
                     !hasKey -> AgentSetupEmptyState(onAddKey = { host.showVeniceKeySheet() })
@@ -135,8 +134,7 @@ fun AgentScreen(host: MainActivity) {
                 host,
                 Modifier
                     .fillMaxWidth()
-                    .background(WdPalette.bg)
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .imePadding(),
             )
         }
@@ -157,8 +155,8 @@ private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .background(WdPalette.surface, RoundedCornerShape(12.dp))
-                .padding(start = 4.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+                .border(1.dp, WdPalette.stroke, RoundedCornerShape(22.dp))
+                .padding(start = 2.dp, end = 6.dp, top = 2.dp, bottom = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(

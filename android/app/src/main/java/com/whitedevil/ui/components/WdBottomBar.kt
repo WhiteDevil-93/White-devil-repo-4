@@ -1,7 +1,9 @@
 package com.whitedevil.ui.components
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.GridView
@@ -37,13 +39,17 @@ fun WdBottomBar(
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    NavigationBar(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding(),
-        containerColor = WdPalette.bg,
-        tonalElevation = 0.dp,
     ) {
+        HorizontalDivider(color = WdPalette.stroke, thickness = 0.5.dp)
+        NavigationBar(
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = WdPalette.bg,
+            tonalElevation = 0.dp,
+        ) {
         tabDefs.forEach { tab ->
             val selected = tab.id == selectedId
             NavigationBarItem(
@@ -71,6 +77,7 @@ fun WdBottomBar(
                     unselectedTextColor = WdPalette.textSecondary,
                 ),
             )
+        }
         }
     }
 }
