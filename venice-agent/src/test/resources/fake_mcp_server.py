@@ -4,6 +4,7 @@ def send(obj):
     sys.stdout.write(json.dumps(obj) + "\n")
     sys.stdout.flush()
 
+hang_initialize = "--hang-initialize" in sys.argv
 state = {"list_version": 1}
 
 for line in sys.stdin:
@@ -13,16 +14,26 @@ for line in sys.stdin:
     msg = json.loads(line)
     method = msg.get("method")
     if method == "initialize":
+        if hang_initialize:
+            continue  # never respond, simulating a server that's still starting up
         send({"jsonrpc": "2.0", "id": msg["id"], "result": {"protocolVersion": "2024-11-05", "capabilities": {}, "serverInfo": {"name": "fake", "version": "0.1"}}})
     elif method == "notifications/initialized":
         pass
     elif method == "tools/list":
         params = msg.get("params") or {}
         cursor = params.get("cursor")
+        if state.get("cursor_loop"):
+            # Applies regardless of pagination position: the same cursor, forever.
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"tools": [], "nextCursor": "loop"}})
+            continue
         if cursor is None:
             if state.get("fail_next_list"):
                 state["fail_next_list"] = False
                 send({"jsonrpc": "2.0", "id": msg["id"], "error": {"code": -32000, "message": "simulated transient tools/list failure"}})
+                continue
+            if state.get("malformed_next_list"):
+                state["malformed_next_list"] = False
+                send({"jsonrpc": "2.0", "id": msg["id"], "result": "not an object"})
                 continue
             # First page: one tool, plus a cursor pointing at a second page. After a
             # notifications/tools/list_changed has been sent, a new tool also appears here,
@@ -77,6 +88,14 @@ for line in sys.stdin:
         elif name == "trigger_list_changed_mid_fetch":
             state["list_version"] = 2
             state["emit_change_on_page2"] = True
+            send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "trigger_malformed_list":
+            state["malformed_next_list"] = True
+            send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "trigger_cursor_loop":
+            state["cursor_loop"] = True
             send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
         elif name == "exit_process":

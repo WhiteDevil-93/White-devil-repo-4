@@ -1,10 +1,12 @@
 package com.whitedevil.veniceagent.mcp
 
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.File
+import kotlin.system.measureTimeMillis
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -125,27 +127,99 @@ class McpStdioClientTest {
     }
 
     @Test
-    fun `marks the provider changed when its subprocess exits`() = runBlocking {
+    fun `marks the provider changed and fails the in-flight call fast when its subprocess exits`() = runBlocking {
         assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
 
         val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        // A timeout much longer than this test should ever take: if execute() below only
+        // returns because it timed out rather than because the closed stream failed it
+        // immediately, this proves the fix isn't in effect.
         val client = McpStdioClient(
             "fake",
             McpServerConfig(command = "python3", args = listOf(script.absolutePath)),
-            requestTimeoutMillis = 500,
+            requestTimeoutMillis = 10_000,
         )
         try {
             client.definitions()
             assertFalse(client.hasChanged())
 
-            // The fake server exits without replying, simulating a crash; execute() must not
-            // hang (it times out and reports an error) or throw out of this test.
-            client.execute("fake__exit_process", "{}")
+            // The fake server exits without replying, simulating a crash.
+            val elapsedMillis = measureTimeMillis {
+                val result = client.execute("fake__exit_process", "{}")
+                assertTrue(result.startsWith("Error:"), "expected an error result, got: $result")
+            }
+            assertTrue(elapsedMillis < 5_000, "expected the dead process to fail the call immediately, took ${elapsedMillis}ms")
 
             // readLoop notices the closed stream asynchronously; poll briefly for it.
             withTimeout(5_000) {
                 while (!client.hasChanged()) delay(20)
             }
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `rejects a malformed tools list page instead of silently truncating`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
+        try {
+            client.definitions() // establish an initial cache
+
+            client.execute("fake__trigger_malformed_list", "{}")
+            assertFailsWith<McpException> { client.definitions() }
+
+            // The failed attempt must not have poisoned the cache or the pending-change flag:
+            // a normal refresh (once the server stops misbehaving) still works afterward.
+            val after = client.definitions().map { it.function.name }
+            assertTrue("fake__echo" in after)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `stops pagination when an mcp cursor repeats instead of looping forever`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
+        try {
+            client.definitions()
+
+            client.execute("fake__trigger_cursor_loop", "{}")
+            withTimeout(5_000) {
+                assertFailsWith<McpException> { client.definitions() }
+            }
+        } finally {
+            client.close()
+        }
+        Unit // assertFailsWith above returns the caught exception; without this the function's
+        // inferred return type stops being Unit and JUnit silently won't register it as a @Test.
+    }
+
+    @Test
+    fun `retires the connection after initialize times out instead of retrying it`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(script.absolutePath, "--hang-initialize")),
+            requestTimeoutMillis = 300,
+        )
+        try {
+            assertFailsWith<TimeoutCancellationException> { client.definitions() }
+
+            // The connection must be retired, not retried: the next attempt fails immediately
+            // with a clear error instead of sending a second initialize to the same session.
+            val secondAttempt = assertFailsWith<McpException> { client.definitions() }
+            assertTrue(
+                secondAttempt.message.orEmpty().contains("will not be retried"),
+                "unexpected message: ${secondAttempt.message}",
+            )
         } finally {
             client.close()
         }

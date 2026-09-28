@@ -27,6 +27,9 @@ import java.util.concurrent.atomic.AtomicLong
 
 private const val SUPPORTED_PROTOCOL_VERSION = "2024-11-05"
 
+/** Safety net against a buggy server whose nextCursor never terminates and never repeats either. */
+private const val MAX_TOOLS_LIST_PAGES = 1000
+
 /**
  * A [ToolProvider] backed by a local MCP server, launched as a subprocess and spoken to over
  * newline-delimited JSON-RPC 2.0 on stdin/stdout (the MCP "stdio" transport). Tool names are
@@ -60,6 +63,12 @@ class McpStdioClient(
 
     private var cachedDefinitions: List<ToolDefinition>? = null
     private var initialized = false
+
+    // Once initialize has failed once (including timing out), the server may still be about to
+    // process or reply to that request: sending a second initialize on the same session risks
+    // violating the MCP lifecycle. Retire the connection instead of ever retrying initialize on it.
+    @Volatile
+    private var permanentlyFailed = false
 
     // A monotonic counter of tool-list invalidations: bumped on notifications/tools/list_changed
     // and when the subprocess exits. [fetchedVersion] records which version definitions() last
@@ -95,6 +104,10 @@ class McpStdioClient(
         // invalidation so the next definitions() call re-evaluates this provider instead of
         // ToolRegistry trusting a stale cache backed by a dead process forever.
         changeVersion.incrementAndGet()
+        // No response can ever arrive for any call still waiting: fail them now instead of
+        // leaving each one to block until its own 30s timeout expires.
+        val deadProcess = McpException("MCP server '$serverName' process exited before responding")
+        pending.keys.toList().forEach { id -> pending.remove(id)?.completeExceptionally(deadProcess) }
     }
 
     /** Handles server-to-client requests/notifications (distinct from responses to our own calls). */
@@ -124,10 +137,10 @@ class McpStdioClient(
         val id = nextId.getAndIncrement()
         val deferred = CompletableDeferred<JsonRpcResponse>()
         pending[id] = deferred
-        val request = JsonRpcRequest(id = id, method = method, params = params)
-        writeLine(json.encodeToString(JsonRpcRequest.serializer(), request))
-        return try {
-            withTimeout(requestTimeoutMillis) { deferred.await() }
+        try {
+            val request = JsonRpcRequest(id = id, method = method, params = params)
+            writeLine(json.encodeToString(JsonRpcRequest.serializer(), request))
+            return withTimeout(requestTimeoutMillis) { deferred.await() }
         } catch (e: TimeoutCancellationException) {
             notify(
                 "notifications/cancelled",
@@ -138,6 +151,8 @@ class McpStdioClient(
             )
             throw e
         } finally {
+            // Covers writeLine() too: if it throws (e.g. the process already died and stdin
+            // is closed), pending[id] was still stored and must not be left there forever.
             pending.remove(id)
         }
     }
@@ -156,26 +171,37 @@ class McpStdioClient(
 
     private suspend fun ensureInitialized() {
         if (initialized) return
-        val params = buildJsonObject {
-            put("protocolVersion", SUPPORTED_PROTOCOL_VERSION)
-            putJsonObject("capabilities") {}
-            putJsonObject("clientInfo") {
-                put("name", "venice-agent")
-                put("version", "0.1.0")
+        if (permanentlyFailed) {
+            throw McpException("MCP server '$serverName' failed to initialize earlier and will not be retried")
+        }
+        try {
+            val params = buildJsonObject {
+                put("protocolVersion", SUPPORTED_PROTOCOL_VERSION)
+                putJsonObject("capabilities") {}
+                putJsonObject("clientInfo") {
+                    put("name", "venice-agent")
+                    put("version", "0.1.0")
+                }
             }
-        }
-        val response = call("initialize", params)
-        response.error?.let { throw McpException("MCP server '$serverName' failed to initialize: ${it.message}") }
+            val response = call("initialize", params)
+            response.error?.let { throw McpException("MCP server '$serverName' failed to initialize: ${it.message}") }
 
-        val negotiatedVersion = ((response.result as? JsonObject)?.get("protocolVersion") as? JsonPrimitive)?.contentOrNull
-        if (negotiatedVersion != SUPPORTED_PROTOCOL_VERSION) {
-            throw McpException(
-                "MCP server '$serverName' negotiated unsupported protocol version " +
-                    "'$negotiatedVersion' (this client only speaks '$SUPPORTED_PROTOCOL_VERSION')",
-            )
+            val negotiatedVersion = ((response.result as? JsonObject)?.get("protocolVersion") as? JsonPrimitive)?.contentOrNull
+            if (negotiatedVersion != SUPPORTED_PROTOCOL_VERSION) {
+                throw McpException(
+                    "MCP server '$serverName' negotiated unsupported protocol version " +
+                        "'$negotiatedVersion' (this client only speaks '$SUPPORTED_PROTOCOL_VERSION')",
+                )
+            }
+            notify("notifications/initialized", null)
+            initialized = true
+        } catch (e: Exception) {
+            // Whatever failed (a rejected/malformed response, or the initialize call itself
+            // timing out), don't leave this session in limbo to be retried: close it now.
+            permanentlyFailed = true
+            close()
+            throw e
         }
-        notify("notifications/initialized", null)
-        initialized = true
     }
 
     override fun hasChanged(): Boolean = changeVersion.get() != fetchedVersion
@@ -186,14 +212,27 @@ class McpStdioClient(
         ensureInitialized()
 
         val rawTools = mutableListOf<JsonObject>()
+        val seenCursors = mutableSetOf<String>()
         var cursor: String? = null
+        var pageCount = 0
         do {
+            if (++pageCount > MAX_TOOLS_LIST_PAGES) {
+                throw McpException("MCP server '$serverName' tools/list did not terminate after $MAX_TOOLS_LIST_PAGES pages")
+            }
             val params = cursor?.let { buildJsonObject { put("cursor", it) } }
             val response = call("tools/list", params)
             response.error?.let { throw McpException("MCP server '$serverName' tools/list failed: ${it.message}") }
-            val result = response.result as? JsonObject ?: break
+            // A malformed/missing result is a failed page, not the natural end of pagination:
+            // throwing here (instead of silently stopping) lets the caller's "only commit on
+            // full success" logic keep the previous cache and invalidation for a retry.
+            val result = response.result as? JsonObject
+                ?: throw McpException("MCP server '$serverName' tools/list returned a malformed result")
             (result["tools"] as? JsonArray)?.forEach { (it as? JsonObject)?.let(rawTools::add) }
-            cursor = (result["nextCursor"] as? JsonPrimitive)?.contentOrNull
+            val nextCursor = (result["nextCursor"] as? JsonPrimitive)?.contentOrNull
+            if (nextCursor != null && !seenCursors.add(nextCursor)) {
+                throw McpException("MCP server '$serverName' tools/list returned a repeated cursor '$nextCursor'")
+            }
+            cursor = nextCursor
         } while (cursor != null)
 
         // Build into fresh local state and only commit once every page has been fetched
