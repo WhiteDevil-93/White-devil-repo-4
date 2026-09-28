@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.whitedevil.MainActivity
+import com.whitedevil.ui.theme.WdDimens
 import com.whitedevil.ui.theme.WdPalette
 
 @Composable
@@ -60,8 +61,8 @@ fun AgentChatScreen(
     LazyColumn(
         state = listState,
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(top = 8.dp, bottom = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(visible, key = { it.id }) { msg ->
             ChatBubbleRow(msg, onToggleTool, onCopy)
@@ -122,13 +123,16 @@ private fun UserBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         Text(
             msg.message,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = WdPalette.text,
             modifier = Modifier
-                .widthIn(max = 320.dp)
-                .background(WdPalette.userBubble, RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp))
+                .widthIn(max = 300.dp)
+                .background(
+                    WdPalette.userBubble,
+                    RoundedCornerShape(WdDimens.bubbleRadius, WdDimens.bubbleRadius, 3.dp, WdDimens.bubbleRadius),
+                )
                 .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 10.dp, vertical = 7.dp),
         )
     }
 }
@@ -138,13 +142,13 @@ private fun AssistantBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
     val fg = if (msg.role == MainActivity.ROLE_ERROR) WdPalette.errorText else WdPalette.text
     Text(
         msg.message,
-        style = MaterialTheme.typography.bodyLarge,
+        style = MaterialTheme.typography.bodyMedium,
         color = fg,
         modifier = Modifier
             .fillMaxWidth()
             .widthIn(max = 340.dp)
             .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
-            .padding(end = 8.dp),
+            .padding(end = 4.dp),
     )
 }
 
@@ -153,9 +157,9 @@ private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy:
     Column(
         Modifier
             .fillMaxWidth()
-            .background(WdPalette.surface, RoundedCornerShape(12.dp))
+            .background(WdPalette.surface, RoundedCornerShape(WdDimens.controlRadius))
             .clickable { onToggleTool(msg.id) }
-            .padding(12.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(

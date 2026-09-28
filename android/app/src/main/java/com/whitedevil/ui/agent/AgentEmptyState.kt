@@ -1,24 +1,19 @@
 package com.whitedevil.ui.agent
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Key
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.whitedevil.ui.theme.WdDimens
 import com.whitedevil.ui.theme.WdPalette
 
 @Composable
@@ -26,31 +21,23 @@ fun AgentSetupEmptyState(onAddKey: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(horizontal = WdDimens.screenHorizontal + 8.dp),
+        horizontalAlignment = Alignment.Start,
     ) {
-        Icon(
-            Icons.Outlined.Key,
-            contentDescription = null,
-            modifier = Modifier.size(40.dp),
-            tint = WdPalette.accent,
-        )
-        Spacer(Modifier.height(16.dp))
-        Text("Connect Venice", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
+        Text("Connect Venice", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(6.dp))
         Text(
-            "Your API key stays on this device. You can attach files and run tools on your relay once connected.",
+            "Add an API key on this device to chat and run tools on your relay.",
             style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(24.dp))
-        Button(
-            onClick = onAddKey,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = WdPalette.accent, contentColor = WdPalette.onAccent),
-        ) {
-            Text("Add API key", style = MaterialTheme.typography.titleMedium)
-        }
+        Spacer(Modifier.height(14.dp))
+        Text(
+            "Add API key",
+            style = MaterialTheme.typography.labelMedium,
+            color = WdPalette.accent,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onAddKey),
+        )
     }
 }
 
@@ -59,15 +46,11 @@ fun AgentReadyEmptyState(modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(horizontal = WdDimens.screenHorizontal + 8.dp),
+        horizontalAlignment = Alignment.Start,
     ) {
-        Text("Message Venice", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Ask anything or attach a file with the clip.",
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center,
-        )
+        Text("No messages yet", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(4.dp))
+        Text("Send a message below.", style = MaterialTheme.typography.bodySmall)
     }
 }

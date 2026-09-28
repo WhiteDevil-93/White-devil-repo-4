@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.whitedevil.ui.theme.WdDimens
 import com.whitedevil.ui.theme.WdPalette
 
 data class WdTabItem(val id: String, val label: String, val iconRes: Int)
@@ -57,8 +58,7 @@ fun WdBottomBar(
         Row(
             Modifier
                 .fillMaxWidth()
-                .height(52.dp)
-                .padding(horizontal = 4.dp),
+                .height(WdDimens.navBarHeight),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             tabDefs.forEach { tab ->
@@ -66,30 +66,28 @@ fun WdBottomBar(
                 Column(
                     Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
                         .clickable { onSelect(tab.id) }
                         .semantics { role = Role.Tab }
-                        .padding(vertical = 6.dp),
+                        .padding(vertical = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Icon(
                         tab.icon,
                         contentDescription = tab.label,
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(WdDimens.navIcon),
                         tint = if (selected) WdPalette.text else WdPalette.textMetadata,
                     )
                     Text(
                         tab.label,
                         style = MaterialTheme.typography.labelSmall,
                         color = if (selected) WdPalette.text else WdPalette.textMetadata,
-                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                        modifier = Modifier.padding(top = 2.dp),
+                        fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
                     )
                     Box(
                         Modifier
-                            .padding(top = 4.dp)
-                            .width(18.dp)
-                            .height(2.dp)
+                            .padding(top = 2.dp)
+                            .width(14.dp)
+                            .height(1.5.dp)
                             .clip(RoundedCornerShape(1.dp))
                             .background(if (selected) WdPalette.accent else WdPalette.bg),
                     )

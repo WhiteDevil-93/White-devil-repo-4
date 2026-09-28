@@ -1,11 +1,9 @@
 package com.whitedevil.ui.agent
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,8 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -36,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.contentDescription
@@ -50,6 +45,7 @@ import com.whitedevil.ui.chat.AgentChatScreen
 import com.whitedevil.ui.components.WdHairline
 import com.whitedevil.ui.components.WdScreenBackground
 import com.whitedevil.ui.components.WdTopBar
+import com.whitedevil.ui.theme.WdDimens
 import com.whitedevil.ui.theme.WdPalette
 
 private const val DEFAULT_AGENT_SUBTITLE = "On-device agent"
@@ -68,8 +64,11 @@ fun AgentScreen(host: MainActivity) {
                 subtitle = if (showStatus) status else null,
                 trailing = {
                     Box {
-                        IconButton(onClick = { overflowOpen = true }) {
-                            Icon(Icons.Outlined.MoreHoriz, null, tint = WdPalette.textSecondary)
+                        IconButton(
+                            onClick = { overflowOpen = true },
+                            modifier = Modifier.size(WdDimens.iconTap),
+                        ) {
+                            Icon(Icons.Outlined.MoreHoriz, null, tint = WdPalette.textSecondary, modifier = Modifier.size(20.dp))
                         }
                         DropdownMenu(expanded = overflowOpen, onDismissRequest = { overflowOpen = false }) {
                             DropdownMenuItem(text = { Text("Paste from clipboard") }, onClick = {
@@ -91,29 +90,28 @@ fun AgentScreen(host: MainActivity) {
             if (hasKey) {
                 Row(
                     Modifier
-                        .padding(horizontal = 16.dp, vertical = 0.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .padding(horizontal = WdDimens.screenHorizontal)
                         .clickable { host.showModelPicker() }
                         .semantics { contentDescription = "Choose model" }
-                        .padding(horizontal = 4.dp, vertical = 6.dp),
+                        .padding(bottom = 2.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         UiPolish.modelLabel(host.agentSelectedModelPublic()),
                         style = MaterialTheme.typography.labelMedium,
-                        color = WdPalette.textSecondary,
+                        color = WdPalette.textMetadata,
                     )
                     Icon(
                         Icons.Outlined.ExpandMore,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(16.dp),
                         tint = WdPalette.textMetadata,
                     )
                 }
             }
             if (host.agentShowProgressPublic()) {
                 LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth().height(2.dp),
+                    modifier = Modifier.fillMaxWidth().height(1.dp),
                     color = WdPalette.accent,
                     trackColor = Color.Transparent,
                 )
@@ -122,12 +120,18 @@ fun AgentScreen(host: MainActivity) {
             Box(
                 Modifier
                     .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = if (hasKey && hasConversation) Alignment.TopStart else Alignment.Center,
+                    .fillMaxWidth()
+                    .padding(top = 20.dp),
+                contentAlignment = Alignment.TopStart,
             ) {
                 when {
-                    !hasKey -> AgentSetupEmptyState(onAddKey = { host.showVeniceKeySheet() })
-                    !hasConversation -> AgentReadyEmptyState()
+                    !hasKey -> AgentSetupEmptyState(
+                        onAddKey = { host.showVeniceKeySheet() },
+                        modifier = Modifier.padding(horizontal = WdDimens.screenHorizontal),
+                    )
+                    !hasConversation -> AgentReadyEmptyState(
+                        modifier = Modifier.padding(horizontal = WdDimens.screenHorizontal),
+                    )
                     else -> AgentChatScreen(
                         messages = host.chatMessagesPublic(),
                         agentThinking = host.agentThinkingPublic(),
@@ -137,7 +141,7 @@ fun AgentScreen(host: MainActivity) {
                         includeInfoMessages = false,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = WdDimens.screenHorizontal),
                     )
                 }
             }
@@ -146,8 +150,6 @@ fun AgentScreen(host: MainActivity) {
                     host,
                     Modifier
                         .fillMaxWidth()
-                        .background(WdPalette.bg)
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
                         .imePadding(),
                 )
             }
@@ -161,8 +163,9 @@ private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
     val input = host.agentInputTextPublic()
     val canSend = host.agentComposerEnabledPublic() && input.isNotBlank()
     Column(modifier) {
+        WdHairline()
         if (attachments.isNotEmpty()) {
-            LazyRow(modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)) {
+            LazyRow(modifier = Modifier.padding(start = WdDimens.screenHorizontal, top = 6.dp, bottom = 4.dp)) {
                 itemsIndexed(attachments) { index, item ->
                     AttachmentChip(item) { host.removePendingAttachment(index) }
                 }
@@ -171,31 +174,32 @@ private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(WdPalette.surface)
-                .padding(start = 4.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+                .padding(
+                    horizontal = WdDimens.screenHorizontal - 4.dp,
+                    vertical = WdDimens.composerVertical,
+                ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
                 onClick = { host.showAttachSheet() },
-                modifier = Modifier.size(40.dp).semantics { contentDescription = "Attach file" },
+                modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Attach file" },
             ) {
-                Icon(Icons.Outlined.AttachFile, null, tint = WdPalette.textSecondary)
+                Icon(Icons.Outlined.AttachFile, null, modifier = Modifier.size(20.dp), tint = WdPalette.textSecondary)
             }
             BasicTextField(
                 value = input,
                 onValueChange = { host.setAgentInputText(it) },
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 10.dp),
+                    .padding(vertical = 6.dp),
                 enabled = host.agentComposerEnabledPublic(),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = WdPalette.text),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = WdPalette.text),
                 cursorBrush = SolidColor(WdPalette.accent),
-                maxLines = 6,
+                maxLines = 5,
                 decorationBox = { inner ->
                     Box {
                         if (input.isEmpty()) {
-                            Text("Message", style = MaterialTheme.typography.bodyLarge, color = WdPalette.textMetadata)
+                            Text("Message", style = MaterialTheme.typography.bodyMedium, color = WdPalette.textMetadata)
                         }
                         inner()
                     }
@@ -204,24 +208,14 @@ private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
             IconButton(
                 onClick = { host.sendAgentMessage() },
                 enabled = canSend,
-                modifier = Modifier
-                    .size(36.dp)
-                    .semantics { contentDescription = "Send" },
+                modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Send" },
             ) {
-                Box(
-                    Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(if (canSend) WdPalette.accent else WdPalette.surfaceHover),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Send,
-                        null,
-                        modifier = Modifier.size(18.dp),
-                        tint = if (canSend) WdPalette.onAccent else WdPalette.textMetadata,
-                    )
-                }
+                Icon(
+                    Icons.AutoMirrored.Filled.Send,
+                    null,
+                    modifier = Modifier.size(20.dp),
+                    tint = if (canSend) WdPalette.accent else WdPalette.textMetadata,
+                )
             }
         }
     }
@@ -230,11 +224,11 @@ private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
 @Composable
 private fun AttachmentChip(item: AttachmentUi, onRemove: () -> Unit) {
     Text(
-        item.name.take(24) + if (item.name.length > 24) "…" else "",
+        item.name.take(20) + if (item.name.length > 20) "…" else "",
         style = MaterialTheme.typography.labelMedium,
         color = WdPalette.textSecondary,
         modifier = Modifier
-            .padding(end = 8.dp)
+            .padding(end = 6.dp)
             .clickable { onRemove() },
     )
 }

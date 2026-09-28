@@ -1,120 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>WhiteDevil — product shell v3</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #000; --surface: #1c1c1e; --accent: #d9bf8c;
-      --text: #fff; --body: #aeaeb2; --meta: #8e8e93; --stroke: #3a3a3c;
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #050505; color: var(--text); padding: 18px 8px; }
-    h1 { text-align: center; font-size: 0.9rem; color: var(--body); font-weight: 500; margin-bottom: 16px; }
-    .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .phone {
-      width: 268px; height: 560px; background: var(--bg); border-radius: 20px;
-      border: 1px solid #222; overflow: hidden; display: flex; flex-direction: column;
-    }
-    .top { padding: 14px 16px 10px; display: flex; justify-content: space-between; align-items: flex-start; }
-    .top h2 { font-size: 20px; font-weight: 600; }
-    .top .meta { font-size: 13px; color: var(--meta); margin-top: 2px; }
-    .more { color: var(--body); font-size: 20px; line-height: 1; padding: 4px; }
-    .line { height: 1px; background: var(--stroke); opacity: 0.6; }
-    .model { padding: 0 16px 8px; font-size: 13px; color: var(--body); }
-    .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 28px; text-align: center; }
-    .key { width: 40px; height: 40px; border: 2px solid var(--accent); border-radius: 10px; margin-bottom: 14px; position: relative; }
-    .key::after { content: ""; position: absolute; width: 14px; height: 8px; border: 2px solid var(--accent); border-radius: 2px; right: 6px; top: 14px; }
-    .center h3 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
-    .center p { font-size: 15px; color: var(--body); line-height: 1.45; }
-    .btn { margin-top: 22px; background: var(--accent); color: #000; border: none; padding: 12px 22px; border-radius: 12px; font-size: 15px; font-weight: 600; }
-    .composer { padding: 8px 12px; }
-    .field { display: flex; align-items: center; background: var(--surface); border-radius: 24px; padding: 6px 8px; }
-    .field span { flex: 1; padding: 8px; color: var(--meta); font-size: 17px; }
-    .send { width: 32px; height: 32px; border-radius: 50%; background: #2c2c2e; display: flex; align-items: center; justify-content: center; color: var(--meta); font-size: 14px; }
-    .nav { margin-top: auto; border-top: 1px solid var(--stroke); display: flex; padding: 8px 0 12px; }
-    .tab { flex: 1; text-align: center; font-size: 11px; color: var(--meta); }
-    .tab.on { color: var(--text); font-weight: 600; }
-    .dot { width: 18px; height: 2px; background: var(--accent); border-radius: 1px; margin: 4px auto 0; }
-    .tab:not(.on) .dot { background: transparent; }
-    .status { padding: 0 16px 10px; font-size: 13px; color: var(--meta); line-height: 1.4; }
-    .link { color: var(--accent); display: block; margin-top: 6px; font-size: 13px; }
-    .item { padding: 16px; display: flex; align-items: center; border-bottom: 1px solid rgba(58,58,60,0.5); }
-    .item div { flex: 1; }
-    .item strong { font-size: 17px; font-weight: 400; display: block; }
-    .item small { font-size: 13px; color: var(--meta); margin-top: 2px; display: block; }
-    .item.muted strong { color: var(--body); }
-    .chev { color: var(--meta); font-size: 18px; }
-    .tabs { display: flex; gap: 8px; padding: 8px 12px; }
-    .tabs span { font-size: 13px; color: var(--meta); padding: 4px 10px; }
-    .tabs span.on { color: var(--text); border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
-    .skel { flex: 1; padding: 20px; }
-    .bar { height: 10px; background: var(--surface); border-radius: 5px; margin: 8px 0; }
-    .lbl { text-align: center; font-size: 10px; color: #555; margin-top: 8px; letter-spacing: 0.08em; }
-  </style>
-</head>
-<body>
-  <h1>Product shell v3 — accent on CTA &amp; tab marker only · no composer until keyed</h1>
-  <div class="row">
-    <div>
-      <div class="phone">
-        <div class="top"><div><h2>Venice</h2></div><span class="more">⋯</span></div>
-        <div class="line"></div>
-        <div class="center">
-          <div class="key"></div>
-          <h3>Connect Venice</h3>
-          <p>Your API key stays on this device. Attach files and run tools on your relay once connected.</p>
-          <button class="btn" type="button">Add API key</button>
-        </div>
-        <div class="nav">
-          <div class="tab on"><div style="font-size:18px">◯</div>Agent<div class="dot"></div></div>
-          <div class="tab"><div style="font-size:18px">▦</div>Hub<div class="dot"></div></div>
-          <div class="tab"><div style="font-size:18px">◌</div>You<div class="dot"></div></div>
-        </div>
-      </div>
-      <div class="lbl">SETUP</div>
-    </div>
-    <div>
-      <div class="phone">
-        <div class="top"><div><h2>Venice</h2><div class="model" style="padding:0;margin-top:6px">GLM 5.2 ⌄</div></div><span class="more">⋯</span></div>
-        <div class="line"></div>
-        <div class="center" style="justify-content:flex-start;padding-top:80px">
-          <h3>Message Venice</h3>
-          <p style="margin-top:8px">Ask anything or attach a file with the clip.</p>
-        </div>
-        <div class="composer">
-          <div class="field">
-            <span style="flex:0;color:var(--body)">📎</span>
-            <span>Message</span>
-            <div class="send">➤</div>
-          </div>
-        </div>
-        <div class="nav">
-          <div class="tab on"><div>◯</div>Agent<div class="dot"></div></div>
-          <div class="tab"><div>▦</div>Hub<div class="dot"></div></div>
-          <div class="tab"><div>◌</div>You<div class="dot"></div></div>
-        </div>
-      </div>
-      <div class="lbl">CHAT READY</div>
-    </div>
-    <div>
-      <div class="phone">
-        <div class="top"><div><h2>You</h2></div></div>
-        <div class="status">Venice: not configured · Relay: reachable<div class="link">Add Venice API key</div></div>
-        <div class="line"></div>
-        <div class="item"><div><strong>Settings</strong><small>Venice, relay, laptop</small></div><span class="chev">›</span></div>
-        <div class="item"><div><strong>Terminal</strong><small>SSH / WSL on relay</small></div><span class="chev">›</span></div>
-        <div class="line" style="margin-top:8px"></div>
-        <div class="item muted"><div><strong>Test connections</strong><small>Venice &amp; relay health</small></div><span class="chev">›</span></div>
-        <div style="flex:1"></div>
-        <div class="nav">
-          <div class="tab"><div>◯</div>Agent<div class="dot"></div></div>
-          <div class="tab"><div>▦</div>Hub<div class="dot"></div></div>
-          <div class="tab on"><div>◌</div>You<div class="dot"></div></div>
-        </div>
-      </div>
-      <div class="lbl">YOU</div>
-    </div>
-  </div>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"/><title>Compact scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#000;--a:#d9bf8c;--t:#fff;--b:#aeaeb2;--m:#8e8e93;--s:#3a3a3c}
+body{font:14px/1.35 -apple-system,sans-serif;background:#000;color:var(--t);padding:16px}
+h1{font-size:13px;font-weight:500;color:var(--b);text-align:center;margin-bottom:14px}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.p{width:240px;height:500px;background:var(--bg);border:1px solid #222;border-radius:16px;display:flex;flex-direction:column;font-size:14px}
+.bar{padding:10px 12px 8px;display:flex;justify-content:space-between;align-items:center}
+.bar b{font-size:17px;font-weight:600}
+.line{height:1px;background:var(--s);opacity:.5}
+.body{flex:1;padding:16px 14px}
+.body h2{font-size:15px;font-weight:500;margin-bottom:4px}
+.body p{font-size:13px;color:var(--b)}
+.link{font-size:12px;color:var(--a);margin-top:10px}
+.comp{border-top:1px solid var(--s);padding:6px 8px;display:flex;align-items:center;gap:4px;color:var(--m);font-size:14px}
+.comp input{flex:1;border:none;background:transparent;color:var(--t);font-size:14px;outline:none}
+.nav{border-top:1px solid var(--s);display:flex;height:44px;align-items:center;font-size:10px;color:var(--m)}
+.nav div{flex:1;text-align:center}
+.nav .on{color:var(--t)}
+.row2{padding:10px 12px;border-bottom:1px solid rgba(58,58,60,.4);display:flex;justify-content:space-between}
+.row2 small{display:block;font-size:11px;color:var(--m);margin-top:1px}
+</style></head><body>
+<h1>Compact scale — 17px titles, hairlines, no gray pills</h1>
+<div class="row">
+<div class="p"><div class="bar"><b>Venice</b><span style="color:var(--b)">⋯</span></div><div class="line"></div>
+<div class="body"><h2>Connect Venice</h2><p>Add an API key on this device to chat and run tools on your relay.</p><div class="link">Add API key</div></div>
+<div class="nav"><div class="on">Agent</div><div>Hub</div><div>You</div></div></div>
+<div class="p"><div class="bar"><b>Venice</b><span style="color:var(--b)">⋯</span></div><div style="padding:0 12px 4px;font-size:11px;color:var(--m)">GLM 5.2 ⌄</div><div class="line"></div>
+<div class="body"><h2>No messages yet</h2><p>Send a message below.</p></div>
+<div class="comp"><span>📎</span><span style="flex:1;color:var(--m)">Message</span><span style="color:var(--m)">➤</span></div>
+<div class="nav"><div class="on">Agent</div><div>Hub</div><div>You</div></div></div>
+<div class="p"><div class="bar"><b>You</b></div><div style="padding:0 12px 6px;font-size:11px;color:var(--m)">Venice: not configured · Relay: reachable</div><div class="line"></div>
+<div class="row2"><div>Settings<small>Venice, relay, laptop</small></div><span style="color:var(--m)">›</span></div>
+<div class="row2"><div>Terminal<small>SSH / WSL on relay</small></div><span style="color:var(--m)">›</span></div>
+<div class="line" style="margin-top:6px"></div>
+<div class="row2" style="color:var(--b)"><div>Test connections<small>Venice & relay health</small></div><span>›</span></div>
+<div class="nav"><div>Agent</div><div>Hub</div><div class="on">You</div></div></div>
+</div></body></html>

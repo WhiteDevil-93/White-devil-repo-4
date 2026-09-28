@@ -36,6 +36,7 @@ import com.whitedevil.MainActivity
 import com.whitedevil.ui.components.WdHairline
 import com.whitedevil.ui.components.WdScreenBackground
 import com.whitedevil.ui.components.WdTopBar
+import com.whitedevil.ui.theme.WdDimens
 import com.whitedevil.ui.theme.WdPalette
 
 @Composable
@@ -48,14 +49,22 @@ fun ForgeHubScreen(host: MainActivity) {
                 title = "Forge Hub",
                 subtitle = host.hubConnectionLabelPublic(),
                 trailing = {
-                    IconButton(onClick = { host.reloadCurrentHubScreen() }) {
-                        Icon(Icons.Outlined.Refresh, contentDescription = "Reload", tint = WdPalette.textSecondary)
+                    IconButton(
+                        onClick = { host.reloadCurrentHubScreen() },
+                        modifier = Modifier.size(WdDimens.iconTap),
+                    ) {
+                        Icon(
+                            Icons.Outlined.Refresh,
+                            contentDescription = "Reload",
+                            modifier = Modifier.size(20.dp),
+                            tint = WdPalette.textSecondary,
+                        )
                     }
                 },
             )
             if (host.hubBannerVisiblePublic()) {
                 Row(
-                    Modifier.padding(horizontal = 16.dp, vertical = 0.dp),
+                    Modifier.padding(horizontal = WdDimens.screenHorizontal),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -79,13 +88,13 @@ fun ForgeHubScreen(host: MainActivity) {
                     trackColor = Color.Transparent,
                 )
             }
-            LazyRow(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            LazyRow(Modifier.padding(horizontal = WdDimens.screenHorizontal, vertical = 6.dp)) {
                 items(host.hubScreensUiPublic(), key = { it.id }) { screen ->
                     val active = screen.id == host.hubCurrentScreenIdPublic()
                     Column(
                         Modifier
                             .clickable { host.showHubScreen(screen.id) }
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(

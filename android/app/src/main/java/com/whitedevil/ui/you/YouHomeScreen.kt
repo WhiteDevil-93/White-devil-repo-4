@@ -18,6 +18,7 @@ import com.whitedevil.ui.components.WdHairline
 import com.whitedevil.ui.components.WdListChevron
 import com.whitedevil.ui.components.WdScreenBackground
 import com.whitedevil.ui.components.WdTopBar
+import com.whitedevil.ui.theme.WdDimens
 import com.whitedevil.ui.theme.WdPalette
 
 @Composable
@@ -36,7 +37,7 @@ fun YouHomeScreen(
                 compactStatus(connectionSummary),
                 style = MaterialTheme.typography.labelMedium,
                 color = WdPalette.textMetadata,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = WdDimens.screenHorizontal, vertical = 2.dp),
             )
             if (!veniceReady) {
                 Text(
@@ -44,16 +45,16 @@ fun YouHomeScreen(
                     style = MaterialTheme.typography.labelMedium,
                     color = WdPalette.accent,
                     modifier = Modifier
-                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                        .padding(horizontal = WdDimens.screenHorizontal, vertical = 4.dp)
                         .clickable { onAddVeniceKey() },
                 )
             }
-            WdHairline(Modifier.padding(top = 8.dp))
+            WdHairline(Modifier.padding(top = 6.dp))
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 NavRow("Settings", "Venice, relay, laptop", onSettings)
-                WdHairline(Modifier.padding(start = 16.dp))
+                WdHairline(Modifier.padding(start = WdDimens.screenHorizontal))
                 NavRow("Terminal", "SSH / WSL on relay", onTerminal)
-                WdHairline(Modifier.padding(top = 12.dp))
+                WdHairline(Modifier.padding(top = 8.dp))
                 NavRow("Test connections", "Venice & relay health", onTestConnections, muted = true)
             }
         }
@@ -63,7 +64,7 @@ fun YouHomeScreen(
 private fun compactStatus(summary: String): String =
     summary.lines()
         .filter { it.isNotBlank() }
-        .joinToString("  ·  ") { it.trim() }
+        .joinToString(" · ") { it.trim() }
 
 @Composable
 private fun NavRow(
@@ -76,20 +77,19 @@ private fun NavRow(
         Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(horizontal = WdDimens.screenHorizontal, vertical = WdDimens.rowVertical),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             Text(
                 title,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = if (muted) WdPalette.textSecondary else WdPalette.text,
             )
             Text(
                 subtitle,
                 style = MaterialTheme.typography.labelMedium,
                 color = WdPalette.textMetadata,
-                modifier = Modifier.padding(top = 2.dp),
             )
         }
         WdListChevron()
