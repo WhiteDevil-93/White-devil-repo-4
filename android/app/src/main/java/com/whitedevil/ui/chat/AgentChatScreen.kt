@@ -11,11 +11,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,13 +36,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.whitedevil.MainActivity
-import com.whitedevil.ui.theme.WdColors
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.whitedevil.ui.theme.WdPalette
 
 @Composable
 fun AgentChatScreen(
@@ -54,24 +52,20 @@ fun AgentChatScreen(
     val listState = rememberLazyListState()
     LaunchedEffect(scrollTrigger, agentThinking) {
         val last = messages.size + if (agentThinking) 1 else 0
-        if (last > 0) {
-            listState.animateScrollToItem((last - 1).coerceAtLeast(0))
-        }
+        if (last > 0) listState.animateScrollToItem((last - 1).coerceAtLeast(0))
     }
 
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(top = 4.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         items(messages, key = { it.id }) { msg ->
             ChatBubbleRow(msg, onToggleTool, onCopy)
         }
         if (agentThinking) {
-            item(key = "typing") {
-                TypingRow()
-            }
+            item(key = "typing") { TypingRow() }
         }
     }
 }
@@ -79,27 +73,18 @@ fun AgentChatScreen(
 @Composable
 private fun TypingRow() {
     Row(
-        modifier = Modifier
+        Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+            .padding(start = 4.dp, end = 48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(Color(0x442A2A30), CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("V", color = WdColors.strong, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-        }
-        Spacer(Modifier.size(8.dp))
         Column(
-            modifier = Modifier
-                .background(Color(0x331A1A1E), RoundedCornerShape(18.dp))
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+            Modifier
+                .background(WdPalette.surface, RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
-            Text("Venice is thinking", color = WdColors.strong, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(6.dp))
+            Text("Venice", style = MaterialTheme.typography.labelMedium, color = WdPalette.textSecondary)
+            Spacer(Modifier.height(4.dp))
             ThinkingDots()
         }
     }
@@ -108,44 +93,25 @@ private fun TypingRow() {
 @Composable
 private fun ThinkingDots() {
     val transition = rememberInfiniteTransition(label = "dots")
-    val a1 = transition.animateFloat(
-        0.3f,
-        1f,
-        infiniteRepeatable(tween(600, easing = LinearEasing), RepeatMode.Reverse),
-        label = "d1",
-    )
-    val a2 = transition.animateFloat(
-        0.3f,
-        1f,
-        infiniteRepeatable(tween(600, delayMillis = 150, easing = LinearEasing), RepeatMode.Reverse),
-        label = "d2",
-    )
-    val a3 = transition.animateFloat(
-        0.3f,
-        1f,
-        infiniteRepeatable(tween(600, delayMillis = 300, easing = LinearEasing), RepeatMode.Reverse),
-        label = "d3",
-    )
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    val a1 = transition.animateFloat(0.25f, 1f, infiniteRepeatable(tween(500, easing = LinearEasing), RepeatMode.Reverse), label = "d1")
+    val a2 = transition.animateFloat(0.25f, 1f, infiniteRepeatable(tween(500, delayMillis = 120, easing = LinearEasing), RepeatMode.Reverse), label = "d2")
+    val a3 = transition.animateFloat(0.25f, 1f, infiniteRepeatable(tween(500, delayMillis = 240, easing = LinearEasing), RepeatMode.Reverse), label = "d3")
+    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
         listOf(a1, a2, a3).forEach { anim ->
             Box(
                 Modifier
-                    .size(8.dp)
+                    .size(6.dp)
                     .alpha(anim.value)
-                    .background(WdColors.accent, CircleShape),
+                    .background(WdPalette.accent, CircleShape),
             )
         }
     }
 }
 
 @Composable
-private fun ChatBubbleRow(
-    msg: ChatUiMessage,
-    onToggleTool: (Long) -> Unit,
-    onCopy: (String) -> Unit,
-) {
+private fun ChatBubbleRow(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy: (String) -> Unit) {
     when {
-        msg.isInfo() -> InfoBubble(msg)
+        msg.isInfo() -> InfoLine(msg)
         msg.isUser() -> UserBubble(msg, onCopy)
         msg.isTool() -> ToolBubble(msg, onToggleTool, onCopy)
         else -> AssistantBubble(msg, onCopy)
@@ -153,69 +119,61 @@ private fun ChatBubbleRow(
 }
 
 @Composable
-private fun InfoBubble(msg: ChatUiMessage) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top,
+private fun InfoLine(msg: ChatUiMessage) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp, horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Avatar("✦", Color(0x443D3528), WdColors.accent)
-        Spacer(Modifier.size(8.dp))
-        Column(
-            modifier = Modifier
-                .widthIn(max = 340.dp)
-                .background(Color(0x2A1E1810), RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp))
-                .padding(14.dp),
-        ) {
-            Text(msg.sender, color = WdColors.accent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-            Spacer(Modifier.height(6.dp))
-            Text(msg.message, color = Color(0xFFD8D2C8), fontSize = 13.sp, lineHeight = 18.sp)
-        }
+        Text(
+            msg.sender.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = WdPalette.accentDim,
+            letterSpacing = MaterialTheme.typography.labelSmall.letterSpacing,
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            msg.message,
+            style = MaterialTheme.typography.bodySmall,
+            color = WdPalette.textSecondary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(max = 300.dp),
+        )
     }
 }
 
 @Composable
 private fun UserBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.Bottom,
-    ) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         Column(
-            modifier = Modifier
-                .widthIn(max = 320.dp)
-                .background(Color(0x3D4A3828), RoundedCornerShape(18.dp, 18.dp, 6.dp, 18.dp))
-                .padding(14.dp)
-                .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) },
+            Modifier
+                .widthIn(max = 300.dp)
+                .background(WdPalette.accent.copy(alpha = 0.12f), RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp))
+                .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
+                .padding(horizontal = 16.dp, vertical = 10.dp),
         ) {
-            BubbleHeader(msg.sender, WdColors.accent, showTime = true)
-            Text(msg.message, color = WdColors.fg, fontSize = 14.sp, lineHeight = 20.sp)
+            Text(msg.message, style = MaterialTheme.typography.bodyMedium, color = WdPalette.text)
         }
-        Spacer(Modifier.size(8.dp))
-        Avatar("Y", Color(0x554A3828), WdColors.accent)
     }
 }
 
 @Composable
 private fun AssistantBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
-    val fg = when (msg.role) {
-        MainActivity.ROLE_ERROR -> Color(0xFFFF6B6B)
-        else -> WdColors.fg
-    }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        Avatar("V", Color(0x442A2A30), WdColors.strong)
-        Spacer(Modifier.size(8.dp))
+    val fg = if (msg.role == MainActivity.ROLE_ERROR) WdPalette.danger else WdPalette.text
+    Row(Modifier.fillMaxWidth().padding(end = 48.dp)) {
         Column(
-            modifier = Modifier
-                .widthIn(max = 320.dp)
-                .background(Color(0x331A1A1E), RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp))
-                .padding(14.dp)
-                .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) },
+            Modifier
+                .widthIn(max = 300.dp)
+                .background(WdPalette.surface, RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp))
+                .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
+                .padding(horizontal = 16.dp, vertical = 10.dp),
         ) {
-            BubbleHeader(msg.sender, fg, showTime = true)
-            Text(msg.message, color = fg, fontSize = 14.sp, lineHeight = 20.sp)
+            if (msg.role != MainActivity.ROLE_VENICE) {
+                Text(msg.sender, style = MaterialTheme.typography.labelMedium, color = WdPalette.textSecondary)
+                Spacer(Modifier.height(4.dp))
+            }
+            Text(msg.message, style = MaterialTheme.typography.bodyMedium, color = fg)
         }
     }
 }
@@ -223,57 +181,35 @@ private fun AssistantBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
 @Composable
 private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy: (String) -> Unit) {
     Column(
-        modifier = Modifier
+        Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .background(Color(0x331F2E3D), RoundedCornerShape(14.dp))
+            .padding(horizontal = 4.dp)
+            .background(Color(0xFF1A2332), RoundedCornerShape(16.dp))
             .clickable { onToggleTool(msg.id) }
             .padding(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(msg.sender, color = Color(0xFF82B6E8), fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.weight(1f))
             Text(
-                if (msg.toolExpanded) "Hide details" else "Show details",
-                color = WdColors.muted,
-                fontSize = 11.sp,
+                msg.sender,
+                style = MaterialTheme.typography.labelMedium,
+                color = WdPalette.link,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                if (msg.toolExpanded) "Less" else "More",
+                style = MaterialTheme.typography.labelSmall,
+                color = WdPalette.textTertiary,
             )
         }
         if (msg.toolExpanded) {
             Spacer(Modifier.height(8.dp))
             Text(
                 msg.message,
-                color = WdColors.muted,
-                fontSize = 11.5.sp,
-                fontFamily = FontFamily.Monospace,
+                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                color = WdPalette.textSecondary,
                 modifier = Modifier.clickable { onCopy(msg.message) },
             )
         }
-    }
-}
-
-@Composable
-private fun BubbleHeader(sender: String, color: Color, showTime: Boolean) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(sender, color = color, fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.weight(1f))
-        if (showTime) {
-            Text(
-                SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()),
-                color = WdColors.muted,
-                fontSize = 12.sp,
-            )
-        }
-    }
-    Spacer(Modifier.height(6.dp))
-}
-
-@Composable
-private fun Avatar(letter: String, bg: Color, fg: Color) {
-    Box(
-        modifier = Modifier
-            .size(36.dp)
-            .background(bg, CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(letter, color = fg, fontWeight = FontWeight.Bold, fontSize = 13.sp)
     }
 }

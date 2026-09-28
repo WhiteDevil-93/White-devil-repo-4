@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,13 +26,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.whitedevil.*
 import com.whitedevil.MainActivity
 import com.whitedevil.R
 import com.whitedevil.ui.components.WdScreenBackground
-import com.whitedevil.ui.theme.WdColors
+import com.whitedevil.ui.theme.WdPalette
 
 @Composable
 fun ForgeHubScreen(host: MainActivity) {
@@ -44,36 +44,35 @@ fun ForgeHubScreen(host: MainActivity) {
             if (host.hubBannerVisiblePublic()) {
                 Text(
                     host.hubBannerTextPublic(),
-                    color = Color(0xFF111111),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = WdPalette.onAccent,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(WdColors.strong)
+                        .background(WdPalette.accent)
                         .clickable { host.onHubBannerClickPublic() }
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 20.dp, vertical = 10.dp),
                 )
             }
             Row(
-                Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Forge Hub", color = WdColors.strong, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text("Relay tools & dashboards", color = WdColors.muted, fontSize = 12.sp)
+                    Text("Hub", style = MaterialTheme.typography.titleLarge)
+                    Text("Relay dashboards", style = MaterialTheme.typography.bodySmall)
                 }
                 Text(
                     host.hubConnectionLabelPublic(),
-                    color = if (host.hubConnectionLabelPublic() == "Online") WdColors.accent else WdColors.muted,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (host.hubConnectionLabelPublic() == "Online") WdPalette.success else WdPalette.textTertiary,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0x331A1A1E))
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(WdPalette.surface)
                         .padding(horizontal = 10.dp, vertical = 5.dp),
                 )
                 IconButton(onClick = { host.reloadCurrentHubScreen() }) {
-                    Icon(painterResource(R.drawable.ic_refresh), contentDescription = "Reload current screen", tint = WdColors.accent)
+                    Icon(painterResource(R.drawable.ic_refresh), contentDescription = "Reload", tint = WdPalette.textSecondary)
                 }
             }
             val progress = host.hubLoadProgressPublic()
@@ -81,36 +80,38 @@ fun ForgeHubScreen(host: MainActivity) {
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth(),
-                    color = WdColors.accent,
-                    trackColor = Color(0x331A1A1E),
+                    color = WdPalette.accent,
+                    trackColor = Color.Transparent,
                 )
             }
             Row(
                 Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
             ) {
                 host.hubScreensUiPublic().forEach { screen ->
                     val active = screen.id == host.hubCurrentScreenIdPublic()
                     Text(
                         screen.title,
-                        color = if (active) WdColors.strong else WdColors.muted,
-                        fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (active) WdPalette.text else WdPalette.textTertiary,
+                        fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
                         modifier = Modifier
-                            .padding(end = 8.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (active) Color(0x26FFFFFF) else Color(0x331A1A1E))
+                            .padding(end = 6.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (active) WdPalette.surfaceHover else Color.Transparent)
                             .clickable { host.showHubScreen(screen.id) }
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
                     )
                 }
             }
             AndroidView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(1f)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                 factory = { ctx -> host.obtainHubHostFrame(ctx) },
                 update = { frame ->
                     frame.layoutParams = FrameLayout.LayoutParams(

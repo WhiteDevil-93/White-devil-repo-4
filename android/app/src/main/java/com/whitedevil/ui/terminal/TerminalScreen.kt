@@ -16,6 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,15 +32,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import com.whitedevil.*
 import com.whitedevil.MainActivity
 import com.whitedevil.R
-import com.whitedevil.ui.components.WdGlassCard
 import com.whitedevil.ui.components.WdScreenBackground
-import com.whitedevil.ui.theme.WdColors
+import com.whitedevil.ui.components.WdSurfaceCard
+import com.whitedevil.ui.theme.WdPalette
 
 @Composable
 fun TerminalScreen(host: MainActivity, showBack: Boolean) {
@@ -51,35 +51,36 @@ fun TerminalScreen(host: MainActivity, showBack: Boolean) {
                 .statusBarsPadding(),
         ) {
             Row(
-                Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (showBack) {
                     Text(
                         "← You",
-                        color = WdColors.accent,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = WdPalette.accent,
                         modifier = Modifier
                             .padding(end = 12.dp)
                             .clickable { host.showYouSub(MainActivity.YouSub.HOME) },
                     )
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("Terminal", color = WdColors.strong, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text("Relay SSH / WSL", color = WdColors.muted, fontSize = 12.sp)
+                    Text("Terminal", style = MaterialTheme.typography.titleLarge)
+                    Text("Relay shell", style = MaterialTheme.typography.bodySmall)
                 }
                 Text(
                     "Paste",
-                    color = Color(0xFF111111),
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = WdPalette.onAccent,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(WdColors.accent)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(WdPalette.accent)
                         .clickable { host.openTerminalPasteSheetPublic() }
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
                 )
                 IconButton(onClick = { menuOpen = true }) {
-                    Icon(painterResource(R.drawable.ic_more), contentDescription = "Terminal options", tint = WdColors.muted)
+                    Icon(painterResource(R.drawable.ic_more), contentDescription = "Options", tint = WdPalette.textSecondary)
                 }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                     DropdownMenuItem(text = { Text("Scroll to top") }, onClick = {
@@ -101,14 +102,16 @@ fun TerminalScreen(host: MainActivity, showBack: Boolean) {
                 LinearProgressIndicator(
                     progress = { termProgress },
                     modifier = Modifier.fillMaxWidth(),
-                    color = WdColors.accent,
-                    trackColor = Color(0x331A1A1E),
+                    color = WdPalette.accent,
+                    trackColor = Color.Transparent,
                 )
             }
             AndroidView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(1f)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                 factory = { ctx -> host.ensureTerminalWebViewMounted(ctx) },
                 update = { frame ->
                     frame.layoutParams = FrameLayout.LayoutParams(
@@ -121,13 +124,12 @@ fun TerminalScreen(host: MainActivity, showBack: Boolean) {
     }
     if (host.terminalPasteOpenPublic()) {
         Dialog(onDismissRequest = { host.setTerminalPasteOpen(false) }) {
-            WdGlassCard {
-                Column(Modifier.padding(16.dp)) {
-                    Text("Terminal Paste Safety", color = WdColors.strong, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            WdSurfaceCard {
+                Column(Modifier.padding(20.dp)) {
+                    Text("Paste into shell", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "Review before sending to the shell.",
-                        color = WdColors.muted,
-                        fontSize = 12.sp,
+                        "Review before sending.",
+                        style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(vertical = 8.dp),
                     )
                     OutlinedTextField(
@@ -138,10 +140,10 @@ fun TerminalScreen(host: MainActivity, showBack: Boolean) {
                     )
                     Row(Modifier.padding(top = 12.dp)) {
                         TextButton(onClick = { host.sendPasteToTerminalPublic() }, modifier = Modifier.weight(1f)) {
-                            Text("Send to Shell", color = WdColors.accent)
+                            Text("Send", color = WdPalette.accent)
                         }
                         TextButton(onClick = { host.setTerminalPasteOpen(false) }, modifier = Modifier.weight(1f)) {
-                            Text("Cancel", color = WdColors.muted)
+                            Text("Cancel", color = WdPalette.textSecondary)
                         }
                     }
                 }

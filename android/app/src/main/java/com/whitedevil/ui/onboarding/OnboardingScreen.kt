@@ -29,7 +29,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.whitedevil.ui.components.WdScreenBackground
 import com.whitedevil.ui.theme.WdColors
+import com.whitedevil.ui.theme.WdPalette
 import kotlinx.coroutines.launch
 
 private data class OnboardingPage(val title: String, val body: String, val kicker: String)
@@ -58,16 +60,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF141210), Color(0xFF0B0B0C), Color(0xFF080809)),
-                ),
-            )
-            .padding(24.dp),
-    ) {
+    WdScreenBackground(Modifier.fillMaxSize().padding(24.dp)) {
         Column(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
                 OnboardingPageContent(pages[page])
@@ -80,7 +73,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     onClick = onFinished,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = WdColors.accent, contentColor = Color(0xFF111111)),
+                    colors = ButtonDefaults.buttonColors(containerColor = WdPalette.accent, contentColor = WdPalette.onAccent),
                 ) {
                     Text("Get started", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
@@ -91,7 +84,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = WdColors.accent, contentColor = Color(0xFF111111)),
+                    colors = ButtonDefaults.buttonColors(containerColor = WdPalette.accent, contentColor = WdPalette.onAccent),
                 ) {
                     Text("Next", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
