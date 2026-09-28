@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="bg">#FF0B0B0C</color>
-    <color name="bar">#FF121214</color>
+    <color name="bar">#D9121216</color>
     <color name="accent">#FFCDB88F</color>
     <color name="icon_bg">#FF1A1A1C</color>
 
-    <style name="Theme.ForgeHub" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.WhiteDevil" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/bg</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>

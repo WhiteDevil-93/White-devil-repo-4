@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ForgeHub"
+rootProject.name = "WhiteDevil"
 include(":app")

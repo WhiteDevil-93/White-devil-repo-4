@@ -3,7 +3,7 @@
 Unified multi-component platform containing:
 1. **Autonomous Venice Agent (`venice-agent/`)**: Kotlin/JVM autonomous tool-calling CLI agent with native tools for file management, shell execution, Wan2.2 rendering pipeline control, and remote WSL laptop SSH execution.
 2. **Forge Hub Backend (`hub/`)**: FastAPI-based management hub serving dynamic screens, Wan2.2 Colab/ThunderCompute runners, HypnoForge bridge, and OpenAI-compatible Venice proxy.
-3. **Forge Hub Android App (`android/`)**: Native Android client with bottom navigation, dynamic manifest tabs (`/api/manifest`), WebView shell, terminal patch with preset commands, and credential management.
+3. **WhiteDevil Android App (`android/`)**: Independent native application (`com.whitedevil`) with modern dark glass design, 4-tab native bottom navigation (Agent, Forge Hub, Terminal, Settings), native Venice Agent coroutines/chat interface, isolated WebView Forge Hub container, safe terminal shell wrapper, and EncryptedSharedPreferences.
 4. **Tools (`tools/`)**: Civitai LoRA downloader (`civitai_red_dl.py`) and Wan2.2 prompt pack ingest utilities.
 
 ---
@@ -26,12 +26,19 @@ White-devil-repo-4/
 │   ├── venice.py                        # Venice relay proxy & persistent chat threads
 │   ├── laptop.py                        # SSH bridge to laptop WSL (~/venice_run)
 │   └── static/                          # Mobile web UIs (venice, term, renders, etc.)
-├── android/                             # Forge Hub Native Android Client
+├── android/                             # WhiteDevil Native Android Client (`com.whitedevil`)
 │   ├── app/src/main/
 │   │   ├── AndroidManifest.xml
-│   │   ├── java/com/anon3/forgehub/MainActivity.kt  # Bottom Nav + Dynamic Manifest
-│   │   └── res/                         # Vector icons, themes, and layouts
-│   └── build_and_publish.sh             # Build script for Windows Android SDK
+│   │   ├── java/com/whitedevil/
+│   │   │   ├── MainActivity.kt          # 4-Tab Bottom Nav, Dark Glass styling, Hub & Term isolation
+│   │   │   ├── SettingsManager.kt       # EncryptedSharedPreferences (Venice API key, relay credentials)
+│   │   │   └── agent/                   # Native Venice Agent integration
+│   │   │       ├── Agent.kt             # Coroutine agent loop with live UI event emission
+│   │   │       ├── VeniceClient.kt      # Native Ktor Venice chat completion client
+│   │   │       ├── Models.kt            # OpenAI/Venice Chat schemas
+│   │   │       └── Tools.kt             # Local workspace sandboxed tools + remote relay/laptop tools
+│   │   └── res/                         # Vector icons (Agent, Forge Hub, Terminal, Settings), dark glass theme
+│   └── build_and_publish.sh             # Build script for Android SDK
 └── tools/
     ├── civitai_red_dl.py                # Civitai LoRA background downloader
     ├── wan_ingest.py                    # Model-free pack ingest & queueing
@@ -87,18 +94,21 @@ uvicorn app:app --host 0.0.0.0 --port 9000
 
 ---
 
-## 3. Forge Hub Android App (`android/`)
+## 3. WhiteDevil Android App (`android/`)
 
-Native Android client with:
-- Bottom navigation with dynamic tabs loaded from the relay manifest.
-- Custom vector icons for Home, Venice, Renders, HypnoForge, Colab, Thunder, Files, and Terminal.
-- Terminal patch (`patch.js`) with one-finger touch scroll and explicit paste protection.
-- Built-in update check with `force_update` support.
+Independent native Android application (`com.whitedevil`) with:
+- **Architecture & Navigation**: 4-tab native bottom navigation bar with dark glass styling:
+  1. `[Agent]`: Native Android UI for Venice Agent, custom message bubbles (User, Venice, Tool Call, Tool Output, Error), model selector, and system prompt dialog. Runs `VeniceClient` and `Agent` coroutines directly on Android.
+  2. `[Forge Hub]`: Isolated WebView container for the relay screens (Home, Renders, Colab, Thunder, etc.). If the relay is offline or sends `force_update`, only this component displays error banners; it never locks out the rest of the app.
+  3. `[Terminal]`: Isolated terminal container wrapping ttyd/terminal with one-finger touch scrolling and safe staged paste modal.
+  4. `[Settings]`: Native settings screen configuring `VENICE_API_KEY`, Relay URL, Relay User/Pass, and Laptop User/Pass stored securely in Android `EncryptedSharedPreferences`.
+- **Integrated Agent Core**: Direct port of Venice Agent client logic and unified local device workspace tools (`read_file`, `write_file`, `list_directory`, `delete_file`) plus remote Forge Hub and WSL laptop tools (`get_render_status`, `list_prompt_packs`, `run_laptop_command`, `download_civitai_lora`).
 
 ### Building the APK
 
 ```bash
 cd android
+./gradlew assembleDebug
 ./gradlew assembleRelease
 ```
 

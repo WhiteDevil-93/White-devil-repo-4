@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 val signing = Properties().apply {
@@ -11,15 +12,15 @@ val signing = Properties().apply {
 }
 
 android {
-    namespace = "com.anon3.forgehub"
+    namespace = "com.whitedevil"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.anon3.forgehub"
+        applicationId = "com.whitedevil"
         minSdk = 31
         targetSdk = 35
-        versionCode = 8
-        versionName = "8.0"
+        versionCode = 9
+        versionName = "9.0"
     }
 
     signingConfigs {
@@ -50,4 +51,19 @@ android {
     buildFeatures {
         buildConfig = true
     }
+}
+
+val ktorVersion = "2.3.12"
+
+dependencies {
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    testImplementation("junit:junit:4.13.2")
 }
