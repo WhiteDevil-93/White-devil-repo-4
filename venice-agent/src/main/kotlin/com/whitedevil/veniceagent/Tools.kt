@@ -118,10 +118,22 @@ class ToolBox(
                 function = ToolFunctionSpec(
                     name = "download_civitai_lora",
                     description = "Trigger a download of a LoRA or model from Civitai to the laptop's ~/civitai_dl folder.",
-                    parameters = objectSchema(
-                        "model_id" to "Civitai model ID.",
-                        "slug" to "Optional model slug name for file naming.",
-                    ),
+                    parameters = buildJsonObject {
+                        put("type", "object")
+                        putJsonObject("properties") {
+                            putJsonObject("model_id") {
+                                put("type", "string")
+                                put("description", "Civitai model ID.")
+                            }
+                            putJsonObject("slug") {
+                                put("type", "string")
+                                put("description", "Optional model slug name for file naming.")
+                            }
+                        }
+                        put("required", buildJsonArray {
+                            add(kotlinx.serialization.json.JsonPrimitive("model_id"))
+                        })
+                    },
                 ),
             ),
         )
@@ -210,23 +222,27 @@ class ToolBox(
         }
         val url = java.net.URI("${relayBaseUrl.trimEnd('/')}$path").toURL()
         val conn = url.openConnection() as HttpURLConnection
-        conn.requestMethod = method
-        conn.connectTimeout = 15000
-        conn.readTimeout = 30000
-        val auth = "Basic " + Base64.getEncoder().encodeToString("$relayUser:$relayPass".toByteArray())
-        conn.setRequestProperty("Authorization", auth)
-        if (postBody != null) {
-            conn.doOutput = true
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.outputStream.use { it.write(postBody.toByteArray()) }
-        }
-        val code = conn.responseCode
-        val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-        val body = stream?.bufferedReader()?.readText().orEmpty()
-        return if (code in 200..299) {
-            body.ifBlank { "HTTP $code" }
-        } else {
-            "HTTP $code${if (body.isNotBlank()) ": $body" else ""}"
+        try {
+            conn.requestMethod = method
+            conn.connectTimeout = 15000
+            conn.readTimeout = 30000
+            val auth = "Basic " + Base64.getEncoder().encodeToString("$relayUser:$relayPass".toByteArray())
+            conn.setRequestProperty("Authorization", auth)
+            if (postBody != null) {
+                conn.doOutput = true
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.outputStream.use { it.write(postBody.toByteArray()) }
+            }
+            val code = conn.responseCode
+            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+            val body = stream?.bufferedReader()?.readText().orEmpty()
+            return if (code in 200..299) {
+                body.ifBlank { "HTTP $code" }
+            } else {
+                "HTTP $code${if (body.isNotBlank()) ": $body" else ""}"
+            }
+        } finally {
+            conn.disconnect()
         }
     }
 
