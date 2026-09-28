@@ -27,7 +27,7 @@ fun AgentSetupEmptyState(onAddKey: () -> Unit, modifier: Modifier = Modifier) {
         Text("Connect Venice", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(6.dp))
         Text(
-            "Add an API key on this device to chat and run tools on your relay.",
+            "Integrate your intelligence layer to start forging. Securely connect your favorite models via API.",
             style = MaterialTheme.typography.bodySmall,
         )
         Spacer(Modifier.height(14.dp))
