@@ -14,9 +14,9 @@
 <div id="alerts"></div>
 
 <div class="card tight" style="margin:0 0 14px">
-  <div class="tiny mut">Phone only</div>
-  <div style="font-weight:650;margin:4px 0 6px">This app is the remote. Terminal is the laptop.</div>
-  <div class="small mut">Wake the PC if Terminal says offline. You do not need a keyboard on the desk.</div>
+  <div class="tiny mut" id="hubWhere">Laptop app</div>
+  <div style="font-weight:650;margin:4px 0 6px">Update Hub publishes this UI to the relay.</div>
+  <div class="small mut">Open Terminal, Send the script, wait for “Done!”, then reload. That is the laptop via ttyd — no extra keyboard.</div>
   <div class="row wrap" style="margin-top:10px">
     <a class="btn primary grow" href="/app/term/?update=1">Update Hub</a>
     <a class="btn grow" href="/app/term/">Open Terminal</a>
@@ -43,6 +43,13 @@ const jobTitle = j => groupTitle(j.chain_id) || (j.name || 'Job').replace(/[_-]+
 function greet(){
   const h = new Date().getHours();
   $('hello').textContent = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  try {
+    if (parent !== window && /\/app\/desktop/.test(parent.location.pathname)) {
+      $('hubWhere').textContent = 'Laptop app';
+    } else {
+      $('hubWhere').textContent = 'Phone or browser';
+    }
+  } catch (e) {}
 }
 
 function hero(s){

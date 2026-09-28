@@ -104,12 +104,19 @@ def test_desktop_app_caching_and_manifest():
     assert res_manifest.status_code == 200
     assert "no-store" in res_manifest.headers.get("Cache-Control", "")
     manifest_data = res_manifest.json()
-    assert manifest_data.get("web_rev") == 8 or manifest_data.get("web_rev") == 9
+    assert manifest_data.get("web_rev") == 10
 
     # Desktop HTML should return no-store
     res_desktop = client.get("/app/desktop/index.html")
     assert res_desktop.status_code == 200
     assert "no-store" in res_desktop.headers.get("Cache-Control", "")
+    assert "Update Hub" in res_desktop.text
+    assert "/app/term/?update=1" in res_desktop.text
+
+    res_term = client.get("/app/term/")
+    assert res_term.status_code == 200
+    assert "loraIds" in res_term.text
+    assert "every LoRA file" in res_term.text
 
     # Static CSS and JS assets under /app/ should return no-cache (allowing 304 validation)
     res_css = client.get("/app/ui/forge.css")

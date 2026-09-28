@@ -116,7 +116,7 @@ cd android
 
 ## 4. Tools (`tools/`)
 
-- **`civitai_red_dl.py`**: Downloads Civitai mirror models directly to the WSL laptop (`~/civitai_dl`).
+- **`civitai_red_dl.py`**: Downloads Civitai LoRA files to the WSL laptop (`~/civitai_dl/<id>_<base>/`). Pass multiple `--id` values to pull Wan 2.2 + LTX-2 + LTX-2.5, not a single LTX 2.5 file.
 - **`wan_ingest.py`**: Validates, merges, and queues prompt packs for the Wan2.2 video pipeline.
 
 ---

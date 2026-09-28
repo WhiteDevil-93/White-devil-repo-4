@@ -120,7 +120,7 @@ class ToolBox(
             ToolDefinition(
                 function = ToolFunctionSpec(
                     name = "download_civitai_lora",
-                    description = "Trigger a download of a LoRA or model from Civitai to the laptop's ~/civitai_dl folder.",
+                    description = "Download LoRA files from Civitai onto the laptop ~/civitai_dl folder. Pass one id or several (comma-separated). Pulls every LoRA file on every version (Wan 2.2, LTX-2, LTX-2.5), not a single LTX 2.5 file.",
                     parameters = objectSchema(
                         "model_id" to "Civitai model ID or version ID.",
                         "slug" to "Optional model slug name for file naming.",
@@ -265,7 +265,8 @@ class ToolBox(
             val id = args.stringOrNull("model_id") ?: return "Error: 'model_id' argument is required."
             val slug = args.stringOrNull("slug") ?: ""
             val cmd = buildString {
-                append("python3 tools/civitai_red_dl.py --id $id")
+                append("python3 tools/civitai_red_dl.py")
+                id.split(Regex("[\\s,;]+")).filter { it.isNotBlank() }.forEach { append(" --id $it") }
                 if (slug.isNotBlank()) append(" --slug $slug")
             }
             val payload = buildJsonObject {

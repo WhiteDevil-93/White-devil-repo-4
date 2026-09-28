@@ -34,6 +34,7 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0}
 .bar h1{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar button{background:transparent;border:1px solid transparent;color:var(--mut);border-radius:9px;height:32px;min-width:32px;
   padding:0 9px;cursor:pointer;display:grid;place-items:center;font:inherit}
+.bar button.text{display:inline-flex;align-items:center;gap:0;font-size:12.5px;font-weight:600;padding:0 11px;border-color:var(--line);color:var(--fg)}
 .bar button:hover{background:var(--hover);color:var(--fg);border-color:var(--line)}
 .bar svg{width:17px;height:17px}
 .frames{position:relative;flex:1;min-height:0}
@@ -57,6 +58,7 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0}
     <div class="bar">
       <h1 id="title">Forge Hub</h1>
       <button id="reload" title="Reload screen (Ctrl+R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
+      <button id="updateHub" class="text" title="Publish this Hub to wan-relay">Update Hub</button>
       <button id="pop" title="Open in a browser tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>
     </div>
     <div class="frames" id="frames"><div class="load" id="load"></div></div>
@@ -113,7 +115,7 @@ function screenForUrl(href) {
   let u; try { u = new URL(href, location.href); } catch { return null; }
   if (u.origin !== location.origin) return null;
   const path = u.pathname + u.search;
-  return screens.find(s => s.url === path || (s.url.endsWith('/') && u.pathname === s.url && !s.url.includes('?')));
+  return screens.find(s => s.url === path || (s.url.endsWith('/') && u.pathname.replace(/\/?$/, '/') === s.url.replace(/\/?$/, '/')));
 }
 
 function hookFrame(f) {
@@ -124,18 +126,20 @@ function hookFrame(f) {
       d.addEventListener('click', e => {
         const a = e.target.closest && e.target.closest('a[href]');
         if (!a || a.target === '_blank' || e.ctrlKey || e.metaKey) return;
-        const s = screenForUrl(a.getAttribute('href'));
-        if (s && s.id !== f.dataset.id) { e.preventDefault(); show(s.id); }
+        const href = a.getAttribute('href');
+        const s = screenForUrl(href);
+        if (s && s.id !== f.dataset.id) { e.preventDefault(); show(s.id, false, href); }
       }, true);
       d.addEventListener('keydown', keys);
     } catch (e) {}
   });
 }
 
-function show(id, reload) {
+function show(id, reload, href) {
   const s = screens.find(x => x.id === id) || screens[0];
   if (!s) return;
   current = s;
+  const src = href || s.url;
   let f = frames[s.id];
   if (!f) {
     f = frames[s.id] = document.createElement('iframe');
@@ -143,9 +147,16 @@ function show(id, reload) {
     f.allow = s.id === 'term'
       ? 'fullscreen; autoplay'
       : 'fullscreen; clipboard-read; clipboard-write; autoplay';
-    hookFrame(f); f.src = s.url; $('frames').appendChild(f); $('load').classList.add('go');
-  } else if (reload) {
-    $('load').classList.add('go'); f.contentWindow.location.reload();
+    hookFrame(f); f.src = src; $('frames').appendChild(f); $('load').classList.add('go');
+  } else if (reload || href) {
+    $('load').classList.add('go');
+    if (href) {
+      const u = new URL(src, location.href);
+      u.searchParams.set('_t', String(Date.now()));
+      f.src = u.pathname + u.search;
+    } else {
+      f.contentWindow.location.reload();
+    }
   }
   for (const [k, el] of Object.entries(frames)) {
     const isTarget = k === s.id;
@@ -209,6 +220,7 @@ async function boot() {
 document.addEventListener('keydown', keys);
 window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (!current || id !== current.id) show(id); });
 $('reload').onclick = () => current && show(current.id, true);
+$('updateHub').onclick = () => show('term', false, '/app/term/?update=1');
 $('pop').onclick = () => { const f = current && frames[current.id]; window.open(f ? f.contentWindow.location.href : current.url, '_blank'); };
 boot();
 </script>
