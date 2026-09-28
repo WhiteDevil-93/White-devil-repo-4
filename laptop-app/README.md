@@ -4,13 +4,38 @@ Native desktop window for Forge Hub (Venice Agent, Shell, renders, Setup). This 
 
 It loads the same Hub UI the phone uses, with relay basic-auth handled by the window so iframes (Shell / Files) keep working.
 
-## Run on the laptop (WSL or Windows)
+## On WhiteDevil (WSL)
+
+`cd laptop-app` from `~` fails. There is no `~/laptop-app` until you clone the repo and install it. npm then looks for `/home/anon3/package.json` and errors with ENOENT.
+
+**Once, from a home prompt:**
 
 ```bash
-cd laptop-app
-npm install
+git clone https://github.com/WhiteDevil-93/White-devil-repo-4.git ~/White-devil-repo-4
+~/White-devil-repo-4/laptop-app/install-home.sh
+```
+
+If the repo is already cloned somewhere else:
+
+```bash
+# find it, then:
+/path/to/White-devil-repo-4/laptop-app/install-home.sh
+```
+
+**Every launch after that:**
+
+```bash
+cd ~/laptop-app
 npm start
 ```
+
+or, if `~/.local/bin` is on your PATH:
+
+```bash
+forge-hub
+```
+
+WSL needs a GUI (WSLg). If start fails with no DISPLAY: `export DISPLAY=:0`.
 
 On first launch it looks for a hub at `http://127.0.0.1:43173/app/desktop/`. If that is not up, it uses the relay:
 
@@ -23,6 +48,14 @@ On first launch it looks for a hub at `http://127.0.0.1:43173/app/desktop/`. If 
 | Hub URL | Relay site or a local `uvicorn` hub |
 | Relay user / password | Caddy basic auth (`relay_access.txt`) |
 | Laptop user / password | `/laptop/term/` and `/laptop/files/` only |
+
+## From the git clone (no home copy)
+
+```bash
+cd ~/White-devil-repo-4/laptop-app
+npm install
+npm start
+```
 
 ## Keyboard
 
@@ -37,7 +70,7 @@ On first launch it looks for a hub at `http://127.0.0.1:43173/app/desktop/`. If 
 From Windows or WSL with a Windows electron-builder target:
 
 ```bash
-cd laptop-app
+cd ~/laptop-app
 npm run dist:win
 ```
 

@@ -128,13 +128,16 @@ cd android
 
 Native Electron window for Forge Hub on the WSL/Windows laptop (Venice Agent, Shell, renders). Not a browser tab.
 
+`cd laptop-app` from `~` fails — that folder is not in your home directory. On WhiteDevil:
+
 ```bash
-cd laptop-app
-npm install
+git clone https://github.com/WhiteDevil-93/White-devil-repo-4.git ~/White-devil-repo-4
+~/White-devil-repo-4/laptop-app/install-home.sh
+cd ~/laptop-app
 npm start
 ```
 
-Settings (`Ctrl+,`) store the hub URL and relay/laptop passwords in the OS user-data folder. See `laptop-app/README.md`. Windows installer: `npm run dist:win`.
+Later launches: `cd ~/laptop-app && npm start`, or `forge-hub` after install. Settings (`Ctrl+,`) store the hub URL and relay/laptop passwords in the OS user-data folder. See `laptop-app/README.md`. Windows installer: `npm run dist:win`.
 
 ---
 
