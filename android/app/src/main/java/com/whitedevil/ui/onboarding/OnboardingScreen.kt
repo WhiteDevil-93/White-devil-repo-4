@@ -125,7 +125,7 @@ private fun RowDots(current: Int, total: Int) {
                     .width(28.dp)
                     .height(6.dp)
                     .background(
-                        if (i == current) WdColors.accent else Color(0x33FFFFFF),
+                        if (i == current) WdPalette.accent else WdPalette.surfaceHover,
                         RoundedCornerShape(3.dp),
                     ),
             )

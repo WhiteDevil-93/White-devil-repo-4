@@ -65,7 +65,7 @@ fun ForgeHubScreen(host: MainActivity) {
                 Text(
                     host.hubConnectionLabelPublic(),
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (host.hubConnectionLabelPublic() == "Online") WdPalette.success else WdPalette.textTertiary,
+                    color = if (host.hubConnectionLabelPublic() == "Online") WdPalette.accent else WdPalette.textTertiary,
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(WdPalette.surface)

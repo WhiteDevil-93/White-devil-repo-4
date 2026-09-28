@@ -11,21 +11,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.whitedevil.ui.theme.WdPalette
 
-private val topGlow = Brush.verticalGradient(
-    0f to Color(0xFF121214),
-    0.35f to WdPalette.bg,
-    1f to WdPalette.bg,
-)
-
 @Composable
 fun WdScreenBackground(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Box(modifier.fillMaxSize().background(topGlow)) { content() }
+    Box(modifier.fillMaxSize().background(WdPalette.bg)) { content() }
 }
 
 @Composable
@@ -42,7 +34,6 @@ fun WdSurfaceCard(
     )
 }
 
-/** Chat / input dock — one elevated surface, no double borders. */
 @Composable
 fun WdInputDock(
     modifier: Modifier = Modifier,
@@ -50,9 +41,9 @@ fun WdInputDock(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         color = WdPalette.bgElevated,
-        shadowElevation = 8.dp,
+        shadowElevation = 0.dp,
         content = {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
                 content()
@@ -77,17 +68,14 @@ fun WdInlineField(
     }
 }
 
-/** @deprecated use WdSurfaceCard */
 @Composable
 fun WdGlassCard(modifier: Modifier = Modifier, corner: Dp = 16.dp, content: @Composable () -> Unit) =
     WdSurfaceCard(modifier, corner, content)
 
-/** @deprecated use WdInputDock */
 @Composable
 fun WdComposerDock(modifier: Modifier = Modifier, content: @Composable () -> Unit) =
     WdInputDock(modifier, content)
 
-/** @deprecated */
 @Composable
 fun WdGlassBar(modifier: Modifier = Modifier, content: @Composable () -> Unit) =
     WdInlineField(modifier, content)

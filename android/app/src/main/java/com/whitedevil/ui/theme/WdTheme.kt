@@ -10,23 +10,31 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-/** 2025-style neutral dark — no brown vignette. */
+/**
+ * AMOLED black shell with a **single accent** ([accent]).
+ * All interactive / selected / emphasis states use accent or grayscale only.
+ */
 object WdPalette {
-    val bg = Color(0xFF09090A)
-    val bgElevated = Color(0xFF111113)
-    val surface = Color(0xFF161618)
-    val surfaceHover = Color(0xFF1E1E22)
-    val stroke = Color(0x14FFFFFF)
-    val strokeStrong = Color(0x22FFFFFF)
-    val accent = Color(0xFFE8D5B5)
-    val accentDim = Color(0xFF6B5D48)
-    val onAccent = Color(0xFF141210)
-    val text = Color(0xFFF4F4F5)
-    val textSecondary = Color(0xFF9CA3AF)
-    val textTertiary = Color(0xFF6B7280)
-    val danger = Color(0xFFF87171)
-    val success = Color(0xFF86EFAC)
-    val link = Color(0xFF93C5FD)
+    val bg = Color(0xFF000000)
+    val bgElevated = Color(0xFF0A0A0A)
+    val surface = Color(0xFF121212)
+    val surfaceHover = Color(0xFF1A1A1A)
+    val stroke = Color(0x10FFFFFF)
+    val strokeStrong = Color(0x1FFFFFFF)
+
+    /** The only chromatic brand color in the UI. */
+    val accent = Color(0xFFD9BF8C)
+
+    val onAccent = Color(0xFF000000)
+    val text = Color(0xFFF5F5F5)
+    val textSecondary = Color(0xFF8E8E93)
+    val textTertiary = Color(0xFF636366)
+
+    /** Muted accent for labels (still derived from [accent]). */
+    val accentDim @Composable get() = accent.copy(alpha = 0.55f)
+
+    /** Errors use accent — no second hue. */
+    val errorText @Composable get() = accent
 }
 
 private val scheme = darkColorScheme(
@@ -39,7 +47,7 @@ private val scheme = darkColorScheme(
     onSurface = WdPalette.text,
     onSurfaceVariant = WdPalette.textSecondary,
     outline = WdPalette.strokeStrong,
-    error = WdPalette.danger,
+    error = WdPalette.accent,
 )
 
 private val wdTypography = Typography(
@@ -114,7 +122,6 @@ fun WhiteDevilTheme(content: @Composable () -> Unit) {
     )
 }
 
-/** Legacy accessors — map to new palette. */
 object WdColors {
     val accent @Composable get() = WdPalette.accent
     val muted @Composable get() = WdPalette.textSecondary

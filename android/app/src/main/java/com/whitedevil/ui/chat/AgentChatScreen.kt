@@ -160,7 +160,7 @@ private fun UserBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
 
 @Composable
 private fun AssistantBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
-    val fg = if (msg.role == MainActivity.ROLE_ERROR) WdPalette.danger else WdPalette.text
+    val fg = if (msg.role == MainActivity.ROLE_ERROR) WdPalette.errorText else WdPalette.text
     Row(Modifier.fillMaxWidth().padding(end = 48.dp)) {
         Column(
             Modifier
@@ -184,7 +184,7 @@ private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy:
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp)
-            .background(Color(0xFF1A2332), RoundedCornerShape(16.dp))
+            .background(WdPalette.surface, RoundedCornerShape(16.dp))
             .clickable { onToggleTool(msg.id) }
             .padding(12.dp),
     ) {
@@ -192,7 +192,7 @@ private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy:
             Text(
                 msg.sender,
                 style = MaterialTheme.typography.labelMedium,
-                color = WdPalette.link,
+                color = WdPalette.accent,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f),
             )

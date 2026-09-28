@@ -63,7 +63,7 @@ fun YouHomeScreen(
                         Text(
                             "Add Venice API key →",
                             style = MaterialTheme.typography.labelMedium,
-                            color = WdPalette.danger,
+                            color = WdPalette.accent,
                             modifier = Modifier.clickable { onAddVeniceKey() },
                         )
                     }

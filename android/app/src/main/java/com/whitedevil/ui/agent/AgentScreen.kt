@@ -131,7 +131,7 @@ private fun ConnectionDot(ready: Boolean) {
         if (ready) "Live" else "Setup",
         style = MaterialTheme.typography.labelSmall,
         fontWeight = FontWeight.SemiBold,
-        color = if (ready) WdPalette.success else WdPalette.danger,
+        color = if (ready) WdPalette.accent else WdPalette.textTertiary,
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
             .clickable(enabled = !ready) { /* chip is visual only when ready */ }
