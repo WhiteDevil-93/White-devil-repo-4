@@ -11,7 +11,9 @@ class ToolRegistry(private val providers: List<ToolProvider>) : AutoCloseable {
     private var cachedDefinitions: List<ToolDefinition>? = null
 
     suspend fun definitions(): List<ToolDefinition> {
-        cachedDefinitions?.let { return it }
+        if (cachedDefinitions != null && providers.none { it.hasChanged() }) {
+            return cachedDefinitions!!
+        }
 
         val routeMap = LinkedHashMap<String, ToolProvider>()
         val allDefinitions = mutableListOf<ToolDefinition>()

@@ -10,5 +10,8 @@ interface ToolProvider {
 
     suspend fun execute(name: String, argumentsJson: String): String
 
+    /** True if this provider's tool list has changed since its last [definitions] call. */
+    fun hasChanged(): Boolean = false
+
     fun close() {}
 }

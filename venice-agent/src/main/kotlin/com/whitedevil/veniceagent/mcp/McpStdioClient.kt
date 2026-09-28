@@ -23,6 +23,7 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 private const val SUPPORTED_PROTOCOL_VERSION = "2024-11-05"
@@ -60,6 +61,7 @@ class McpStdioClient(
 
     private var cachedDefinitions: List<ToolDefinition>? = null
     private var initialized = false
+    private val toolsChanged = AtomicBoolean(false)
 
     init {
         scope.launch { readLoop() }
@@ -86,6 +88,10 @@ class McpStdioClient(
     /** Handles server-to-client requests/notifications (distinct from responses to our own calls). */
     private fun handleIncomingRequest(element: JsonObject) {
         val method = (element["method"] as? JsonPrimitive)?.contentOrNull ?: return
+        if (method == "notifications/tools/list_changed") {
+            toolsChanged.set(true)
+            return
+        }
         val id = element["id"] ?: return // a notification from the server; nothing to reply to
         if (method == "ping") {
             val pong = buildJsonObject {
@@ -160,8 +166,12 @@ class McpStdioClient(
         initialized = true
     }
 
+    override fun hasChanged(): Boolean = toolsChanged.get()
+
     override suspend fun definitions(): List<ToolDefinition> {
-        cachedDefinitions?.let { return it }
+        if (cachedDefinitions != null && !toolsChanged.get()) return cachedDefinitions!!
+        toolsChanged.set(false)
+        exposedToOriginal.clear()
         ensureInitialized()
 
         val rawTools = mutableListOf<JsonObject>()
@@ -228,10 +238,23 @@ class McpStdioClient(
     private fun mimeTypeOf(obj: JsonObject): String =
         (obj["mimeType"] as? JsonPrimitive)?.contentOrNull ?: "unknown mime type"
 
+    /**
+     * Sanitizing and truncating to fit chat-completion function-name limits is lossy (e.g.
+     * "foo.bar" and "foo_bar" both sanitize to "foo_bar"), so two distinct original tool names
+     * can collide. When that happens, later ones get a numeric suffix so every tool this
+     * provider exposes still gets a distinct, valid name.
+     */
     private fun namespacedName(toolName: String): String {
-        val sanitized = "${serverName}__$toolName".replace(Regex("[^a-zA-Z0-9_-]"), "_").take(64)
-        exposedToOriginal[sanitized] = toolName
-        return sanitized
+        val base = "${serverName}__$toolName".replace(Regex("[^a-zA-Z0-9_-]"), "_")
+        var candidate = base.take(64)
+        var suffix = 1
+        while (exposedToOriginal[candidate]?.let { it != toolName } == true) {
+            val suffixText = "_$suffix"
+            candidate = base.take((64 - suffixText.length).coerceAtLeast(0)) + suffixText
+            suffix++
+        }
+        exposedToOriginal[candidate] = toolName
+        return candidate
     }
 
     private fun originalName(exposedName: String): String =

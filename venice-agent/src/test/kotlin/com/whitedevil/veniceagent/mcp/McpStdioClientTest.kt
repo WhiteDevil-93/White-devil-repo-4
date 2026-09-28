@@ -25,10 +25,13 @@ class McpStdioClientTest {
         val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
         try {
             // The fake server paginates tools/list across two pages and interleaves an
-            // unsolicited server-to-client "ping" between them; both tools must still surface.
+            // unsolicited server-to-client "ping" between them; all tools must still surface.
+            // "foo.bar" and "foo_bar" both sanitize to the same string, exercising
+            // collision-safe naming.
             val definitions = client.definitions()
-            val names = definitions.map { it.function.name }.toSet()
-            assertEquals(setOf("fake__echo", "fake__fail"), names)
+            val names = definitions.map { it.function.name }
+            assertEquals(names.size, names.toSet().size, "exposed tool names must be unique: $names")
+            assertTrue(names.containsAll(listOf("fake__echo", "fake__fail")), "unexpected names: $names")
 
             val echoResult = client.execute("fake__echo", """{"text":"hi"}""")
             assertTrue(echoResult.contains("echo: hi"), "unexpected tool result: $echoResult")
@@ -38,6 +41,32 @@ class McpStdioClientTest {
             val failResult = client.execute("fake__fail", "{}")
             assertTrue(failResult.startsWith("Error:"), "expected an error-prefixed result: $failResult")
             assertTrue(failResult.contains("boom"), "expected the tool's message to be preserved: $failResult")
+
+            // Both collision candidates must route back to their own distinct original tool.
+            val collisionNames = names.filter { it.startsWith("fake__foo_bar") }
+            assertEquals(2, collisionNames.size, "expected two disambiguated names, got: $collisionNames")
+            val collisionResults = collisionNames.map { client.execute(it, "{}") }.toSet()
+            assertEquals(setOf("called: foo.bar", "called: foo_bar"), collisionResults)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `invalidates the cached tool list after notifications tools list_changed`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
+        try {
+            val before = client.definitions().map { it.function.name }
+            assertTrue("fake__new_tool" !in before, "new_tool shouldn't exist yet: $before")
+
+            // Not in the tool list yet, but execute() routes directly to the server by name.
+            client.execute("fake__trigger_list_changed", "{}")
+
+            val after = client.definitions().map { it.function.name }
+            assertTrue("fake__new_tool" in after, "expected the cache to be rebuilt with new_tool: $after")
         } finally {
             client.close()
         }
