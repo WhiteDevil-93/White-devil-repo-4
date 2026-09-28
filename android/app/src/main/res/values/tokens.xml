@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- WhiteDevil design tokens (reference for XML / future Compose migration) -->
+    <color name="wd_surface_0">#FF080809</color>
+    <color name="wd_surface_1">#331A1A1E</color>
+    <color name="wd_text_primary">#FFEDEDEA</color>
+    <color name="wd_text_secondary">#FFA3A3AA</color>
+    <color name="wd_accent">#FFCDB88F</color>
+    <color name="wd_accent_on">#FF111111</color>
+    <color name="wd_error">#FFE85D5D</color>
+    <color name="wd_info">#FF82B6E8</color>
+    <dimen name="wd_touch_min">48dp</dimen>
+    <dimen name="wd_radius_bubble">18dp</dimen>
+    <dimen name="wd_radius_composer">22dp</dimen>
+</resources>

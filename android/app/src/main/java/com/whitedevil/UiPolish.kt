@@ -78,14 +78,24 @@ object UiPolish {
         background = glass(bg, dp(ctx, 14))
     }
 
-    fun iconCircle(ctx: Context, iconRes: Int, tint: Int, onClick: () -> Unit): FrameLayout =
+    fun iconCircle(
+        ctx: Context,
+        iconRes: Int,
+        tint: Int,
+        contentDescription: String,
+        onClick: () -> Unit,
+    ): FrameLayout =
         FrameLayout(ctx).apply {
             background = glass(Color.parseColor("#331A1A1E"), dp(ctx, 14), Color.parseColor("#22FFFFFF"))
             isClickable = true
+            this.contentDescription = contentDescription
+            minimumWidth = dpInt(ctx, 48)
+            minimumHeight = dpInt(ctx, 48)
             setOnClickListener { onClick() }
             addView(ImageView(ctx).apply {
                 setImageResource(iconRes)
                 imageTintList = android.content.res.ColorStateList.valueOf(tint)
+                importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }, FrameLayout.LayoutParams(dpInt(ctx, 22), dpInt(ctx, 22), Gravity.CENTER))
         }
 

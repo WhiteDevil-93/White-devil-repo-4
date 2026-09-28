@@ -47,6 +47,7 @@ import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.Switch
@@ -125,7 +126,12 @@ class MainActivity : ComponentActivity() {
     private lateinit var agentInput: EditText
     private lateinit var agentSendWrap: FrameLayout
     private lateinit var agentModelChip: TextView
+    private lateinit var agentStatusPill: TextView
+    private lateinit var agentApiKeyBanner: LinearLayout
+    private lateinit var agentOverflowAnchor: View
     private lateinit var agentProgress: ProgressBar
+    private lateinit var settingsConnectionSummary: TextView
+    private lateinit var hubConnectionPill: TextView
     private val agentModels = listOf(
         "zai-org-glm-5-2",
         "zai-org-glm-5",
@@ -220,12 +226,14 @@ class MainActivity : ComponentActivity() {
         }
 
         handleSharedIntent(intent)
+        updateAgentSetupState()
 
         registerReceiver(downloadDone, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), RECEIVER_EXPORTED)
     }
 
     override fun onResume() {
         super.onResume()
+        updateAgentSetupState()
         if (activeTab == Tab.FORGE_HUB && !hubBlockedByUpdate) {
             val wv = hubWebViews[currentHubScreenId]
             wv?.reload()
@@ -396,37 +404,33 @@ class MainActivity : ComponentActivity() {
         agentSelectedModel = prefs.getString(SettingsManager.KEY_VENICE_MODEL, SettingsManager.DEFAULT_MODEL)
             ?: SettingsManager.DEFAULT_MODEL
 
-        val titleBlock = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(2), 0, dp(2), dp(12))
-        }
-        titleBlock.addView(TextView(this).apply {
-            text = "WHITEDEVIL"
-            textSize = 10f
-            letterSpacing = 0.14f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(ACCENT)
-        })
-        titleBlock.addView(TextView(this).apply {
-            text = "Venice Agent"
-            textSize = 24f
-            letterSpacing = -0.02f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(STRONG)
-            setPadding(0, dp(2), 0, 0)
-        })
-        titleBlock.addView(TextView(this).apply {
-            text = "Native tools · relay · laptop · attachments"
-            textSize = 12.5f
-            setTextColor(MUTED)
-            setPadding(0, dp(4), 0, 0)
-        })
-        layout.addView(titleBlock)
-
-        val toolRow = LinearLayout(this).apply {
+        val appBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(2), 0, dp(2), dp(10))
         }
+        appBar.addView(TextView(this).apply {
+            text = "Venice"
+            textSize = 20f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(STRONG)
+        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        agentStatusPill = TextView(this).apply {
+            textSize = 11f
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(dp(10), dp(5), dp(10), dp(5))
+            background = createGlassDrawable(CARD_BG, dp(12), LINE)
+        }
+        agentOverflowAnchor = UiPolish.iconCircle(
+            this,
+            R.drawable.ic_more,
+            MUTED,
+            "Agent options",
+        ) { showAgentOverflowMenu() }
+        appBar.addView(agentStatusPill, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(8) })
+        appBar.addView(agentOverflowAnchor, LinearLayout.LayoutParams(dp(48), dp(48)))
+        layout.addView(appBar)
+
         agentModelChip = TextView(this).apply {
             text = "${UiPolish.modelLabel(agentSelectedModel)}  ▾"
             textSize = 12.5f
@@ -435,33 +439,10 @@ class MainActivity : ComponentActivity() {
             setPadding(dp(14), dp(8), dp(14), dp(8))
             background = createGlassDrawable(CARD_BG, dp(14), LINE)
             isClickable = true
+            contentDescription = "Choose Venice model"
             setOnClickListener { showModelPicker() }
         }
-        val promptBtn = TextView(this).apply {
-            text = "Prompt"
-            textSize = 12.5f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(MUTED)
-            setPadding(dp(14), dp(8), dp(14), dp(8))
-            background = createGlassDrawable(PILL, dp(14), LINE)
-            isClickable = true
-            setOnClickListener { showSystemPromptDialog() }
-        }
-        val resetBtn = TextView(this).apply {
-            text = "Clear"
-            textSize = 12.5f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(ACCENT)
-            setPadding(dp(14), dp(8), dp(14), dp(8))
-            background = createGlassDrawable(PILL, dp(14), LINE)
-            isClickable = true
-            setOnClickListener { resetAgentChat() }
-        }
-        toolRow.addView(agentModelChip, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
-        toolRow.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
-        toolRow.addView(promptBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(8) })
-        toolRow.addView(resetBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
-        layout.addView(toolRow)
+        layout.addView(agentModelChip, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { bottomMargin = dp(8) })
 
         agentProgress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
             isIndeterminate = true
@@ -514,6 +495,29 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(0, dp(6), 0, 0)
         }
+        agentApiKeyBanner = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = createGlassDrawable(Color.parseColor("#33CC5555"), dp(14), Color.parseColor("#66E85D5D"))
+            visibility = View.GONE
+            addView(TextView(this@MainActivity).apply {
+                text = "Venice API key required to chat"
+                textSize = 13f
+                setTextColor(STRONG)
+            }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+            addView(TextView(this@MainActivity).apply {
+                text = "Add key"
+                textSize = 12.5f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.parseColor("#FF111111"))
+                setPadding(dp(14), dp(8), dp(14), dp(8))
+                background = createGlassDrawable(ACCENT, dp(12))
+                isClickable = true
+                setOnClickListener { showVeniceKeySheet() }
+            })
+        }
+        composer.addView(agentApiKeyBanner, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = dp(6) })
         composer.addView(agentAttachmentScroll, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
         val inputBar = LinearLayout(this).apply {
@@ -522,11 +526,11 @@ class MainActivity : ComponentActivity() {
             setPadding(dp(6), dp(8), dp(6), dp(8))
             background = createGlassDrawable(BAR_GLASS, dp(22), LINE)
         }
-        val attachBtn = UiPolish.iconCircle(this, R.drawable.ic_attach, ACCENT) { showAttachSheet() }.apply {
-            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(6) }
+        val attachBtn = UiPolish.iconCircle(this, R.drawable.ic_attach, ACCENT, "Attach file") { showAttachSheet() }.apply {
+            layoutParams = LinearLayout.LayoutParams(dp(48), dp(48)).apply { rightMargin = dp(4) }
         }
-        val pasteBtn = UiPolish.iconCircle(this, R.drawable.ic_clipboard, MUTED) { pasteFromClipboard() }.apply {
-            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(8) }
+        val pasteBtn = UiPolish.iconCircle(this, R.drawable.ic_clipboard, MUTED, "Paste from clipboard") { pasteFromClipboard() }.apply {
+            layoutParams = LinearLayout.LayoutParams(dp(48), dp(48)).apply { rightMargin = dp(6) }
         }
         agentInput = EditText(this).apply {
             hint = "Message Venice…"
@@ -543,11 +547,13 @@ class MainActivity : ComponentActivity() {
                 setColor(ACCENT)
             }
             isClickable = true
+            contentDescription = "Send message"
             setOnClickListener { sendAgentMessage() }
-            layoutParams = LinearLayout.LayoutParams(dp(46), dp(46)).apply { leftMargin = dp(8) }
+            layoutParams = LinearLayout.LayoutParams(dp(48), dp(48)).apply { leftMargin = dp(6) }
             addView(ImageView(this@MainActivity).apply {
                 setImageResource(R.drawable.ic_send)
                 imageTintList = ColorStateList.valueOf(Color.parseColor("#FF111111"))
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
         }
 
@@ -562,19 +568,69 @@ class MainActivity : ComponentActivity() {
         return shell
     }
 
-    private fun showModelPicker() {
-        val labels = agentModels.map { UiPolish.modelLabel(it) }.toTypedArray()
-        val current = agentModels.indexOf(agentSelectedModel).coerceAtLeast(0)
-        AlertDialog.Builder(this)
-            .setTitle("Venice model")
-            .setSingleChoiceItems(labels, current) { dialog, which ->
-                agentSelectedModel = agentModels[which]
-                agentModelChip.text = "${UiPolish.modelLabel(agentSelectedModel)}  ▾"
-                prefs.edit().putString(SettingsManager.KEY_VENICE_MODEL, agentSelectedModel).apply()
-                dialog.dismiss()
+    private fun veniceKeyConfigured(): Boolean =
+        !prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim().isNullOrEmpty()
+
+    private fun updateAgentSetupState() {
+        if (!::agentStatusPill.isInitialized) return
+        val ok = veniceKeyConfigured()
+        if (::agentApiKeyBanner.isInitialized) {
+            agentApiKeyBanner.visibility = if (ok) View.GONE else View.VISIBLE
+        }
+        agentStatusPill.text = if (ok) "Ready" else "Setup"
+        agentStatusPill.setTextColor(if (ok) ACCENT else Color.parseColor("#FFE85D5D"))
+        agentStatusPill.background = createGlassDrawable(
+            if (ok) CARD_BG else Color.parseColor("#33CC5555"),
+            dp(12),
+            if (ok) LINE else Color.parseColor("#66E85D5D"),
+        )
+    }
+
+    private fun showVeniceKeySheet() {
+        val current = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "") ?: ""
+        UiSheets.showSecretFieldSheet(
+            this,
+            title = "Venice API key",
+            hint = "Paste your Venice API key",
+            initial = current,
+        ) { key ->
+            prefs.edit().putString(SettingsManager.KEY_VENICE_API_KEY, key).apply()
+            updateAgentSetupState()
+            UiFeedback.snackbar(root, "Venice API key saved")
+        }
+    }
+
+    private fun showAgentOverflowMenu() {
+        PopupMenu(this, agentOverflowAnchor).apply {
+            menu.add(0, 1, 0, "System prompt")
+            menu.add(0, 2, 0, "Clear chat")
+            setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    1 -> showSystemPromptDialog()
+                    2 -> confirmClearAgentChat()
+                }
+                true
             }
+            show()
+        }
+    }
+
+    private fun confirmClearAgentChat() {
+        AlertDialog.Builder(this)
+            .setTitle("Clear chat?")
+            .setMessage("This removes the on-screen history and saved conversation file.")
+            .setPositiveButton("Clear") { _, _ -> resetAgentChat() }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun showModelPicker() {
+        val labels = agentModels.map { UiPolish.modelLabel(it) }.toTypedArray()
+        UiSheets.showListSheet(this, "Venice model", labels) { which ->
+            agentSelectedModel = agentModels[which]
+            agentModelChip.text = "${UiPolish.modelLabel(agentSelectedModel)}  ▾"
+            prefs.edit().putString(SettingsManager.KEY_VENICE_MODEL, agentSelectedModel).apply()
+        }
     }
 
     private fun showSystemPromptDialog() {
@@ -672,8 +728,8 @@ class MainActivity : ComponentActivity() {
         if (text.isEmpty() && pendingAttachments.isEmpty()) return
         val apiKey = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim() ?: ""
         if (apiKey.isEmpty()) {
-            Toast.makeText(this, "Venice API key not set! Please configure it in Settings tab.", Toast.LENGTH_LONG).show()
-            selectTab(Tab.SETTINGS)
+            updateAgentSetupState()
+            UiFeedback.snackbar(root, "Add a Venice API key to send messages", "Add key") { showVeniceKeySheet() }
             return
         }
 
@@ -762,19 +818,15 @@ class MainActivity : ComponentActivity() {
 
     private fun showAttachSheet() {
         val items = arrayOf("Take photo", "Record video", "Choose images", "Choose video", "Choose file")
-        AlertDialog.Builder(this)
-            .setTitle("Attach to message")
-            .setItems(items) { _, which ->
-                when (which) {
-                    0 -> withCapturePermission(video = false) { launchCamera(photo = true) }
-                    1 -> withCapturePermission(video = true) { launchCamera(photo = false) }
-                    2 -> pickImagesLauncher.launch("image/*")
-                    3 -> pickVideosLauncher.launch("video/*")
-                    4 -> pickFilesLauncher.launch(arrayOf("*/*"))
-                }
+        UiSheets.showListSheet(this, "Attach to message", items) { which ->
+            when (which) {
+                0 -> withCapturePermission(video = false) { launchCamera(photo = true) }
+                1 -> withCapturePermission(video = true) { launchCamera(photo = false) }
+                2 -> pickImagesLauncher.launch("image/*")
+                3 -> pickVideosLauncher.launch("video/*")
+                4 -> pickFilesLauncher.launch(arrayOf("*/*"))
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
     }
 
     private fun withCapturePermission(video: Boolean, action: () -> Unit) {
@@ -1135,18 +1187,27 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        headerRow.addView(TextView(this).apply {
-            text = sender
-            textSize = 11.5f
+        val titleView = TextView(this).apply {
+            text = if (isTool) sender else sender
+            textSize = 12f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(avatarFg)
-        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        if (!isInfo) {
+        }
+        headerRow.addView(titleView, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        val expandLabel = if (isTool) {
+            TextView(this).apply {
+                text = "Show details"
+                textSize = 11f
+                setTextColor(MUTED)
+            }
+        } else null
+        expandLabel?.let { headerRow.addView(it) }
+        if (!isInfo && !isTool) {
             val time = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
                 .format(java.util.Date())
             headerRow.addView(TextView(this).apply {
                 text = time
-                textSize = 10f
+                textSize = 12f
                 setTextColor(MUTED)
             })
         }
@@ -1170,21 +1231,36 @@ class MainActivity : ComponentActivity() {
             setLineSpacing(0f, 1.15f)
             if (isTool) typeface = Typeface.MONOSPACE
             setPadding(0, dp(6), 0, 0)
+            if (isTool) visibility = View.GONE
         }
         bubble.addView(contentView)
 
+        val copyRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.END
+            setPadding(0, dp(6), 0, 0)
+            visibility = if (isTool) View.GONE else View.VISIBLE
+        }
         if (!isInfo && message.length > 24) {
-            val copyRow = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.END
-                setPadding(0, dp(6), 0, 0)
-            }
             copyRow.addView(
-                UiPolish.iconCircle(this, R.drawable.ic_copy, MUTED) { copyToClipboard(message) }.apply {
-                    layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                UiPolish.iconCircle(this, R.drawable.ic_copy, MUTED, "Copy message") { copyToClipboard(message) }.apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(48), dp(48))
                 },
             )
             bubble.addView(copyRow)
+        }
+
+        if (isTool) {
+            var expanded = false
+            val toggle = {
+                expanded = !expanded
+                contentView.visibility = if (expanded) View.VISIBLE else View.GONE
+                copyRow.visibility = if (expanded && message.length > 24) View.VISIBLE else View.GONE
+                expandLabel?.text = if (expanded) "Hide details" else "Show details"
+            }
+            headerRow.isClickable = true
+            headerRow.setOnClickListener { toggle() }
+            bubble.setOnClickListener { toggle() }
         }
 
         val avatar = UiPolish.avatar(this, avatarLetter, avatarBg, avatarFg).apply {
@@ -1239,13 +1315,46 @@ class MainActivity : ComponentActivity() {
 
     private fun buildForgeHubTab(): FrameLayout {
         val outer = FrameLayout(this).apply {
-            setBackgroundColor(BG)
+            background = UiPolish.screenGradient(this@MainActivity)
         }
 
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(BG)
         }
+
+        val hubTopBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(36), dp(16), dp(8))
+        }
+        hubTopBar.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(TextView(context).apply {
+                text = "Forge Hub"
+                textSize = 20f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(STRONG)
+            })
+            addView(TextView(context).apply {
+                text = "Relay tools & dashboards"
+                textSize = 12f
+                setTextColor(MUTED)
+            })
+        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        hubConnectionPill = TextView(this).apply {
+            text = "Checking…"
+            textSize = 11f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(MUTED)
+            setPadding(dp(10), dp(5), dp(10), dp(5))
+            background = createGlassDrawable(CARD_BG, dp(12), LINE)
+        }
+        val hubReload = UiPolish.iconCircle(this, R.drawable.ic_refresh, ACCENT, "Reload current screen") {
+            reloadCurrentHubScreen()
+        }
+        hubTopBar.addView(hubConnectionPill, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(8) })
+        hubTopBar.addView(hubReload, LinearLayout.LayoutParams(dp(48), dp(48)))
+        container.addView(hubTopBar)
 
         // Isolated Update / Offline Banner inside Forge Hub only
         hubBanner = TextView(this).apply {
@@ -1261,7 +1370,7 @@ class MainActivity : ComponentActivity() {
         // Screen selection chips row (Home, Renders, Colab, Thunder, etc.)
         hubScreenChips = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(dp(8), dp(40), dp(8), dp(8))
+            setPadding(dp(8), dp(4), dp(8), dp(8))
         }
         hubScreenChipsScroll = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
@@ -1308,17 +1417,32 @@ class MainActivity : ComponentActivity() {
                 setPadding(dp(16), dp(8), dp(16), dp(8))
                 isClickable = true
                 setOnClickListener { showHubScreen(s.id) }
-                setOnLongClickListener {
-                    hubWebViews[s.id]?.reload()
-                    Toast.makeText(this@MainActivity, "Reloading ${s.title}", Toast.LENGTH_SHORT).show()
-                    true
-                }
             }
             val p = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
                 rightMargin = dp(8)
             }
             hubScreenChips.addView(chip, p)
         }
+    }
+
+    private fun reloadCurrentHubScreen() {
+        val id = currentHubScreenId
+        if (id.isNullOrEmpty()) {
+            loadHubManifest()
+            return
+        }
+        hubWebViews[id]?.reload()
+        UiFeedback.snackbar(root, "Reloading ${hubScreens.firstOrNull { it.id == id }?.title ?: "screen"}")
+    }
+
+    private fun updateHubConnectionPill(online: Boolean, detail: String? = null) {
+        if (!::hubConnectionPill.isInitialized) return
+        hubConnectionPill.text = when {
+            online -> "Online"
+            detail != null -> detail
+            else -> "Offline"
+        }
+        hubConnectionPill.setTextColor(if (online) ACCENT else MUTED)
     }
 
     private fun showHubScreen(id: String) {
@@ -1363,9 +1487,13 @@ class MainActivity : ComponentActivity() {
                 }
                 val body = conn.inputStream.bufferedReader().readText()
                 prefs.edit().putString("manifest", body).apply()
-                main.post { applyHubManifest(body, fromCache = false) }
+                main.post {
+                    applyHubManifest(body, fromCache = false)
+                    updateHubConnectionPill(online = true)
+                }
             } catch (e: Exception) {
                 main.post {
+                    updateHubConnectionPill(online = false, detail = "Offline")
                     if (hubScreens.isEmpty()) showHubOffline(e.message)
                     else {
                         hubBanner.text = "Relay offline - showing cached screens"
@@ -1399,9 +1527,11 @@ class MainActivity : ComponentActivity() {
         if (!hubBlockedByUpdate) {
             showHubScreen(hubScreens.firstOrNull { it.id == want }?.id ?: hubScreens.firstOrNull()?.id ?: "home")
         }
+        updateHubConnectionPill(online = !fromCache || hubScreens.isNotEmpty(), detail = if (fromCache) "Cached" else null)
     }
 
     private fun showHubOffline(msg: String?) {
+        updateHubConnectionPill(online = false, detail = "Offline")
         hubContent.removeAllViews()
         hubContent.addView(hubLoadBar, FrameLayout.LayoutParams(MATCH_PARENT, dp(2), Gravity.TOP))
         val box = LinearLayout(this).apply {
@@ -1513,53 +1643,64 @@ class MainActivity : ComponentActivity() {
 
     private fun buildTerminalTab(): FrameLayout {
         val outer = FrameLayout(this).apply {
-            setBackgroundColor(BG)
+            background = UiPolish.screenGradient(this@MainActivity)
         }
 
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(BG)
         }
 
-        // Top bar with controls: Paste Safety, Top, Bottom, Reload
         val topBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(12), dp(38), dp(12), dp(8))
-            background = createGlassDrawable(BAR_GLASS, border = LINE)
+            setPadding(dp(16), dp(36), dp(16), dp(8))
         }
 
-        val titleCol = LinearLayout(this).apply {
+        topBar.addView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             addView(TextView(context).apply {
-                text = "Relay SSH / WSL"
-                textSize = 11f
-                setTextColor(MUTED)
-            })
-            addView(TextView(context).apply {
                 text = "Terminal"
-                textSize = 17f
+                textSize = 20f
                 typeface = Typeface.DEFAULT_BOLD
                 setTextColor(STRONG)
             })
-        }
-        topBar.addView(titleCol, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+            addView(TextView(context).apply {
+                text = "Relay SSH / WSL"
+                textSize = 12f
+                setTextColor(MUTED)
+            })
+        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
 
-        fun termBtn(text: String, onClick: () -> Unit) = TextView(this).apply {
-            this.text = text
-            textSize = 12f
+        val pasteBtn = TextView(this).apply {
+            text = "Paste"
+            textSize = 13f
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(STRONG)
-            setPadding(dp(12), dp(6), dp(12), dp(6))
-            background = createGlassDrawable(CARD_BG, dp(12), LINE)
+            setTextColor(Color.parseColor("#FF111111"))
+            setPadding(dp(16), dp(10), dp(16), dp(10))
+            background = createGlassDrawable(ACCENT, dp(14))
             isClickable = true
-            setOnClickListener { onClick() }
+            setOnClickListener { openTerminalPasteSheet() }
         }
-
-        topBar.addView(termBtn("Paste") { openTerminalPasteSheet() }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(6) })
-        topBar.addView(termBtn("Top") { scrollTerminal("top") }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(6) })
-        topBar.addView(termBtn("Bottom") { scrollTerminal("bottom") }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(6) })
-        topBar.addView(termBtn("Reload") { terminalWebView?.reload() }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
+        var termMenuAnchor: View? = null
+        termMenuAnchor = UiPolish.iconCircle(this, R.drawable.ic_more, MUTED, "Terminal options") {
+            val anchor = termMenuAnchor ?: return@iconCircle
+            PopupMenu(this@MainActivity, anchor).apply {
+                menu.add("Scroll to top")
+                menu.add("Scroll to bottom")
+                menu.add("Reload")
+                setOnMenuItemClickListener { item ->
+                    when (item.title.toString()) {
+                        "Scroll to top" -> scrollTerminal("top")
+                        "Scroll to bottom" -> scrollTerminal("bottom")
+                        "Reload" -> terminalWebView?.reload()
+                    }
+                    true
+                }
+                show()
+            }
+        }
+        topBar.addView(pasteBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(8) })
+        topBar.addView(termMenuAnchor, LinearLayout.LayoutParams(dp(48), dp(48)))
 
         container.addView(topBar)
 
@@ -1733,8 +1874,25 @@ class MainActivity : ComponentActivity() {
             text = "Credentials are encrypted on-device via Android Jetpack Security."
             textSize = 12.5f
             setTextColor(MUTED)
-            setPadding(0, 0, 0, dp(20))
+            setPadding(0, 0, 0, dp(16))
         })
+
+        val connectionCard = UiPolish.sectionCard(this)
+        connectionCard.addView(TextView(this).apply {
+            text = "Connection health"
+            textSize = 13f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(STRONG)
+            setPadding(0, 0, 0, dp(8))
+        })
+        settingsConnectionSummary = TextView(this).apply {
+            text = "Run a quick check after saving credentials."
+            textSize = 13f
+            setTextColor(MUTED)
+            setLineSpacing(0f, 1.2f)
+        }
+        connectionCard.addView(settingsConnectionSummary)
+        box.addView(connectionCard, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = dp(14) })
 
         fun sectionHeader(txt: String) = TextView(this).apply {
             text = txt
@@ -1822,6 +1980,34 @@ class MainActivity : ComponentActivity() {
         val fLaptopUser = laptopTags[0]
         val fLaptopPass = laptopTags[1]
 
+        val testBtn = TextView(this).apply {
+            text = "Test connections"
+            textSize = 14f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(STRONG)
+            gravity = Gravity.CENTER
+            setPadding(dp(20), dp(12), dp(20), dp(12))
+            background = createGlassDrawable(CARD_BG, dp(16), LINE)
+            isClickable = true
+            setOnClickListener {
+                settingsConnectionSummary.text = "Testing…"
+                scope.launch {
+                    val snap = withContext(Dispatchers.IO) {
+                        ConnectionHealth.evaluate(
+                            veniceKey = fVeniceKey.text.toString().trim(),
+                            relayUrl = fRelayUrl.text.toString().trim(),
+                            relayUser = fRelayUser.text.toString().trim(),
+                            relayPass = fRelayPass.text.toString(),
+                            laptopUser = fLaptopUser.text.toString().trim(),
+                            laptopPass = fLaptopPass.text.toString(),
+                        )
+                    }
+                    settingsConnectionSummary.text = snap.multiline()
+                }
+            }
+        }
+        box.addView(testBtn, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = dp(12) })
+
         val saveBtn = TextView(this).apply {
             text = "Save Settings"
             textSize = 15f
@@ -1846,9 +2032,9 @@ class MainActivity : ComponentActivity() {
                     .putString(SettingsManager.KEY_LAPTOP_PASS, fLaptopPass.text.toString())
                     .apply()
 
-                Toast.makeText(this@MainActivity, "Settings saved securely.", Toast.LENGTH_SHORT).show()
+                updateAgentSetupState()
+                UiFeedback.snackbar(root, "Settings saved")
 
-                // Invalidate hub caches & reload
                 hubWebViews.values.forEach { hubContent.removeView(it); it.destroy() }
                 hubWebViews.clear()
                 authTries.clear()
