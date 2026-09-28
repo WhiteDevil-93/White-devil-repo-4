@@ -24,12 +24,34 @@ class McpStdioClientTest {
         val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
         val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
         try {
+            // The fake server paginates tools/list across two pages and interleaves an
+            // unsolicited server-to-client "ping" between them; both tools must still surface.
             val definitions = client.definitions()
-            assertEquals(1, definitions.size)
-            assertEquals("fake__echo", definitions.single().function.name)
+            val names = definitions.map { it.function.name }.toSet()
+            assertEquals(setOf("fake__echo", "fake__fail"), names)
 
-            val result = client.execute("fake__echo", """{"text":"hi"}""")
-            assertTrue(result.contains("echo: hi"), "unexpected tool result: $result")
+            val echoResult = client.execute("fake__echo", """{"text":"hi"}""")
+            assertTrue(echoResult.contains("echo: hi"), "unexpected tool result: $echoResult")
+
+            // The fake server reports isError: true for "fail"; it must surface as an error,
+            // not be treated as a successful result.
+            val failResult = client.execute("fake__fail", "{}")
+            assertTrue(failResult.startsWith("Error:"), "expected an error-prefixed result: $failResult")
+            assertTrue(failResult.contains("boom"), "expected the tool's message to be preserved: $failResult")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `rejects non-object tool arguments instead of substituting defaults`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
+        try {
+            val result = client.execute("fake__echo", "not json")
+            assertTrue(result.startsWith("Error:"), "expected malformed arguments to be rejected: $result")
         } finally {
             client.close()
         }

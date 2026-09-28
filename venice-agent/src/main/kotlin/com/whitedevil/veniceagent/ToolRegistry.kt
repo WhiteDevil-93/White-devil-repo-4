@@ -16,7 +16,13 @@ class ToolRegistry(private val providers: List<ToolProvider>) : AutoCloseable {
         val routeMap = LinkedHashMap<String, ToolProvider>()
         val allDefinitions = mutableListOf<ToolDefinition>()
         for (provider in providers) {
-            for (definition in provider.definitions()) {
+            val providerDefinitions = try {
+                provider.definitions()
+            } catch (e: Exception) {
+                System.err.println("Warning: a tool provider failed to list its tools and was skipped: ${e.message}")
+                continue
+            }
+            for (definition in providerDefinitions) {
                 val name = definition.function.name
                 val previousOwner = routeMap.putIfAbsent(name, provider)
                 if (previousOwner != null) {
