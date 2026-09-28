@@ -139,6 +139,70 @@ function hookFrame(f) {
   });
 }
 
+function makeFrame(s, src) {
+  const f = document.createElement('iframe');
+  f.dataset.id = s.id;
+  f.allow = s.id === 'term'
+    ? 'fullscreen; autoplay'
+    : 'fullscreen; clipboard-read; clipboard-write; autoplay';
+  hookFrame(f);
+  f.src = src || s.url;
+  $('frames').appendChild(f);
+  return f;
+}
+
+function ensureFrame(id) {
+  const s = screens.find(x => x.id === id);
+  if (!s) return null;
+  if (!frames[s.id]) {
+    frames[s.id] = makeFrame(s, s.url);
+    $('load').classList.add('go');
+  }
+  return frames[s.id];
+}
+
+function pasteIntoTerm(text) {
+  const raw = String(text || '');
+  if (!raw) return false;
+  const f = frames.term;
+  if (!f || !f.contentWindow) return false;
+  try {
+    const w = f.contentWindow;
+    if (typeof w.ForgeTermReceive === 'function') {
+      w.ForgeTermReceive(raw);
+      return true;
+    }
+    w.postMessage({type: 'forge:term-paste', text: raw}, '*');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+window.ForgeDesktopTermPaste = function (text, opts) {
+  const raw = String(text || '');
+  if (!raw) return Promise.resolve(false);
+  const showShell = !!(opts && opts.show);
+  const f = ensureFrame('term');
+  if (!f) return Promise.resolve(false);
+  if (showShell) show('term');
+  const tryPaste = () => pasteIntoTerm(raw);
+  if (tryPaste()) return Promise.resolve(true);
+  return new Promise(resolve => {
+    const done = () => resolve(tryPaste());
+    f.addEventListener('load', () => setTimeout(done, 350), {once: true});
+    setTimeout(done, 1600);
+  });
+};
+
+window.addEventListener('message', ev => {
+  const d = ev.data;
+  if (!d || d === 'forge:shown') return;
+  if (d.type === 'forge:term-paste' && d.text) {
+    window.ForgeDesktopTermPaste(d.text, {show: !!d.show});
+  }
+});
+
 function show(id, reload, href) {
   const s = screens.find(x => x.id === id) || screens[0];
   if (!s) return;
@@ -146,12 +210,7 @@ function show(id, reload, href) {
   const src = href || s.url;
   let f = frames[s.id];
   if (!f) {
-    f = frames[s.id] = document.createElement('iframe');
-    f.dataset.id = s.id;
-    f.allow = s.id === 'term'
-      ? 'fullscreen; autoplay'
-      : 'fullscreen; clipboard-read; clipboard-write; autoplay';
-    hookFrame(f); f.src = src; $('frames').appendChild(f); $('load').classList.add('go');
+    f = frames[s.id] = makeFrame(s, src); $('load').classList.add('go');
   } else if (reload || href) {
     $('load').classList.add('go');
     if (href) {

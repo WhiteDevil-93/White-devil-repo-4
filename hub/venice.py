@@ -23,6 +23,14 @@ HUB = Path(__file__).resolve().parent
 ROOT = HUB.parent
 HOME = Path.home()
 DEFAULT_BASE = "https://api.venice.ai/api/v1"
+DEFAULT_MODEL = "zai-org-glm-5-2"
+DEFAULT_SYSTEM_PROMPT = (
+    "You are WhiteDevil Venice Agent, an autonomous AI assistant with tools to inspect "
+    "and modify local workspace files, and monitor and trigger remote Forge Hub and Wan2.2 "
+    "video generation pipelines on the relay and laptop. Be concise and proactive. "
+    "Use run_laptop_command for scripts that need stdout. Use run_in_terminal to type a "
+    "command into the live laptop Shell (ttyd) so the user can watch it."
+)
 DEFAULT_MODELS = [
     {"id": "zai-org-glm-5-2", "name": "GLM 5.2"},
     {"id": "zai-org-glm-5", "name": "GLM 5"},
@@ -31,6 +39,9 @@ DEFAULT_MODELS = [
     {"id": "kimi-k2-6", "name": "Kimi K2.6"},
     {"id": "claude-opus-4-8", "name": "Claude Opus 4.8"},
 ]
+MAX_TOOL_ITERATIONS = 8
+WORKSPACE = HOME / ".venice_workspace"
+MAX_FILE_CHARS = 200_000
 
 router = APIRouter(prefix="/api/venice")
 
@@ -92,13 +103,14 @@ class KeyIn(BaseModel):
 
 class ChatIn(BaseModel):
     messages: list[dict[str, Any]]
-    model: str = "zai-org-glm-5-2"
+    model: str = DEFAULT_MODEL
     temperature: float = 0.8
     stream: bool = True
     web_search: bool = False
     venice_prompt: bool = False
     thinking: bool = False
     max_tokens: Optional[int] = 2048
+    tools: Optional[list[dict[str, Any]]] = None
 
 
 def payload_of(req: ChatIn) -> dict[str, Any]:
@@ -116,6 +128,8 @@ def payload_of(req: ChatIn) -> dict[str, Any]:
     }
     if req.max_tokens:
         body["max_tokens"] = req.max_tokens
+    if req.tools:
+        body["tools"] = req.tools
     return body
 
 
@@ -136,14 +150,30 @@ def empty_store() -> dict[str, Any]:
     return {"activeId": None, "chats": []}
 
 
-def _clean_msg(raw: Any) -> Optional[dict[str, str]]:
+KEEP_ROLES = ("user", "assistant", "system", "laptop", "tool", "tool_call", "error")
+
+
+def _clean_msg(raw: Any) -> Optional[dict[str, Any]]:
     if not isinstance(raw, dict):
         return None
     role = str(raw.get("role") or "").strip()
-    if role not in ("user", "assistant", "system", "laptop"):
+    if role not in KEEP_ROLES:
         return None
     content = str(raw.get("content") or "")[:MAX_MSG_CHARS]
-    return {"role": role, "content": content}
+    msg: dict[str, Any] = {"role": role, "content": content}
+    name = str(raw.get("name") or "").strip()
+    if name:
+        msg["name"] = name[:80]
+    tid = str(raw.get("tool_call_id") or "").strip()
+    if tid:
+        msg["tool_call_id"] = tid[:80]
+    args = raw.get("arguments")
+    if args is not None:
+        msg["arguments"] = str(args)[:MAX_MSG_CHARS]
+    calls = raw.get("tool_calls")
+    if isinstance(calls, list) and calls:
+        msg["tool_calls"] = calls[:16]
+    return msg
 
 
 def normalize_store(raw: Any) -> dict[str, Any]:
@@ -201,9 +231,14 @@ def status():
     return {
         "configured": bool(server_key()),
         "base": base_url(),
-        "default_model": os.environ.get("VENICE_MODEL") or "zai-org-glm-5-2",
+        "default_model": os.environ.get("VENICE_MODEL") or DEFAULT_MODEL,
+        "default_system_prompt": DEFAULT_SYSTEM_PROMPT,
         "key_file": str(HOME / ".venice_key"),
         "chats": len(load_chats().get("chats") or []),
+        "agent": True,
+        "max_tool_iterations": MAX_TOOL_ITERATIONS,
+        "workspace": str(WORKSPACE),
+        "tools": [t["function"]["name"] for t in AGENT_TOOLS],
     }
 
 
@@ -316,3 +351,262 @@ def _err_text(r: httpx.Response) -> str:
         return r.text or r.reason_phrase
     except Exception:
         return r.text or r.reason_phrase
+
+
+def _object_schema(*params: tuple[str, str], required: Optional[list[str]] = None) -> dict[str, Any]:
+    props = {name: {"type": "string", "description": desc} for name, desc in params}
+    req = [name for name, _ in params] if required is None else list(required)
+    return {"type": "object", "properties": props, "required": req}
+
+
+def _tool(name: str, description: str, parameters: dict[str, Any]) -> dict[str, Any]:
+    return {"type": "function", "function": {"name": name, "description": description, "parameters": parameters}}
+
+
+AGENT_TOOLS: list[dict[str, Any]] = [
+    _tool(
+        "read_file",
+        "Read the contents of a text file inside the local agent workspace.",
+        _object_schema(("path", "Path to the file, relative to the workspace root.")),
+    ),
+    _tool(
+        "write_file",
+        "Create or overwrite a text file inside the local agent workspace.",
+        _object_schema(
+            ("path", "Path to the file, relative to the workspace root."),
+            ("content", "Full text content to write to the file."),
+        ),
+    ),
+    _tool(
+        "list_directory",
+        "List files and subdirectories inside a directory in the local agent workspace.",
+        _object_schema(("path", "Directory path, relative to the workspace root. Use \".\" for the root.")),
+    ),
+    _tool(
+        "delete_file",
+        "Delete a file inside the local agent workspace.",
+        _object_schema(("path", "Path to the file, relative to the workspace root.")),
+    ),
+    _tool(
+        "get_render_status",
+        "Query active Wan2.2 rendering jobs, Colab GPU status, credit usage, and laptop connection state from Forge Hub.",
+        {"type": "object", "properties": {}},
+    ),
+    _tool(
+        "list_prompt_packs",
+        "List prompt packs in the Wan2.2 generation catalog and their render completion status from Forge Hub.",
+        {"type": "object", "properties": {}},
+    ),
+    _tool(
+        "run_laptop_command",
+        "Execute a bash or python command on the user's WSL laptop via the relay SSH bridge in ~/venice_run. Returns stdout/stderr.",
+        _object_schema(
+            ("code", "The shell command or python script code to execute."),
+            ("lang", "Execution language: 'bash' or 'python'. Defaults to 'bash'."),
+            required=["code"],
+        ),
+    ),
+    _tool(
+        "run_in_terminal",
+        "Type a command into the live laptop Shell (ttyd) so it runs in the visible terminal. Use this when the user should watch the command. Prefer run_laptop_command when you need the output back.",
+        _object_schema(("command", "The exact shell command to paste into the live terminal, without a trailing prompt.")),
+    ),
+    _tool(
+        "download_civitai_lora",
+        "Download LoRA files from Civitai onto the laptop ~/civitai_dl folder. Pass one id or several (comma-separated). Pulls every LoRA file on every version (Wan 2.2, LTX-2, LTX-2.5), not a single LTX 2.5 file.",
+        _object_schema(
+            ("model_id", "Civitai model ID or version ID."),
+            ("slug", "Optional model slug name for file naming."),
+            required=["model_id"],
+        ),
+    ),
+]
+
+
+def _as_args(raw: Any) -> dict[str, Any]:
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, str) and raw.strip():
+        try:
+            parsed = json.loads(raw)
+        except ValueError:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return {}
+
+
+def _workspace_root() -> Path:
+    WORKSPACE.mkdir(parents=True, exist_ok=True)
+    return WORKSPACE.resolve()
+
+
+def _within_workspace(relative: str) -> Path:
+    root = _workspace_root()
+    rel = (relative or ".").strip() or "."
+    if rel.startswith("/") or rel.startswith("~") or ".." in Path(rel).parts:
+        raise ValueError(f"Path '{relative}' escapes the workspace directory")
+    target = (root / rel).resolve()
+    if target != root and not str(target).startswith(str(root) + os.sep):
+        raise ValueError(f"Path '{relative}' escapes the workspace directory")
+    return target
+
+
+def _clip(text: str, n: int = 24000) -> str:
+    s = text or ""
+    return s if len(s) <= n else s[-n:]
+
+
+def _render_status_text() -> str:
+    wan = Path.home() / "wan"
+    renders = wan / "renders"
+    clips = sorted(renders.glob("smoke_*.mp4"), key=lambda p: p.stat().st_mtime, reverse=True) if renders.exists() else []
+    payload: dict[str, Any] = {
+        "clips": len(clips),
+        "newest": clips[0].name if clips else None,
+    }
+    try:
+        payload["laptop_file"] = json.loads((wan / "www" / "laptop.json").read_text())
+    except (OSError, ValueError):
+        payload["laptop_file"] = {}
+    try:
+        import laptop as laptop_mod
+        payload["laptop"] = laptop_mod.ping()
+    except Exception as e:
+        payload["laptop"] = {"error": str(e)}
+    try:
+        from colab import state as colab_state
+        payload["colab"] = colab_state()
+    except Exception as e:
+        payload["colab"] = {"error": str(e)}
+    return _clip(json.dumps(payload, default=str, indent=2))
+
+
+def _packs_text() -> str:
+    try:
+        from colab import packs
+        return _clip(json.dumps(packs(), default=str))
+    except Exception as e:
+        return f"Error fetching prompt packs: {e}"
+
+
+def _laptop_run(code: str, lang: str = "bash", timeout: int = 90) -> str:
+    import laptop as laptop_mod
+    body = laptop_mod.RunIn(lang=lang or "bash", code=code, timeout=timeout)
+    return _clip(json.dumps(laptop_mod.run(body), default=str))
+
+
+def execute_tool(name: str, arguments: Any = None) -> str:
+    """Run one Venice Agent tool. Same names as the Android app, plus run_in_terminal."""
+    args = _as_args(arguments)
+    try:
+        if name == "read_file":
+            path = str(args.get("path") or "").strip()
+            if not path:
+                return "Error: 'path' argument is required."
+            file = _within_workspace(path)
+            if not file.is_file():
+                return f"Error: file not found: {path}"
+            text = file.read_text(encoding="utf-8", errors="replace")
+            return text if len(text) <= MAX_FILE_CHARS else text[:MAX_FILE_CHARS] + "\n…truncated"
+
+        if name == "write_file":
+            path = str(args.get("path") or "").strip()
+            if not path:
+                return "Error: 'path' argument is required."
+            content = str(args.get("content") or "")
+            file = _within_workspace(path)
+            file.parent.mkdir(parents=True, exist_ok=True)
+            file.write_text(content, encoding="utf-8")
+            return f"Wrote {len(content)} characters to {path}"
+
+        if name == "list_directory":
+            path = str(args.get("path") or ".").strip() or "."
+            folder = _within_workspace(path)
+            if not folder.is_dir():
+                return f"Error: directory not found: {path}"
+            names = []
+            for child in sorted(folder.iterdir(), key=lambda p: p.name):
+                names.append(child.name + ("/" if child.is_dir() else ""))
+            return "\n".join(names) if names else "(empty directory)"
+
+        if name == "delete_file":
+            path = str(args.get("path") or "").strip()
+            if not path:
+                return "Error: 'path' argument is required."
+            file = _within_workspace(path)
+            if not file.exists():
+                return f"Error: file not found: {path}"
+            if file.is_dir():
+                return f"Error: '{path}' is a directory"
+            file.unlink()
+            return f"Deleted {path}"
+
+        if name == "get_render_status":
+            return _render_status_text()
+
+        if name == "list_prompt_packs":
+            return _packs_text()
+
+        if name == "run_laptop_command":
+            code = str(args.get("code") or args.get("command") or "")
+            if not code.strip():
+                return "Error: 'code' argument is required."
+            lang = str(args.get("lang") or "bash")
+            timeout = int(args.get("timeout") or 90)
+            timeout = max(10, min(180, timeout))
+            return _laptop_run(code, lang, timeout)
+
+        if name == "run_in_terminal":
+            cmd = str(args.get("command") or args.get("code") or "").strip()
+            if not cmd:
+                return "Error: 'command' argument is required."
+            return json.dumps({
+                "ok": True,
+                "paste": True,
+                "command": cmd,
+                "hint": "Paste this into the live Shell. Laptop Venice does that automatically.",
+            })
+
+        if name == "download_civitai_lora":
+            mid = str(args.get("model_id") or args.get("id") or "").strip()
+            if not mid:
+                return "Error: 'model_id' argument is required."
+            slug = str(args.get("slug") or "").strip()
+            ids = [p for p in mid.replace(",", " ").split() if p]
+            flags = " ".join(f"--id {p}" for p in ids)
+            if slug:
+                flags += f" --slug {slug}"
+            script = "~/hub/static/term/civitai_red_dl.py"
+            cmd = f"mkdir -p ~/civitai_dl && python3 {script} {flags}"
+            return _laptop_run(cmd, "bash", 180)
+
+        return f"Error: unknown tool '{name}'."
+    except HTTPException as e:
+        detail = e.detail if isinstance(e.detail, str) else str(e.detail)
+        return f"Error: {detail}"
+    except Exception as e:
+        return f"Error: {e}"
+
+
+@router.get("/tools")
+def list_tools():
+    return {
+        "tools": AGENT_TOOLS,
+        "max_iterations": MAX_TOOL_ITERATIONS,
+        "system_prompt": DEFAULT_SYSTEM_PROMPT,
+        "workspace": str(WORKSPACE),
+    }
+
+
+class ToolIn(BaseModel):
+    name: str
+    arguments: Any = {}
+
+
+@router.post("/tool")
+def run_tool(body: ToolIn):
+    name = (body.name or "").strip()
+    if not name:
+        raise HTTPException(400, "Tool name is required.")
+    output = execute_tool(name, body.arguments)
+    return {"ok": not str(output).startswith("Error:"), "name": name, "output": output}

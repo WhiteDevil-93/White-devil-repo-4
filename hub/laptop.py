@@ -1,7 +1,8 @@
 """Run a Venice snippet on the laptop over `ssh laptop` (same path as HypnoForge).
 
-Nothing auto-executes. The Venice tab POSTs here after an explicit Run tap.
-Scripts land in ~/venice_run on the WSL laptop.
+The Venice Agent POSTs here from run_laptop_command (and from the old Run sheet).
+Scripts land in ~/venice_run on the WSL laptop. Live Shell paste is separate
+(ttyd via forge:term-paste) so the user can watch commands in the Terminal tab.
 """
 from __future__ import annotations
 

@@ -87,13 +87,25 @@ $('paste').onclick = () => {
   $('clip').focus();
 };
 $('cancel').onclick = () => { $('sheet').classList.remove('on'); $('loraIdsWrap').hidden = true; };
+function pasteText(text) {
+  let s = String(text || '');
+  if (s && !s.endsWith('\n')) s += '\n';
+  if (!s) return false;
+  patch();
+  const w = win();
+  if (w && w.ForgeTermPaste) { w.ForgeTermPaste(s); return true; }
+  return false;
+}
+window.ForgeTermReceive = pasteText;
+window.addEventListener('message', ev => {
+  const d = ev.data;
+  if (d && d.type === 'forge:term-paste' && d.text) pasteText(d.text);
+});
 $('send').onclick = () => {
-  let text = $('clip').value;
-  if (text && !text.endsWith('\n')) text += '\n';
+  const text = $('clip').value;
   $('sheet').classList.remove('on');
   $('loraIdsWrap').hidden = true;
-  const w = win();
-  if (w && w.ForgeTermPaste) w.ForgeTermPaste(text);
+  pasteText(text);
 };
 
 function extraLoraFlags() {

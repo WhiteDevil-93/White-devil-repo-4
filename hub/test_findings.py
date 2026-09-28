@@ -104,7 +104,7 @@ def test_desktop_app_caching_and_manifest():
     assert res_manifest.status_code == 200
     assert "no-store" in res_manifest.headers.get("Cache-Control", "")
     manifest_data = res_manifest.json()
-    assert manifest_data.get("web_rev") == 11
+    assert manifest_data.get("web_rev") == 12
 
     # Desktop HTML should return no-store
     res_desktop = client.get("/app/desktop/index.html")
@@ -112,11 +112,24 @@ def test_desktop_app_caching_and_manifest():
     assert "no-store" in res_desktop.headers.get("Cache-Control", "")
     assert "Update Hub" in res_desktop.text
     assert "/app/term/?update=1" in res_desktop.text
+    assert "ForgeDesktopTermPaste" in res_desktop.text
+    assert "forge:term-paste" in res_desktop.text
 
     res_term = client.get("/app/term/")
     assert res_term.status_code == 200
     assert "loraIds" in res_term.text
     assert "every LoRA file" in res_term.text
+    assert "ForgeTermReceive" in res_term.text
+    assert "forge:term-paste" in res_term.text
+
+    res_venice = client.get("/app/venice/")
+    assert res_venice.status_code == 200
+    assert "Venice Agent" in res_venice.text
+    assert "Venice Bench" not in res_venice.text
+    assert "run_laptop_command" in res_venice.text
+    assert "run_in_terminal" in res_venice.text
+    assert "forge:term-paste" in res_venice.text
+    assert "Ask Venice or give a task" in res_venice.text
 
     # Static CSS and JS assets under /app/ should return no-cache (allowing 304 validation)
     res_css = client.get("/app/ui/forge.css")

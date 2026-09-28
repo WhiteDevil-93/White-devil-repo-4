@@ -79,8 +79,9 @@ FastAPI server providing endpoints for the Android app and web interface:
 - **Dynamic manifest**: `GET /api/manifest` (serves `hub/screens.json`)
 - **Status & health**: `GET /api/status`
 - **Colab GPU & Wan2.2 runner state**: `/api/colab/*`
-- **Venice chat proxy & thread persistence**: `/api/venice/*`
+- **Venice chat proxy, agent tools, and thread persistence**: `/api/venice/*` (`/tools`, `/tool`, `/chat`)
 - **Remote laptop execution**: `/api/laptop/*`
+- **Laptop Venice tab** (`/app/venice/`): same Agent loop as the Android app (You / Venice / Tool Call / Output), including `run_laptop_command` in `~/venice_run` and `run_in_terminal` which types into the live Shell (ttyd).
 
 ### Running Forge Hub
 
