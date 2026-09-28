@@ -7,6 +7,8 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 npm install
-CSC_IDENTITY_AUTO_DISCOVERY=false npm run dist:win
+# Linux cross-build uses native makensis + system wine (wine32 needed for the NSIS stub).
+# On Windows those env vars are ignored.
+CSC_IDENTITY_AUTO_DISCOVERY=false USE_SYSTEM_WINE=true npm run dist:win
 echo "Installers in $(pwd)/dist/"
 ls -lh dist/*.exe 2>/dev/null || true

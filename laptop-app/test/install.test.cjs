@@ -17,3 +17,13 @@ test("run.sh refuses a missing package.json", () => {
   assert.match(sh, /package\.json/);
   assert.match(sh, /install-home\.sh/);
 });
+
+test("Windows dist produces named Setup and Portable exes", () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8"));
+  assert.match(pkg.scripts["dist:win"], /--win nsis portable/);
+  assert.equal(pkg.build.nsis.artifactName, "Forge-Hub-Setup.${ext}");
+  assert.equal(pkg.build.portable.artifactName, "Forge-Hub-Portable.${ext}");
+  const readme = fs.readFileSync(path.join(__dirname, "..", "README.md"), "utf8");
+  assert.match(readme, /Forge-Hub-Setup\.exe/);
+  assert.match(readme, /Ctrl\+,/);
+});

@@ -9,7 +9,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "node --test test/config.test.cjs",
+    "test": "node --test test/config.test.cjs test/install.test.cjs",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win nsis portable",
     "dist:linux": "electron-builder --linux AppImage"
@@ -31,6 +31,9 @@
     ],
     "directories": {
       "output": "dist"
+    },
+    "toolsets": {
+      "nsis": "1.2.1"
     },
     "linux": {
       "target": ["AppImage"],
