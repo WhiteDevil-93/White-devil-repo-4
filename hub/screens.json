@@ -2,7 +2,7 @@
   "apk_version": 8,
   "apk_url": "/app/forgehub.apk",
   "force_update": true,
-  "web_rev": 12,
+  "web_rev": 13,
   "screens": [
     {"id": "home", "title": "Home", "icon": "home", "url": "/app/home/"},
     {"id": "renders", "title": "Renders", "icon": "movie", "url": "/app/renders/"},

@@ -5,6 +5,8 @@ __pycache__/
 hub/venice.key
 hub/venice.chats.json
 hub/.venv/
+laptop-app/node_modules/
+laptop-app/dist/
 *.apk
 .venv/
 credentials.json
