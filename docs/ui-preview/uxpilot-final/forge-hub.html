@@ -1,0 +1,174 @@
+<!-- screen_requirements:
+- Deep Space AI palette: #0B0E14 (bg), #151921 (surface), #7C3AED (accent), #C084FC (light accent).
+- Stark Grid layout: Industrial 1px borders, high-contrast imagery, minimalist headers.
+- Font: Plus Jakarta Sans for all text.
+- Header: Large hero image with brand "WhiteDevil" and "Forge Hub" subtitle.
+- Sections: Active AI Agents (Grid), System Status, Recent Files.
+- Navigation: Bottom nav with grid-aligned items and purple active indicator.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forge Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'space-bg': '#0B0E14',
+                        'space-surface': '#151921',
+                        'space-accent': '#7C3AED',
+                        'space-glow': '#C084FC',
+                        'space-border': '#1F2937',
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B0E14;
+            color: #FFFFFF;
+            -webkit-font-smoothing: antialiased;
+        }
+        .stark-grid {
+            background-image: 
+                linear-gradient(to right, rgba(31, 41, 55, 0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(31, 41, 55, 0.2) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .glass-card {
+            background: rgba(21, 25, 33, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(124, 58, 237, 0.1);
+        }
+        .glow-button {
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+            transition: all 0.3s ease;
+        }
+        .glow-button:hover {
+            box-shadow: 0 0 25px rgba(124, 58, 237, 0.5);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="max-w-[375px] mx-auto min-h-screen flex flex-col relative overflow-x-hidden">
+    <!-- Stark Grid Background -->
+    <div class="fixed inset-0 stark-grid pointer-events-none opacity-40"></div>
+
+    <!-- Hero Section -->
+    <section id="hero" class="relative h-[320px] w-full overflow-hidden flex flex-col justify-end">
+        <img class="absolute inset-0 w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_a293a29b9d_c7bea915ab298bde.png" alt="hyper-realistic futuristic AI laboratory with violet energy cores and sleek industrial metal structu" />
+        <div class="absolute inset-0 bg-gradient-to-t from-space-bg via-space-bg/40 to-transparent"></div>
+        
+        <div class="relative px-6 pb-8 z-10">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-space-accent to-space-glow flex items-center justify-center shadow-lg shadow-space-accent/20">
+                    <i class="fa-solid fa-ghost text-xs text-white"></i>
+                </div>
+                <span class="text-xs font-bold tracking-[0.2em] text-space-glow uppercase">WhiteDevil System</span>
+            </div>
+            <h1 class="text-4xl font-bold tracking-tight mb-2">Forge Hub</h1>
+            <p class="text-white/60 text-sm max-w-[280px]">Access neural networks and automated deployment protocols.</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="flex-1 relative z-10 px-6 py-8 space-y-8">
+        <!-- Quick Stats Grid -->
+        <div class="grid grid-cols-2 gap-px bg-space-border border border-space-border overflow-hidden rounded-lg">
+            <div class="bg-space-bg p-4 flex flex-col gap-1">
+                <span class="text-[10px] uppercase tracking-wider text-white/40 font-semibold">Active Agents</span>
+                <span class="text-xl font-bold text-space-glow">12</span>
+            </div>
+            <div class="bg-space-bg p-4 flex flex-col gap-1">
+                <span class="text-[10px] uppercase tracking-wider text-white/40 font-semibold">Process Load</span>
+                <span class="text-xl font-bold text-white">42%</span>
+            </div>
+        </div>
+
+        <!-- Section: Active Protocols -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-white/40">Active Protocols</h2>
+                <a href="#" class="text-[10px] font-bold text-space-accent uppercase tracking-wider">View All</a>
+            </div>
+            
+            <div class="space-y-1 bg-space-border border border-space-border overflow-hidden">
+                <!-- List Item 1 -->
+                <div class="bg-space-bg p-4 flex items-center justify-between group active:bg-space-surface transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-space-surface border border-space-border flex items-center justify-center text-space-glow">
+                            <i class="fa-solid fa-microchip text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold">Neural Forge</h3>
+                            <p class="text-[10px] text-white/40">Synthesizing assets...</p>
+                        </div>
+                    </div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-space-accent animate-pulse shadow-[0_0_8px_rgba(124,58,237,0.8)]"></div>
+                </div>
+
+                <!-- List Item 2 -->
+                <div class="bg-space-bg p-4 flex items-center justify-between group active:bg-space-surface transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-space-surface border border-space-border flex items-center justify-center text-white/40 group-hover:text-space-glow transition-colors">
+                            <i class="fa-solid fa-terminal text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold">Agent Deployment</h3>
+                            <p class="text-[10px] text-white/40">Ready for command</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-white/20"></i>
+                </div>
+
+                <!-- List Item 3 -->
+                <div class="bg-space-bg p-4 flex items-center justify-between group active:bg-space-surface transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-space-surface border border-space-border flex items-center justify-center text-white/40 group-hover:text-space-glow transition-colors">
+                            <i class="fa-solid fa-shield-halved text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold">Security Core</h3>
+                            <p class="text-[10px] text-white/40">Protection Active</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-white/20"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- New Agent Button -->
+        <button class="w-full h-14 bg-space-accent hover:bg-space-glow text-white font-bold text-sm tracking-widest uppercase glow-button flex items-center justify-center gap-3 transition-colors">
+            <i class="fa-solid fa-plus"></i>
+            Initialize New Agent
+        </button>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav id="footer" class="sticky bottom-0 w-full h-[72px] bg-space-bg/80 backdrop-blur-xl border-t border-space-border grid grid-cols-3 z-50">
+        <a href="AgentChat__mobile.html" class="flex flex-col items-center justify-center gap-1 group">
+            <i class="fa-solid fa-bolt text-lg text-white/40 group-hover:text-space-accent transition-colors"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tighter text-white/40 group-hover:text-white transition-colors">Agent</span>
+        </a>
+        <a href="ForgeHub__mobile.html" class="flex flex-col items-center justify-center gap-1 group relative">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] bg-space-accent shadow-[0_0_10px_rgba(124,58,237,1)]"></div>
+            <i class="fa-solid fa-layer-group text-lg text-space-accent"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tighter text-white">Hub</span>
+        </a>
+        <a href="YouProfile__mobile.html" class="flex flex-col items-center justify-center gap-1 group">
+            <i class="fa-solid fa-user text-lg text-white/40 group-hover:text-space-accent transition-colors"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tighter text-white/40 group-hover:text-white transition-colors">You</span>
+        </a>
+    </nav>
+</body>
+</html>

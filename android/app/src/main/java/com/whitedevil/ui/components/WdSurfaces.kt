@@ -17,7 +17,7 @@ import com.whitedevil.ui.theme.WdPalette
 
 @Composable
 fun WdScreenBackground(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Box(modifier.fillMaxSize().background(WdPalette.bg)) { content() }
+    WdStarkGridScreen(modifier.background(WdPalette.bg)) { content() }
 }
 
 @Composable

@@ -10,21 +10,25 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+/** UX Pilot “Deep Space” — https://uxpilot.ai/a/ui-design?page=KWVlind9DyhFkDfRaXEf */
 object WdPalette {
-    val bg = Color(0xFF000000)
-    val surface = Color(0xFF1C1C1E)
-    val bgElevated = Color(0xFF0A0A0A)
-    val surfaceHover = Color(0xFF2C2C2E)
-    val stroke = Color(0xFF3A3A3C)
-    val accent = Color(0xFFD9BF8C)
-    val onAccent = Color(0xFF000000)
+    val bg = Color(0xFF0B0E14)
+    val surface = Color(0xFF151921)
+    val bgElevated = Color(0xFF151921)
+    val surfaceHover = Color(0xFF1F2937)
+    val stroke = Color(0xFF1F2937)
+    val accent = Color(0xFF7C3AED)
+    val accentLight = Color(0xFFC084FC)
+    val onAccent = Color(0xFFFFFFFF)
+    val onLightButton = Color(0xFF0B0E14)
     val text = Color(0xFFFFFFFF)
-    val textSecondary = Color(0xFFAEAEB2)
-    val textMetadata = Color(0xFF8E8E93)
-    val userBubble = Color(0xFF2C2C2E)
+    val textSecondary = Color(0x99FFFFFF)
+    val textMetadata = Color(0x66FFFFFF)
+    val userBubble = Color(0xFF7C3AED)
+    val success = Color(0xFF22C55E)
 
     val accentDim @Composable get() = accent.copy(alpha = 0.65f)
-    val errorText @Composable get() = accent
+    val errorText @Composable get() = accentLight
 }
 
 private val scheme = darkColorScheme(
@@ -36,29 +40,27 @@ private val scheme = darkColorScheme(
     onSurface = WdPalette.text,
     onSurfaceVariant = WdPalette.textSecondary,
     outline = WdPalette.stroke,
-    error = WdPalette.accent,
+    error = WdPalette.accentLight,
 )
 
-/** Dense type scale (~iOS Messages / Telegram), not poster headlines. */
 private val wdTypography = Typography(
     headlineLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Bold,
         fontSize = 17.sp,
         lineHeight = 22.sp,
-        letterSpacing = (-0.2).sp,
         color = WdPalette.text,
     ),
     titleLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 17.sp,
-        lineHeight = 22.sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
         color = WdPalette.text,
     ),
     titleMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp,
         lineHeight = 20.sp,
         color = WdPalette.text,
@@ -86,24 +88,25 @@ private val wdTypography = Typography(
     ),
     labelLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 0.4.sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 10.sp,
+        lineHeight = 12.sp,
+        letterSpacing = 1.2.sp,
         color = WdPalette.textMetadata,
     ),
     labelMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
         color = WdPalette.textSecondary,
     ),
     labelSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 13.sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 9.sp,
+        lineHeight = 11.sp,
+        letterSpacing = 0.5.sp,
         color = WdPalette.textMetadata,
     ),
 )

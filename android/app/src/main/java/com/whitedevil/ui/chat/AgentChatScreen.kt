@@ -124,13 +124,10 @@ private fun UserBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
         Text(
             msg.message,
             style = MaterialTheme.typography.bodyMedium,
-            color = WdPalette.text,
+            color = WdPalette.onAccent,
             modifier = Modifier
                 .widthIn(max = 300.dp)
-                .background(
-                    WdPalette.userBubble,
-                    RoundedCornerShape(WdDimens.bubbleRadius, WdDimens.bubbleRadius, 3.dp, WdDimens.bubbleRadius),
-                )
+                .background(WdPalette.accent, RoundedCornerShape(2.dp))
                 .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
                 .padding(horizontal = 10.dp, vertical = 7.dp),
         )

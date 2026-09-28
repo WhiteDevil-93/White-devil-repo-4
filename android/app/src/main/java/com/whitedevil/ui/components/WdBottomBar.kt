@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Layers
@@ -22,14 +21,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.whitedevil.ui.theme.WdDimens
 import com.whitedevil.ui.theme.WdPalette
 
 data class WdTabItem(val id: String, val label: String, val iconRes: Int)
@@ -58,7 +55,8 @@ fun WdBottomBar(
         Row(
             Modifier
                 .fillMaxWidth()
-                .height(WdDimens.navBarHeight),
+                .height(72.dp)
+                .background(WdPalette.bg),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             tabDefs.forEach { tab ->
@@ -68,28 +66,33 @@ fun WdBottomBar(
                         .weight(1f)
                         .clickable { onSelect(tab.id) }
                         .semantics { role = Role.Tab }
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    if (selected) {
+                        Box(
+                            Modifier
+                                .width(32.dp)
+                                .height(2.dp)
+                                .background(WdPalette.accent),
+                        )
+                    } else {
+                        Box(Modifier.height(2.dp))
+                    }
                     Icon(
                         tab.icon,
                         contentDescription = tab.label,
-                        modifier = Modifier.size(WdDimens.navIcon),
-                        tint = if (selected) WdPalette.text else WdPalette.textMetadata,
+                        modifier = Modifier
+                            .padding(top = 6.dp)
+                            .size(22.dp),
+                        tint = if (selected) WdPalette.accent else WdPalette.textMetadata,
                     )
                     Text(
-                        tab.label,
+                        tab.label.uppercase(),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (selected) WdPalette.text else WdPalette.textMetadata,
-                        fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
-                    )
-                    Box(
-                        Modifier
-                            .padding(top = 2.dp)
-                            .width(14.dp)
-                            .height(1.5.dp)
-                            .clip(RoundedCornerShape(1.dp))
-                            .background(if (selected) WdPalette.accent else WdPalette.bg),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 4.dp),
                     )
                 }
             }

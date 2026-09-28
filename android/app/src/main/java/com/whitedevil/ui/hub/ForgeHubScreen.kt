@@ -28,16 +28,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import androidx.compose.ui.viewinterop.AndroidView
 import com.whitedevil.*
 import com.whitedevil.MainActivity
 import com.whitedevil.ui.components.WdHairline
 import com.whitedevil.ui.components.WdScreenBackground
-import com.whitedevil.ui.components.WdTopBar
 import com.whitedevil.ui.theme.WdDimens
 import com.whitedevil.ui.theme.WdPalette
+
+private const val HUB_HERO =
+    "https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_a293a29b9d_c7bea915ab298bde.png"
 
 @Composable
 fun ForgeHubScreen(host: MainActivity) {
@@ -45,23 +51,35 @@ fun ForgeHubScreen(host: MainActivity) {
     val loading = progress in 0.01f..0.99f || host.hubScreensUiPublic().isEmpty()
     WdScreenBackground(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            WdTopBar(
-                title = "Forge Hub",
-                subtitle = host.hubConnectionLabelPublic(),
-                trailing = {
-                    IconButton(
-                        onClick = { host.reloadCurrentHubScreen() },
-                        modifier = Modifier.size(WdDimens.iconTap),
-                    ) {
-                        Icon(
-                            Icons.Outlined.Refresh,
-                            contentDescription = "Reload",
-                            modifier = Modifier.size(20.dp),
-                            tint = WdPalette.textSecondary,
-                        )
+            Box(Modifier.fillMaxWidth().height(140.dp)) {
+                AsyncImage(
+                    model = HUB_HERO,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(Brush.verticalGradient(listOf(Color.Transparent, WdPalette.bg))),
+                )
+                Row(
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("WHITEDEVIL SYSTEM", style = MaterialTheme.typography.labelLarge, color = WdPalette.accentLight)
+                        Text("Forge Hub", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Text(host.hubConnectionLabelPublic(), style = MaterialTheme.typography.labelMedium)
                     }
-                },
-            )
+                    IconButton(onClick = { host.reloadCurrentHubScreen() }, modifier = Modifier.size(WdDimens.iconTap)) {
+                        Icon(Icons.Outlined.Refresh, contentDescription = "Reload", tint = WdPalette.textSecondary)
+                    }
+                }
+            }
+            WdHairline()
             if (host.hubBannerVisiblePublic()) {
                 Row(
                     Modifier.padding(horizontal = WdDimens.screenHorizontal),

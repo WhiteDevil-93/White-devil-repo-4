@@ -1,9 +1,12 @@
 package com.whitedevil.ui.agent
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,12 +15,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.outlined.AttachFile
-import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -32,10 +36,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whitedevil.*
 import com.whitedevil.MainActivity
@@ -44,94 +50,55 @@ import com.whitedevil.ui.app.AttachmentUi
 import com.whitedevil.ui.chat.AgentChatScreen
 import com.whitedevil.ui.components.WdHairline
 import com.whitedevil.ui.components.WdScreenBackground
-import com.whitedevil.ui.components.WdTopBar
 import com.whitedevil.ui.theme.WdDimens
 import com.whitedevil.ui.theme.WdPalette
-
-private const val DEFAULT_AGENT_SUBTITLE = "On-device agent"
 
 @Composable
 fun AgentScreen(host: MainActivity) {
     var overflowOpen by remember { mutableStateOf(false) }
     val hasKey = host.veniceKeyConfiguredPublic()
     val hasConversation = host.agentHasConversationPublic()
-    val status = host.agentStatusSubtitlePublic()
-    val showStatus = status != DEFAULT_AGENT_SUBTITLE
     WdScreenBackground(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            WdTopBar(
-                title = "Venice",
-                subtitle = if (showStatus) status else null,
-                trailing = {
-                    Box {
-                        IconButton(
-                            onClick = { overflowOpen = true },
-                            modifier = Modifier.size(WdDimens.iconTap),
-                        ) {
-                            Icon(Icons.Outlined.MoreHoriz, null, tint = WdPalette.textSecondary, modifier = Modifier.size(20.dp))
-                        }
-                        DropdownMenu(expanded = overflowOpen, onDismissRequest = { overflowOpen = false }) {
-                            DropdownMenuItem(text = { Text("Paste from clipboard") }, onClick = {
-                                overflowOpen = false
-                                host.pasteFromClipboard()
-                            })
-                            DropdownMenuItem(text = { Text("System prompt") }, onClick = {
-                                overflowOpen = false
-                                host.showSystemPromptDialog()
-                            })
-                            DropdownMenuItem(text = { Text("Clear chat") }, onClick = {
-                                overflowOpen = false
-                                host.confirmClearAgentChatPublic()
-                            })
-                        }
-                    }
-                },
-            )
-            if (hasKey) {
+            if (!hasKey) {
                 Row(
                     Modifier
-                        .padding(horizontal = WdDimens.screenHorizontal)
-                        .clickable { host.showModelPicker() }
-                        .semantics { contentDescription = "Choose model" }
-                        .padding(bottom = 2.dp),
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        UiPolish.modelLabel(host.agentSelectedModelPublic()),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = WdPalette.textMetadata,
-                    )
-                    Icon(
-                        Icons.Outlined.ExpandMore,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = WdPalette.textMetadata,
+                        "AGENT CONFIG: VENICE",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = WdPalette.text,
+                        fontWeight = FontWeight.Bold,
                     )
                 }
+                WdHairline()
+            } else {
+                AgentChatHeader(
+                    modelLabel = UiPolish.modelLabel(host.agentSelectedModelPublic()),
+                    onOverflow = { overflowOpen = true },
+                    overflowOpen = overflowOpen,
+                    onDismissOverflow = { overflowOpen = false },
+                    host = host,
+                )
             }
             if (host.agentShowProgressPublic()) {
                 LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth().height(1.dp),
+                    modifier = Modifier.fillMaxWidth().height(2.dp),
                     color = WdPalette.accent,
                     trackColor = Color.Transparent,
                 )
             }
-            WdHairline()
-            Box(
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(top = 20.dp),
-                contentAlignment = Alignment.TopStart,
-            ) {
+            Box(Modifier.weight(1f).fillMaxWidth()) {
                 when {
                     !hasKey -> AgentSetupEmptyState(
                         onAddKey = { host.showVeniceKeySheet() },
-                        modifier = Modifier.padding(horizontal = WdDimens.screenHorizontal),
+                        onPickModel = { host.showModelPicker() },
+                        modelLabel = UiPolish.modelLabel(host.agentSelectedModelPublic()),
                     )
-                    !hasConversation -> AgentReadyEmptyState(
-                        modifier = Modifier.padding(horizontal = WdDimens.screenHorizontal),
-                    )
+                    !hasConversation -> AgentReadyEmptyState(Modifier.align(Alignment.TopStart))
                     else -> AgentChatScreen(
                         messages = host.chatMessagesPublic(),
                         agentThinking = host.agentThinkingPublic(),
@@ -146,52 +113,114 @@ fun AgentScreen(host: MainActivity) {
                 }
             }
             if (hasKey) {
-                CompactComposer(
-                    host,
-                    Modifier
-                        .fillMaxWidth()
-                        .imePadding(),
-                )
+                DeepSpaceComposer(host, Modifier.fillMaxWidth().imePadding())
             }
         }
     }
 }
 
 @Composable
-private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
+private fun AgentChatHeader(
+    modelLabel: String,
+    onOverflow: () -> Unit,
+    overflowOpen: Boolean,
+    onDismissOverflow: () -> Unit,
+    host: MainActivity,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("Venice", style = MaterialTheme.typography.titleLarge)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(WdPalette.accent),
+                )
+                Text(
+                    " $modelLabel • ACTIVE",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = WdPalette.textMetadata,
+                    modifier = Modifier.padding(start = 6.dp),
+                )
+            }
+        }
+        Box {
+            IconButton(
+                onClick = onOverflow,
+                modifier = Modifier
+                    .size(40.dp)
+                    .border(1.dp, WdPalette.stroke, RoundedCornerShape(2.dp)),
+            ) {
+                Icon(Icons.Outlined.Tune, null, tint = WdPalette.textSecondary, modifier = Modifier.size(18.dp))
+            }
+            DropdownMenu(expanded = overflowOpen, onDismissRequest = onDismissOverflow) {
+                DropdownMenuItem(text = { Text("Paste from clipboard") }, onClick = {
+                    onDismissOverflow()
+                    host.pasteFromClipboard()
+                })
+                DropdownMenuItem(text = { Text("System prompt") }, onClick = {
+                    onDismissOverflow()
+                    host.showSystemPromptDialog()
+                })
+                DropdownMenuItem(text = { Text("Clear chat") }, onClick = {
+                    onDismissOverflow()
+                    host.confirmClearAgentChatPublic()
+                })
+            }
+        }
+    }
+    WdHairline()
+}
+
+@Composable
+private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier) {
     val attachments = host.pendingAttachmentsUiPublic()
     val input = host.agentInputTextPublic()
     val canSend = host.agentComposerEnabledPublic() && input.isNotBlank()
-    Column(modifier) {
-        WdHairline()
+    Column(
+        modifier
+            .background(WdPalette.bg)
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+    ) {
         if (attachments.isNotEmpty()) {
-            LazyRow(modifier = Modifier.padding(start = WdDimens.screenHorizontal, top = 6.dp, bottom = 4.dp)) {
+            LazyRow(modifier = Modifier.padding(bottom = 8.dp)) {
                 itemsIndexed(attachments) { index, item ->
-                    AttachmentChip(item) { host.removePendingAttachment(index) }
+                    Text(
+                        item.name.take(20),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .clickable { host.removePendingAttachment(index) },
+                    )
                 }
             }
         }
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(
-                    horizontal = WdDimens.screenHorizontal - 4.dp,
-                    vertical = WdDimens.composerVertical,
-                ),
+                .border(1.dp, WdPalette.stroke, RoundedCornerShape(2.dp))
+                .background(WdPalette.surface)
+                .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
                 onClick = { host.showAttachSheet() },
                 modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Attach file" },
             ) {
-                Icon(Icons.Outlined.AttachFile, null, modifier = Modifier.size(20.dp), tint = WdPalette.textSecondary)
+                Icon(Icons.Outlined.AttachFile, null, tint = WdPalette.textMetadata, modifier = Modifier.size(18.dp))
             }
             BasicTextField(
                 value = input,
                 onValueChange = { host.setAgentInputText(it) },
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 6.dp),
+                    .padding(vertical = 8.dp),
                 enabled = host.agentComposerEnabledPublic(),
                 textStyle = MaterialTheme.typography.bodyMedium.copy(color = WdPalette.text),
                 cursorBrush = SolidColor(WdPalette.accent),
@@ -199,7 +228,7 @@ private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
                 decorationBox = { inner ->
                     Box {
                         if (input.isEmpty()) {
-                            Text("Message", style = MaterialTheme.typography.bodyMedium, color = WdPalette.textMetadata)
+                            Text("Command Venice...", style = MaterialTheme.typography.bodyMedium, color = WdPalette.textMetadata)
                         }
                         inner()
                     }
@@ -208,27 +237,19 @@ private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
             IconButton(
                 onClick = { host.sendAgentMessage() },
                 enabled = canSend,
-                modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Send" },
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(if (canSend) WdPalette.accent else WdPalette.stroke)
+                    .semantics { contentDescription = "Send" },
             ) {
                 Icon(
-                    Icons.AutoMirrored.Filled.Send,
+                    Icons.Outlined.KeyboardArrowUp,
                     null,
-                    modifier = Modifier.size(20.dp),
-                    tint = if (canSend) WdPalette.accent else WdPalette.textMetadata,
+                    tint = WdPalette.onAccent,
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
     }
-}
-
-@Composable
-private fun AttachmentChip(item: AttachmentUi, onRemove: () -> Unit) {
-    Text(
-        item.name.take(20) + if (item.name.length > 20) "…" else "",
-        style = MaterialTheme.typography.labelMedium,
-        color = WdPalette.textSecondary,
-        modifier = Modifier
-            .padding(end = 6.dp)
-            .clickable { onRemove() },
-    )
 }
