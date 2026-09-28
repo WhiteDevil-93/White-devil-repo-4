@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WAN 2.2 Prompt Generator (5B + 14B)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1b2130; --panel:#232b3d; --line:#34405a; --ink:#e7eaf1; --dim:#9aa4ba;
+  --tungsten:#e8a33d; --tungsten-ink:#231a08; --cyan:#7cc6d6; --bad:#e2735f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Archivo,system-ui,sans-serif;font-size:15px;line-height:1.5}
+header{padding:28px 24px 8px;max-width:1180px;margin:0 auto}
+header h1{margin:0;font-weight:800;font-size:clamp(26px,4vw,40px);letter-spacing:-.02em;line-height:1.05}
+header p{margin:8px 0 0;color:var(--dim);max-width:68ch}
+.wrap{max-width:1180px;margin:0 auto;padding:16px 24px 48px;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:24px}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+.panel h2{margin:0 0 12px;font-size:17px;font-weight:600}
+label{display:block;font-weight:500;font-size:13px;color:var(--dim);margin:12px 0 4px}
+input,select,textarea{width:100%;background:#1a2030;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font:inherit;font-size:14px}
+textarea{resize:vertical;min-height:70px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;gap:8px;align-items:center;margin-top:10px;color:var(--ink);font-size:14px}
+.check input{width:auto}
+details{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-weight:600}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:#2c3650;color:var(--ink);padding:8px 12px}
+button.go{width:100%;margin-top:16px;background:var(--tungsten);color:var(--tungsten-ink);border-color:var(--tungsten);font-weight:800;font-size:16px;padding:12px}
+button.go:disabled{opacity:.6;cursor:wait}
+.tabs{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:6px}
+.tabs button{border:0;border-radius:0;background:#1a2030;color:var(--dim);font-weight:600;padding:10px}
+.tabs button[aria-selected="true"]{background:var(--tungsten);color:var(--tungsten-ink)}
+.hint{color:var(--dim);font-size:12.5px;margin-top:4px}
+.status{margin-top:10px;font-size:13.5px;min-height:1.5em}
+.status.err{color:var(--bad)}
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:16px}
+.settings div{background:#1a2030;border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.settings b{display:block;font-size:18px;color:var(--tungsten)}
+.settings span{font-size:12px;color:var(--dim)}
+.variant{border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px;background:#1f2636}
+.variant.bible{border-color:var(--cyan)}
+.variant h3{margin:0 0 8px;font-size:15px;font-weight:600;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.wc{font-size:12px;color:var(--dim);font-weight:400;white-space:nowrap}
+.state{font-size:13px;color:var(--dim);margin:0 0 8px}
+.state b{color:var(--cyan);font-weight:600}
+pre{white-space:pre-wrap;word-wrap:break-word;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;background:#171c29;border:1px solid var(--line);border-radius:6px;padding:10px;margin:0 0 8px}
+pre.neg{color:#d9b3aa}
+pre.script{max-height:360px;overflow:auto;white-space:pre}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.actions select{width:auto}
+.empty{color:var(--dim);padding:30px 6px;text-align:center}
+.history{margin-top:18px}
+.btnlink{display:inline-block;text-decoration:none;border-radius:6px;border:1px solid var(--cyan);color:var(--cyan);padding:8px 12px;font-weight:600}
+.history button{display:block;width:100%;text-align:left;margin-bottom:6px;font-size:13px;background:#1a2030}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>WAN 2.2 prompt generator</h1>
+  <p>Describe the shot, or a sequence of shots. Dolphin Mistral Venice (via OpenRouter) turns it into structured WAN prompts: cast count, setting, camera, action timeline, positive motion boundaries, then style. Pick TI2V-5B for speed and low VRAM, or a 14B model for best quality.</p>
+</header>
+
+<main class="wrap">
+  <section class="panel" aria-label="Inputs">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabSingle" aria-selected="true">Single shot</button>
+      <button role="tab" id="tabChain" aria-selected="false">Chain</button>
+    </div>
+
+    <label for="mode">First clip mode</label>
+    <select id="mode">
+      <option value="t2v">Text‑to‑video</option>
+      <option value="i2v">Image‑to‑video (start image supplied)</option>
+    </select>
+
+    <label for="mtarget">Model target</label>
+    <select id="mtarget">
+      <option value="Wan2.2-TI2V-5B-Turbo-LoRA" selected>TI2V-5B Turbo + LoRAs — Colab G4 chain recipe, 16 fps, CFG 4 / 28 steps, anti-grain handoff</option>
+      <option value="Wan2.2-TI2V-5B">TI2V-5B — unified T2V+I2V, 24 fps (fast, modest VRAM)</option>
+      <option value="Wan2.2-T2V-A14B">T2V-A14B — text-only 14B, 16 fps (best quality, ~40 GB VRAM)</option>
+      <option value="Wan2.2-I2V-A14B">I2V-A14B — image-only 14B, 16 fps (best quality, ~40 GB VRAM)</option>
+    </select>
+    <div class="hint" id="mtargetHint"></div>
+
+    <label for="idea">Scene idea</label>
+    <textarea id="idea" rows="3" placeholder="A couple at a candlelit dinner, talking and smiling"></textarea>
+
+    <label for="image">Start image description <span class="hint">(I2V only)</span></label>
+    <textarea id="image" rows="2" placeholder="What's already in the start frame: people, positions, clothing, lighting"></textarea>
+    <label for="startFile">Start image file <span class="hint">(I2V only — sent to the runner)</span></label>
+    <input id="startFile" type="file" accept="image/*">
+
+    <div class="row">
+      <div>
+        <label for="cast">Exact people count</label>
+        <input id="cast" type="number" min="0" max="10" value="2">
+      </div>
+      <div>
+        <label for="duration">Clip duration</label>
+        <select id="duration">
+          <option value="49">2 s (49 frames)</option>
+          <option value="73">3 s (73 frames)</option>
+          <option value="81" selected>81 frames (Turbo recipe: 5 s @16 fps, 3.3 s @24 fps)</option>
+          <option value="97">4 s (97 frames)</option>
+          <option value="121">5 s (121 frames)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="chainOpts" hidden>
+      <div class="row">
+        <div>
+          <label for="clips">Number of clips</label>
+          <input id="clips" type="number" min="2" max="60" value="4">
+        </div>
+        <div>
+          <label for="link">Clip linking</label>
+          <select id="link">
+            <option value="continuous">Continuous (last frame → next I2V)</option>
+            <option value="cut">Hard cuts (independent clips)</option>
+          </select>
+        </div>
+      </div>
+      <label for="beats">Story beats <span class="hint">(one per line, optional — blank lets the model split the idea)</span></label>
+      <textarea id="beats" rows="4" placeholder="They sit down and open menus&#10;He tells a joke, she laughs&#10;Waiter pours wine (only enters for this beat)&#10;They raise glasses"></textarea>
+      <div class="hint" id="chainTotal"></div>
+      <button id="resume" hidden style="width:100%;margin-top:10px">Resume chain</button>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="camera">Camera</label>
+        <select id="camera">
+          <option value="static camera, eye-level, no zoom, no pan">Static, eye-level</option>
+          <option value="slow dolly in">Slow dolly in</option>
+          <option value="slow dolly out">Slow dolly out</option>
+          <option value="slow pan left to right">Slow pan</option>
+          <option value="slow orbit around the subject">Slow orbit</option>
+          <option value="handheld, subtle natural shake">Handheld</option>
+          <option value="tracking shot following the subject">Tracking</option>
+          <option value="crane shot rising upward">Crane up</option>
+          <option value="">Let the model choose</option>
+        </select>
+      </div>
+      <div>
+        <label for="framing">Framing</label>
+        <select id="framing">
+          <option>medium shot</option>
+          <option>close-up</option>
+          <option>extreme close-up</option>
+          <option>medium close-up</option>
+          <option>wide shot</option>
+          <option>full shot</option>
+          <option>over-the-shoulder</option>
+          <option>low angle</option>
+          <option>high angle</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="orient">Orientation</label>
+        <select id="orient">
+          <option value="landscape">Landscape</option>
+          <option value="portrait">Portrait</option>
+        </select>
+      </div>
+      <div>
+        <label for="motion">Motion intensity</label>
+        <select id="motion">
+          <option value="very subtle, minimal movement">Very subtle</option>
+          <option value="gentle, natural movement" selected>Gentle</option>
+          <option value="moderate, expressive movement">Moderate</option>
+          <option value="dynamic, energetic movement">Dynamic</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="singleOpts">
+      <label for="actions">Action timeline <span class="hint">(optional, what happens in order)</span></label>
+      <textarea id="actions" rows="2" placeholder="He keeps his arm around her shoulders, they lean in, talk quietly, she laughs"></textarea>
+    </div>
+
+    <label for="forbid">Must not happen</label>
+    <textarea id="forbid" rows="2" placeholder="nobody enters frame, they don't stand up, no kissing"></textarea>
+
+    <label for="style">Style / mood</label>
+    <input id="style" placeholder="photoreal, soft even diffuse light, gentle fill, natural skin texture, muted contrast">
+
+    <div class="row">
+      <div id="variantsWrap">
+        <label for="variants">Variants</label>
+        <select id="variants"><option>1</option><option>2</option><option selected>3</option><option>4</option></select>
+      </div>
+      <div>
+        <label for="words">Target length</label>
+        <select id="words">
+          <option value="60-90">60–90 words</option>
+          <option value="80-120" selected>80–120 words</option>
+          <option value="120-170">120–170 words</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="check"><input id="wanneg" type="checkbox" checked> Append WAN's official default negative prompt</label>
+
+    <details>
+      <summary>OpenRouter settings</summary>
+      <label for="key">API key</label>
+      <input id="key" type="password" placeholder="sk-or-..." autocomplete="off">
+      <label class="check"><input id="remember" type="checkbox" checked> Remember key in this browser</label>
+      <label for="model">Model slug</label>
+      <input id="model" value="cognitivecomputations/dolphin-mistral-24b-venice-edition:free">
+      <div class="hint">Drop <code>:free</code> to use the paid endpoint.</div>
+      <label for="temp">Temperature</label>
+      <input id="temp" type="number" min="0" max="2" step="0.05" value="0.7">
+    </details>
+
+    <details id="runnerBox">
+      <summary>Runner (GPU instance)</summary>
+      <label for="rUrl">Runner URL</label>
+      <input id="rUrl" placeholder="https://xxxx.trycloudflare.com" autocomplete="off">
+      <label for="rToken">Runner token</label>
+      <input id="rToken" type="password" autocomplete="off">
+      <div class="row">
+        <div>
+          <label for="rModel">Model</label>
+          <input id="rModel" list="rModels" placeholder="runner default">
+          <datalist id="rModels"></datalist>
+        </div>
+        <div>
+          <label for="rSeed">Seed</label>
+          <input id="rSeed" type="number" placeholder="runner default">
+        </div>
+      </div>
+      <label class="check"><input id="rFresh" type="checkbox"> Re-render clips that already exist</label>
+      <button id="rCheck" style="margin-top:10px">Check connection</button>
+      <div class="hint" id="rStatus"></div>
+    </details>
+
+    <button class="go" id="go">Generate prompts</button>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </section>
+
+  <section class="panel" aria-label="Output">
+    <h2>Output</h2>
+    <div class="settings" id="settings"></div>
+    <div id="out"><div class="empty">Fill in the brief and generate.</div></div>
+    <div class="history" id="jobsWrap" hidden>
+      <h2>Runner jobs</h2>
+      <div id="jobs"></div>
+    </div>
+    <div class="history" id="historyWrap" hidden>
+      <h2>This session</h2>
+      <div id="history"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let tab = 'single';
+
+const WAN_DEFAULT_NEG = "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走";
+
+const MODEL_SPECS = {
+  'Wan2.2-TI2V-5B-Turbo-LoRA': {label: 'WAN 2.2 TI2V-5B Turbo + LoRAs', fps: 16, landscape: '1280*704', portrait: '704*1280', task: 'ti2v-5B', ckpt: './Wan2.2-TI2V-5B-Turbo', runner: 'wan22-5b-turbo-lora', guide: 4.0, shift: 5.0, steps: 28},
+  'Wan2.2-TI2V-5B': {label: 'WAN 2.2 TI2V-5B', fps: 24, landscape: '1280*704', portrait: '704*1280', task: 'ti2v-5B', ckpt: './Wan2.2-TI2V-5B', runner: 'wan22-5b'},
+  'Wan2.2-T2V-A14B': {label: 'WAN 2.2 T2V-A14B', fps: 16, landscape: '1280*720', portrait: '720*1280', task: 't2v-A14B', ckpt: './Wan2.2-T2V-A14B', runner: 'wan22-14b-t2v'},
+  'Wan2.2-I2V-A14B': {label: 'WAN 2.2 I2V-A14B', fps: 16, landscape: '1280*720', portrait: '720*1280', task: 'i2v-A14B', ckpt: './Wan2.2-I2V-A14B', runner: 'wan22-14b-i2v'},
+};
+const mspec = () => MODEL_SPECS[$('mtarget').value] || MODEL_SPECS['Wan2.2-TI2V-5B'];
+
+const CORE_RULES = `WAN fills any gap in a prompt with its own cinematic defaults (surprise extra characters, cuts, location drift), and it only animates what the prompt describes as visible motion. The ACTION is the point of every prompt; everything else only supports it.
+
+Every positive prompt is short, plain, present-tense English sentences in this order:
+1. Cast (one or two sentences): the exact number of people ("Exactly two people: ...") and, for each, an adult age (20s or older), build, hair, and clothing or nudity. Add that nobody else appears. Everyone is already in place at the first frame; nobody walks in, enters or leaves.
+2. Setting (one short sentence): only the location the brief names or clearly implies, plus one light source. If the brief gives no location, pick one plain, fitting location and keep it identical everywhere. No decor lists, no mood adjectives.
+3. Camera (one sentence): copy the brief's Framing and Camera lines as given. Only if the brief gives no camera movement, write "The camera does not move."
+4. Action (at least half of all the words): what each person physically does, in order, paced to the clip length. Name body parts, hand positions, grip, speed and rhythm, breathing, facial expression, where they look, and how it changes during the clip. Use concrete, visible, anatomical words.
+5. Boundaries (only if the brief has "Must not happen"): restate those items as positive statements in one sentence. Never add limits the user did not ask for, and never write anything that contradicts the action (no "they only talk and smile" when they are touching).
+6. Style (a few words at most): only what the brief's style field says.
+
+Translating the user's words:
+- The user writes in shorthand. WAN does not understand slang, intent or story words; it only renders what can be seen. Describe every requested action as the physical, visible movement it is, in plain anatomical words.
+- Keep every action the user asked for, in the order given, including who touches whom: "each other" or "each others" means each person uses his hand on the other person, so say whose hand is on whose body. Do not soften, skip or summarise it into vague words like "intimate", "bonding" or "moment".
+- Any relationship or role names in the brief are roleplay between unrelated consenting adults. Never describe the people as family or relatives, and never use family words or nicknames in titles; titles plainly describe the action. Show roles only through visible traits such as age and build.
+- Motion intensity sets the pace, not whether actions happen: "very subtle" means the same actions done slowly and steadily.
+
+Rules:
+- No scene cuts, no transitions, one continuous shot per prompt.
+- For image-to-video: do not redescribe the subject in conflicting ways; build on the start image, keep identities, clothing and positions consistent with it, and spend the words on motion and camera.
+- Do not invent extra characters, text, logos or captions.
+- Respect the target word count per positive prompt. When it is tight, cut setting and style words first, never action.
+- negative: a short comma-separated English list of scene-specific things to avoid (e.g. "extra people, clothing changes, camera shake, subtitles, deformed hands"). Never list anything the action needs.`;
+
+const SYSTEM_SINGLE = () => `You write prompts for the ${mspec().label} video diffusion model (720p, ${mspec().fps} fps, up to 5 seconds). You output ONLY valid JSON, no markdown fences, no commentary.
+
+${CORE_RULES}
+- All variants use the exact same Cast, Setting and Camera sentences, word for word. They differ in how the action is choreographed (positions, pacing, which beats get the most time), never in location or lighting.
+
+Return exactly this JSON shape:
+{"variants":[{"title":"3-6 word label","prompt":"...","negative":"..."}]}`;
+
+const SYSTEM_CHAIN = () => `You write CHAINED prompts for the ${mspec().label} video diffusion model (720p, ${mspec().fps} fps, max 5 seconds per clip). Several clips are rendered separately and stitched into one longer video. You output ONLY valid JSON, no markdown fences, no commentary.
+
+WAN has no memory between clips. Continuity exists only through the prompt text and, in continuous mode, the start frame. So:
+- First write a bible: fixed descriptions of every character (age, build, face, hair, exact clothing and colors), the setting, the lighting, and a style suffix.
+- Every clip prompt must repeat the bible character descriptions and the setting VERBATIM, and end with the style suffix VERBATIM. Never paraphrase them between clips.
+- The people count is the same in every clip unless a beat explicitly adds someone; if someone enters for one beat, state it only in that clip and state they leave or are absent in the others.
+
+${CORE_RULES}
+
+Chain rules:
+- Split the story into exactly the requested number of clips, one beat per clip, each paced to the clip duration.
+- start_state: the exact pose, positions, expressions and camera framing at the first frame of the clip.
+- end_state: the exact pose, positions and framing at the last frame.
+- CONTINUOUS mode (clips 2+ are image-to-video from the previous clip's last frame): each clip's start_state must equal the previous clip's end_state. Open each prompt from that state ("Continuing from a still moment where ..."). End every clip on a settled, stable pose with slow motion into it, faces visible, no motion blur, no mid-gesture, so the handoff frame is clean. Keep camera framing consistent across clips unless a beat requires a change; any camera move must be slow.
+- CUT mode: each clip is independent; camera angle and framing may change per clip for coverage, but characters, setting, lighting and style stay identical.
+- Clip 1 follows the first-clip mode given in the brief.
+
+Return exactly this JSON shape:
+{"bible":{"characters":"...","setting":"...","style":"..."},"clips":[{"title":"3-6 word label","start_state":"...","prompt":"...","end_state":"...","negative":"..."}]}`;
+
+const R_FIELDS = ['rUrl', 'rToken', 'rModel', 'rSeed'];
+function loadPrefs(){
+  try{
+    R_FIELDS.forEach(id => { const v = localStorage.getItem('wan_' + id); if(v !== null) $(id).value = v; });
+    const k = localStorage.getItem('wan_or_key'); if(k) $('key').value = k;
+    const m = localStorage.getItem('wan_or_model'); if(m) $('model').value = m;
+  }catch(e){}
+}
+function savePrefs(){
+  try{
+    if($('remember').checked) localStorage.setItem('wan_or_key', $('key').value.trim());
+    else localStorage.removeItem('wan_or_key');
+    localStorage.setItem('wan_or_model', $('model').value.trim());
+    R_FIELDS.forEach(id => localStorage.setItem('wan_' + id, $(id).value.trim()));
+  }catch(e){}
+}
+
+function sizeStr(sep){ const [w, h] = ($('orient').value === 'portrait' ? mspec().portrait : mspec().landscape).split('*'); return `${w}${sep}${h}`; }
+const CHUNK = 12, MAX_CLIPS = 60;
+function clipCount(){ return Math.min(MAX_CLIPS, Math.max(2, parseInt($('clips').value, 10) || 2)); }
+
+function renderSettings(){
+  const frames = +$('duration').value;
+  const fps = mspec().fps;
+  const items = [[sizeStr('×'),'size'],[frames,'frames / clip'],[String(fps),'fps'],[(mspec().guide ?? 5).toFixed(1),'guide scale'],[(mspec().shift ?? 5).toFixed(1),'sample shift'],[String(mspec().steps ?? 50),'steps'],[mspec().label,'model']];
+  if(tab === 'chain'){
+    const n = clipCount();
+    const secs = (frames - 1) / fps;
+    const total = $('link').value === 'continuous' ? (n * frames - (n - 1)) / fps : n * secs;
+    items.push([n, 'clips'], [total.toFixed(1) + ' s', 'stitched length']);
+    const parts = Math.ceil(n / CHUNK);
+    $('chainTotal').textContent = `≈ ${total.toFixed(1)} s total after stitching.` + (parts > 1 ? ` Generated in ${parts} requests of up to ${CHUNK} clips.` : '');
+  }
+  $('settings').innerHTML = items.map(([v,l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('');
+}
+
+function setTab(t){
+  tab = t;
+  $('tabSingle').setAttribute('aria-selected', t === 'single');
+  $('tabChain').setAttribute('aria-selected', t === 'chain');
+  $('chainOpts').hidden = t !== 'chain';
+  $('singleOpts').hidden = t !== 'single';
+  $('variantsWrap').hidden = t !== 'single';
+  $('go').textContent = t === 'chain' ? 'Generate chain' : 'Generate prompts';
+  renderSettings();
+}
+
+function sharedLines(){
+  const mode = $('mode').value;
+  const frames = +$('duration').value;
+  const fps = mspec().fps;
+  const secs = (frames - 1) / fps;
+  const lines = [
+    `Model: ${mspec().label} (${fps} fps)`,
+    `First clip mode: ${mode === 'i2v' ? 'image-to-video' : 'text-to-video'}`,
+    `Scene idea: ${$('idea').value.trim()}`,
+  ];
+  if(mode === 'i2v' && $('image').value.trim()) lines.push(`Start image contains: ${$('image').value.trim()}`);
+  lines.push(
+    `Exact people count: ${$('cast').value}`,
+    `Clip length: ${secs} seconds (${frames} frames at ${fps} fps) — pace the actions to fit`,
+    `Framing: ${$('framing').value}`,
+    `Camera: ${$('camera').value || 'model may choose, but keep it a single continuous shot'}`,
+    `Orientation: ${$('orient').value}`,
+    `Motion intensity: ${$('motion').value}`,
+  );
+  if($('forbid').value.trim()) lines.push(`Must not happen: ${$('forbid').value.trim()}`);
+  if($('style').value.trim()) lines.push(`Style/mood: ${$('style').value.trim()}`);
+  lines.push(`Target length per positive prompt: ${$('words').value} words`);
+  return lines;
+}
+
+function buildSingleMsg(){
+  const lines = sharedLines();
+  if($('actions').value.trim()) lines.push(`Action timeline: ${$('actions').value.trim()}`);
+  lines.push(`Number of variants: ${$('variants').value}`);
+  return lines.join('\n');
+}
+
+function buildChainMsg(b){
+  const lines = sharedLines();
+  lines.push(`Total clips in the full video: ${b.total}`);
+  lines.push(`Linking: ${$('link').value === 'continuous' ? 'CONTINUOUS (each clip after the first starts from the previous clip\'s last frame via image-to-video)' : 'CUT (independent clips, hard cuts between them)'}`);
+  const beats = $('beats').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if(beats.length) lines.push(`Story beats for the whole video (spread across all ${b.total} clips in order; if fewer beats than clips, spread them; if more, merge):\n` + beats.map((x,i) => `${i+1}. ${x}`).join('\n'));
+  if(b.count > 1){
+    lines.push(`\nTHIS REQUEST: batch ${b.index} of ${b.count}. Write ONLY clips ${b.start} to ${b.end} (${b.end - b.start + 1} clips), covering the matching portion of the story. The "clips" array must contain exactly ${b.end - b.start + 1} items, in order.`);
+  }
+  if(b.bible){
+    lines.push(`\nContinuity bible (fixed — copy it into the "bible" field UNCHANGED and use it verbatim in every prompt):\nCharacters: ${b.bible.characters || ''}\nSetting: ${b.bible.setting || ''}\nStyle: ${b.bible.style || ''}`);
+  }
+  if(b.prevTitles && b.prevTitles.length){
+    lines.push(`\nStory so far (clips 1–${b.start - 1}):\n` + b.prevTitles.map((t,i) => `${i+1}. ${t}`).join('\n'));
+  }
+  if(b.prevEnd){
+    lines.push(`\nClip ${b.start - 1} ended on: ${b.prevEnd}` + ($('link').value === 'continuous' ? `\nClip ${b.start}'s start_state must equal this exactly; it is image-to-video from that frame.` : ''));
+  }
+  return lines.join('\n');
+}
+
+function extractJSON(text){
+  let t = text.replace(/```json|```/g, '').trim();
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if(a === -1 || b === -1) throw new Error('No JSON in model reply');
+  return JSON.parse(t.slice(a, b + 1));
+}
+
+function esc(s){return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function wc(s){return (String(s ?? '').trim().match(/\S+/g) || []).length;}
+function negFor(v){ return [v.negative, $('wanneg').checked ? WAN_DEFAULT_NEG : ''].filter(Boolean).join(', '); }
+
+function copy(text, btn){
+  const done = () => { const o = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => btn.textContent = o, 1200); };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+  ta.select(); try{document.execCommand('copy'); done();}catch(e){} ta.remove();
+}
+function download(name, text){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type:'text/plain'}));
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* ---------- JSON export ---------- */
+function baseSettings(){
+  return {
+    model_target: $('mtarget').value,
+    size: sizeStr('*'),
+    frames_per_clip: +$('duration').value,
+    fps: mspec().fps,
+    guide_scale: mspec().guide ?? 5.0,
+    sample_shift: mspec().shift ?? 5.0,
+    steps: mspec().steps ?? 50
+  };
+}
+function brief(){
+  return {
+    idea: $('idea').value.trim(),
+    first_clip_mode: $('mode').value,
+    start_image: $('mode').value === 'i2v' ? $('image').value.trim() : null,
+    people_count: +$('cast').value,
+    camera: $('camera').value,
+    framing: $('framing').value,
+    motion: $('motion').value,
+    must_not: $('forbid').value.trim(),
+    style: $('style').value.trim()
+  };
+}
+function singleJSON(variants, meta){
+  return {
+    type: 'single',
+    generated_at: meta.at,
+    llm: meta.llm,
+    settings: meta.settings,
+    brief: meta.brief,
+    variants: variants.map((v, i) => ({
+      index: i + 1,
+      title: v.title || '',
+      prompt: v.prompt || '',
+      negative: negFor(v),
+      word_count: wc(v.prompt)
+    }))
+  };
+}
+function chainJSON(chain, meta){
+  const frames = chain.frames, n = chain.clips.length;
+  const cont = chain.link === 'continuous';
+  return {
+    type: 'chain',
+    chain_id: meta.id,
+    generated_at: meta.at,
+    llm: meta.llm,
+    settings: Object.assign({}, meta.settings, {
+      linking: chain.link,
+      clip_count: n,
+      stitched_seconds: +((cont ? (n * frames - (n - 1)) : n * (frames - 1)) / meta.settings.fps).toFixed(2)
+    }),
+    brief: meta.brief,
+    bible: {
+      characters: chain.bible.characters || '',
+      setting: chain.bible.setting || '',
+      style: chain.bible.style || ''
+    },
+    clips: chain.clips.map((c, i) => ({
+      index: i + 1,
+      title: c.title || '',
+      input: i === 0 ? (chain.firstI2V ? { mode: 'i2v', image: 'start.jpg' } : { mode: 't2v' })
+                     : (cont ? { mode: 'i2v', image: `last_${pad(i)}.png`, from_clip: i } : { mode: 't2v' }),
+      start_state: c.start_state || '',
+      prompt: c.prompt || '',
+      negative: negFor(c),
+      end_state: c.end_state || '',
+      output_file: `clip_${pad(i + 1)}.mp4`,
+      word_count: wc(c.prompt)
+    }))
+  };
+}
+function chainPartJSON(chain, meta, part){
+  const full = chainJSON(chain, meta);
+  const count = Math.ceil(full.clips.length / CHUNK);
+  const a = (part - 1) * CHUNK, b = Math.min(a + CHUNK, full.clips.length);
+  full.type = 'chain_part';
+  full.part = { index: part, of: count, clip_range: [a + 1, b], previous_end_state: a > 0 ? full.clips[a - 1].end_state : null };
+  full.clips = full.clips.slice(a, b);
+  return full;
+}
+function chainJsonBar(chain, meta){
+  const n = chain.clips.length, count = Math.ceil(n / CHUNK);
+  const base = `wan_chain_${slug(meta.brief.idea)}`;
+  const el = document.createElement('article');
+  el.className = 'variant';
+  const opts = [`<option value="0">All clips (${n})</option>`];
+  for(let i = 1; i <= count; i++) opts.push(`<option value="${i}">Part ${i} (clips ${(i-1)*CHUNK+1}–${Math.min(i*CHUNK, n)})</option>`);
+  el.innerHTML = `
+    <h3><span>JSON</span><span class="wc">${count} part${count === 1 ? '' : 's'} of ≤${CHUNK}</span></h3>
+    <div class="actions">
+      <select aria-label="JSON scope">${opts.join('')}</select>
+      <button data-a="s">Send to runner</button>
+      <button data-a="c">Copy JSON</button>
+      <button data-a="d">Download JSON</button>
+      ${count > 1 ? '<button data-a="all">Download all parts</button>' : ''}
+      <button data-a="v">Show JSON</button>
+    </div>
+    <pre class="script" hidden></pre>`;
+  const sel = el.querySelector('select'), pre = el.querySelector('pre');
+  const obj = v => v === 0 ? chainJSON(chain, meta) : chainPartJSON(chain, meta, v);
+  const name = v => v === 0 ? `${base}.json` : `${base}_part${pad(v)}.json`;
+  const txt = () => JSON.stringify(obj(+sel.value), null, 2);
+  const refresh = () => { pre.textContent = txt(); };
+  sel.onchange = refresh; refresh();
+  el.querySelector('[data-a="c"]').onclick = e => copy(txt(), e.target);
+  el.querySelector('[data-a="d"]').onclick = () => download(name(+sel.value), txt());
+  el.querySelector('[data-a="s"]').onclick = e => {
+    const v = +sel.value;
+    sendToRunner(obj(v), {}, e.target, v <= 1);
+  };
+  const all = el.querySelector('[data-a="all"]');
+  if(all) all.onclick = () => { for(let i = 1; i <= count; i++) setTimeout(() => download(name(i), JSON.stringify(obj(i), null, 2)), (i-1) * 400); };
+  el.querySelector('[data-a="v"]').onclick = e => { pre.hidden = !pre.hidden; e.target.textContent = pre.hidden ? 'Show JSON' : 'Hide JSON'; };
+  return el;
+}
+function metaNow(){
+  const id = (window.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : Date.now().toString(16) + Math.random().toString(16).slice(2)).slice(0, 12);
+  return { id, at: new Date().toISOString(), llm: $('model').value.trim(), settings: baseSettings(), brief: brief() };
+}
+function jsonBar(obj, filename){
+  const el = document.createElement('article');
+  el.className = 'variant';
+  const vn = (obj.variants || []).length;
+  const vopts = Array.from({length: vn}, (_, i) => `<option value="${i + 1}">Variant ${i + 1}</option>`).join('');
+  el.innerHTML = `
+    <h3><span>JSON</span><span class="wc">${filename}</span></h3>
+    <div class="actions">
+      ${vn ? `<select aria-label="Variant to render">${vopts}</select><button data-a="s">Send to runner</button>` : ''}
+      <button data-a="c">Copy JSON</button>
+      <button data-a="d">Download JSON</button>
+      <button data-a="v">Show JSON</button>
+    </div>
+    <pre class="script" hidden></pre>`;
+  const txt = JSON.stringify(obj, null, 2);
+  const pre = el.querySelector('pre');
+  pre.textContent = txt;
+  el.querySelector('[data-a="c"]').onclick = e => copy(txt, e.target);
+  el.querySelector('[data-a="d"]').onclick = () => download(filename, txt);
+  el.querySelector('[data-a="v"]').onclick = e => { pre.hidden = !pre.hidden; e.target.textContent = pre.hidden ? 'Show JSON' : 'Hide JSON'; };
+  const sb = el.querySelector('[data-a="s"]');
+  if(sb) sb.onclick = () => sendToRunner(obj, { variant: +el.querySelector('select').value }, sb, true);
+  return el;
+}
+function slug(s){ return (s || 'wan').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'wan'; }
+
+/* ---------- single ---------- */
+function renderVariants(variants, meta){
+  $('out').innerHTML = '';
+  meta = meta || metaNow();
+  $('out').appendChild(jsonBar(singleJSON(variants, meta), `wan_${slug(meta.brief.idea)}.json`));
+  variants.forEach((v, i) => {
+    const neg = negFor(v);
+    const el = document.createElement('article');
+    el.className = 'variant';
+    el.innerHTML = `
+      <h3><span>${esc(v.title || 'Variant ' + (i+1))}</span><span class="wc">${wc(v.prompt)} words</span></h3>
+      <label>Positive</label><pre>${esc(v.prompt)}</pre>
+      <label>Negative</label><pre class="neg">${esc(neg)}</pre>
+      <div class="actions">
+        <button data-a="p">Copy positive</button>
+        <button data-a="n">Copy negative</button>
+        <button data-a="c">Copy CLI command</button>
+      </div>`;
+    const cli = `python generate.py --task ${mspec().task} --size ${sizeStr('*')} --frame_num ${$('duration').value} --ckpt_dir ${mspec().ckpt} --offload_model True --convert_model_dtype --t5_cpu${$('mode').value === 'i2v' && mspec().task !== 't2v-A14B' ? ' --image ./start.jpg' : ''} --prompt ${JSON.stringify(v.prompt || '')}`;
+    el.querySelector('[data-a="p"]').onclick = e => copy(v.prompt || '', e.target);
+    el.querySelector('[data-a="n"]').onclick = e => copy(neg, e.target);
+    el.querySelector('[data-a="c"]').onclick = e => copy(cli, e.target);
+    $('out').appendChild(el);
+  });
+}
+
+/* ---------- chain ---------- */
+const pad = n => String(n).padStart(2, '0');
+const shq = s => `'${String(s).replace(/'/g, `'\\''`)}'`;
+const psq = s => `'${String(s).replace(/'/g, `''`)}'`;
+
+function bashScript(chain){
+  const cont = chain.link === 'continuous', n = chain.clips.length;
+  const task = chain.task || 'ti2v-5B', ckpt = chain.ckpt || './Wan2.2-TI2V-5B';
+  const L = [
+    '#!/usr/bin/env bash',
+    `# WAN 2.2 ${task} chained render + stitch. Run from the Wan2.2 repo root.`,
+    'set -euo pipefail',
+    `CKPT=${ckpt}`,
+    `SIZE='${chain.size}'`,
+    `FRAMES=${chain.frames}`,
+    'OUT=chain',
+    'mkdir -p "$OUT"',
+    ''
+  ];
+  chain.clips.forEach((c, i) => {
+    const k = pad(i+1);
+    let img = '';
+    if(i === 0 && chain.firstI2V) img = ' --image ./start.jpg';
+    if(i > 0 && cont) img = ` --image "$OUT/last_${pad(i)}.png"`;
+    L.push(`# Clip ${k}: ${String(c.title || '').replace(/\n/g,' ')}`);
+    L.push(`python generate.py --task ${task} --size "$SIZE" --frame_num $FRAMES --ckpt_dir "$CKPT" --offload_model True --convert_model_dtype --t5_cpu${img} --save_file "$OUT/clip_${k}.mp4" \\\n  --prompt ${shq(c.prompt)}`);
+    if(cont && i < n - 1) L.push(`ffmpeg -y -loglevel error -sseof -0.1 -i "$OUT/clip_${k}.mp4" -update 1 -frames:v 1 "$OUT/last_${k}.png"`);
+    L.push('');
+  });
+  L.push('# Stitch' + (cont ? ' (drop the duplicated first frame of clips 2+)' : ''));
+  L.push(': > "$OUT/list.txt"');
+  chain.clips.forEach((c, i) => {
+    const k = pad(i+1);
+    const vf = cont && i > 0 ? '-vf "trim=start_frame=1,setpts=PTS-STARTPTS" ' : '';
+    L.push(`ffmpeg -y -loglevel error -i "$OUT/clip_${k}.mp4" ${vf}-an -r ${chain.fps || 24} -c:v libx264 -crf 16 -pix_fmt yuv420p "$OUT/t_${k}.mp4"`);
+    L.push(`echo "file 't_${k}.mp4'" >> "$OUT/list.txt"`);
+  });
+  L.push('ffmpeg -y -loglevel error -f concat -safe 0 -i "$OUT/list.txt" -c copy "$OUT/final.mp4"');
+  L.push('echo "Done: $OUT/final.mp4"');
+  return L.join('\n') + '\n';
+}
+
+function psScript(chain){
+  const cont = chain.link === 'continuous', n = chain.clips.length;
+  const task = chain.task || 'ti2v-5B', ckpt = chain.ckpt || './Wan2.2-TI2V-5B';
+  const chk = 'if ($LASTEXITCODE) { exit $LASTEXITCODE }';
+  const L = [
+    '# WAN 2.2 chained render + stitch. Run from the Wan2.2 repo root.',
+    '$ErrorActionPreference = "Stop"',
+    `$CKPT = "${ckpt}"`,
+    `$SIZE = "${chain.size}"`,
+    `$FRAMES = ${chain.frames}`,
+    '$OUT = "chain"',
+    'New-Item -ItemType Directory -Force $OUT | Out-Null',
+    ''
+  ];
+  chain.clips.forEach((c, i) => {
+    const k = pad(i+1);
+    let img = [];
+    if(i === 0 && chain.firstI2V) img = ['--image', '"./start.jpg"'];
+    if(i > 0 && cont) img = ['--image', `"$OUT/last_${pad(i)}.png"`];
+    L.push(`# Clip ${k}: ${String(c.title || '').replace(/\n/g,' ')}`);
+    L.push(`python generate.py --task ${task} --size $SIZE --frame_num $FRAMES --ckpt_dir $CKPT --offload_model True --convert_model_dtype --t5_cpu ${img.join(' ')} --save_file "$OUT/clip_${k}.mp4" \`\n  --prompt ${psq(c.prompt)}`);
+    L.push(chk);
+    if(cont && i < n - 1){ L.push(`ffmpeg -y -loglevel error -sseof -0.1 -i "$OUT/clip_${k}.mp4" -update 1 -frames:v 1 "$OUT/last_${k}.png"`); L.push(chk); }
+    L.push('');
+  });
+  L.push('# Stitch' + (cont ? ' (drop the duplicated first frame of clips 2+)' : ''));
+  L.push('$list = @()');
+  chain.clips.forEach((c, i) => {
+    const k = pad(i+1);
+    const vf = cont && i > 0 ? '-vf "trim=start_frame=1,setpts=PTS-STARTPTS" ' : '';
+    L.push(`ffmpeg -y -loglevel error -i "$OUT/clip_${k}.mp4" ${vf}-an -r ${chain.fps || 24} -c:v libx264 -crf 16 -pix_fmt yuv420p "$OUT/t_${k}.mp4"`);
+    L.push(chk);
+    L.push(`$list += "file 't_${k}.mp4'"`);
+  });
+  L.push('Set-Content -Path "$OUT/list.txt" -Value $list -Encoding ascii');
+  L.push('ffmpeg -y -loglevel error -f concat -safe 0 -i "$OUT/list.txt" -c copy "$OUT/final.mp4"');
+  L.push(chk);
+  L.push('Write-Host "Done: $OUT/final.mp4"');
+  return L.join('\n') + '\n';
+}
+
+function chainText(chain){
+  const b = chain.bible || {};
+  const parts = [`BIBLE\nCharacters: ${b.characters || ''}\nSetting: ${b.setting || ''}\nStyle: ${b.style || ''}`];
+  chain.clips.forEach((c, i) => {
+    parts.push(`CLIP ${pad(i+1)} — ${c.title || ''}\nStart: ${c.start_state || ''}\nPositive: ${c.prompt || ''}\nNegative: ${negFor(c)}\nEnd: ${c.end_state || ''}`);
+  });
+  return parts.join('\n\n');
+}
+
+function renderChain(chain, meta){
+  const out = $('out');
+  out.innerHTML = '';
+  meta = meta || metaNow();
+  out.appendChild(chainJsonBar(chain, meta));
+  const b = chain.bible || {};
+  const bible = document.createElement('article');
+  bible.className = 'variant bible';
+  bible.innerHTML = `
+    <h3><span>Continuity bible</span></h3>
+    <label>Characters</label><pre>${esc(b.characters)}</pre>
+    <label>Setting</label><pre>${esc(b.setting)}</pre>
+    <label>Style suffix</label><pre>${esc(b.style)}</pre>
+    <div class="actions"><button data-a="all">Copy all clips as text</button></div>`;
+  bible.querySelector('[data-a="all"]').onclick = e => copy(chainText(chain), e.target);
+  out.appendChild(bible);
+
+  chain.clips.forEach((c, i) => {
+    const neg = negFor(c);
+    const inMode = i === 0 ? (chain.firstI2V ? 'I2V from start.jpg' : 'T2V') : (chain.link === 'continuous' ? `I2V from clip ${pad(i)} last frame` : 'T2V (hard cut)');
+    const el = document.createElement('article');
+    el.className = 'variant';
+    el.innerHTML = `
+      <h3><span>Clip ${pad(i+1)} · ${esc(c.title)}</span><span class="wc">${inMode} · ${wc(c.prompt)} words</span></h3>
+      <p class="state"><b>Starts:</b> ${esc(c.start_state)}</p>
+      <label>Positive</label><pre>${esc(c.prompt)}</pre>
+      <label>Negative</label><pre class="neg">${esc(neg)}</pre>
+      <p class="state"><b>Ends:</b> ${esc(c.end_state)}</p>
+      <div class="actions">
+        <button data-a="p">Copy positive</button>
+        <button data-a="n">Copy negative</button>
+      </div>`;
+    el.querySelector('[data-a="p"]').onclick = e => copy(c.prompt || '', e.target);
+    el.querySelector('[data-a="n"]').onclick = e => copy(neg, e.target);
+    out.appendChild(el);
+  });
+
+  const sc = document.createElement('article');
+  sc.className = 'variant';
+  sc.innerHTML = `
+    <h3><span>Render + stitch script</span><span class="wc">needs ffmpeg on PATH</span></h3>
+    <div class="actions" style="margin-bottom:8px">
+      <select id="shell" aria-label="Script type"><option value="ps">PowerShell (.ps1)</option><option value="sh">Bash (.sh)</option></select>
+      <button data-a="c">Copy script</button>
+      <button data-a="d">Download script</button>
+    </div>
+    <pre class="script" id="scriptOut"></pre>`;
+  out.appendChild(sc);
+  const scriptFor = () => $('shell').value === 'sh' ? bashScript(chain) : psScript(chain);
+  const show = () => { $('scriptOut').textContent = scriptFor(); };
+  $('shell').onchange = show;
+  sc.querySelector('[data-a="c"]').onclick = e => copy(scriptFor(), e.target);
+  sc.querySelector('[data-a="d"]').onclick = () => download($('shell').value === 'sh' ? 'wan_chain.sh' : 'wan_chain.ps1', scriptFor());
+  show();
+}
+
+/* ---------- runner ---------- */
+let startImageB64 = null;
+const tracked = new Map();
+let pollTimer = null;
+const ENDED = ['done', 'error', 'cancelled'];
+
+function rBase(){ return $('rUrl').value.trim().replace(/\/+$/, ''); }
+async function rFetch(path, opts = {}){
+  const url = rBase(), tok = $('rToken').value.trim();
+  if(!url || !tok){ $('runnerBox').open = true; throw new Error('Set the runner URL and token under Runner (GPU instance).'); }
+  const res = await fetch(url + path, Object.assign({}, opts, {
+    headers: Object.assign({ 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' }, opts.headers || {})
+  }));
+  let data = null;
+  try{ data = await res.json(); }catch(e){}
+  if(!res.ok) throw new Error((data && (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail))) || `HTTP ${res.status}`);
+  return data;
+}
+function runnerOpts(extra, withImage){
+  const o = Object.assign({}, extra);
+  if($('rModel').value.trim()) o.model = $('rModel').value.trim();
+  if($('rSeed').value !== '') o.seed = +$('rSeed').value;
+  if($('rFresh').checked) o.fresh = true;
+  if(withImage && startImageB64 && $('mode').value === 'i2v') o.start_image_b64 = startImageB64;
+  o.name = $('idea').value.trim().slice(0, 80);
+  return o;
+}
+async function sendToRunner(spec, extra, btn, withImage){
+  savePrefs();
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try{
+    const j = await rFetch('/jobs', { method: 'POST', body: JSON.stringify(Object.assign({}, spec, { runner: runnerOpts(extra, withImage) })) });
+    trackJob(j);
+    btn.textContent = 'Sent';
+    $('status').className = 'status';
+    $('status').textContent = `Queued on runner as ${j.id}.`;
+  }catch(e){
+    btn.textContent = 'Send failed';
+    $('status').className = 'status err';
+    $('status').textContent = 'Runner: ' + (e.message === 'Failed to fetch' ? 'could not reach the runner (URL wrong, runner stopped, or tunnel changed).' : e.message);
+  }finally{
+    setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 1500);
+  }
+}
+function trackJob(j){
+  tracked.set(j.id, j);
+  renderJobs();
+  if(!pollTimer) pollTimer = setInterval(pollJobs, 5000);
+}
+async function pollJobs(){
+  const active = [...tracked.values()].filter(j => !ENDED.includes(j.status));
+  if(!active.length){ clearInterval(pollTimer); pollTimer = null; return; }
+  await Promise.all(active.map(async j => {
+    try{ tracked.set(j.id, await rFetch(`/jobs/${j.id}?log=1`)); }catch(e){}
+  }));
+  renderJobs();
+}
+function renderJobs(){
+  $('jobsWrap').hidden = tracked.size === 0;
+  const box = $('jobs');
+  box.innerHTML = '';
+  const finals = {};
+  tracked.forEach(j => { if(j.final_url && j.chain_id) finals[j.chain_id] = j.final_url; });
+  [...tracked.values()].reverse().forEach(j => {
+    const p = j.progress || {};
+    const fin = j.final_url || (j.chain_id && finals[j.chain_id]);
+    const last = j.log && j.log.length ? j.log[j.log.length - 1].replace(/^\S+\s/, '') : '';
+    const el = document.createElement('article');
+    el.className = 'variant';
+    el.innerHTML = `
+      <h3><span>${esc(j.name || j.id)}</span><span class="wc">${esc(j.model || '')}</span></h3>
+      <p class="state"><b>${esc(j.status)}</b> · ${p.done || 0}/${p.total || 0} clips${j.part ? ` · part ${j.part.index}/${j.part.of}` : ''} · ${esc(j.id)}</p>
+      ${last ? `<p class="state">${esc(last)}</p>` : ''}
+      ${j.error ? `<pre class="neg">${esc(j.error)}</pre>` : ''}
+      <div class="actions">
+        ${fin ? `<a class="btnlink" href="${esc(rBase() + fin + '?token=' + encodeURIComponent($('rToken').value.trim()))}" target="_blank" rel="noopener">Open video</a>` : ''}
+        ${!ENDED.includes(j.status) ? '<button data-a="x">Cancel</button>' : ''}
+        ${['error', 'cancelled'].includes(j.status) ? '<button data-a="r">Retry</button>' : ''}
+      </div>`;
+    const act = async (path) => {
+      try{ trackJob(await rFetch(`/jobs/${j.id}/${path}`, { method: 'POST' })); }
+      catch(e){ $('status').className = 'status err'; $('status').textContent = 'Runner: ' + e.message; }
+    };
+    const x = el.querySelector('[data-a="x"]'); if(x) x.onclick = () => act('cancel');
+    const r = el.querySelector('[data-a="r"]'); if(r) r.onclick = () => act('retry');
+    box.appendChild(el);
+  });
+}
+async function checkRunner(){
+  savePrefs();
+  const st = $('rStatus');
+  st.textContent = 'Checking…';
+  try{
+    const h = await rFetch('/health');
+    $('rModels').innerHTML = h.models.map(m => `<option value="${esc(m)}">`).join('');
+    st.textContent = `Connected · ${h.gpu && h.gpu.length ? h.gpu.join(' | ') : 'no GPU info'} · models: ${h.models.join(', ')} (default ${h.default_model})` + (h.loaded_model ? ` · loaded: ${h.loaded_model}` : '') + ` · queued: ${h.queued}`;
+  }catch(e){
+    st.textContent = e.message === 'Failed to fetch' ? 'Could not reach the runner (URL wrong, runner stopped, or tunnel changed).' : e.message;
+  }
+}
+
+/* ---------- history ---------- */
+const history = [];
+function pushHistory(entry){
+  history.unshift(entry);
+  $('historyWrap').hidden = false;
+  $('history').innerHTML = '';
+  history.slice(0, 12).forEach(h => {
+    const b = document.createElement('button');
+    b.textContent = (h.kind === 'chain' ? `Chain (${h.data.clips.length}) · ` : '') + (h.idea || 'Untitled').slice(0, 80);
+    b.onclick = () => h.kind === 'chain' ? renderChain(h.data, h.meta) : renderVariants(h.data, h.meta);
+    $('history').appendChild(b);
+  });
+}
+
+/* ---------- API ---------- */
+async function callModel(system, user, maxTokens){
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + $('key').value.trim(),
+      'Content-Type': 'application/json',
+      'HTTP-Referer': location.origin && location.origin !== 'null' ? location.origin : 'http://localhost',
+      'X-Title': 'WAN 2.2 Prompt Generator'
+    },
+    body: JSON.stringify({
+      model: $('model').value.trim(),
+      temperature: +$('temp').value,
+      max_tokens: maxTokens,
+      messages: [{role: 'system', content: system}, {role: 'user', content: user}]
+    })
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+  return data?.choices?.[0]?.message?.content || '';
+}
+
+let pending = null;
+async function runChain(resumeFrom){
+  const status = $('status');
+  let job = resumeFrom;
+  if(!job){
+    const n = clipCount();
+    job = {
+      idea: $('idea').value.trim(),
+      total: n,
+      count: Math.ceil(n / CHUNK),
+      next: 1,
+      meta: metaNow(),
+      chain: { bible: null, clips: [], link: $('link').value, frames: +$('duration').value, size: sizeStr('*'), firstI2V: $('mode').value === 'i2v', task: mspec().task, ckpt: mspec().ckpt, fps: mspec().fps }
+    };
+  }
+  pending = job;
+  $('resume').hidden = true;
+  while(job.next <= job.count){
+    const i = job.next;
+    const start = (i - 1) * CHUNK + 1, end = Math.min(i * CHUNK, job.total);
+    const want = end - start + 1;
+    status.className = 'status';
+    status.textContent = job.count > 1 ? `Generating batch ${i}/${job.count} (clips ${start}–${end})…` : 'Generating chain…';
+    const prev = job.chain.clips;
+    const text = await callModel(SYSTEM_CHAIN(), buildChainMsg({
+      total: job.total, index: i, count: job.count, start, end,
+      bible: job.chain.bible,
+      prevTitles: prev.map(c => c.title || ''),
+      prevEnd: prev.length ? prev[prev.length - 1].end_state : null
+    }), 1200 + want * 700);
+    let parsed;
+    try{ parsed = extractJSON(text); }
+    catch(e){ throw new Error(`Batch ${i}: model did not return valid JSON.`); }
+    if(!Array.isArray(parsed.clips) || !parsed.clips.length) throw new Error(`Batch ${i}: reply had no clips.`);
+    if(!job.chain.bible) job.chain.bible = parsed.bible || {};
+    job.chain.clips = prev.concat(parsed.clips.slice(0, want));
+    job.next++;
+    renderChain(job.chain, job.meta);
+  }
+  pending = null;
+  pushHistory({kind:'chain', idea: job.idea, data: job.chain, meta: job.meta});
+  const got = job.chain.clips.length;
+  status.textContent = `Done — ${got} clips` + (job.count > 1 ? ` in ${job.count} batches.` : '.') + (got !== job.total ? ` (asked for ${job.total})` : '');
+}
+
+let resuming = false;
+async function generate(){
+  const status = $('status');
+  status.className = 'status';
+  if(!$('key').value.trim()){ status.className = 'status err'; status.textContent = 'Add your OpenRouter API key under OpenRouter settings.'; $('key').closest('details').open = true; return; }
+  if(!$('idea').value.trim()){ status.className = 'status err'; status.textContent = 'Scene idea is empty.'; return; }
+  const _t = $('mtarget').value, _m = $('mode').value;
+  if(_t === 'Wan2.2-T2V-A14B' && _m === 'i2v'){ status.className = 'status err'; status.textContent = 'T2V-A14B is text-only: switch the first clip to text-to-video, or pick TI2V-5B / I2V-A14B.'; return; }
+  if(_t === 'Wan2.2-I2V-A14B' && _m === 't2v'){ status.className = 'status err'; status.textContent = 'I2V-A14B needs a start image: switch the first clip to image-to-video, or pick TI2V-5B / T2V-A14B.'; return; }
+  savePrefs();
+  $('go').disabled = true; $('resume').disabled = true;
+  status.textContent = tab === 'chain' ? 'Generating chain…' : 'Generating…';
+  const idea = $('idea').value.trim();
+  try{
+    if(tab === 'single'){
+      const text = await callModel(SYSTEM_SINGLE(), buildSingleMsg(), 2500);
+      let parsed;
+      try{ parsed = extractJSON(text); }
+      catch(e){ parsed = {variants: [{title: 'Raw output (JSON parse failed)', prompt: text, negative: ''}]}; }
+      const variants = Array.isArray(parsed.variants) ? parsed.variants : [parsed];
+      const meta = metaNow();
+      renderVariants(variants, meta);
+      pushHistory({kind:'single', idea, data: variants, meta});
+      status.textContent = `Done — ${variants.length} variant${variants.length === 1 ? '' : 's'}.`;
+    } else {
+      await runChain(resuming && pending && pending.idea === idea ? pending : null);
+    }
+  }catch(err){
+    status.className = 'status err';
+    status.textContent = 'Error: ' + err.message;
+    if(tab === 'chain' && pending && pending.chain.clips.length){
+      $('resume').hidden = false;
+      $('resume').textContent = `Resume chain from batch ${pending.next}/${pending.count}`;
+    }
+  }finally{
+    $('go').disabled = false; $('resume').disabled = false;
+  }
+}
+
+['duration','orient','clips','link'].forEach(id => { $(id).addEventListener('change', renderSettings); $(id).addEventListener('input', renderSettings); });
+$('mode').addEventListener('change', () => { const off = $('mode').value !== 'i2v'; $('image').disabled = off; $('startFile').disabled = off; });
+function refreshModelHint(){
+  const m = mspec();
+  const bits = [];
+  if($('mtarget').value === 'Wan2.2-T2V-A14B') bits.push('text-only: first clip must be T2V; use CUT linking (continuous needs I2V follow-ups the T2V model cannot render)');
+  if($('mtarget').value === 'Wan2.2-I2V-A14B') bits.push('image-only: first clip must be I2V with a start image');
+  if($('mtarget').value === 'Wan2.2-TI2V-5B-Turbo-LoRA') bits.push('image-to-video chain model on the Colab G4 wanbot runner; clip 1 uses your start image or the soft start; end every clip on a settled pose');
+  if($('mtarget').value.includes('A14B')) bits.push('needs the 14B weights (notebook cell 4, INSTALL_WAN22_14B) and ~40 GB VRAM, or ~24 GB with offload');
+  $('mtargetHint').textContent = bits.join('. ');
+  if(!$('rModel').value.trim()) $('rModel').value = m.runner;
+  renderSettings();
+}
+$('mtarget').addEventListener('change', refreshModelHint);
+$('startFile').addEventListener('change', () => {
+  const f = $('startFile').files[0];
+  startImageB64 = null;
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = () => { startImageB64 = r.result; };
+  r.readAsDataURL(f);
+});
+$('rCheck').addEventListener('click', checkRunner);
+R_FIELDS.forEach(id => $(id).addEventListener('change', savePrefs));
+$('tabSingle').addEventListener('click', () => setTab('single'));
+$('tabChain').addEventListener('click', () => setTab('chain'));
+$('go').addEventListener('click', () => { resuming = false; generate(); });
+$('resume').addEventListener('click', () => { resuming = true; generate(); });
+document.addEventListener('keydown', e => { if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ resuming = false; generate(); } });
+$('image').disabled = true;
+$('startFile').disabled = true;
+loadPrefs();
+refreshModelHint();
+setTab('single');
+</script>
+<script src="/app/lexicon.js"></script>
+<script src="/app/generator_relay.js"></script></body>
+</html>

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b0b0c">
+<title>Terminal</title>
+<link rel="stylesheet" href="/app/ui/forge.css">
+<style>
+html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;background:#0b0b0c}
+.shell{display:flex;flex-direction:column;height:100%;min-height:0}
+.bar{flex:none;display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);
+  background:#121214}
+.bar .grow{min-width:0}
+.bar h1{font-size:15px;margin:0;font-weight:600}
+.frame{position:relative;flex:1;min-height:0;background:#000}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0b0b0c}
+.sheet{position:absolute;left:10px;right:10px;bottom:10px;z-index:4;padding:12px;display:none}
+.sheet.on{display:block}
+.sheet textarea{min-height:88px}
+.offline{position:absolute;inset:0;display:none;place-items:center;padding:28px;text-align:center;z-index:3}
+.offline.on{display:grid}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="bar">
+    <div class="grow"><div class="tiny mut">Laptop</div><h1>Terminal</h1></div>
+    <button class="btn sm" id="paste">Paste</button>
+    <button class="btn sm" id="updateHub">Update Hub</button>
+    <button class="btn sm" id="lora">Civitai LoRA</button>
+    <button class="btn sm ghost" id="top">Top</button>
+    <button class="btn sm ghost" id="bot">Bottom</button>
+  </div>
+  <div class="frame">
+    <iframe id="tty" src="/laptop/term/" title="Laptop terminal" allow="fullscreen"></iframe>
+    <div class="offline" id="offline">
+      <div>
+        <div style="font-weight:700;font-size:20px;margin-bottom:8px">Laptop is offline</div>
+        <div class="mut small">Wake WSL / the PC, then reload. The web terminal is ttyd on the laptop tunnel.</div>
+        <button class="btn primary" style="margin-top:16px" id="retry">Retry</button>
+      </div>
+    </div>
+    <div class="card sheet" id="sheet">
+      <div class="small mut">Paste lands here, not in the shell — so a copied API key or prompt cannot dump into the terminal by itself.</div>
+      <textarea class="input" id="clip" placeholder="Paste here, then send"></textarea>
+      <div class="row wrap" style="margin-top:10px">
+        <button class="btn primary grow" id="send">Send to terminal</button>
+        <button class="btn grow" id="cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/app/term/patch.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const frame = $('tty');
+function win() { try { return frame.contentWindow; } catch { return null; } }
+
+function patch() {
+  const w = win();
+  if (!w || !window.ForgeTerm) return;
+  try { window.ForgeTerm.install(w); } catch (e) {}
+}
+frame.addEventListener('load', () => {
+  $('offline').classList.remove('on');
+  patch();
+  setTimeout(patch, 400);
+  setTimeout(patch, 1200);
+});
+frame.addEventListener('error', () => $('offline').classList.add('on'));
+
+$('retry').onclick = () => { frame.src = '/laptop/term/?t=' + Date.now(); };
+$('top').onclick = () => { const w = win(); w && w.ForgeTermScroll && w.ForgeTermScroll('top'); };
+$('bot').onclick = () => { const w = win(); w && w.ForgeTermScroll && w.ForgeTermScroll('bottom'); };
+
+$('paste').onclick = () => {
+  $('sheet').classList.add('on');
+  $('clip').value = '';
+  $('clip').focus();
+};
+$('cancel').onclick = () => $('sheet').classList.remove('on');
+$('send').onclick = () => {
+  let text = $('clip').value;
+  if (text && !text.endsWith('\n')) text += '\n';
+  $('sheet').classList.remove('on');
+  const w = win();
+  if (w && w.ForgeTermPaste) w.ForgeTermPaste(text);
+};
+
+async function civitaiCmd() {
+  const r = await fetch('civitai_red_dl.py', {cache: 'no-store'});
+  if (!r.ok) throw new Error('missing civitai_red_dl.py');
+  const src = await r.text();
+  return [
+    'mkdir -p ~/civitai_dl',
+    '(command -v pip3 >/dev/null || (sudo apt-get update && sudo apt-get install -y python3-pip))',
+    'python3 - <<\'PY\'',
+    src.replace(/\s+$/, ''),
+    'PY'
+  ].join('\n') + '\n';
+}
+$('lora').onclick = async () => {
+  $('sheet').classList.add('on');
+  $('clip').value = 'loading Civitai LoRA command…';
+  try {
+    $('clip').value = await civitaiCmd();
+  } catch (e) {
+    $('clip').value = '# could not load civitai_red_dl.py — paste the command from chat instead\n';
+  }
+  $('clip').focus();
+};
+
+async function updateCmd() {
+  const r = await fetch('phone_publish.sh', {cache: 'no-store'});
+  if (!r.ok) throw new Error('missing phone_publish.sh');
+  return (await r.text()).replace(/\s+$/, '') + '\n';
+}
+async function openUpdate() {
+  $('sheet').classList.add('on');
+  $('clip').value = 'loading Update Hub command…';
+  try { $('clip').value = await updateCmd(); }
+  catch (e) { $('clip').value = '# could not load phone_publish.sh — paste it from chat this once\n'; }
+  $('clip').focus();
+}
+$('updateHub').onclick = openUpdate;
+if (/[?&]update=1(?:&|$)/.test(location.search)) openUpdate();
+</script>
+</body>
+</html>

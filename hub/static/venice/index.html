@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c">
+<title>Venice Bench</title>
+<link rel="stylesheet" href="/app/ui/forge.css">
+<script src="/app/ui/forge.js"></script>
+<style>
+:root{--acc:#f0b429;--acc2:#d4921a;--strong:#f0b429}
+html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;background:#0b0b0c}
+.shell{display:flex;flex-direction:column;height:100%;min-height:0}
+.head{flex:none;padding:14px 16px 12px;background:linear-gradient(#141210,rgba(11,11,12,.92))}
+.brand{font-size:22px;font-weight:800;letter-spacing:-.04em;line-height:1.05;color:#f4f1ea}
+.brand b{display:block;color:#f0b429;font-size:22px}
+.status{text-align:right}
+.status .pill{margin-left:auto}
+.log{flex:1;min-height:0;overflow:auto;padding:12px 16px;-webkit-overflow-scrolling:touch}
+.msg{max-width:92%;margin:0 0 12px;padding:11px 13px;border-radius:16px;line-height:1.45;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text}
+.msg.user{margin-left:auto;background:rgba(240,180,41,.16);border:1px solid rgba(240,180,41,.32);border-bottom-right-radius:6px}
+.msg.assistant{background:var(--glass);border:1px solid var(--line);border-bottom-left-radius:6px}
+.msg.err{border-color:rgba(217,147,147,.4);color:var(--bad)}
+.msg.laptop{border-color:rgba(147,187,163,.35);background:rgba(147,187,163,.08)}
+.msg .acts{display:flex;gap:6px;flex:none}
+.msg .who-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.msg .who{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.msg .copy{appearance:none;border:0;background:rgba(240,180,41,.12);color:#f0b429;font:700 11px system-ui;
+  letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;min-height:32px;border-radius:999px;flex:none}
+.msg .copy:active{transform:scale(.96)}
+.msg .copy[disabled]{opacity:.35}
+.empty{padding:36px 10px 18px;text-align:center}
+.empty h2{font-size:22px;letter-spacing:-.03em;text-transform:none;color:#f4f1ea;margin:0 0 10px;font-weight:700}
+.composer{flex:none;padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#121110}
+.composer textarea{min-height:72px;max-height:160px;resize:none}
+.controls{display:flex;gap:8px;align-items:center;margin:8px 0}
+.controls input[type=range]{flex:1;accent-color:#f0b429}
+.keystrip{flex:none;padding:10px 12px 12px;background:#1a1610;border-bottom:1px solid rgba(240,180,41,.35)}
+.keystrip label{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#f0b429;margin-bottom:6px}
+.keystrip input{width:100%;font:15px ui-monospace,monospace;padding:12px;border-radius:12px;border:1px solid rgba(240,180,41,.45);
+  background:#0b0b0c;color:#ededea}
+.btn.gold{background:#f0b429;color:#111;border-color:transparent;font-weight:700}
+.sys{margin-top:6px;font-size:13px;color:var(--mut)}
+.sys textarea{min-height:44px;margin-top:4px}
+.thread{font-size:12px;color:var(--mut);margin-top:4px;max-width:58vw}
+.drawer{position:absolute;inset:0;z-index:6;background:rgba(0,0,0,.55);display:none}
+.drawer.on{display:block}
+.drawer .panel{position:absolute;inset:0;background:#121110;display:flex;flex-direction:column;
+  padding:14px 14px calc(14px + env(safe-area-inset-bottom))}
+.drawer h2{font-size:22px;letter-spacing:-.03em;text-transform:none;color:#f4f1ea;margin:0;font-weight:700}
+.chatlist{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;margin-top:12px}
+.chatrow{display:flex;gap:10px;align-items:center;padding:12px 4px;border-top:1px solid var(--line)}
+.chatrow:first-child{border-top:0}
+.chatrow .grow{min-width:0}
+.chatrow .t{font-weight:650;color:#f4f1ea}
+.chatrow.on .t{color:#f0b429}
+.chatrow .del{flex:none}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="head">
+    <div class="row">
+      <div class="grow">
+        <div class="brand">Venice<b>Bench</b></div>
+        <div class="thread trunc" id="threadTitle">New chat</div>
+      </div>
+      <div class="status">
+        <div class="pill bad" id="st">Need key</div>
+        <div class="tiny mut" id="base">https://api.venice.ai/api/v1</div>
+        <button class="btn sm" id="openChats" style="margin-top:8px">Chats</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="keystrip" id="keystrip">
+    <label for="key">Paste API key here</label>
+    <input id="key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="VENICE_…  (inference key from venice.ai → Settings → API)">
+    <div class="row wrap" style="margin-top:8px">
+      <button class="btn gold grow" id="saveRelay">Save on relay</button>
+      <button class="btn grow" id="savePhone">Save on this phone</button>
+    </div>
+    <div class="tiny mut" id="keyHint" style="margin-top:8px">This is the only place the key goes. Do not paste it in chat. Chat keys are not admin/account secrets.</div>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <div class="composer">
+    <select class="input" id="model"></select>
+    <div class="controls">
+      <span class="tiny mut">temp</span>
+      <input type="range" id="temp" min="0" max="1.5" step="0.05" value="0.7">
+      <span class="tiny" id="tempv">0.70</span>
+      <button class="btn sm" id="copyLast">Copy</button>
+      <button class="btn sm" id="runLast">Run</button>
+      <button class="btn sm" id="newChat">New</button>
+      <button class="btn sm" id="stop" disabled>Stop</button>
+    </div>
+    <details class="sys">
+      <summary>System prompt (optional)</summary>
+      <textarea class="input" id="sys" placeholder="Optional instructions"></textarea>
+    </details>
+    <div class="row" style="margin-top:8px;align-items:flex-end">
+      <textarea class="input grow" id="idea" rows="2" placeholder="What should we build?"></textarea>
+      <button class="btn gold send" id="go" style="height:44px">Send</button>
+    </div>
+  </div>
+
+  <div class="drawer" id="runSheet">
+    <div class="panel">
+      <div class="row">
+        <h2 class="grow">Run on laptop</h2>
+        <button class="btn sm" id="cancelRun">Cancel</button>
+      </div>
+      <div class="tiny mut" id="laptopSt" style="margin-top:8px">Checks the WSL laptop, then runs in ~/venice_run. Nothing runs until you tap Run on laptop.</div>
+      <div class="row wrap" style="margin-top:10px">
+        <button class="btn sm" id="langBash" data-lang="bash">bash</button>
+        <button class="btn sm" id="langPy" data-lang="python">python3</button>
+      </div>
+      <textarea class="input" id="runCode" spellcheck="false" style="flex:1;min-height:160px;margin-top:10px;font:13px/1.4 ui-monospace,monospace"></textarea>
+      <button class="btn gold" id="doRun" style="margin-top:12px">Run on laptop</button>
+    </div>
+  </div>
+  <div class="drawer" id="drawer">
+    <div class="panel">
+      <div class="row">
+        <h2 class="grow">Chats</h2>
+        <button class="btn sm" id="drawerNew">New</button>
+        <button class="btn sm gold" id="closeChats">Done</button>
+      </div>
+      <div class="tiny mut" style="margin-top:8px">Chats save on this phone and on the relay. Tap one to resume.</div>
+      <div class="chatlist" id="chatList"></div>
+    </div>
+  </div>
+</div>
+<script>
+const {$, esc} = F;
+const LS_KEY = 'venice.deviceKey';
+const LS_MODEL = 'venice.model';
+const LS_CHAT = 'venice.chat';
+let messages = [];
+let busy = false;
+let configured = false;
+let abort = null;
+
+function headers() {
+  const h = {};
+  const k = localStorage.getItem(LS_KEY);
+  if (k) h['X-Venice-Key'] = k;
+  return h;
+}
+function setStatus(text, kind) {
+  $('st').textContent = text;
+  $('st').className = 'pill ' + (kind || '');
+}
+async function copyText(text) {
+  const t = String(text || '');
+  if (!t.trim()) { F.toast('Nothing to copy yet'); return false; }
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(t);
+      F.toast('Copied');
+      return true;
+    }
+  } catch (e) {}
+  const ta = document.createElement('textarea');
+  ta.value = t;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, t.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) {}
+  ta.remove();
+  F.toast(ok ? 'Copied' : 'Copy failed — long-press the message');
+  return ok;
+}
+function flashCopy(btn, ok) {
+  if (!btn || !ok) return;
+  const prev = btn.textContent;
+  btn.textContent = 'Copied';
+  clearTimeout(btn._t);
+  btn._t = setTimeout(() => { btn.textContent = prev; }, 1200);
+}
+function lastAssistantText() {
+  const bodies = [...document.querySelectorAll('.msg.assistant .body')];
+  for (let i = bodies.length - 1; i >= 0; i--) {
+    const t = bodies[i].textContent || '';
+    if (t.trim()) return t;
+  }
+  const m = [...messages].reverse().find(x => x.role === 'assistant' && x.content);
+  return (m && m.content) || '';
+}
+function extractCode(text) {
+  const src = String(text || '');
+  const fences = [...src.matchAll(/```([^\n`]*)\n([\s\S]*?)```/g)];
+  if (fences.length) {
+    const last = fences[fences.length - 1];
+    const tag = String(last[1] || '').trim().toLowerCase();
+    const lang = /py/.test(tag) ? 'python' : 'bash';
+    return {lang, code: last[2].replace(/\s+$/, '')};
+  }
+  return {lang: 'bash', code: src.replace(/\s+$/, '')};
+}
+function setLang(lang) {
+  $('langBash').classList.toggle('gold', lang === 'bash');
+  $('langPy').classList.toggle('gold', lang === 'python');
+  $('runSheet').dataset.lang = lang;
+}
+async function refreshLaptop() {
+  try {
+    const j = await F.api('/api/laptop/ping');
+    $('laptopSt').textContent = j.online
+      ? ('Laptop is awake' + (j.host ? ' · ' + j.host : '') + '. Runs in ~/venice_run.')
+      : 'Laptop looks offline. Wake WSL, then try again.';
+    return !!j.online;
+  } catch (e) {
+    $('laptopSt').textContent = 'Could not reach the laptop from the relay.';
+    return false;
+  }
+}
+function openRun(text) {
+  const {lang, code} = extractCode(text);
+  if (!code.trim()) { F.toast('Nothing to run'); return; }
+  $('runCode').value = code;
+  setLang(lang);
+  $('runSheet').classList.add('on');
+  refreshLaptop();
+  $('runCode').focus();
+}
+async function runOnLaptop() {
+  const code = $('runCode').value;
+  const lang = $('runSheet').dataset.lang || 'bash';
+  if (!code.trim()) { F.toast('Nothing to run'); return; }
+  $('doRun').disabled = true;
+  $('laptopSt').textContent = 'Running on the laptop…';
+  try {
+    const j = await F.post('/api/laptop/run', {lang, code});
+    $('runSheet').classList.remove('on');
+    const head = (j.lang || lang) + ' · exit ' + j.exit + ' · ' + (j.cwd || '~/venice_run');
+    const body = (j.output || '(no output)').trim();
+    const text = head + '\n' + body;
+    if (!$('log').querySelector('.msg')) $('log').innerHTML = '';
+    messages.push({role: 'laptop', content: text});
+    bubble('laptop', text, j.ok ? '' : 'err');
+    persist(true);
+    F.toast(j.ok ? 'Laptop finished' : 'Laptop exit ' + j.exit);
+  } catch (e) {
+    $('laptopSt').textContent = e.message || String(e);
+    F.toast(e.message || String(e));
+  } finally {
+    $('doRun').disabled = false;
+  }
+}
+function bubble(role, text, extra) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + role + (extra ? ' ' + extra : '');
+  const body = document.createElement('div');
+  body.className = 'body';
+  body.textContent = text;
+  if (role !== 'system') {
+    const row = document.createElement('div');
+    row.className = 'who-row';
+    const who = document.createElement('div');
+    who.className = 'who';
+    who.textContent = role === 'user' ? 'You' : role === 'laptop' ? 'Laptop' : 'Venice';
+    const acts = document.createElement('div');
+    acts.className = 'acts';
+    if (role === 'assistant') {
+      const run = document.createElement('button');
+      run.type = 'button';
+      run.className = 'copy';
+      run.textContent = 'Run';
+      run.setAttribute('aria-label', 'Run on laptop');
+      run.disabled = !String(text || '').trim();
+      run.onclick = ev => { ev.preventDefault(); ev.stopPropagation(); openRun(body.textContent); };
+      acts.appendChild(run);
+    }
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy';
+    btn.textContent = 'Copy';
+    btn.setAttribute('aria-label', 'Copy message');
+    btn.disabled = !String(text || '').trim();
+    btn.onclick = async ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      flashCopy(btn, await copyText(body.textContent));
+    };
+    acts.appendChild(btn);
+    row.append(who, acts);
+    el.appendChild(row);
+  }
+  el.appendChild(body);
+  $('log').appendChild(el);
+  $('log').scrollTop = $('log').scrollHeight;
+  return body;
+}
+function empty() {
+  $('log').innerHTML = `<div class="empty">
+    <h2>Build with Venice</h2>
+    <div class="mut small">This thread is saved as you talk. Tap Run on a reply to execute a code block on the laptop (you confirm first).</div>
+  </div>`;
+}
+
+const LS_THREADS = 'venice.threads';
+let store = {activeId: null, chats: []};
+let persistTimer = 0;
+
+function nid() { return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function titleOf(msgs) {
+  const u = (msgs || []).find(m => m.role === 'user' && m.content);
+  const t = String(u && u.content || '').replace(/\s+/g, ' ').trim();
+  return t.slice(0, 48) || 'New chat';
+}
+function readLocalStore() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS_THREADS) || 'null');
+    if (raw && Array.isArray(raw.chats)) return raw;
+  } catch (e) {}
+  try {
+    const legacy = JSON.parse(localStorage.getItem(LS_CHAT) || '[]');
+    if (Array.isArray(legacy) && legacy.length) {
+      const id = nid();
+      return {activeId: id, chats: [{id, title: titleOf(legacy), updated: Date.now(), model: '', system: '', messages: legacy}]};
+    }
+  } catch (e) {}
+  return {activeId: null, chats: []};
+}
+function writeLocalStore() {
+  try { localStorage.setItem(LS_THREADS, JSON.stringify(store)); } catch (e) {}
+  try { localStorage.setItem(LS_CHAT, JSON.stringify(messages.slice(-80))); } catch (e) {}
+}
+function mergeStores(a, b) {
+  const map = {};
+  for (const s of [a, b]) for (const c of (s && s.chats) || []) {
+    if (!c || !c.id) continue;
+    const prev = map[c.id];
+    if (!prev || (c.updated || 0) >= (prev.updated || 0)) map[c.id] = c;
+  }
+  const chats = Object.values(map).sort((x, y) => (y.updated || 0) - (x.updated || 0));
+  const active = (b && b.activeId && map[b.activeId] && b) ? b.activeId : ((a && a.activeId && map[a.activeId]) ? a.activeId : (chats[0] && chats[0].id) || null);
+  return {activeId: active, chats};
+}
+function currentSnap() {
+  if (!messages.length) return null;
+  const id = store.activeId || nid();
+  store.activeId = id;
+  return {
+    id,
+    title: titleOf(messages),
+    updated: Date.now(),
+    model: $('model').value,
+    system: $('sys').value,
+    messages: messages.slice(-80)
+  };
+}
+function putCurrent() {
+  const snap = currentSnap();
+  if (!snap) return;
+  store.chats = [snap].concat(store.chats.filter(c => c.id !== snap.id)).slice(0, 40);
+  store.activeId = snap.id;
+}
+function showThread() {
+  const t = store.chats.find(c => c.id === store.activeId);
+  $('threadTitle').textContent = t ? t.title : (messages.length ? titleOf(messages) : 'New chat');
+}
+function renderLog() {
+  if (!messages.length) { empty(); showThread(); return; }
+  $('log').innerHTML = '';
+  for (const m of messages) if (m.role !== 'system') bubble(m.role, m.content);
+  $('log').scrollTop = $('log').scrollHeight;
+  showThread();
+}
+function openChat(id) {
+  putCurrent();
+  const t = store.chats.find(c => c.id === id);
+  if (!t) return;
+  store.activeId = id;
+  messages = (t.messages || []).map(m => ({role: m.role, content: m.content}));
+  if (t.model && [...$('model').options].some(o => o.value === t.model)) $('model').value = t.model;
+  if (t.system != null) $('sys').value = t.system;
+  renderLog();
+  persist(true);
+  F.toast('Resumed');
+}
+function newChat() {
+  putCurrent();
+  store.activeId = null;
+  messages = [];
+  renderLog();
+  persist(true);
+  $('drawer').classList.remove('on');
+  $('idea').focus();
+}
+function deleteChat(id) {
+  store.chats = store.chats.filter(c => c.id !== id);
+  if (store.activeId === id) {
+    const next = store.chats[0];
+    store.activeId = next ? next.id : null;
+    messages = next ? (next.messages || []).map(m => ({role: m.role, content: m.content})) : [];
+    if (next && next.system != null) $('sys').value = next.system;
+    renderLog();
+  }
+  persist(true);
+  drawChatList();
+}
+function drawChatList() {
+  const list = $('chatList');
+  const rows = store.chats;
+  if (!rows.length) {
+    list.innerHTML = `<div class="empty"><div class="mut">No saved chats yet. Send a message and it stays here.</div></div>`;
+    return;
+  }
+  list.innerHTML = rows.map(c => {
+    const n = (c.messages || []).length;
+    const when = F.ago((c.updated || 0) / 1000);
+    const on = c.id === store.activeId ? ' on' : '';
+    return `<div class="chatrow${on}" data-id="${esc(c.id)}">
+      <div class="grow" data-open="${esc(c.id)}">
+        <div class="t trunc">${esc(c.title || 'Chat')}</div>
+        <div class="tiny mut">${esc(when)} · ${n} message${n === 1 ? '' : 's'}</div>
+      </div>
+      <button class="btn sm ghost del" data-del="${esc(c.id)}">Delete</button>
+    </div>`;
+  }).join('');
+}
+function persist(now) {
+  putCurrent();
+  showThread();
+  writeLocalStore();
+  const send = () => F.api('/api/venice/chats', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(store)}).catch(() => {});
+  if (now) send();
+  else {
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(send, 250);
+  }
+}
+
+$('temp').oninput = () => { $('tempv').textContent = Number($('temp').value).toFixed(2); };
+$('copyLast').onclick = async () => {
+  const btns = document.querySelectorAll('.msg.assistant .copy');
+  flashCopy(btns[btns.length - 1], await copyText(lastAssistantText()));
+};
+$('runLast').onclick = () => openRun(lastAssistantText());
+$('cancelRun').onclick = () => $('runSheet').classList.remove('on');
+$('langBash').onclick = () => setLang('bash');
+$('langPy').onclick = () => setLang('python');
+$('doRun').onclick = runOnLaptop;
+$('newChat').onclick = newChat;
+$('drawerNew').onclick = newChat;
+$('openChats').onclick = () => { putCurrent(); drawChatList(); $('drawer').classList.add('on'); };
+$('closeChats').onclick = () => $('drawer').classList.remove('on');
+$('chatList').onclick = ev => {
+  const del = ev.target.closest('[data-del]');
+  if (del) { ev.preventDefault(); deleteChat(del.dataset.del); return; }
+  const open = ev.target.closest('[data-open]');
+  if (open) { $('drawer').classList.remove('on'); openChat(open.dataset.open); }
+};
+$('stop').onclick = () => { if (abort) abort.abort(); };
+
+async function saveRelay() {
+  const v = $('key').value.trim();
+  if (!v) { $('key').focus(); F.toast('Paste the key in the gold box'); return; }
+  try {
+    const j = await F.post('/api/venice/key', {key: v});
+    localStorage.removeItem(LS_KEY);
+    $('key').value = '';
+    $('key').placeholder = 'Saved on relay · paste a new one to replace';
+    setStatus('Ready', 'ok');
+    configured = true;
+    $('keyHint').textContent = 'Saved at ' + (j.where || '~/.venice_key') + '. Paste a replacement anytime.';
+    F.toast('Key saved on the relay');
+  } catch (e) { setStatus('key rejected', 'bad'); F.toast(e.message || String(e)); }
+}
+function savePhone() {
+  const v = $('key').value.trim();
+  if (!v) { localStorage.removeItem(LS_KEY); F.toast('Phone key cleared'); return; }
+  localStorage.setItem(LS_KEY, v);
+  configured = true;
+  setStatus('Ready', 'ok');
+  F.toast('Key saved on this device only');
+}
+$('saveRelay').onclick = saveRelay;
+$('savePhone').onclick = savePhone;
+$('key').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveRelay(); } });
+
+async function boot() {
+  let st = {configured: false, default_model: 'zai-org-glm-5-2', base: 'https://api.venice.ai/api/v1'};
+  try { st = await F.api('/api/venice/status'); } catch (e) {}
+  configured = !!st.configured || !!localStorage.getItem(LS_KEY);
+  if (st.base) $('base').textContent = st.base;
+  setStatus(configured ? 'Ready' : 'Need key', configured ? 'ok' : 'warn');
+  if (st.configured) {
+    $('key').placeholder = 'Relay already has a key · paste a new one here to replace it';
+    $('keyHint').textContent = 'Relay file: ' + (st.key_file || '~/.venice_key');
+  }
+  $('key').focus();
+
+  let models = [];
+  try {
+    const r = await fetch('/api/venice/models', {headers: headers(), credentials: 'same-origin'});
+    models = (await r.json()).models || [];
+  } catch (e) {}
+  if (!models.length) models = [{id: 'zai-org-glm-5-2', name: 'GLM 5.2'}, {id: 'qwen-3-8-27b', name: 'Qwen 3.8 27B'}, {id: 'venice-uncensored', name: 'Venice Uncensored'}];
+  const prefer = localStorage.getItem(LS_MODEL) || st.default_model || 'zai-org-glm-5-2';
+  $('model').innerHTML = models.map(m => `<option value="${esc(m.id)}">${esc(m.name || m.id)}</option>`).join('');
+  if ([...$('model').options].some(o => o.value === prefer)) $('model').value = prefer;
+  $('model').onchange = () => localStorage.setItem(LS_MODEL, $('model').value);
+
+  store = readLocalStore();
+  try {
+    const remote = await F.api('/api/venice/chats');
+    store = mergeStores(store, remote);
+  } catch (e) {}
+  writeLocalStore();
+  const active = store.activeId && store.chats.find(c => c.id === store.activeId);
+  if (active) {
+    messages = (active.messages || []).map(m => ({role: m.role, content: m.content}));
+    if (active.model && [...$('model').options].some(o => o.value === active.model)) $('model').value = active.model;
+    if (active.system) $('sys').value = active.system;
+  } else {
+    store.activeId = null;
+    messages = [];
+  }
+  renderLog();
+}
+
+async function send() {
+  const text = $('idea').value.trim();
+  if (!text || busy) return;
+  if (/^VENICE[_-]/i.test(text) || /ADMIN_KEY/i.test(text)) {
+    $('key').value = text;
+    $('idea').value = '';
+    $('key').focus();
+    F.toast('That looks like a key — it is in the gold box now. Tap Save on relay.');
+    return;
+  }
+  if (!configured && !localStorage.getItem(LS_KEY) && !$('key').value.trim()) {
+    $('key').focus();
+    F.toast('Paste the key in the gold box at the top first');
+    return;
+  }
+  $('idea').value = '';
+  if (!$('log').querySelector('.msg')) $('log').innerHTML = '';
+  messages.push({role: 'user', content: text});
+  bubble('user', text);
+  persist();
+  const out = bubble('assistant', '');
+  busy = true; $('go').disabled = true; $('stop').disabled = false;
+  abort = new AbortController();
+  try {
+    const msgs = [];
+    const sys = $('sys').value.trim();
+    if (sys) msgs.push({role: 'system', content: sys});
+    msgs.push(...messages.map(m => m.role === 'laptop'
+      ? {role: 'user', content: 'Laptop ran the last snippet.\n' + m.content}
+      : {role: m.role, content: m.content}));
+    const r = await fetch('/api/venice/chat', {
+      method: 'POST', credentials: 'same-origin', signal: abort.signal,
+      headers: Object.assign({'Content-Type': 'application/json'}, headers()),
+      body: JSON.stringify({model: $('model').value, stream: true, temperature: Number($('temp').value), messages: msgs})
+    });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      throw new Error(j.detail || ('HTTP ' + r.status));
+    }
+    const reader = r.body.getReader();
+    const dec = new TextDecoder();
+    let acc = '', buf = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, {stream: true});
+      const parts = buf.split('\n');
+      buf = parts.pop();
+      for (const line of parts) {
+        const s = line.trim();
+        if (!s.startsWith('data:')) continue;
+        const data = s.slice(5).trim();
+        if (data === '[DONE]') continue;
+        let j; try { j = JSON.parse(data); } catch { continue; }
+        if (j.error) throw new Error(typeof j.error === 'string' ? j.error : JSON.stringify(j.error));
+        const piece = j.choices && j.choices[0] && j.choices[0].delta && (j.choices[0].delta.content || j.choices[0].delta.reasoning_content);
+        if (piece) {
+          acc += piece;
+          out.textContent = acc;
+          out.parentElement && out.parentElement.querySelectorAll('.copy').forEach(b => { b.disabled = !acc.trim(); });
+          $('log').scrollTop = $('log').scrollHeight;
+        }
+      }
+    }
+    if (!acc) throw new Error('Empty reply');
+    messages.push({role: 'assistant', content: acc});
+    persist(true);
+    setStatus('Ready', 'ok');
+    configured = true;
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      out.textContent = (out.textContent || '') + ' [stopped]';
+      if (acc) { messages.push({role: 'assistant', content: acc}); persist(true); }
+    }
+    else {
+      out.parentElement.classList.add('err');
+      out.textContent = e.message || String(e);
+      if (/401/.test(out.textContent)) setStatus('key rejected (401)', 'bad');
+      messages.pop();
+      persist(true);
+    }
+    out.parentElement && out.parentElement.querySelectorAll('.copy').forEach(b => {
+      b.disabled = !String(out.textContent || '').trim();
+    });
+  } finally {
+    busy = false; $('go').disabled = false; $('stop').disabled = true; abort = null;
+  }
+}
+$('go').onclick = send;
+$('idea').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+boot();
+</script>
+</body>
+</html>

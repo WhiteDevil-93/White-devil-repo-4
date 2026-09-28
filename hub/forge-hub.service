@@ -1,0 +1,13 @@
+[Unit]
+Description=Forge Hub API (127.0.0.1:9000)
+After=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/hub
+ExecStart=/home/ubuntu/hub/.venv/bin/uvicorn app:app --host 127.0.0.1 --port 9000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
