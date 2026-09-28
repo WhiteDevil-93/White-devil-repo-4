@@ -1,6 +1,7 @@
 package com.whitedevil.veniceagent
 
 import com.whitedevil.veniceagent.mcp.McpServerLoader
+import com.whitedevil.veniceagent.mcp.McpStdioClient
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
@@ -38,10 +39,28 @@ fun main(args: Array<String>) = runBlocking {
     val toolRegistry = ToolRegistry(listOf(toolBox) + mcpClients)
     val client = VeniceClient(apiKey = apiKey, baseUrl = baseUrl)
 
+    try {
+        runCli(client, toolRegistry, mcpClients, model, enableWebSearch, workspaceDir, allowShell, args)
+    } finally {
+        client.close()
+        toolRegistry.close()
+    }
+}
+
+private suspend fun runCli(
+    client: VeniceClient,
+    tools: ToolRegistry,
+    mcpClients: List<McpStdioClient>,
+    model: String,
+    enableWebSearch: Boolean,
+    workspaceDir: File,
+    allowShell: Boolean,
+    args: Array<String>,
+) {
     val agent = Agent(
         client = client,
         model = model,
-        tools = toolRegistry,
+        tools = tools,
         systemPrompt = SYSTEM_PROMPT,
         enableWebSearch = enableWebSearch,
         onToolCall = { name, arguments -> println("  -> tool call: $name($arguments)") },
@@ -51,34 +70,31 @@ fun main(args: Array<String>) = runBlocking {
         },
     )
 
-    toolRegistry.use {
-        client.use {
-            if (mcpClients.isNotEmpty()) {
-                println("Connected MCP servers: ${mcpClients.joinToString(", ") { it.serverName }}")
-            }
-            println("Venice agent ready. Model: $model | workspace: ${workspaceDir.absolutePath} | shell: $allowShell")
-            if (args.isNotEmpty()) {
-                val task = args.joinToString(" ")
-                println("> $task")
-                println(agent.send(task))
-                return@runBlocking
-            }
+    if (mcpClients.isNotEmpty()) {
+        println("Connected MCP servers: ${mcpClients.joinToString(", ") { it.serverName }}")
+    }
+    println("Venice agent ready. Model: $model | workspace: ${workspaceDir.absolutePath} | shell: $allowShell")
 
-            println("Type a message and press Enter. Type 'exit' or 'quit' to stop.")
-            while (true) {
-                print("\n> ")
-                val line = readLine() ?: break
-                if (line.equals("exit", ignoreCase = true) || line.equals("quit", ignoreCase = true)) break
-                if (line.isBlank()) continue
+    if (args.isNotEmpty()) {
+        val task = args.joinToString(" ")
+        println("> $task")
+        println(agent.send(task))
+        return
+    }
 
-                try {
-                    println(agent.send(line))
-                } catch (e: VeniceApiException) {
-                    System.err.println("Venice API error: ${e.message}")
-                } catch (e: Exception) {
-                    System.err.println("Unexpected error: ${e.message}")
-                }
-            }
+    println("Type a message and press Enter. Type 'exit' or 'quit' to stop.")
+    while (true) {
+        print("\n> ")
+        val line = readLine() ?: break
+        if (line.equals("exit", ignoreCase = true) || line.equals("quit", ignoreCase = true)) break
+        if (line.isBlank()) continue
+
+        try {
+            println(agent.send(line))
+        } catch (e: VeniceApiException) {
+            System.err.println("Venice API error: ${e.message}")
+        } catch (e: Exception) {
+            System.err.println("Unexpected error: ${e.message}")
         }
     }
 }
