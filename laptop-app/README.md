@@ -65,16 +65,25 @@ npm start
 - `Ctrl+,` Settings
 - `Ctrl+R` Reload
 
-## Windows installer
+## Windows: double-click the installer
 
-From Windows or WSL with a Windows electron-builder target:
+1. Download **Forge-Hub-Setup.exe** (NSIS installer) or **Forge-Hub-Portable.exe** (no install).
+2. Double-click it. First run opens `https://84-12-112-249.sslip.io/app/desktop/`.
+3. Press **Ctrl+,** to store relay / laptop passwords (same fields as Settings in the app).
 
-```bash
-cd ~/laptop-app
+WSL users can still use `install-home.sh` (see above) instead of the `.exe`.
+
+### Build the `.exe` yourself
+
+From **Windows PowerShell** (repo clone, not `cd laptop-app` from `~`):
+
+```powershell
+cd path\to\White-devil-repo-4\laptop-app
+npm install
 npm run dist:win
 ```
 
-The `.exe` lands in `laptop-app/dist/`. Linux AppImage: `npm run dist:linux`.
+Or from Linux / WSL in this folder: `./build-win.sh` (same as `npm run dist:win`). Output is `dist/Forge-Hub-Setup.exe` and `dist/Forge-Hub-Portable.exe`. Linux AppImage: `npm run dist:linux`.
 
 ## Env (optional)
 

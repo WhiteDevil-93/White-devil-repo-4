@@ -11,7 +11,7 @@
     "start": "electron .",
     "test": "node --test test/config.test.cjs",
     "dist": "electron-builder",
-    "dist:win": "electron-builder --win nsis",
+    "dist:win": "electron-builder --win nsis portable",
     "dist:linux": "electron-builder --linux AppImage"
   },
   "devDependencies": {
@@ -38,12 +38,16 @@
       "icon": "icon.png"
     },
     "win": {
-      "target": ["nsis"],
+      "target": ["nsis", "portable"],
       "icon": "icon.png"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Forge-Hub-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "Forge-Hub-Portable.${ext}"
     }
   }
 }
