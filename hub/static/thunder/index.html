@@ -1,0 +1,290 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c"><title>Thunder</title>
+<link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
+<style>
+.inst{padding:14px 0;border-top:1px solid var(--line)}.inst:first-child{border-top:0;padding-top:4px}
+.job{padding:14px 0;border-top:1px solid var(--line)}.job:first-child{border-top:0;padding-top:4px}
+.job .strip .thumb{width:30%}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.kv div{padding:8px 10px;border-radius:12px;background:rgba(0,0,0,.22)}.kv b{display:block;font-size:14px}.kv span{font-size:11px;color:var(--mut)}
+code.ssh{display:block;margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.3);font:12.5px ui-monospace,monospace;color:#e2d8c3;overflow-x:auto;white-space:nowrap}
+</style>
+</head><body>
+
+<div class="row" style="margin:4px 2px 12px">
+  <div class="grow"><div class="tiny mut" id="gpuname">Thunder Compute</div><h1 style="margin:2px 0 0">Thunder</h1></div>
+  <span id="st" class="pill">…</span>
+</div>
+
+<div class="card" id="down" hidden>
+  <div class="row"><div class="grow"><div style="font-weight:700">Can't reach Thunder</div><div class="small mut" id="downmsg"></div></div>
+  <button class="btn sm" onclick="load()">Retry</button></div>
+</div>
+
+<div class="card">
+  <div class="tiles" id="tiles"><div class="tile skel" style="height:80px"></div><div class="tile skel" style="height:80px"></div></div>
+  <div class="small mut" id="q14s" style="margin:12px 2px 0"></div>
+  <div class="row wrap" style="margin-top:14px">
+    <button class="btn primary grow" onclick="$('cf').click()">Send a chain</button>
+    <button class="btn grow" id="snapbtn" onclick="snapFirst()">Snapshot</button>
+  </div>
+</div>
+
+<h2>Queue</h2>
+<div class="card" id="q14"><div class="skel" style="height:60px"></div></div>
+
+<h2>Send a chain</h2>
+<div class="card">
+  <div class="small mut">Pick a <b>wan_chain_…json</b> from the prompt creator. Pick all parts (part01, part02…) together and they're joined into one chain.</div>
+  <input type="file" id="cf" accept=".json,application/json" multiple hidden>
+  <button class="btn" style="width:100%;margin-top:12px" onclick="$('cf').click()">Choose chain file(s)</button>
+  <div id="cfinfo" hidden>
+    <label class="field"><span>Name</span><input class="input" id="cfname"></label>
+    <div class="two">
+      <label class="field"><span>Seed (optional)</span><input class="input" id="cfseed" type="number" placeholder="random"></label>
+      <label class="field"><span>Queue position</span><select class="input" id="cffirst"><option value="1">Next up</option><option value="">End of queue</option></select></label>
+    </div>
+    <div class="small mut" id="cfsum" style="margin:10px 2px"></div>
+    <button class="btn primary" style="width:100%" id="cfgo" onclick="send14()">Render on Thunder 14B</button>
+  </div>
+</div>
+
+<h2>Create</h2>
+<a class="card row" href="/generator.html?target=thunder" style="color:inherit">
+  <div class="ico" style="width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--accsoft);color:var(--acc);font-size:20px">✦</div>
+  <div class="grow"><div style="font-weight:700">Prompt generator</div><div class="small mut">Write 14B chains. "Send to runner" queues them on the L40.</div></div>
+  <div class="mut" style="font-size:22px">›</div>
+</a>
+
+<h2>Instance</h2>
+<div class="card" id="inst"><div class="skel" style="height:70px"></div></div>
+
+<div class="card"><details><summary>New instance</summary>
+  <div class="two" style="margin-top:12px">
+    <label class="field"><span>GPU</span><select class="input" id="gpu"></select></label>
+    <label class="field"><span>GPUs</span><select class="input" id="ngpu"><option>1</option><option>2</option><option>4</option><option>8</option></select></label>
+  </div>
+  <div class="two">
+    <label class="field"><span>vCPUs</span><select class="input" id="cpu"><option>4</option><option selected>8</option><option>16</option><option>32</option></select></label>
+    <label class="field"><span>Disk (GB)</span><input class="input" id="disk" type="number" value="100" min="100" max="1000" step="50"></label>
+  </div>
+  <label class="field"><span>Template</span><select class="input" id="tpl"></select></label>
+  <div class="small mut" id="price" style="margin:12px 2px"></div>
+  <button class="btn primary" style="width:100%" id="create" onclick="create()">Create instance</button>
+</details></div>
+
+<div class="card"><details><summary>Snapshots <span class="mut" id="nsnaps"></span></summary><div id="snaps" style="margin-top:10px"><div class="skel" style="height:40px"></div></div></details></div>
+
+<div class="tiny mut" style="margin:14px 4px">Thunder has no stop button: to stop paying, snapshot the instance and delete it, then create a new one from the snapshot later.</div>
+
+<script>
+const {$, esc} = F;
+let S = null;
+const GPUS = ['t4', 'a100xl', 'h100'];
+const STATUS = s => { s = (s || '').toLowerCase(); return s === 'running' ? 'ok' : /start|creat|pend|snap|restor/.test(s) ? 'warn live' : /err|fail|delet/.test(s) ? 'bad' : ''; };
+
+const specs = () => S?.specs?.specs || {};
+function gpuTypes(){
+  const keys = [...new Set(Object.keys(specs()).map(k => k.replace(/_x\d+$/, '')))];
+  return keys.length ? keys : GPUS;
+}
+function gpuLabel(g){
+  const s = specs()[g + '_x1'] || Object.entries(specs()).find(([k]) => k.startsWith(g + '_x'))?.[1];
+  return s ? s.displayName.replace(/^NVIDIA /, '') : g.toUpperCase();
+}
+const stock = (g, n) => S?.status?.specs?.[`${g}_x${n}`];
+function templates(){
+  const t = S?.templates; let out = [];
+  if (Array.isArray(t)) out = t.map(x => typeof x === 'string' ? [x, x] : [x.name || x.id, x.displayName || x.display_name || x.name || x.id]);
+  else if (t && typeof t === 'object') out = Object.entries(t).map(([k, v]) => [k, (v && (v.displayName || v.display_name)) || k]);
+  return out.length ? out : [['base', 'Base (Ubuntu + CUDA)'], ['ollama', 'Ollama'], ['comfy-ui', 'ComfyUI'], ['webui-forge', 'WebUI Forge']];
+}
+function priceText(){
+  const p = S?.pricing?.pricing; if (!p) return '';
+  const g = $('gpu').value, n = +$('ngpu').value, sp = specs()[`${g}_x${n}`];
+  if (Object.keys(specs()).length && !sp) return `${gpuLabel(g)} doesn't come in ${n}× here.`;
+  const rate = p[`${g}_x${n}`] ?? (p[g] != null ? p[g] * n : null);
+  if (rate == null) return '';
+  const disk = Math.max(0, (+$('disk').value || 100) - 100) * (p.disk_gb || 0);
+  const st = stock(g, n);
+  return `About $${(rate + disk).toFixed(2)} per hour${sp ? ` · ${sp.vramGB} GB VRAM each` : ''}${st && st !== 'available' ? ' · currently out of stock' : ''}.`;
+}
+['gpu', 'ngpu'].forEach(id => $(id).onchange = () => fillForm());
+$('disk').oninput = () => $('price').textContent = priceText();
+
+async function load(){
+  try { S = await F.api('/api/thunder/state'); }
+  catch (e) {
+    $('st').textContent = 'Unreachable'; $('st').className = 'pill bad';
+    $('down').hidden = false; $('downmsg').textContent = e.message;
+    $('tiles').innerHTML = '<div class="tile"><div class="k">Rate</div><div class="v">—</div><div class="s">unknown</div></div><div class="tile"><div class="k">Up for</div><div class="v">—</div><div class="s">unknown</div></div>';
+    $('inst').innerHTML = $('snaps').innerHTML = '<div class="empty">Waiting for Thunder to come back.</div>';
+    fillForm(); return;
+  }
+  $('down').hidden = true;
+  const insts = S.instances || [], running = insts.filter(i => (i.status || '').toLowerCase() === 'running').length;
+  $('st').textContent = !insts.length ? 'No instance' : running ? (running > 1 ? running + ' running' : 'Running') : insts[0].status || '?';
+  $('st').className = 'pill ' + (running ? 'ok live' : insts.length ? STATUS(insts[0].status) : 'bad');
+  const i0 = insts.find(i => (i.status || '').toLowerCase() === 'running') || insts[0];
+  const pr = S.pricing?.pricing || {}, n0 = +(i0?.numGpus || 1), g0 = (i0?.gpuType || '').toLowerCase();
+  const rate = i0 ? (pr[`${g0}_x${n0}`] ?? (pr[g0] != null ? pr[g0] * n0 : null)) : null;
+  const up = i0?.createdAt ? Date.now() / 1000 - Date.parse(i0.createdAt) / 1000 : null;
+  $('gpuname').textContent = i0 ? `${n0 > 1 ? n0 + '× ' : ''}${i0.gpuType || 'GPU'}${i0.memory ? ' · ' + i0.memory + ' GB' : ''}` : 'Thunder Compute';
+  $('tiles').innerHTML =
+    `<div class="tile"><div class="k">Rate</div><div class="v">${rate != null ? '$' + rate.toFixed(2) : '—'}</div><div class="s">per hour${i0 ? ' · ' + esc(i0.gpuType || '') : ''}</div></div>
+     <div class="tile"><div class="k">Up for</div><div class="v">${up != null ? F.dur(up) : '—'}</div><div class="s">${up != null && rate != null ? 'about $' + (rate * up / 3600).toFixed(2) + ' so far' : 'no instance'}</div></div>`;
+  $('snapbtn').disabled = !i0;
+  $('inst').innerHTML = insts.map(i => {
+    const ssh = i.ip ? `ssh -p ${i.port || 22} ubuntu@${i.ip}` : '';
+    const ports = (i.httpPorts || []).join(', ');
+    return `<div class="inst"><div class="row"><div class="grow"><div class="trunc" style="font-weight:700;font-size:16px">${esc(i.name || i.id)}</div>
+        <div class="tiny mut">${esc(i.template || '')}${i.createdAt ? ' · created ' + F.ago(Date.parse(i.createdAt) / 1000) : ''}</div></div>
+        <span class="pill ${STATUS(i.status)}">${esc(i.status || '?')}</span></div>
+      <div class="kv"><div><b>${esc((i.numGpus || 1) + '× ' + (i.gpuType || '?').toUpperCase())}</b><span>GPU</span></div>
+        <div><b>${esc(i.cpuCores ?? '?')}</b><span>vCPUs</span></div><div><b>${esc(i.storage ?? '?')} GB</b><span>disk</span></div></div>
+      ${ssh ? `<code class="ssh" onclick="copy('${esc(ssh)}')">${esc(ssh)}</code>` : ''}
+      ${ports ? `<div class="tiny mut" style="margin-top:8px">Open HTTP ports: ${esc(ports)}</div>` : ''}
+      <div class="row wrap" style="margin-top:10px;justify-content:flex-end">
+        <button class="btn sm" onclick="ports('${esc(i.id)}')">Ports</button>
+        <button class="btn sm" onclick="resize('${esc(i.id)}')">Resize</button>
+        <button class="btn sm" onclick="snap('${esc(i.id)}','${esc(i.name || i.id)}')">Snapshot</button>
+        <button class="btn danger sm" onclick="del('${esc(i.id)}','${esc(i.name || i.id)}')">Delete</button>
+      </div></div>`;
+  }).join('') || '<div class="empty">No instances. Create one below.</div>';
+  const snaps = Array.isArray(S.snapshots) ? S.snapshots : Object.entries(S.snapshots || {}).map(([k, v]) => Object.assign({id: k}, v));
+  $('snaps').innerHTML = snaps.map(s => `<div class="item"><div class="ico">◧</div><div class="grow"><div class="trunc" style="font-weight:600">${esc(s.name || s.id)}</div>
+      <div class="tiny mut">${esc(s.status || '')}${s.createdAt ? ' · ' + F.ago(Date.parse(s.createdAt) / 1000) : ''}${s.minimumDiskSizeGb ? ' · ' + s.minimumDiskSizeGb + ' GB' : ''}</div></div>
+      <button class="btn danger sm" onclick="delSnap('${esc(s.id)}','${esc(s.name || s.id)}')">Delete</button></div>`).join('') || '<div class="empty">No snapshots.</div>';
+  $('nsnaps').textContent = snaps.length ? '· ' + snaps.length : '';
+  fillForm();
+}
+function fillForm(){
+  const g0 = $('gpu').value, t0 = $('tpl').value;
+  $('gpu').innerHTML = gpuTypes().map(g => `<option value="${esc(g)}"${g === g0 || (!g0 && g === 'l40') ? ' selected' : ''}>${esc(gpuLabel(g))}${stock(g, 1) && stock(g, 1) !== 'available' ? ' (out of stock)' : ''}</option>`).join('');
+  const sp = specs()[`${$('gpu').value}_x${$('ngpu').value}`];
+  if (sp?.vcpuOptions) { const c0 = $('cpu').value; $('cpu').innerHTML = sp.vcpuOptions.map(v => `<option${String(v) === c0 ? ' selected' : ''}>${v}</option>`).join(''); }
+  const snaps = Array.isArray(S?.snapshots) ? S.snapshots : [];
+  $('tpl').innerHTML = templates().map(([v, t]) => `<option value="${esc(v)}"${v === t0 ? ' selected' : ''}>${esc(t)}</option>`).join('')
+    + snaps.map(s => `<option value="${esc(s.name)}"${s.name === t0 ? ' selected' : ''}>Snapshot: ${esc(s.name)}</option>`).join('');
+  $('price').textContent = priceText();
+}
+
+const copy = t => navigator.clipboard?.writeText(t).then(() => F.toast('Copied'), () => F.toast(t));
+async function run(p, body, ok){
+  try { await F.post('/api/thunder/' + p, body); F.toast(ok); setTimeout(load, 1500); } catch (e) { F.toast(e.message); }
+}
+async function create(){
+  const b = $('create'); if (b.disabled) return;
+  if (!confirm(`Create a ${$('ngpu').value}× ${$('gpu').value.toUpperCase()} instance? It bills until you delete it.`)) return;
+  b.disabled = true;
+  await run('instances', {gpu_type: $('gpu').value, num_gpus: +$('ngpu').value, cpu_cores: +$('cpu').value,
+    disk_size_gb: +$('disk').value || 100, template: $('tpl').value}, 'Creating. It takes a minute or two.');
+  b.disabled = false;
+}
+function del(id, name){ if (confirm(`Delete "${name}"? Everything on it is lost unless you snapshot first.`)) run(`instances/${id}/delete`, undefined, 'Deleting.'); }
+function snap(id, name){
+  const n = prompt('Snapshot name', name.replace(/\W+/g, '-') + '-' + new Date().toISOString().slice(0, 10));
+  if (n) run('snapshots', {instance_id: id, name: n}, 'Snapshot started.');
+}
+function snapFirst(){
+  const i = (S?.instances || []).find(x => (x.status || '').toLowerCase() === 'running') || (S?.instances || [])[0];
+  if (i) snap(i.id, i.name || i.id);
+}
+function delSnap(id, name){ if (confirm(`Delete snapshot "${name}"?`)) run(`snapshots/${id}/delete`, undefined, 'Snapshot deleted.'); }
+function ports(id){
+  const a = prompt('HTTP ports to open (comma separated). Prefix with - to close, e.g. 8188, -7860');
+  if (!a) return;
+  const xs = a.split(/[\s,]+/).filter(Boolean).map(Number).filter(n => n && Math.abs(n) < 65536);
+  run(`instances/${id}/ports`, {add_ports: xs.filter(n => n > 0), remove_ports: xs.filter(n => n < 0).map(n => -n)}, 'Ports updated.');
+}
+function resize(id){
+  const g = prompt('New GPU type (blank to keep): ' + gpuTypes().join(', ')); if (g === null) return;
+  const n = prompt('Number of GPUs (blank to keep)'); if (n === null) return;
+  const d = prompt('Disk GB (blank to keep; can only grow)'); if (d === null) return;
+  const body = {}; if (g.trim()) body.gpu_type = g.trim().toLowerCase(); if (+n) body.num_gpus = +n; if (+d) body.disk_size_gb = +d;
+  if (!Object.keys(body).length) return;
+  if (confirm('Resize this instance? It restarts.')) run(`instances/${id}/modify`, body, 'Resizing.');
+}
+
+const JST = {rendering: ['Rendering', 'ok live'], queued: ['Queued', ''], waiting: ['Waiting', 'warn'], error: ['Failed', 'bad'],
+             cancelled: ['Cancelled', ''], done: ['Done', 'ok']};
+let lib = [];
+async function load14(){
+  let q;
+  try { q = await F.api('/api/thunder/queue'); } catch (e) { $('q14s').textContent = e.message; return; }
+  try { lib = await F.api('/api/media/library'); } catch (e) {}
+  const c = q.comfy || {};
+  $('q14s').textContent = !q.runner ? '14B runner is not running on the relay.'
+    : !c.online ? 'ComfyUI on the instance is unreachable (instance deleted, or tunnel down).'
+    : `ComfyUI online · ${c.running ? 'rendering' : 'idle'}${c.pending ? ' · ' + c.pending + ' waiting' : ''}`;
+  const jobs = q.jobs.filter(j => j.status !== 'done' || Date.now() / 1000 - (lib.find(x => x.id === j.chain_id)?.updated || 0) < 6 * 3600);
+  $('q14').innerHTML = jobs.map(j => {
+    const p = j.progress || {}, pct = p.total ? Math.round(100 * p.done / p.total) : 0;
+    const behind = j.status === 'rendering' && c.online && !(c.running_prefix || '').startsWith('wanbot/' + j.id);
+    const [l, cls] = behind ? ['Waiting for GPU', 'warn live'] : JST[j.status] || [j.status, ''];
+    const g = lib.find(x => x.id === j.chain_id), recent = g ? g.clips.slice(-3).reverse() : [];
+    const title = g?.title || (j.name || j.id).replace(/[_-]+/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
+    const left = j.status === 'rendering' && !behind && j.avg_seconds && p.total ? ' · about ' + F.dur(j.avg_seconds * (p.total - p.done)) + ' left' : '';
+    return `<div class="job" data-g="${esc(j.chain_id || '')}"><div class="row"><div class="grow trunc" style="font-weight:700;font-size:16px">${esc(title)}</div><span class="pill ${cls}">${l}</span></div>
+      <div class="bar" style="margin:10px 0 6px"><i style="width:${pct}%"></i></div>
+      <div class="tiny mut">${j.created ? 'Sent ' + new Date(j.created).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + ' · ' : ''}${p.done || 0} of ${p.total || '?'} clips${j.current ? ' · on clip ' + j.current : ''}${j.avg_seconds ? ' · ~' + Math.round(j.avg_seconds / 60) + ' min each' : ''}${left}${behind ? ' · another render is using the GPU' : ''}</div>
+      ${recent.length ? `<div class="strip" style="margin-top:10px">${recent.map(c => F.thumb(c, 'Clip ' + c.idx)).join('')}</div>` : ''}
+      ${j.error ? `<div class="tiny" style="color:var(--bad);margin-top:8px">${esc(friendly(j.error))}</div>` : ''}
+      <div class="row" style="margin-top:10px;justify-content:flex-end">
+        ${['error', 'cancelled'].includes(j.status) ? `<button class="btn sm" onclick="act14('${j.id}','retry')">Retry</button>` : ''}
+        ${['queued', 'rendering', 'waiting'].includes(j.status) ? `<button class="btn danger sm" onclick="act14('${j.id}','cancel')">Cancel</button>` : ''}
+      </div></div>`;
+  }).join('') || `<div class="empty">${q.runner ? 'Nothing queued. Send a chain to start.' : 'Runner offline.'}</div>`;
+}
+function friendly(e){
+  e = String(e);
+  const m = e.match(/"exception_message":\s*"([^"]{1,200})/);
+  if (m) return 'ComfyUI error: ' + m[1].replace(/\\n/g, ' ');
+  if (/execution_interrupted|vanished|kept failing/.test(e)) return 'ComfyUI restarted or was interrupted mid-render. Retry resumes from the last finished clip.';
+  if (/Connection aborted|RemoteDisconnected|Connection refused|Max retries/.test(e)) return 'Lost the connection to ComfyUI. Retry resumes from the last finished clip.';
+  return e.slice(0, 240);
+}
+$('q14').addEventListener('click', e => {
+  const n = e.target.closest('.thumb')?.dataset.clip; if (!n) return;
+  const g = lib.find(x => x.id === e.target.closest('[data-g]').dataset.g); if (!g) return;
+  F.viewer(g.clips, g.clips.findIndex(c => c.name === n), c => g.title + ' · clip ' + c.idx);
+});
+async function act14(id, a){
+  if (a === 'cancel' && !confirm('Cancel this 14B chain? Finished clips are kept.')) return;
+  try { await F.post(`/api/thunder/queue/${id}/${a}`); F.toast(a === 'retry' ? 'Retrying.' : 'Cancelled.'); load14(); } catch (e) { F.toast(e.message); }
+}
+
+let chain = null;
+$('cf').onchange = async () => {
+  const files = [...$('cf').files]; if (!files.length) return;
+  try {
+    const specs = await Promise.all(files.map(async f => JSON.parse(await f.text())));
+    const clips = specs.flatMap(s => s.clips || []).sort((a, b) => a.index - b.index)
+      .filter((c, i, a) => !i || c.index !== a[i - 1].index);
+    if (!clips.length) throw new Error('no clips in that file');
+    const base = specs[0];
+    chain = Object.assign({}, base, {type: 'chain', clips, settings: Object.assign({}, base.settings, {clip_count: clips.length})});
+    chain.chain_id = (base.chain_id || (base.brief?.idea || 'chain').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40)).replace(/-part\d+$/, '') + '-14b';
+    delete chain.part; delete chain.parts;
+    $('cfname').value = chain.chain_id.replace(/-/g, '_');
+    $('cfsum').textContent = `${clips.length} clips from ${files.length} file${files.length > 1 ? 's' : ''} · about ${Math.round(clips.length * 5 / 60 * 10) / 10} min of video · renders 1280×720 at 16 fps, 5 s per clip.`;
+    $('cfinfo').hidden = false;
+  } catch (e) { chain = null; $('cfinfo').hidden = true; F.toast('Could not read the file: ' + e.message); }
+};
+async function send14(){
+  const b = $('cfgo'); if (!chain || b.disabled) return;
+  b.disabled = true;
+  try {
+    const r = await F.post('/api/thunder/queue', {spec: chain, name: $('cfname').value.trim() || null,
+      seed: $('cfseed').value === '' ? null : +$('cfseed').value, first: !!$('cffirst').value});
+    F.toast(`Queued ${r.clips} clips on Thunder 14B.`);
+    chain = null; $('cf').value = ''; $('cfinfo').hidden = true; load14();
+  } catch (e) { F.toast(e.message); }
+  finally { b.disabled = false; }
+}
+
+F.pull(() => Promise.all([load(), load14()]));
+load(); load14(); setInterval(() => { if (!document.hidden && !document.querySelector('.viewer')) { load(); load14(); } }, 30000);
+</script>
+</body></html>

@@ -1,0 +1,37 @@
+/* Shared shorthand lexicon for the prompt tools (generator.html, Shotwriter). Keep in sync with hub/gen.py SHORTHAND. */
+// WAN only renders what it can see, and the prompt LLM copies whatever words it is given, so shorthand
+// is rewritten into visible actions before it reaches the model.
+window.FORGE_LEXICON = [
+  [/\bbig\s*bro\b/gi, 'the older, broader man'],
+  [/\b(?:lil|little)\s*bro\b/gi, 'the younger, slimmer man'],
+  [/\bbros\b/gi, 'the two men'],
+  [/\bbro\b/gi, 'man'],
+  [/\beach\s*others\b(?!\s+(?:penis|penises|cock|dick|body|bodies|mouth))/gi, 'each other\'s penis'],
+  [/\bgooning\b/gi, 'slow, entranced masturbation with a glazed expression'],
+  [/\bgoon(?:s|ed)?\b/gi, 'masturbate slowly in a trance'],
+  [/\bedging\b/gi, 'stroking to the brink of orgasm, stopping with breath held, then slowly starting again'],
+  [/\bedged\b/gi, 'stopped just before orgasm'],
+  [/\bcum\s*shots?\b/gi, 'visible ejaculation'],
+  [/\bcumming\b/gi, 'ejaculating'],
+  [/\bcums\b/gi, 'ejaculates'],
+  [/\bcum(?:med)?\b/gi, 'ejaculate'],
+  [/\bpre-?cum\b/gi, 'a clear drop of fluid at the tip of the penis'],
+  [/\b(?:shoot|shoots|shooting|blow|blows|blowing)\s+(?:his|their|a)\s+loads?\b/gi, 'ejaculating'],
+  [/\bbust(?:s|ing)?\s+a\s+nut\b/gi, 'ejaculating'],
+  [/\bnutting\b/gi, 'ejaculating'],
+  [/\b(?:jerk|jack)(?:ing|s|ed)?\s+off\b/gi, 'masturbating'],
+  [/\b(?:jerk|jack)(?:ing|s|ed)?\s+each\s+other(?:\s+off)?\b/gi, 'stroking each other\'s penis'],
+  [/\bwank(?:ing|s|ed)?\b/gi, 'masturbating'],
+  [/\bfap(?:ping|s|ped)?\b/gi, 'masturbating'],
+  [/\bj\/?o\b/gi, 'masturbation'],
+  [/\bhand\s*jobs?\b|\bhj\b/gi, 'one man stroking the other man\'s penis with his hand'],
+  [/\bblow\s*jobs?\b|\bbj\b|\bsucking\s+off\b|\bsucks?\s+(?:him|each\s+other)\s+off\b/gi, 'one man takes the other\'s penis into his mouth, lips around it, head moving slowly up and down'],
+  [/\bdeep\s*throat(?:ing|s)?\b/gi, 'taking the penis fully into his mouth, down to the base'],
+  [/\bfrot(?:ting|tage)?\b/gi, 'the two men pressing their erect penises together and rubbing them against each other'],
+  [/\bboners?\b|\bhard-?ons?\b/gi, 'erection'],
+  [/\bcocks\b|\bdicks\b/gi, 'penises'],
+  [/\bcock\b|\bdick\b/gi, 'penis'],
+  [/\bballs\b/gi, 'testicles'],
+  [/\beach\s*others\b/gi, 'each other\'s'],
+];
+window.plainWords = s => window.FORGE_LEXICON.reduce((t, [re, to]) => t.replace(re, to), String(s ?? ''));
