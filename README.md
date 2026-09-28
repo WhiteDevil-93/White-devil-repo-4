@@ -108,3 +108,10 @@ cd android
 
 - **`civitai_red_dl.py`**: Downloads Civitai mirror models directly to the WSL laptop (`~/civitai_dl`).
 - **`wan_ingest.py`**: Validates, merges, and queues prompt packs for the Wan2.2 video pipeline.
+
+---
+
+## Security Note
+
+Sensitive configuration and authentication files such as `credentials.json`, `.env`, `.venice_key`, and relay access tokens must never be committed to git and are excluded via `.gitignore`.
+

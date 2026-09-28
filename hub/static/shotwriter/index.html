@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Shotwriter — Video Prompt Generator</title>
+<meta name="description" content="Universal AI video & image prompt generator for Wan 2.1 / 2.2 and SocialSight models, powered by OpenRouter." />
+<meta name="theme-color" content="#12100d" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" href="./icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@500,700,800&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./app.css" />
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#" aria-label="Shotwriter home">
+    <svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <rect x="3" y="7" width="26" height="19" rx="3" stroke="currentColor" stroke-width="2.2"/>
+      <path d="M3 12h26" stroke="currentColor" stroke-width="2.2"/>
+      <path d="M8 7l3 5M15 7l3 5M22 7l3 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M13.5 16.5v5.5l5-2.75z" fill="var(--accent)"/>
+    </svg>
+    <span class="brand-name">Shotwriter</span>
+  </a>
+  <div class="top-actions">
+    <button class="icon-btn" id="historyBtn" aria-label="History" title="History">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>
+    </button>
+    <button class="icon-btn" id="themeBtn" aria-label="Toggle theme" title="Theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+    <button class="key-btn" id="settingsBtn" aria-label="API settings">
+      <span class="dot" id="keyDot"></span><span id="keyLabel">Add API key</span>
+    </button>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- BRIEF -->
+  <section class="panel brief" aria-labelledby="briefTitle">
+    <div class="panel-head">
+      <h1 id="briefTitle">Brief</h1>
+      <button class="ghost sm" id="sparkBtn" title="Random idea">Surprise me</button>
+    </div>
+
+    <div class="field">
+      <label for="modelSel">Target model</label>
+      <select id="modelSel"></select>
+      <input id="customName" class="hidden" type="text" placeholder="Model name, e.g. LTX-2, Hunyuan Video 1.5, Pika 2.5…" />
+      <div class="chips" id="modelChips"></div>
+    </div>
+
+    <div class="field">
+      <span class="label">Task</span>
+      <div class="seg" id="taskSeg" role="radiogroup">
+        <button role="radio" data-v="create" aria-checked="true">Create</button>
+        <button role="radio" data-v="enhance" aria-checked="false">Enhance</button>
+        <button role="radio" data-v="adapt" aria-checked="false">Adapt</button>
+      </div>
+      <p class="hint" id="taskHint"></p>
+    </div>
+
+    <div class="field">
+      <span class="label">Input mode</span>
+      <div class="seg wrap" id="modeSeg" role="radiogroup"></div>
+    </div>
+
+    <div class="field">
+      <label for="idea" id="ideaLabel">Your idea</label>
+      <textarea id="idea" rows="4" placeholder="A lone astronaut walks through a neon-lit Tokyo alley in the rain…"></textarea>
+    </div>
+
+    <div class="field hidden" id="imgField">
+      <label for="imgDesc" id="imgLabel">Describe the start image</label>
+      <textarea id="imgDesc" rows="3" placeholder="What's in the image: subject, outfit, setting, framing, lighting…"></textarea>
+    </div>
+
+    <details class="direction" open>
+      <summary>Direction <span class="muted">— leave on Auto to let the model decide</span></summary>
+      <div class="grid2">
+        <div class="field"><label for="style">Style</label><select id="style"></select></div>
+        <div class="field"><label for="camera">Camera move</label><select id="camera"></select></div>
+        <div class="field"><label for="shot">Shot size / angle</label><select id="shot"></select></div>
+        <div class="field"><label for="lighting">Lighting</label><select id="lighting"></select></div>
+        <div class="field"><label for="mood">Mood / grade</label><select id="mood"></select></div>
+        <div class="field"><label for="pacing">Motion pacing</label><select id="pacing"></select></div>
+        <div class="field"><label for="aspect">Aspect</label><select id="aspect"></select></div>
+        <div class="field"><label for="duration">Duration</label><select id="duration"></select></div>
+      </div>
+    </details>
+
+    <details class="direction" open>
+      <summary>Output</summary>
+      <div class="grid2">
+        <div class="field"><label for="variations">Variations</label>
+          <select id="variations"><option>1</option><option selected>3</option><option>4</option><option>6</option></select></div>
+        <div class="field"><label for="detail">Detail</label>
+          <select id="detail"><option value="concise">Concise</option><option value="balanced" selected>Balanced</option><option value="rich">Rich</option></select></div>
+        <div class="field"><label for="lang">Prompt language</label>
+          <select id="lang"><option value="en" selected>English</option><option value="zh">中文 (Chinese)</option></select></div>
+        <div class="field"><label for="temp">Creativity <span class="muted" id="tempVal">0.8</span></label>
+          <input type="range" id="temp" min="0.2" max="1.3" step="0.1" value="0.8" /></div>
+      </div>
+      <div class="toggles">
+        <label class="tog" id="negTog"><input type="checkbox" id="negOn" checked /><span>Negative prompt</span></label>
+        <label class="tog" id="audioTog"><input type="checkbox" id="audioOn" /><span>Audio / dialogue</span></label>
+        <label class="tog" id="shotTog"><input type="checkbox" id="multiOn" /><span>Multi-shot</span></label>
+        <label class="tog"><input type="checkbox" id="nsfwOn" /><span>Unfiltered</span></label>
+      </div>
+      <div class="field">
+        <label for="extra">Extra instructions <span class="muted">(optional)</span></label>
+        <input type="text" id="extra" placeholder="e.g. keep the red umbrella in every variation, LoRA trigger word: ohwx man" />
+      </div>
+    </details>
+
+    <div class="gen-bar">
+      <button class="primary" id="genBtn">
+        <span class="btn-label">Generate prompts</span>
+        <span class="kbd">Ctrl ↵</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="panel results" aria-labelledby="resTitle" id="resultsPanel">
+    <div class="panel-head">
+      <h2 id="resTitle">Prompts</h2>
+      <div class="row-actions">
+        <button class="ghost sm" id="copyAllBtn" disabled>Copy all</button>
+      </div>
+    </div>
+    <div id="settingsCard" class="settings-card hidden"></div>
+    <div id="results">
+      <div class="empty">
+        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="6" y="14" width="52" height="38" rx="5" stroke="currentColor" stroke-width="2.5"/><path d="M6 24h52M16 14l5 10M30 14l5 10M44 14l5 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M28 32v12l10-6z" fill="currentColor"/></svg>
+        <h3>No takes yet</h3>
+        <p>Pick a target model, describe your idea, and generate. Prompts are tuned to each model's syntax, length and strengths.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- History drawer -->
+<aside class="drawer" id="historyDrawer" aria-hidden="true">
+  <div class="drawer-inner">
+    <div class="panel-head"><h2>History</h2>
+      <div class="row-actions"><button class="ghost sm" id="clearHist">Clear</button><button class="icon-btn" id="closeHist" aria-label="Close">✕</button></div>
+    </div>
+    <div id="histList"></div>
+  </div>
+</aside>
+<div class="scrim" id="scrim"></div>
+
+<!-- Settings dialog -->
+<dialog id="settingsDlg">
+  <form method="dialog" class="dlg">
+    <h2>OpenRouter settings</h2>
+    <p class="hint">Your key is stored only in this browser and sent directly to OpenRouter. Get one at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>.</p>
+    <div class="field"><label for="apiKey">API key</label>
+      <div class="key-row"><input id="apiKey" type="password" autocomplete="off" placeholder="sk-or-v1-…" /><button type="button" class="ghost sm" id="showKey">Show</button></div></div>
+    <div class="field"><label for="llmSel">Prompt-writing LLM</label>
+      <select id="llmSel">
+        <option value="cognitivecomputations/dolphin-mistral-24b-venice-edition">Dolphin Mistral 24B Venice (paid, 128K)</option>
+        <option value="cognitivecomputations/dolphin-mistral-24b-venice-edition:free">Dolphin Mistral 24B Venice (:free, rate-limited)</option>
+        <option value="__custom">Custom OpenRouter model id…</option>
+      </select>
+      <input id="llmCustom" class="hidden" type="text" placeholder="provider/model-id" />
+    </div>
+    <div class="field"><label class="tog"><input type="checkbox" id="autoFallback" checked /><span>If the paid model fails, retry with the :free variant (and vice-versa)</span></label></div>
+    <p class="hint" id="keyStatus"></p>
+    <div class="dlg-actions">
+      <button type="button" class="ghost" id="testKey">Test key</button>
+      <button type="button" class="primary" id="saveKey">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="/app/lexicon.js"></script>
+<script src="/app/shotwriter_relay.js"></script>
+<script src="./models.js"></script>
+<script src="./app.js"></script>
+<script data-pplx-inline-edit>
+(function () {
+  if (window === window.top) return;
+
+  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://perplexity.localhost","http://localhost:1420","http://127.0.0.1:1420","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
+  const MAX_FONT_BYTES = 500 * 1024;
+  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
+  let scrollForwarding = false;
+  let scrollRaf = 0;
+  let trustedTopOrigin = null;
+
+  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
+  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
+  // across multiple labels.
+  function matchesAllowedOrigin(origin) {
+    if (!origin) return false;
+    for (const entry of allowedParentOrigins) {
+      if (!entry.includes("*")) {
+        if (entry === origin) return true;
+        continue;
+      }
+      const pattern = new RegExp(
+        "^" +
+          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
+          "$",
+      );
+      if (pattern.test(origin)) return true;
+    }
+    return false;
+  }
+
+  // Trust decision: when the sender is same-origin-visible (event.origin is a
+  // real origin like https://www.perplexity.ai) we trust event.origin directly.
+  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
+  // broker's stamped `parentOrigin` to identify the top window. The fallback
+  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
+  // on the response path (see postToTrustedTop) to ensure replies can't be
+  // delivered to anyone but the actual top window of that claimed origin.
+  function getTrustedParentOrigin(event) {
+    const forwardedParentOrigin =
+      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
+    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
+    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
+  }
+
+  // All responses go to window.top with targetOrigin = the allowlisted origin.
+  // An attacker that iframes us inside their own null-origin broker can claim
+  // any parentOrigin they like, but the browser will drop the reply whenever
+  // the real top's origin doesn't match — so the screenshot never leaves.
+  function postToTrustedTop(message) {
+    if (!trustedTopOrigin) return;
+    try {
+      window.top.postMessage(message, trustedTopOrigin);
+    } catch (_error) {}
+  }
+
+  function inlineAll(original, clone) {
+    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
+
+    try {
+      const computedStyle = getComputedStyle(original);
+      // cssText on a computed style is the serialized declaration in modern
+      // Chromium/Safari — a single read beats enumerating ~400 longhand
+      // properties. Firefox returns "" here, so we fall back on empty.
+      const serialized = computedStyle.cssText;
+      if (serialized) {
+        clone.style.cssText = serialized;
+      } else {
+        const parts = new Array(computedStyle.length);
+        for (let index = 0; index < computedStyle.length; index += 1) {
+          const property = computedStyle[index];
+          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
+        }
+        clone.style.cssText = parts.join("");
+      }
+    } catch (_error) {}
+
+    const originalChildren = original.children;
+    const clonedChildren = clone.children;
+    for (
+      let index = 0;
+      index < originalChildren.length && index < clonedChildren.length;
+      index += 1
+    ) {
+      inlineAll(originalChildren[index], clonedChildren[index]);
+    }
+  }
+
+  function extractFontUrl(srcValue) {
+    const matches = [
+      ...srcValue.matchAll(
+        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
+      ),
+    ];
+    if (matches.length === 0) return null;
+    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
+    if (woff2) return woff2[1];
+    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
+    if (woff) return woff[1];
+    return matches[0][1];
+  }
+
+  // Cache resolved font URL -> data URI across captures. Fonts on a page
+  // essentially never change, and a batch run emits multiple captures back to
+  // back — without this we'd refetch + re-base64 every time.
+  const fontDataUriCache = new Map();
+  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
+
+  async function fetchAsDataUri(url) {
+    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
+    let dataUri = null;
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size <= MAX_FONT_BYTES) {
+          dataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (_error) {
+      dataUri = null;
+    }
+    fontDataUriCache.set(url, dataUri);
+    return dataUri;
+  }
+
+  function collectFontFaceRuleTexts() {
+    const rules = [];
+    for (const sheet of document.styleSheets) {
+      let cssRules;
+      try {
+        cssRules = sheet.cssRules;
+      } catch (_error) {
+        continue;
+      }
+      if (!cssRules) continue;
+      for (const rule of cssRules) {
+        const cssText = rule.cssText || "";
+        if (cssText.startsWith("@font-face")) rules.push(cssText);
+      }
+    }
+    return rules;
+  }
+
+  async function buildInlinedFontCss() {
+    const ruleTexts = collectFontFaceRuleTexts();
+    if (ruleTexts.length === 0) return null;
+
+    const resolved = ruleTexts.map((cssText) => {
+      if (!SRC_DECLARATION_RE.test(cssText)) return null;
+      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
+      if (!srcMatch) return null;
+      const url = extractFontUrl(srcMatch[1]);
+      if (!url) return null;
+      try {
+        return { cssText, url: new URL(url, document.baseURI).href };
+      } catch (_error) {
+        return null;
+      }
+    });
+
+    const dataUris = await Promise.all(
+      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
+    );
+
+    const inlined = [];
+    let totalBytes = 0;
+    for (let index = 0; index < resolved.length; index += 1) {
+      const entry = resolved[index];
+      const dataUri = dataUris[index];
+      if (!entry || !dataUri) continue;
+      const approxBytes = dataUri.length * 0.75;
+      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
+      totalBytes += approxBytes;
+      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
+    }
+    return inlined.length > 0 ? inlined.join("\n") : null;
+  }
+
+  function stripExternal(clone) {
+    const images = clone.querySelectorAll("img");
+    for (let index = 0; index < images.length; index += 1) {
+      const src = images[index].getAttribute("src");
+      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
+    }
+
+    const elements = clone.querySelectorAll("*");
+    for (let index = 0; index < elements.length; index += 1) {
+      const style = elements[index].style.cssText;
+      if (style && style.includes("url(")) {
+        elements[index].style.cssText = style.replace(
+          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
+          "none",
+        );
+      }
+    }
+  }
+
+  function emitScroll() {
+    scrollRaf = 0;
+    if (!scrollForwarding) return;
+    postToTrustedTop({
+      type: "INLINE_EDIT_SCROLL",
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+    });
+  }
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (!scrollForwarding || scrollRaf) return;
+      scrollRaf = requestAnimationFrame(emitScroll);
+    },
+    { passive: true, capture: true },
+  );
+
+  async function handleCaptureRequest(event) {
+    const requestId = event.data.requestId;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    function postResult(dataUrl) {
+      postToTrustedTop({
+        type: "INLINE_EDIT_SCREENSHOT_RESULT",
+        requestId,
+        dataUrl,
+        scrollX,
+        scrollY,
+      });
+    }
+
+    try {
+      // Wait for any pending web fonts to resolve so both inline metrics and
+      // the @font-face inlining below see the same loaded faces.
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_error) {}
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      inlineAll(document.documentElement, clone);
+
+      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
+      for (let index = 0; index < removedNodes.length; index += 1) {
+        removedNodes[index].remove();
+      }
+
+      stripExternal(clone);
+
+      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
+      // can resolve them — external font URLs aren't fetched during
+      // foreignObject rendering, which would otherwise force a fallback face
+      // and change text metrics.
+      const inlinedFontCss = await buildInlinedFontCss();
+      if (inlinedFontCss) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = inlinedFontCss;
+        const head = clone.querySelector("head");
+        if (head) head.appendChild(styleEl);
+        else clone.insertBefore(styleEl, clone.firstChild);
+      }
+
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        '<foreignObject width="100%" height="100%">' +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
+        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
+        html +
+        "</div></div></foreignObject></svg>";
+      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const image = new Image();
+      image.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        postResult(canvas.toDataURL("image/png"));
+      };
+      image.onerror = function () {
+        postResult(null);
+      };
+      image.src = svgUrl;
+    } catch (_error) {
+      postResult(null);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (!event.data) return;
+    // Only accept messages from the direct parent frame. Blocks sibling /
+    // unrelated-window postMessage senders that could otherwise reach us.
+    if (event.source !== window.parent) return;
+
+    const trustedParentOrigin = getTrustedParentOrigin(event);
+    if (!trustedParentOrigin) return;
+    trustedTopOrigin = trustedParentOrigin;
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
+      scrollForwarding = true;
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
+      scrollForwarding = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
+      return;
+    }
+
+    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
+
+    handleCaptureRequest(event);
+  });
+})();
+
+
+</script></body>
+</html>

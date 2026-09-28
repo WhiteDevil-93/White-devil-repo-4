@@ -163,8 +163,12 @@ WANBOT14 = "http://127.0.0.1:18901"
 
 
 def wanbot14(method, path):
+    try:
+        token = (Path.home() / ".wanbot_token").read_text().strip()
+    except FileNotFoundError:
+        raise HTTPException(503, "The 14B runner on the relay isn't running.")
     req = urllib.request.Request(WANBOT14 + path, method=method, headers={
-        "Authorization": "Bearer " + (Path.home() / ".wanbot_token").read_text().strip()})
+        "Authorization": "Bearer " + token})
     try:
         with urllib.request.urlopen(req, timeout=15) as r:
             return jsonlib.loads(r.read() or b"null")
@@ -222,7 +226,10 @@ def submit14(s: Submit):
     if s.seed is not None:
         runner["seed"] = s.seed
     spec["runner"] = runner
-    token = (Path.home() / ".wanbot_token").read_text().strip()
+    try:
+        token = (Path.home() / ".wanbot_token").read_text().strip()
+    except FileNotFoundError:
+        raise HTTPException(503, "The 14B runner on the relay isn't running.")
     ahead = []
     if s.first:
         jobs = wanbot14("GET", "/jobs")
@@ -243,6 +250,9 @@ def submit14(s: Submit):
         for jid in ahead:
             wanbot14("POST", f"/jobs/{jid}/retry")
     return {"ok": True, "id": job.get("id"), "clips": len(spec["clips"]), "requeued": len(ahead)}
+
+
+@router.post("/queue/{jid}/{action}")
 def queue14_action(jid: str, action: str):
     if action not in ("cancel", "retry"):
         raise HTTPException(400)

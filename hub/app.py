@@ -39,7 +39,7 @@ app.include_router(laptop_router)
 async def no_store_hub(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
-    if path.startswith("/app/") or path.startswith("/api/manifest") or path.startswith("/api/venice") or path.startswith("/api/laptop/"):
+    if path.startswith("/app/") or path.startswith("/api/manifest") or path.startswith("/api/venice") or path.startswith("/api/laptop/") or path == "/generator.html" or path.startswith("/shotwriter"):
         response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -98,5 +98,19 @@ def status():
         "laptop": laptop,
     }
 
+
+@app.get("/generator.html")
+def generator_html():
+    gen = HUB / "static" / "generator.html"
+    if gen.exists():
+        return FileResponse(gen)
+    return FileResponse(HUB.parent / "relay" / "generator.html")
+
+
+shotwriter_dir = HUB / "static" / "shotwriter"
+if not shotwriter_dir.exists():
+    shotwriter_dir = HUB.parent / "relay" / "shotwriter"
+if shotwriter_dir.exists():
+    app.mount("/shotwriter", StaticFiles(directory=str(shotwriter_dir), html=True), name="shotwriter")
 
 app.mount("/app", StaticFiles(directory=str(HUB / "static"), html=True), name="app")

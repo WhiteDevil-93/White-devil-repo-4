@@ -488,7 +488,7 @@ $('savePhone').onclick = savePhone;
 $('key').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveRelay(); } });
 
 async function boot() {
-  let st = {configured: false, default_model: 'qwen-3-8-27b', base: 'https://api.venice.ai/api/v1'};
+  let st = {configured: false, default_model: 'zai-org-glm-5-2', base: 'https://api.venice.ai/api/v1'};
   try { st = await F.api('/api/venice/status'); } catch (e) {}
   configured = !!st.configured || !!localStorage.getItem(LS_KEY);
   if (st.base) $('base').textContent = st.base;
@@ -504,8 +504,8 @@ async function boot() {
     const r = await fetch('/api/venice/models', {headers: headers(), credentials: 'same-origin'});
     models = (await r.json()).models || [];
   } catch (e) {}
-  if (!models.length) models = [{id: 'qwen-3-8-27b', name: 'Qwen 3.8 27B'}, {id: 'zai-org-glm-5-2', name: 'GLM 5.2'}, {id: 'venice-uncensored', name: 'Venice Uncensored'}];
-  const prefer = localStorage.getItem(LS_MODEL) || 'qwen-3-8-27b';
+  if (!models.length) models = [{id: 'zai-org-glm-5-2', name: 'GLM 5.2'}, {id: 'qwen-3-8-27b', name: 'Qwen 3.8 27B'}, {id: 'venice-uncensored', name: 'Venice Uncensored'}];
+  const prefer = localStorage.getItem(LS_MODEL) || st.default_model || 'zai-org-glm-5-2';
   $('model').innerHTML = models.map(m => `<option value="${esc(m.id)}">${esc(m.name || m.id)}</option>`).join('');
   if ([...$('model').options].some(o => o.value === prefer)) $('model').value = prefer;
   $('model').onchange = () => localStorage.setItem(LS_MODEL, $('model').value);

@@ -44,7 +44,10 @@ def pack_titles():
 def chain_titles():
     at, titles = _cache["chains"]
     if time.time() - at > 60:
-        tok = (Path.home() / ".wanbot_token").read_text().strip()
+        try:
+            tok = (Path.home() / ".wanbot_token").read_text().strip()
+        except FileNotFoundError:
+            tok = ""
         for url in RUNNERS:
             try:
                 jobs = requests.get(url + "/jobs", headers={"Authorization": f"Bearer {tok}"}, timeout=5).json()

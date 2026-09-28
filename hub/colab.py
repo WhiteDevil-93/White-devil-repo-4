@@ -20,12 +20,18 @@ _usage = {"at": 0, "text": ""}
 
 
 def _token():
-    return (Path.home() / ".wanbot_token").read_text().strip()
+    try:
+        return (Path.home() / ".wanbot_token").read_text().strip()
+    except FileNotFoundError:
+        return None
 
 
 def runner(method, path, **kw):
+    tok = _token()
+    if not tok:
+        return None
     try:
-        r = requests.request(method, RUNNER + path, headers={"Authorization": f"Bearer {_token()}"}, timeout=15, **kw)
+        r = requests.request(method, RUNNER + path, headers={"Authorization": f"Bearer {tok}"}, timeout=15, **kw)
     except requests.RequestException:
         return None
     if r.status_code >= 300:
@@ -37,7 +43,7 @@ def usage():
     if time.time() - _usage["at"] > 300:
         try:
             out = subprocess.run([COLAB, "usage"], capture_output=True, text=True, timeout=60).stdout
-        except subprocess.TimeoutExpired:
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             out = ""
         _usage.update(at=time.time(), text=out)
     t = _usage["text"]
@@ -97,18 +103,26 @@ def state():
 
 @router.get("/runner-token")
 def runner_token():
-    return {"url": "/runner", "token": _token()}
+    tok = _token()
+    if not tok:
+        raise HTTPException(503, "runner offline")
+    return {"url": "/runner", "token": tok}
 
 
 @router.get("/packs")
 def packs():
     rendered = {}
-    for f in (WAN / "renders").glob("smoke_goon_p*_c*.mp4"):
-        m = re.match(r"smoke_goon_p(\d+)_c(\d+)_", f.name)
-        if m:
-            rendered.setdefault(int(m[1]), set()).add(int(m[2]))
+    if (WAN / "renders").exists():
+        for f in (WAN / "renders").glob("smoke_goon_p*_c*.mp4"):
+            m = re.match(r"smoke_goon_p(\d+)_c(\d+)_", f.name)
+            if m:
+                rendered.setdefault(int(m[1]), set()).add(int(m[2]))
+    try:
+        lines = JSONL.read_text(encoding="utf-8").splitlines()
+    except FileNotFoundError:
+        return []
     out = []
-    for line in JSONL.read_text(encoding="utf-8").splitlines():
+    for line in lines:
         if not line.strip():
             continue
         p = json.loads(line)
@@ -138,7 +152,7 @@ def queue(q: Queue):
     packs = [p for p in dict.fromkeys(q.packs) if f"goon_p{p:02d}" not in active]
     if not packs:
         return {"ok": True, "output": ["already queued"], "skipped": q.packs}
-    env = dict(os.environ, WANBOT_URL=RUNNER, WANBOT_TOKEN=_token(), WAN_GC=str(WAN / "gooning_chains"))
+    env = dict(os.environ, WANBOT_URL=RUNNER, WANBOT_TOKEN=_token() or "", WAN_GC=str(WAN / "gooning_chains"))
     r = subprocess.run(["python3", str(WAN / "wan_ingest.py"), "send", *map(str, packs)],
                        capture_output=True, text=True, timeout=120, env=env)
     if r.returncode:
