@@ -11,10 +11,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -139,15 +141,33 @@ class McpStdioClient(
         val deferred = CompletableDeferred<JsonRpcResponse>()
         pending[id] = deferred
         try {
-            val request = JsonRpcRequest(id = id, method = method, params = params)
-            writeLine(json.encodeToString(JsonRpcRequest.serializer(), request))
-            return withTimeout(requestTimeoutMillis) { deferred.await() }
-        } catch (e: TimeoutCancellationException) {
+            return withTimeout(requestTimeoutMillis) {
+                val request = JsonRpcRequest(id = id, method = method, params = params)
+                // Off the caller's dispatcher: a subprocess that stops draining stdin can block
+                // this write, and running it inline would freeze whichever coroutine called us
+                // (including a single-threaded runBlocking REPL) for as long as that blocks.
+                withContext(Dispatchers.IO) {
+                    writeLine(json.encodeToString(JsonRpcRequest.serializer(), request))
+                }
+                deferred.await()
+            }
+        } catch (e: CancellationException) {
+            // Covers our own timeout (TimeoutCancellationException, a subtype) and a caller
+            // cancelling us from outside (an outer timeout, shutdown): either way, the server
+            // may still complete this operation without knowing we gave up on it, so a retry
+            // could duplicate a write/deployment. Best-effort tell it to stop.
             notify(
                 "notifications/cancelled",
                 buildJsonObject {
                     put("requestId", id)
-                    put("reason", "client timed out after ${requestTimeoutMillis}ms")
+                    put(
+                        "reason",
+                        if (e is TimeoutCancellationException) {
+                            "client timed out after ${requestTimeoutMillis}ms"
+                        } else {
+                            "client cancelled the request"
+                        },
+                    )
                 },
             )
             throw e
@@ -228,8 +248,17 @@ class McpStdioClient(
             // full success" logic keep the previous cache and invalidation for a retry.
             val result = response.result as? JsonObject
                 ?: throw McpException("MCP server '$serverName' tools/list returned a malformed result")
-            (result["tools"] as? JsonArray)?.forEach { (it as? JsonObject)?.let(rawTools::add) }
-            val nextCursor = (result["nextCursor"] as? JsonPrimitive)?.contentOrNull
+            // A missing/wrong-typed "tools" is a failed page too, not "zero tools this page":
+            // treating it as empty would silently commit a truncated list as if it were complete.
+            val tools = result["tools"] as? JsonArray
+                ?: throw McpException("MCP server '$serverName' tools/list result is missing a 'tools' array")
+            tools.forEach { (it as? JsonObject)?.let(rawTools::add) }
+            val cursorElement = result["nextCursor"]
+            val nextCursor = when {
+                cursorElement == null || cursorElement is JsonNull -> null
+                cursorElement is JsonPrimitive && cursorElement.isString -> cursorElement.content
+                else -> throw McpException("MCP server '$serverName' tools/list returned a malformed nextCursor")
+            }
             if (nextCursor != null && !seenCursors.add(nextCursor)) {
                 throw McpException("MCP server '$serverName' tools/list returned a repeated cursor '$nextCursor'")
             }

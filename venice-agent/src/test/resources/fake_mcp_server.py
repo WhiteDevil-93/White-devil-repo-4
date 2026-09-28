@@ -19,6 +19,8 @@ for line in sys.stdin:
         send({"jsonrpc": "2.0", "id": msg["id"], "result": {"protocolVersion": "2024-11-05", "capabilities": {}, "serverInfo": {"name": "fake", "version": "0.1"}}})
     elif method == "notifications/initialized":
         pass
+    elif method == "notifications/cancelled":
+        state["last_cancelled_request_id"] = (msg.get("params") or {}).get("requestId")
     elif method == "tools/list":
         params = msg.get("params") or {}
         cursor = params.get("cursor")
@@ -34,6 +36,14 @@ for line in sys.stdin:
             if state.get("malformed_next_list"):
                 state["malformed_next_list"] = False
                 send({"jsonrpc": "2.0", "id": msg["id"], "result": "not an object"})
+                continue
+            if state.get("missing_tools_field"):
+                state["missing_tools_field"] = False
+                send({"jsonrpc": "2.0", "id": msg["id"], "result": {}})  # no "tools" key at all
+                continue
+            if state.get("malformed_next_cursor"):
+                state["malformed_next_cursor"] = False
+                send({"jsonrpc": "2.0", "id": msg["id"], "result": {"tools": [], "nextCursor": 12345}})
                 continue
             # First page: one tool, plus a cursor pointing at a second page. After a
             # notifications/tools/list_changed has been sent, a new tool also appears here,
@@ -92,8 +102,18 @@ for line in sys.stdin:
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
         elif name == "hang_forever":
             pass  # never respond; simulates a tool call the server never completes on its own
+        elif name == "get_last_cancelled_request_id":
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": str(state.get("last_cancelled_request_id"))}]}})
         elif name == "trigger_malformed_list":
             state["malformed_next_list"] = True
+            send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "trigger_missing_tools_field":
+            state["missing_tools_field"] = True
+            send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "trigger_malformed_next_cursor":
+            state["malformed_next_cursor"] = True
             send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
         elif name == "trigger_cursor_loop":

@@ -260,6 +260,70 @@ class McpStdioClientTest {
     }
 
     @Test
+    fun `notifies the server when an externally cancelled call is abandoned`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(script.absolutePath)),
+            requestTimeoutMillis = 10_000,
+        )
+        try {
+            val job = launch { client.execute("fake__hang_forever", "{}") }
+            delay(200) // let the call actually reach the server and register in `pending`
+            job.cancelAndJoin()
+
+            val result = client.execute("fake__get_last_cancelled_request_id", "{}")
+            assertTrue(result != "None", "expected the server to have received notifications/cancelled, got: $result")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `rejects a tools list page missing the tools array`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
+        try {
+            client.definitions() // establish an initial cache
+
+            client.execute("fake__trigger_missing_tools_field", "{}")
+            assertFailsWith<McpException> { client.definitions() }
+
+            // The failed attempt must not have poisoned the cache or the pending-change flag:
+            // a normal refresh (once the server stops misbehaving) still works afterward.
+            val after = client.definitions().map { it.function.name }
+            assertTrue("fake__echo" in after)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `rejects a non-string nextCursor instead of treating it as the end of pagination`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
+        try {
+            client.definitions() // establish an initial cache
+
+            client.execute("fake__trigger_malformed_next_cursor", "{}")
+            assertFailsWith<McpException> { client.definitions() }
+
+            // The failed attempt must not have poisoned the cache or the pending-change flag:
+            // a normal refresh (once the server stops misbehaving) still works afterward.
+            val after = client.definitions().map { it.function.name }
+            assertTrue("fake__echo" in after)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
     fun `rejects non-object tool arguments instead of substituting defaults`() = runBlocking {
         assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
 
