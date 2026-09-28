@@ -77,6 +77,18 @@ class ToolRegistryTest {
     }
 
     @Test
+    fun `substitutes a fallback name for a provider's blank tool name`() = runBlocking {
+        val provider = FakeToolProvider(listOf(""))
+        val registry = ToolRegistry(listOf(provider))
+
+        val names = registry.definitions().map { it.function.name }
+        assertTrue(names.all { it.isNotBlank() }, "a blank exposed name would make Venice reject the whole request: $names")
+
+        // Routing must still reach the provider using its own original (blank) name.
+        assertEquals("executed:", registry.execute(names.single(), "{}"))
+    }
+
+    @Test
     fun `retries a provider that failed to list its tools instead of caching the gap`() = runBlocking {
         val healthy = FakeToolProvider(listOf("healthy__tool"))
         val flaky = FakeToolProvider(listOf("flaky__tool"), failNextDefinitionsCall = true)

@@ -63,7 +63,7 @@ class ToolRegistry(private val providers: List<ToolProvider>) : AutoCloseable {
     }
 
     private fun sanitize(name: String): String =
-        name.replace(Regex("[^a-zA-Z0-9_-]"), "_").take(MAX_TOOL_NAME_LENGTH)
+        name.replace(Regex("[^a-zA-Z0-9_-]"), "_").take(MAX_TOOL_NAME_LENGTH).ifBlank { "unnamed_tool" }
 
     private fun disambiguate(name: String, taken: Set<String>): String {
         if (name !in taken) return name

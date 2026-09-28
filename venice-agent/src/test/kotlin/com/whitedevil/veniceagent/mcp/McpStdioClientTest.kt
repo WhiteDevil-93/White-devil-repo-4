@@ -7,6 +7,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import kotlin.system.measureTimeMillis
 import kotlin.test.Test
@@ -513,5 +514,37 @@ class McpStdioClientTest {
         }
         Unit // assertFailsWith above returns the caught exception; without this the function's
         // inferred return type stops being Unit and JUnit silently won't register it as a @Test.
+    }
+
+    @Test
+    fun `close kills a launcher's detached child process too`(@TempDir tempDir: File) = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val wrapperScript = File(javaClass.classLoader.getResource("fake_mcp_wrapper.py")!!.toURI())
+        val markerFile = File(tempDir, "marker.txt")
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(wrapperScript.absolutePath, markerFile.absolutePath)),
+        )
+
+        // Establishing the connection also gives the wrapper's detached child time to start.
+        client.definitions()
+        withTimeout(5_000) {
+            while (!markerFile.exists()) delay(20)
+        }
+        val beforeClose = markerFile.readText()
+        delay(200)
+        assertTrue(markerFile.readText() != beforeClose, "expected the child to be alive and updating the marker before close()")
+
+        client.close()
+        delay(500) // let close()'s waitFor/escalation run
+
+        val afterClose = markerFile.readText()
+        delay(300)
+        assertEquals(
+            afterClose,
+            markerFile.readText(),
+            "expected close() to kill the wrapper's detached child too, but it's still updating the marker",
+        )
     }
 }

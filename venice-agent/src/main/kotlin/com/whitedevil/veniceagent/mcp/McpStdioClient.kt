@@ -468,6 +468,11 @@ class McpStdioClient(
 
     override fun close() {
         runCatching { writer.close() }
+        // Snapshot descendants (a launcher command, e.g. a wrapper script or `npx`, may have
+        // spawned its own child process that doesn't die when the launcher does) BEFORE
+        // destroying the launcher: once it exits, an orphaned child gets reparented (typically
+        // to init) and process.descendants() queried afterward would no longer find it.
+        val descendantsBeforeDestroy = runCatching { process.descendants().toList() }.getOrDefault(emptyList())
         process.destroy()
         // destroy() only requests termination; a server that ignores stdin EOF (or traps the
         // termination signal) would otherwise keep running past this call returning. Wait
@@ -476,9 +481,8 @@ class McpStdioClient(
             process.destroyForcibly()
             process.waitFor(2, TimeUnit.SECONDS)
         }
-        // Best-effort: a launcher command (a wrapper script, `npx`, ...) may have spawned its own
-        // child process that doesn't die when the launcher does.
-        runCatching { process.descendants().forEach { it.destroyForcibly() } }
+        // Destroying an already-exited handle is a harmless no-op.
+        runCatching { descendantsBeforeDestroy.forEach { it.destroyForcibly() } }
         scope.cancel()
     }
 }
