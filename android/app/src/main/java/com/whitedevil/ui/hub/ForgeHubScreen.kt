@@ -1,7 +1,5 @@
 package com.whitedevil.ui.hub
 
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -34,7 +32,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import androidx.compose.ui.viewinterop.AndroidView
 import com.whitedevil.*
 import com.whitedevil.MainActivity
 import com.whitedevil.ui.components.WdHairline
@@ -47,11 +44,9 @@ private const val HUB_HERO =
 
 @Composable
 fun ForgeHubScreen(host: MainActivity) {
-    val progress = host.hubLoadProgressPublic()
-    val loading = progress in 0.01f..0.99f || host.hubScreensUiPublic().isEmpty()
     WdScreenBackground(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxWidth().height(140.dp)) {
+            Box(Modifier.fillMaxWidth().height(120.dp)) {
                 AsyncImage(
                     model = HUB_HERO,
                     contentDescription = null,
@@ -79,14 +74,13 @@ fun ForgeHubScreen(host: MainActivity) {
                     }
                 }
             }
-            WdHairline()
             if (host.hubBannerVisiblePublic()) {
                 Row(
                     Modifier.padding(horizontal = WdDimens.screenHorizontal),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "Update available",
+                        host.hubBannerTextPublic().ifBlank { "Update available" },
                         style = MaterialTheme.typography.labelMedium,
                         color = WdPalette.textSecondary,
                         modifier = Modifier
@@ -98,9 +92,8 @@ fun ForgeHubScreen(host: MainActivity) {
                     }
                 }
             }
-            if (loading) {
+            if (host.hubScreenLoadingPublic()) {
                 LinearProgressIndicator(
-                    progress = { if (progress > 0f) progress else 0.12f },
                     modifier = Modifier.fillMaxWidth().height(2.dp),
                     color = WdPalette.accent,
                     trackColor = Color.Transparent,
@@ -111,7 +104,7 @@ fun ForgeHubScreen(host: MainActivity) {
                     val active = screen.id == host.hubCurrentScreenIdPublic()
                     Column(
                         Modifier
-                            .clickable { host.showHubScreen(screen.id) }
+                            .clickable { host.showHubScreenPublic(screen.id) }
                             .padding(horizontal = 8.dp, vertical = 2.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
@@ -133,48 +126,8 @@ fun ForgeHubScreen(host: MainActivity) {
             }
             WdHairline()
             Box(Modifier.fillMaxWidth().weight(1f)) {
-                AndroidView(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = { ctx -> host.obtainHubHostFrame(ctx) },
-                    update = { frame ->
-                        frame.layoutParams = FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                        )
-                    },
-                )
-                if (loading) {
-                    HubLoadingSkeleton(Modifier.fillMaxSize())
-                }
+                HubNativeContent(host, host.hubCurrentScreenIdPublic())
             }
-        }
-    }
-}
-
-@Composable
-private fun HubLoadingSkeleton(modifier: Modifier = Modifier) {
-    Column(
-        modifier
-            .background(WdPalette.bg.copy(alpha = 0.88f))
-            .padding(20.dp),
-    ) {
-        Text("Loading…", style = MaterialTheme.typography.titleMedium)
-        Text(
-            "Preparing your hub",
-            style = MaterialTheme.typography.labelMedium,
-            color = WdPalette.textMetadata,
-            modifier = Modifier.padding(top = 4.dp),
-        )
-        Spacer(Modifier.height(20.dp))
-        repeat(3) { i ->
-            Box(
-                Modifier
-                    .fillMaxWidth(if (i == 1) 0.72f else 0.9f)
-                    .height(10.dp)
-                    .padding(vertical = 5.dp)
-                    .clip(RoundedCornerShape(5.dp))
-                    .background(WdPalette.surface),
-            )
         }
     }
 }

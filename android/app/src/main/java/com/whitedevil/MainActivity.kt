@@ -32,15 +32,6 @@ import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.WindowInsets
-import android.webkit.CookieManager
-import android.webkit.HttpAuthHandler
-import android.webkit.URLUtil
-import android.webkit.ValueCallback
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -70,6 +61,8 @@ import com.whitedevil.ui.app.AttachmentUi
 import com.whitedevil.ui.app.HubScreenUi
 import com.whitedevil.ui.app.SettingsFormState
 import com.whitedevil.ui.app.WhiteDevilApp
+import com.whitedevil.relay.RelayHttp
+import com.whitedevil.relay.RelayHttpException
 import com.whitedevil.ui.chat.ChatUiMessage
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.AgentEvent
@@ -88,6 +81,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
@@ -121,25 +115,23 @@ class MainActivity : ComponentActivity() {
     internal var hubCurrentScreenIdState by mutableStateOf<String?>(null)
     internal var hubConnectionLabel by mutableStateOf("Checking…")
     internal var hubLoadProgress by mutableFloatStateOf(-1f)
-    internal var terminalLoadProgress by mutableFloatStateOf(-1f)
     internal var terminalPasteOpen by mutableStateOf(false)
     internal var terminalPasteText by mutableStateOf("")
+    internal var hubScreenJson by mutableStateOf("")
+    internal var hubScreenLoading by mutableStateOf(false)
+    internal var hubScreenError by mutableStateOf<String?>(null)
+    internal var hubBlockedByUpdate by mutableStateOf(false)
+    internal var hubForceUpdateVersion by mutableIntStateOf(0)
+    internal var hubForceUpdateApkUrl: String? = null
+    internal val terminalLog = mutableStateListOf<String>()
+    internal var terminalRunning by mutableStateOf(false)
 
-    private var hubHostFrame: FrameLayout? = null
-    private var terminalHostFrame: FrameLayout? = null
     private lateinit var snackbarAnchor: View
 
-    // Forge Hub UI state (isolated)
-    private lateinit var hubContent: FrameLayout
-    private val hubWebViews = HashMap<String, WebView>()
+    // Forge Hub (native Compose — relay JSON APIs)
     private var hubScreens: List<Screen> = emptyList()
     private var currentHubScreenId: String? = null
-    private var hubBlockedByUpdate = false
     private var hubWebRev = 0
-    private val authTries = HashMap<String, Int>()
-
-    // Terminal tab state (isolated)
-    internal var terminalWebView: WebView? = null
 
     // Agent tab state
     internal val chatMessages = mutableStateListOf<ChatUiMessage>()
@@ -214,8 +206,6 @@ class MainActivity : ComponentActivity() {
     // Current navigation state (mirrors uiTab for legacy call sites)
     private val activeTab: Tab get() = uiTab
     private val youSubScreen: YouSub get() = uiYouSub
-    private var fileCallback: ValueCallback<Array<Uri>>? = null
-    private var fullscreenView: View? = null
     private var apkDownloadId = -1L
 
     private val relayBase get() = prefs.getString(SettingsManager.KEY_RELAY_URL, SettingsManager.DEFAULT_RELAY_URL)!!.trimEnd('/')
@@ -253,9 +243,8 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         updateAgentSetupState()
-        if (activeTab == Tab.FORGE_HUB && !hubBlockedByUpdate) {
-            val wv = hubWebViews[currentHubScreenId]
-            wv?.reload()
+        if (activeTab == Tab.FORGE_HUB && !hubBlockedByUpdate && currentHubScreenId != null) {
+            refreshHubNativeScreen()
         }
     }
 
@@ -299,7 +288,6 @@ class MainActivity : ComponentActivity() {
         agentSelectedModel = prefs.getString(SettingsManager.KEY_VENICE_MODEL, SettingsManager.DEFAULT_MODEL)
             ?: SettingsManager.DEFAULT_MODEL
         snackbarAnchor = window.decorView
-        ensureHubHostFrame(this)
         setContent { WhiteDevilApp(this@MainActivity) }
         initAgentWelcomeMessages()
     }
@@ -326,9 +314,6 @@ class MainActivity : ComponentActivity() {
 
     internal fun showYouSub(sub: YouSub) {
         uiYouSub = sub
-        if (sub == YouSub.TERMINAL) {
-            ensureTerminalWebViewLoaded()
-        }
         if (sub == YouSub.HOME) refreshYouHomeSummary()
     }
 
@@ -367,36 +352,7 @@ class MainActivity : ComponentActivity() {
             .apply()
         updateAgentSetupState()
         UiFeedback.snackbar(snackbarAnchor, "Settings saved")
-        hubWebViews.values.forEach { hubContent.removeView(it); it.destroy() }
-        hubWebViews.clear()
-        authTries.clear()
-        terminalWebView?.reload()
         loadHubManifest()
-    }
-
-    internal fun ensureHubHostFrame(context: Context): FrameLayout {
-        if (hubHostFrame == null) {
-            hubContent = FrameLayout(context)
-            hubHostFrame = hubContent
-        }
-        return hubHostFrame!!
-    }
-
-    internal fun ensureTerminalHostFrame(context: Context): FrameLayout {
-        if (terminalHostFrame == null) {
-            terminalHostFrame = FrameLayout(context)
-            ensureTerminalWebViewLoaded()
-        }
-        return terminalHostFrame!!
-    }
-
-    private fun ensureTerminalWebViewLoaded() {
-        if (terminalWebView != null) return
-        val frame = terminalHostFrame ?: FrameLayout(this).also { terminalHostFrame = it }
-        val wv = newGenericWebView(Screen("term", "Terminal", "terminal", "/app/term/"))
-        terminalWebView = wv
-        frame.addView(wv, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        wv.loadUrl(absoluteRelayUrl("/app/term/"))
     }
 
     internal fun openTerminalPasteSheetPublic() {
@@ -1023,11 +979,69 @@ class MainActivity : ComponentActivity() {
             loadHubManifest()
             return
         }
-        hubWebViews[id]?.reload()
+        refreshHubNativeScreen()
         UiFeedback.snackbar(snackbarAnchor, "Reloading ${hubScreens.firstOrNull { it.id == id }?.title ?: "screen"}")
     }
 
     private var hubBannerApkUrl: String? = null
+
+    internal fun downloadHubUpdate() {
+        hubForceUpdateApkUrl?.let { downloadApk(it) }
+            ?: hubBannerApkUrl?.let { downloadApk(it) }
+    }
+
+    internal fun refreshHubNativeScreen() {
+        if (hubBlockedByUpdate) return
+        val id = currentHubScreenId ?: return
+        hubScreenLoading = true
+        hubScreenError = null
+        scope.launch {
+            try {
+                val json = withContext(Dispatchers.IO) { fetchHubScreenJson(id) }
+                hubScreenJson = json
+                hubScreenLoading = false
+                updateHubConnectionPill(online = true)
+            } catch (e: Exception) {
+                hubScreenLoading = false
+                hubScreenError = when (e) {
+                    is RelayHttpException -> e.message?.take(500) ?: "HTTP ${e.code}"
+                    else -> e.message ?: "Could not load screen"
+                }
+            }
+        }
+    }
+
+    private fun fetchHubScreenJson(screenId: String): String {
+        val auth = basicAuth("wan")
+        return when (screenId) {
+            "home" -> {
+                val status = RelayHttp.get(relayBase, auth, "/api/status")
+                val colab = runCatching { RelayHttp.get(relayBase, auth, "/api/colab/state") }.getOrDefault("{}")
+                val library = runCatching { RelayHttp.get(relayBase, auth, "/api/media/library") }.getOrDefault("[]")
+                JSONObject().apply {
+                    put("status", JSONObject(status))
+                    put("colab", JSONObject(colab))
+                    put("library", JSONArray(library))
+                }.toString()
+            }
+            "renders", "gallery" -> RelayHttp.get(relayBase, auth, "/api/media/library")
+            "setup" -> RelayHttp.get(relayBase, auth, "/api/setup")
+            "thunder" -> RelayHttp.get(relayBase, auth, "/api/thunder/state")
+            "colab" -> RelayHttp.get(relayBase, auth, "/api/colab/state")
+            "hypno" -> RelayHttp.get(relayBase, auth, "/api/laptop/hypno/overview")
+            "ltx" -> RelayHttp.get(relayBase, auth, "/api/gen/jobs")
+            "vast" -> RelayHttp.get(relayBase, auth, "/api/thunder/queue")
+            else -> {
+                val screen = hubScreens.firstOrNull { it.id == screenId }
+                JSONObject().apply {
+                    put("id", screenId)
+                    put("title", screen?.title ?: screenId)
+                    put("note", "Native summary only — full controls coming soon.")
+                    put("manifest_url", screen?.url ?: "")
+                }.toString()
+            }
+        }
+    }
 
     private fun updateHubConnectionPill(online: Boolean, detail: String? = null) {
         hubConnectionLabel = when {
@@ -1040,29 +1054,15 @@ class MainActivity : ComponentActivity() {
 
     internal fun showHubScreen(id: String) {
         if (hubBlockedByUpdate) return
-        val s = hubScreens.firstOrNull { it.id == id } ?: return
-        if (id == currentHubScreenId && hubWebViews[id]?.visibility == View.VISIBLE) {
-            hubWebViews[id]?.reload()
-            return
-        }
+        if (hubScreens.none { it.id == id }) return
         currentHubScreenId = id
         prefs.edit().putString("last_hub_screen", id).apply()
-
-        val wv = hubWebViews.getOrPut(id) {
-            newGenericWebView(s).also {
-                it.loadUrl(absoluteRelayUrl(s.url))
-                hubContent.addView(it, 0)
-            }
-        }
-
-        hubWebViews.values.forEach { if (it !== wv) it.visibility = View.GONE }
-        wv.alpha = 0f
-        wv.visibility = View.VISIBLE
-        wv.animate().alpha(1f).setDuration(160).start()
         renderHubChips()
+        refreshHubNativeScreen()
     }
 
-    private fun loadHubManifest() {
+    internal fun loadHubManifest() {
+        if (hubScreens.isEmpty()) hubScreenLoading = true
         prefs.getString("manifest", null)?.let { applyHubManifest(it, fromCache = true) }
         thread {
             try {
@@ -1105,59 +1105,29 @@ class MainActivity : ComponentActivity() {
         }.filter { it.id != "term" && it.id != "venice" } // term and venice have dedicated native tabs!
 
         val rev = json.optInt("web_rev", json.optInt("apk_version", 0))
-        val changedUrls = next.filter { n -> hubScreens.any { it.id == n.id && it.url != n.url } }.map { it.id }
-        val drop = (hubWebViews.keys - next.map { it.id }.toSet() + changedUrls).toMutableSet()
-        if (!fromCache && hubWebRev != 0 && rev != hubWebRev) drop.addAll(hubWebViews.keys)
-        drop.forEach { id ->
-            hubWebViews.remove(id)?.let { hubContent.removeView(it); it.destroy() }
-        }
+        val revChanged = !fromCache && hubWebRev != 0 && rev != hubWebRev
         if (!fromCache) hubWebRev = rev
         hubScreens = next
+        hubScreenLoading = false
+        if (next.isNotEmpty()) hubScreenError = null
 
         if (!fromCache) checkHubUpdate(json)
 
         val want = currentHubScreenId ?: prefs.getString("last_hub_screen", null)
         if (!hubBlockedByUpdate) {
             showHubScreen(hubScreens.firstOrNull { it.id == want }?.id ?: hubScreens.firstOrNull()?.id ?: "home")
+        } else {
+            renderHubChips()
         }
+        if (revChanged && !hubBlockedByUpdate) refreshHubNativeScreen()
         updateHubConnectionPill(online = !fromCache || hubScreens.isNotEmpty(), detail = if (fromCache) "Cached" else null)
     }
 
     private fun showHubOffline(msg: String?) {
         updateHubConnectionPill(online = false, detail = "Offline")
-        hubContent.removeAllViews()
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(32), dp(32), dp(32), dp(32))
-            addView(TextView(context).apply {
-                text = "Forge Hub Relay Offline"
-                textSize = 20f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(STRONG)
-                gravity = Gravity.CENTER
-            })
-            addView(TextView(context).apply {
-                text = "$relayBase\n${msg ?: "Could not reach relay"}\n\nNote: Venice Agent and local Terminal operate independently and are unaffected."
-                textSize = 13f
-                setTextColor(MUTED)
-                gravity = Gravity.CENTER
-                setPadding(0, dp(10), 0, dp(24))
-            })
-            addView(TextView(context).apply {
-                text = "Retry Connection"
-                textSize = 14f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.parseColor("#FF111111"))
-                setPadding(dp(24), dp(12), dp(24), dp(12))
-                background = GradientDrawable().apply {
-                    setColor(ACCENT)
-                    cornerRadius = dp(24).toFloat()
-                }
-                setOnClickListener { loadHubManifest() }
-            })
-        }
-        hubContent.addView(box, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        hubScreenLoading = false
+        hubScreenError =
+            "Forge Hub relay offline\n$relayBase\n${msg ?: "Could not reach relay"}\n\nAgent and Terminal still work on-device."
     }
 
     private fun checkHubUpdate(json: JSONObject) {
@@ -1171,54 +1141,10 @@ class MainActivity : ComponentActivity() {
         val apk = json.optString("apk_url", "/app/forgehub.apk")
         if (force) {
             hubBlockedByUpdate = true
-            hubWebViews.values.forEach { it.visibility = View.GONE }
+            hubForceUpdateVersion = latest
+            hubForceUpdateApkUrl = absoluteRelayUrl(apk)
             hubBannerVisible = false
-            hubContent.removeAllViews()
-            val box = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER
-                setPadding(dp(32), dp(32), dp(32), dp(32))
-                addView(TextView(context).apply {
-                    text = "Forge Hub Update Required"
-                    textSize = 22f
-                    typeface = Typeface.DEFAULT_BOLD
-                    setTextColor(STRONG)
-                    gravity = Gravity.CENTER
-                })
-                addView(TextView(context).apply {
-                    text = "Forge Hub requires v$latest (current: v${BuildConfig.VERSION_CODE}). Only this Hub tab is restricted until updated. Agent and Terminal remain usable."
-                    textSize = 13f
-                    setTextColor(MUTED)
-                    gravity = Gravity.CENTER
-                    setPadding(0, dp(12), 0, dp(24))
-                })
-                addView(TextView(context).apply {
-                    text = "Download v$latest"
-                    textSize = 14f
-                    typeface = Typeface.DEFAULT_BOLD
-                    setTextColor(Color.parseColor("#FF111111"))
-                    setPadding(dp(28), dp(12), dp(28), dp(12))
-                    background = GradientDrawable().apply {
-                        setColor(ACCENT)
-                        cornerRadius = dp(24).toFloat()
-                    }
-                    setOnClickListener { downloadApk(absoluteRelayUrl(apk)) }
-                })
-                addView(TextView(context).apply {
-                    text = "Dismiss / Ignore this update"
-                    textSize = 12f
-                    setTextColor(MUTED)
-                    setPadding(dp(16), dp(16), dp(16), dp(8))
-                    isClickable = true
-                    setOnClickListener {
-                        hubBlockedByUpdate = false
-                        hubContent.removeAllViews()
-                        renderHubChips()
-                        showHubScreen(hubScreens.firstOrNull()?.id ?: "home")
-                    }
-                })
-            }
-            hubContent.addView(box, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            hubScreenLoading = false
             return
         }
         hubBlockedByUpdate = false
@@ -1228,44 +1154,44 @@ class MainActivity : ComponentActivity() {
     }
 
     internal fun sendPasteToTerminal() {
-        var text = terminalPasteText
-        if (text.isNotEmpty()) {
-            if (!text.endsWith("\n")) text += "\n"
-            val escaped = JSONObject.quote(text)
-            val js = """
-                (function(){
-                    if (window.ForgeTerm && window.ForgeTerm.install) {
-                        try { window.ForgeTerm.install(window); } catch(e){}
-                    }
-                    if (window.ForgeTermPaste) { window.ForgeTermPaste($escaped); return; }
-                    var f = document.querySelector('iframe');
-                    if (f && f.contentWindow) {
-                        if (window.ForgeTerm && window.ForgeTerm.install) {
-                            try { window.ForgeTerm.install(f.contentWindow); } catch(e){}
-                        }
-                        if (f.contentWindow.ForgeTermPaste) {
-                            f.contentWindow.ForgeTermPaste($escaped);
-                            return;
-                        }
-                    }
-                })();
-            """.trimIndent()
-            terminalWebView?.evaluateJavascript(js, null)
-        }
+        val text = terminalPasteText.trim()
         terminalPasteOpen = false
+        if (text.isNotEmpty()) runTerminalCommand(text)
     }
 
-    internal fun scrollTerminal(where: String) {
-        val js = """
-            (function(){
-                if (window.ForgeTermScroll) { window.ForgeTermScroll('$where'); return; }
-                var f = document.querySelector('iframe');
-                if (f && f.contentWindow && f.contentWindow.ForgeTermScroll) {
-                    f.contentWindow.ForgeTermScroll('$where');
+    internal fun runTerminalCommand(cmd: String) {
+        val trimmed = cmd.trim()
+        if (trimmed.isEmpty() || terminalRunning) return
+        terminalLog.add("$ $trimmed")
+        terminalRunning = true
+        scope.launch {
+            try {
+                val body = JSONObject().apply {
+                    put("lang", "bash")
+                    put("code", trimmed)
+                }.toString()
+                val resp = withContext(Dispatchers.IO) {
+                    RelayHttp.post(relayBase, basicAuth("wan"), "/api/laptop/run", body)
                 }
-            })();
-        """.trimIndent()
-        terminalWebView?.evaluateJavascript(js, null)
+                val j = JSONObject(resp)
+                val out = j.optString("output").ifBlank { resp }
+                out.lines().forEach { line ->
+                    if (line.isNotBlank()) terminalLog.add(line)
+                }
+                if (!j.optBoolean("ok", true)) {
+                    terminalLog.add("[exit ${j.optInt("exit")}]")
+                }
+            } catch (e: Exception) {
+                terminalLog.add(
+                    when (e) {
+                        is RelayHttpException -> "Error: ${e.message?.take(400) ?: "HTTP ${e.code}"}"
+                        else -> "Error: ${e.message ?: "run failed"}"
+                    },
+                )
+            } finally {
+                terminalRunning = false
+            }
+        }
     }
 
     // =========================================================================
@@ -1275,148 +1201,8 @@ class MainActivity : ComponentActivity() {
     // buildSettingsTab removed (Compose UI)
 
 
-    // =========================================================================
-    // Generic WebView Factory for Forge Hub & Terminal
-    // =========================================================================
-
-    private fun newGenericWebView(screen: Screen): WebView = WebView(this).apply {
-        setBackgroundColor(BG)
-        val term = screen.id == "term" || screen.url.contains("/term")
-        settings.javaScriptEnabled = true
-        settings.domStorageEnabled = true
-        settings.cacheMode = WebSettings.LOAD_NO_CACHE
-        settings.mediaPlaybackRequiresUserGesture = false
-        settings.allowFileAccess = false
-        settings.builtInZoomControls = !term
-        settings.displayZoomControls = false
-        settings.loadWithOverviewMode = !term
-        settings.useWideViewPort = !term
-        settings.setSupportZoom(!term)
-        overScrollMode = if (term) View.OVER_SCROLL_ALWAYS else View.OVER_SCROLL_IF_CONTENT_SCROLLS
-        isNestedScrollingEnabled = term
-        if (term) {
-            isLongClickable = false
-            setOnLongClickListener { true }
-        }
-        settings.userAgentString = settings.userAgentString + " WhiteDevil/${BuildConfig.VERSION_CODE}"
-        CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-
-        webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView, req: WebResourceRequest): Boolean {
-                val u = req.url
-                if (u.host == Uri.parse(relayBase).host) return false
-                if (u.scheme == "whitedevil" || u.scheme == "forgehub") {
-                    u.getQueryParameter("screen")?.let { showHubScreen(it) }
-                    return true
-                }
-                runCatching { startActivity(Intent(Intent.ACTION_VIEW, u)) }
-                return true
-            }
-
-            override fun onReceivedHttpAuthRequest(view: WebView, handler: HttpAuthHandler, host: String, realm: String) {
-                val key = if (realm == "laptop") "laptop" else "wan"
-                val n = (authTries[key] ?: 0) + 1
-                authTries[key] = n
-                if (n > 3) {
-                    handler.cancel()
-                    authTries[key] = 0
-                    Toast.makeText(this@MainActivity, "${if (key == "laptop") "Laptop" else "Relay"} login rejected. Check Settings.", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                val u = if (key == "laptop") prefs.getString(SettingsManager.KEY_LAPTOP_USER, SettingsManager.DEFAULT_LAPTOP_USER)!!
-                else prefs.getString(SettingsManager.KEY_RELAY_USER, SettingsManager.DEFAULT_RELAY_USER)!!
-                val p = if (key == "laptop") prefs.getString(SettingsManager.KEY_LAPTOP_PASS, "")!!
-                else prefs.getString(SettingsManager.KEY_RELAY_PASS, "")!!
-                handler.proceed(u, p)
-            }
-
-            override fun onPageFinished(view: WebView, url: String) {
-                authTries.clear()
-                if (url.contains("/term") || url.contains("/laptop/term")) {
-                    view.evaluateJavascript(TERM_PATCH, null)
-                }
-            }
-        }
-
-        webChromeClient = object : WebChromeClient() {
-            override fun onProgressChanged(view: WebView, p: Int) {
-                val progress = p / 100f
-                main.post {
-                    if (term) {
-                        terminalLoadProgress = if (p < 100) progress else -1f
-                    } else {
-                        hubLoadProgress = if (p < 100) progress else -1f
-                    }
-                }
-            }
-
-            override fun onShowFileChooser(w: WebView, cb: ValueCallback<Array<Uri>>, p: FileChooserParams): Boolean {
-                fileCallback?.onReceiveValue(null)
-                fileCallback = cb
-                return try {
-                    startActivityForResult(p.createIntent().putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true), REQ_FILE)
-                    true
-                } catch (_: Exception) {
-                    fileCallback = null
-                    false
-                }
-            }
-
-            override fun onShowCustomView(view: View, callback: CustomViewCallback) {
-                fullscreenView = view
-                (window.decorView as FrameLayout).addView(view, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-            }
-
-            override fun onHideCustomView() {
-                fullscreenView?.let { (window.decorView as FrameLayout).removeView(it) }
-                fullscreenView = null
-            }
-        }
-
-        setDownloadListener { url, _, disposition, mime, _ ->
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                Toast.makeText(this@MainActivity, "Can't download this link in the app", Toast.LENGTH_SHORT).show()
-                return@setDownloadListener
-            }
-            val name = URLUtil.guessFileName(url, disposition, mime)
-            val realm = if (Uri.parse(url).path?.startsWith("/laptop") == true) "laptop" else "wan"
-            val req = DownloadManager.Request(Uri.parse(url))
-                .addRequestHeader("Authorization", basicAuth(realm))
-                .addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url) ?: "")
-                .setTitle(name)
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "WhiteDevil/$name")
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            (getSystemService(DOWNLOAD_SERVICE) as DownloadManager).enqueue(req)
-            Toast.makeText(this@MainActivity, "Downloading $name", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQ_FILE) {
-            val uris = data?.clipData?.let { c -> Array(c.itemCount) { c.getItemAt(it).uri } }
-                ?: WebChromeClient.FileChooserParams.parseResult(resultCode, data)
-            fileCallback?.onReceiveValue(if (resultCode == RESULT_OK) uris else null)
-            fileCallback = null
-            return
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
-
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (fullscreenView != null) {
-            hubWebViews[currentHubScreenId]?.webChromeClient?.onHideCustomView()
-            terminalWebView?.webChromeClient?.onHideCustomView()
-            return
-        }
-        if (activeTab == Tab.FORGE_HUB) {
-            val wv = hubWebViews[currentHubScreenId]
-            if (wv != null && wv.canGoBack()) {
-                wv.goBack()
-                return
-            }
-        }
         if (activeTab == Tab.YOU && youSubScreen != YouSub.HOME) {
             showYouSub(YouSub.HOME)
             return
@@ -1477,8 +1263,6 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        const val REQ_FILE = 41
-
         const val ROLE_USER = 1
         const val ROLE_VENICE = 2
         const val ROLE_TOOL_CALL = 3
@@ -1496,18 +1280,5 @@ class MainActivity : ComponentActivity() {
         val STRONG = Color.parseColor("#FFF4F1EA")
         val PILL = Color.parseColor("#26FFFFFF")
 
-        const val TERM_PATCH = """
-            (function(){
-              if (window.__forgeTermLoader) return;
-              window.__forgeTermLoader = 1;
-              function go(){ if (window.ForgeTerm) { ForgeTerm.install(window); try { var f=document.querySelector('iframe'); if(f&&f.contentWindow) ForgeTerm.install(f.contentWindow); } catch(e) {} } }
-              var s=document.createElement('script');
-              s.src='/app/term/patch.js';
-              s.onload=go;
-              document.documentElement.appendChild(s);
-              setTimeout(go, 400);
-              setTimeout(go, 1200);
-            })();
-        """
     }
 }

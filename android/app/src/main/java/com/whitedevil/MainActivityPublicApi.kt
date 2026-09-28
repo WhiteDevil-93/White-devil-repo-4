@@ -1,11 +1,5 @@
 package com.whitedevil
 
-import android.content.Context
-import android.net.Uri
-import android.view.Gravity
-import android.view.View
-import android.widget.FrameLayout
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.whitedevil.ui.app.AttachmentUi
 import com.whitedevil.ui.app.HubScreenUi
@@ -13,8 +7,8 @@ import com.whitedevil.ui.app.SettingsFormState
 import com.whitedevil.ui.chat.ChatUiMessage
 
 /**
- * Compose-facing API for [MainActivity]. Keeps WebView + agent logic in the Activity while the
- * entire visible shell is Jetpack Compose ([com.whitedevil.ui.app.WhiteDevilApp]).
+ * Compose-facing API for [MainActivity]. Relay, agent, and hub JSON fetching live in the Activity;
+ * the visible shell is Jetpack Compose ([com.whitedevil.ui.app.WhiteDevilApp]).
  */
 @Suppress("TooManyFunctions")
 internal object MainActivityPublicApi
@@ -35,16 +29,24 @@ fun MainActivity.hubBannerVisiblePublic(): Boolean = hubBannerVisible
 fun MainActivity.hubBannerTextPublic(): String = hubBannerText
 fun MainActivity.hubConnectionLabelPublic(): String = hubConnectionLabel
 fun MainActivity.hubLoadProgressPublic(): Float = hubLoadProgress
-fun MainActivity.terminalLoadProgressPublic(): Float = terminalLoadProgress
 fun MainActivity.hubScreensUiPublic(): List<HubScreenUi> = hubScreensUi
 fun MainActivity.hubCurrentScreenIdPublic(): String? = hubCurrentScreenIdState
+fun MainActivity.hubScreenJsonPublic(): String = hubScreenJson
+fun MainActivity.hubScreenLoadingPublic(): Boolean = hubScreenLoading
+fun MainActivity.hubScreenErrorPublic(): String? = hubScreenError
+fun MainActivity.hubBlockedByUpdatePublic(): Boolean = hubBlockedByUpdate
+fun MainActivity.hubForceUpdateVersionPublic(): Int = hubForceUpdateVersion
+fun MainActivity.hubAppVersionPublic(): Int = BuildConfig.VERSION_CODE
 fun MainActivity.terminalPasteOpenPublic(): Boolean = terminalPasteOpen
 fun MainActivity.terminalPasteTextPublic(): String = terminalPasteText
 fun MainActivity.setTerminalPasteOpen(open: Boolean) { terminalPasteOpen = open }
 fun MainActivity.setTerminalPasteText(t: String) { terminalPasteText = t }
-fun MainActivity.terminalWebViewPublic() = terminalWebView
+fun MainActivity.terminalLogPublic(): SnapshotStateList<String> = terminalLog
+fun MainActivity.terminalRunningPublic(): Boolean = terminalRunning
 fun MainActivity.agentSelectedModelPublic(): String = agentSelectedModel
 fun MainActivity.sendPasteToTerminalPublic() = sendPasteToTerminal()
+fun MainActivity.runTerminalCommandPublic(cmd: String) = runTerminalCommand(cmd)
+fun MainActivity.clearTerminalLogPublic() { terminalLog.clear() }
 fun MainActivity.veniceKeyConfiguredPublic(): Boolean = veniceKeyConfigured()
 fun MainActivity.confirmClearAgentChatPublic() = confirmClearAgentChat()
 fun MainActivity.onHubBannerClickPublic() { onHubBannerClick() }
@@ -55,8 +57,9 @@ fun MainActivity.agentStatusSubtitlePublic(): String = agentStatusSubtitle
 fun MainActivity.selectTabPublic(tab: MainActivity.Tab) = selectTab(tab)
 fun MainActivity.completeOnboardingPublic() = completeOnboarding()
 fun MainActivity.readSettingsForm(): SettingsFormState = readSettingsFormFromPrefs()
+fun MainActivity.loadHubManifestPublic() = loadHubManifest()
+fun MainActivity.showHubScreenPublic(id: String) = showHubScreen(id)
+fun MainActivity.refreshHubNativeScreenPublic() = refreshHubNativeScreen()
+fun MainActivity.downloadHubUpdatePublic() = downloadHubUpdate()
 
 fun MainActivity.removePendingAttachment(index: Int) = removePendingAttachmentAt(index)
-
-fun MainActivity.obtainHubHostFrame(context: Context): FrameLayout = ensureHubHostFrame(context)
-fun MainActivity.ensureTerminalWebViewMounted(context: Context): FrameLayout = ensureTerminalHostFrame(context)
