@@ -1028,18 +1028,95 @@ class MainActivity : ComponentActivity() {
             "setup" -> RelayHttp.get(relayBase, auth, "/api/setup")
             "thunder" -> RelayHttp.get(relayBase, auth, "/api/thunder/state")
             "colab" -> RelayHttp.get(relayBase, auth, "/api/colab/state")
-            "hypno" -> RelayHttp.get(relayBase, auth, "/api/laptop/hypno/overview")
-            "ltx" -> RelayHttp.get(relayBase, auth, "/api/gen/jobs")
+            "hypno" -> {
+                val overview = RelayHttp.get(relayBase, auth, "/api/laptop/hypno/overview")
+                val jobs = runCatching { RelayHttp.get(relayBase, auth, "/api/laptop/hypno/jobs") }.getOrDefault("[]")
+                JSONObject().apply {
+                    put("overview", JSONObject(overview))
+                    put("jobs", JSONArray(jobs))
+                }.toString()
+            }
+            "ltx", "shotwriter" -> {
+                val setup = runCatching { RelayHttp.get(relayBase, auth, "/api/setup") }.getOrDefault("{}")
+                val jobs = runCatching { RelayHttp.get(relayBase, auth, "/api/gen/jobs") }.getOrDefault("[]")
+                JSONObject().apply {
+                    put("setup", JSONObject(setup))
+                    put("jobs", JSONArray(jobs))
+                }.toString()
+            }
             "vast" -> RelayHttp.get(relayBase, auth, "/api/thunder/queue")
-            else -> {
+            "files" -> {
+                val ping = runCatching { RelayHttp.get(relayBase, auth, "/api/laptop/ping") }.getOrDefault("{}")
+                val home = runCatching {
+                    RelayHttp.post(
+                        relayBase,
+                        auth,
+                        "/api/laptop/run",
+                        """{"lang":"bash","code":"ls -lah ~ | head -50\n"}""",
+                    )
+                }.getOrDefault("{}")
+                val paths = runCatching {
+                    RelayHttp.post(
+                        relayBase,
+                        auth,
+                        "/api/laptop/run",
+                        """{"lang":"bash","code":"ls -lah ~/venice_run ~/civitai_dl 2>/dev/null | head -40\n"}""",
+                    )
+                }.getOrDefault("{}")
+                JSONObject().apply {
+                    put("ping", JSONObject(ping))
+                    put("home", JSONObject(home))
+                    put("paths", JSONObject(paths))
+                }.toString()
+            }
+            else -> if (screenId.startsWith("bot-")) {
+                val bid = screenId.removePrefix("bot-")
+                val title = hubScreens.firstOrNull { it.id == screenId }?.title ?: bid
+                val botJson = runCatching { RelayHttp.get(relayBase, auth, "/app/bots/$bid/bot.json") }.getOrDefault("{}")
+                JSONObject().apply {
+                    put("id", screenId)
+                    put("title", title)
+                    put("bot", JSONObject(botJson))
+                }.toString()
+            } else {
                 val screen = hubScreens.firstOrNull { it.id == screenId }
                 JSONObject().apply {
                     put("id", screenId)
                     put("title", screen?.title ?: screenId)
-                    put("note", "Native summary only — full controls coming soon.")
                     put("manifest_url", screen?.url ?: "")
                 }.toString()
             }
+        }
+    }
+
+    internal fun relayBaseUrl(): String = relayBase
+
+    internal fun relayAuthorization(): String = basicAuth("wan")
+
+    internal fun hubRelayPost(path: String, jsonBody: String, refreshAfter: Boolean = true) {
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    RelayHttp.post(relayBase, basicAuth("wan"), path, jsonBody)
+                }
+                if (refreshAfter) refreshHubNativeScreen()
+                UiFeedback.snackbar(snackbarAnchor, "Done")
+            } catch (e: Exception) {
+                UiFeedback.snackbar(snackbarAnchor, e.message?.take(120) ?: "Request failed")
+            }
+        }
+    }
+
+    internal fun hubRelayPostWithResponse(path: String, jsonBody: String, onResult: (String) -> Unit) {
+        scope.launch {
+            val text = try {
+                withContext(Dispatchers.IO) {
+                    RelayHttp.post(relayBase, basicAuth("wan"), path, jsonBody)
+                }
+            } catch (e: Exception) {
+                e.message ?: "Request failed"
+            }
+            main.post { onResult(text) }
         }
     }
 

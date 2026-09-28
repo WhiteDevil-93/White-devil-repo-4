@@ -62,4 +62,14 @@ fun MainActivity.showHubScreenPublic(id: String) = showHubScreen(id)
 fun MainActivity.refreshHubNativeScreenPublic() = refreshHubNativeScreen()
 fun MainActivity.downloadHubUpdatePublic() = downloadHubUpdate()
 
+fun MainActivity.relayBasePublic(): String = relayBaseUrl()
+
+fun MainActivity.relayAuthPublic(): String = relayAuthorization()
+
+fun MainActivity.hubRelayPostPublic(path: String, jsonBody: String, refreshAfter: Boolean = true) =
+    hubRelayPost(path, jsonBody, refreshAfter)
+
+fun MainActivity.hubRelayPostWithResponsePublic(path: String, jsonBody: String, onResult: (String) -> Unit) =
+    hubRelayPostWithResponse(path, jsonBody, onResult)
+
 fun MainActivity.removePendingAttachment(index: Int) = removePendingAttachmentAt(index)
