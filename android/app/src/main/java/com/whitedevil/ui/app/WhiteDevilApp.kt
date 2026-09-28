@@ -1,9 +1,13 @@
 package com.whitedevil.ui.app
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -15,10 +19,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.whitedevil.*
 import com.whitedevil.MainActivity
 import com.whitedevil.R
@@ -44,30 +51,31 @@ fun WhiteDevilApp(host: MainActivity) {
             containerColor = Color.Transparent,
             bottomBar = {
                 NavigationBar(
-                    containerColor = Color(0xD9121216),
+                    containerColor = Color(0xF0101012),
+                    tonalElevation = 0.dp,
                     modifier = Modifier.navigationBarsPadding(),
                 ) {
                     val tab = host.uiTabPublic()
-                    NavigationBarItem(
+                    navItem(
                         selected = tab == MainActivity.Tab.AGENT,
                         onClick = { host.selectTabPublic(MainActivity.Tab.AGENT) },
-                        icon = { Icon(painterResource(R.drawable.ic_venice), contentDescription = "Agent") },
-                        label = { Text("Agent") },
-                        colors = navColors(tab == MainActivity.Tab.AGENT),
+                        iconRes = R.drawable.ic_venice,
+                        label = "Agent",
+                        contentDescription = "Agent",
                     )
-                    NavigationBarItem(
+                    navItem(
                         selected = tab == MainActivity.Tab.FORGE_HUB,
                         onClick = { host.selectTabPublic(MainActivity.Tab.FORGE_HUB) },
-                        icon = { Icon(painterResource(R.drawable.ic_home), contentDescription = "Forge Hub") },
-                        label = { Text("Hub") },
-                        colors = navColors(tab == MainActivity.Tab.FORGE_HUB),
+                        iconRes = R.drawable.ic_home,
+                        label = "Hub",
+                        contentDescription = "Forge Hub",
                     )
-                    NavigationBarItem(
+                    navItem(
                         selected = tab == MainActivity.Tab.YOU,
                         onClick = { host.selectTabPublic(MainActivity.Tab.YOU) },
-                        icon = { Icon(painterResource(R.drawable.ic_settings), contentDescription = "You") },
-                        label = { Text("You") },
-                        colors = navColors(tab == MainActivity.Tab.YOU),
+                        iconRes = R.drawable.ic_settings,
+                        label = "You",
+                        contentDescription = "You",
                     )
                 }
             },
@@ -103,10 +111,38 @@ fun WhiteDevilApp(host: MainActivity) {
 }
 
 @Composable
-private fun navColors(selected: Boolean) = NavigationBarItemDefaults.colors(
-    selectedIconColor = WdColors.accent,
-    selectedTextColor = WdColors.strong,
-    unselectedIconColor = WdColors.muted,
-    unselectedTextColor = WdColors.muted,
-    indicatorColor = Color(0x26FFFFFF),
-)
+private fun RowScope.navItem(
+    selected: Boolean,
+    onClick: () -> Unit,
+    iconRes: Int,
+    label: String,
+    contentDescription: String,
+) {
+    NavigationBarItem(
+        selected = selected,
+        onClick = onClick,
+        icon = {
+            Box(
+                modifier = Modifier
+                    .size(width = 56.dp, height = 32.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (selected) Color(0x33CDB88F) else Color.Transparent),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painterResource(iconRes),
+                    contentDescription = contentDescription,
+                    tint = if (selected) WdColors.accent else WdColors.muted,
+                )
+            }
+        },
+        label = { Text(label, fontSize = 11.sp) },
+        colors = NavigationBarItemDefaults.colors(
+            selectedIconColor = WdColors.accent,
+            selectedTextColor = WdColors.strong,
+            unselectedIconColor = WdColors.muted,
+            unselectedTextColor = WdColors.muted,
+            indicatorColor = Color.Transparent,
+        ),
+    )
+}

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -60,10 +61,9 @@ fun AgentChatScreen(
 
     LazyColumn(
         state = listState,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         items(messages, key = { it.id }) { msg ->
             ChatBubbleRow(msg, onToggleTool, onCopy)
@@ -154,23 +154,16 @@ private fun ChatBubbleRow(
 
 @Composable
 private fun InfoBubble(msg: ChatUiMessage) {
-    Column(
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalAlignment = Alignment.Top,
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(Color(0x443D3528), CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("✦", color = WdColors.accent, fontSize = 16.sp)
-        }
-        Spacer(Modifier.height(8.dp))
+        Avatar("✦", Color(0x443D3528), WdColors.accent)
+        Spacer(Modifier.size(8.dp))
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0x2A1E1810), RoundedCornerShape(18.dp))
+                .widthIn(max = 340.dp)
+                .background(Color(0x2A1E1810), RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp))
                 .padding(14.dp),
         ) {
             Text(msg.sender, color = WdColors.accent, fontWeight = FontWeight.Bold, fontSize = 12.sp)

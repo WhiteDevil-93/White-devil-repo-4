@@ -3,7 +3,9 @@ package com.whitedevil.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -34,6 +36,24 @@ fun WdGlassCard(
             .background(Color(0x331A1A1E))
             .border(1.dp, Color(0x18FFFFFF), RoundedCornerShape(corner)),
     ) { content() }
+}
+
+/** Single bottom dock: one surface for banners, attachments, and the input row. */
+@Composable
+fun WdComposerDock(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Column(
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 22.dp, bottomEnd = 22.dp))
+            .background(Color(0xF0121216))
+            .border(1.dp, Color(0x14FFFFFF), RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 22.dp, bottomEnd = 22.dp))
+            .padding(horizontal = 10.dp, vertical = 10.dp),
+    ) {
+        content()
+    }
 }
 
 @Composable
