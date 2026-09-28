@@ -9,9 +9,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -143,33 +144,32 @@ class McpStdioClient(
         try {
             return withTimeout(requestTimeoutMillis) {
                 val request = JsonRpcRequest(id = id, method = method, params = params)
-                // Off the caller's dispatcher: a subprocess that stops draining stdin can block
-                // this write, and running it inline would freeze whichever coroutine called us
-                // (including a single-threaded runBlocking REPL) for as long as that blocks.
-                withContext(Dispatchers.IO) {
-                    writeLine(json.encodeToString(JsonRpcRequest.serializer(), request))
-                }
+                writeLineOrKill(json.encodeToString(JsonRpcRequest.serializer(), request))
                 deferred.await()
             }
         } catch (e: CancellationException) {
             // Covers our own timeout (TimeoutCancellationException, a subtype) and a caller
             // cancelling us from outside (an outer timeout, shutdown): either way, the server
             // may still complete this operation without knowing we gave up on it, so a retry
-            // could duplicate a write/deployment. Best-effort tell it to stop.
-            notify(
-                "notifications/cancelled",
-                buildJsonObject {
-                    put("requestId", id)
-                    put(
-                        "reason",
-                        if (e is TimeoutCancellationException) {
-                            "client timed out after ${requestTimeoutMillis}ms"
-                        } else {
-                            "client cancelled the request"
-                        },
-                    )
-                },
-            )
+            // could duplicate a write/deployment. Best-effort tell it to stop: if the notification
+            // itself can't be written (e.g. the process just died and stdin is now closed), that
+            // failure must not replace the cancellation we're about to (re)throw.
+            runCatching {
+                notify(
+                    "notifications/cancelled",
+                    buildJsonObject {
+                        put("requestId", id)
+                        put(
+                            "reason",
+                            if (e is TimeoutCancellationException) {
+                                "client timed out after ${requestTimeoutMillis}ms"
+                            } else {
+                                "client cancelled the request"
+                            },
+                        )
+                    },
+                )
+            }
             throw e
         } finally {
             // Covers writeLine() too: if it throws (e.g. the process already died and stdin
@@ -181,6 +181,39 @@ class McpStdioClient(
     private fun notify(method: String, params: JsonObject?) {
         val notification = JsonRpcNotification(method = method, params = params)
         writeLine(json.encodeToString(JsonRpcNotification.serializer(), notification))
+    }
+
+    /**
+     * Writes [line] and waits for it to finish, but — unlike plain `withContext(Dispatchers.IO)`
+     * — doesn't let a blocked write (the subprocess stopped reading stdin, so the pipe fills)
+     * stall past [requestTimeoutMillis]. `withTimeout` cancellation alone can't achieve this: the
+     * underlying `BufferedWriter.write`/`flush` are blocking Java I/O that ignore coroutine
+     * cancellation, so a structured child coroutine running them would keep `withTimeout` waiting
+     * for it to return before it could ever propagate.
+     *
+     * Both the write and its watchdog run on this client's own independent [scope], set up
+     * *before* the only suspension point ([writeJob]'s `.await()`) — so if the caller's own
+     * timeout or cancellation reaches that suspension point first, only the caller's wait ends;
+     * the watchdog keeps running regardless (it's cancelled solely by [writeJob] completing, via
+     * `invokeOnCompletion`, never by the caller giving up) and still forcibly kills the subprocess
+     * if the write hasn't finished by the deadline. That's what actually unblocks it (closing just
+     * the stream doesn't reliably interrupt an in-progress blocked write, but the read end of the
+     * pipe closing does) — without it, the write would hold [writeLine]'s lock forever and wedge
+     * every future call on this client too.
+     */
+    private suspend fun writeLineOrKill(line: String) {
+        val writeJob = scope.async(Dispatchers.IO) { writeLine(line) }
+        val watchdog = scope.launch {
+            delay(requestTimeoutMillis)
+            if (writeJob.isActive) {
+                System.err.println(
+                    "Warning: MCP server '$serverName' stopped reading stdin; killing it to unblock the write.",
+                )
+                process.destroyForcibly()
+            }
+        }
+        writeJob.invokeOnCompletion { watchdog.cancel() }
+        writeJob.await()
     }
 
     @Synchronized
@@ -324,9 +357,20 @@ class McpStdioClient(
             "text" -> (obj["text"] as? JsonPrimitive)?.contentOrNull ?: ""
             "image" -> "[image content: ${mimeTypeOf(obj)}, omitted]"
             "audio" -> "[audio content: ${mimeTypeOf(obj)}, omitted]"
-            "resource" -> "[resource content, omitted]"
+            "resource" -> renderResourceContent(obj)
             else -> "[unsupported content type]"
         }
+    }
+
+    /**
+     * An embedded resource isn't necessarily binary: when it carries a textual `text` payload
+     * (source files, documents, etc. returned this way), surface it like any other text content
+     * instead of discarding it — only a genuinely binary `blob` resource stays omitted.
+     */
+    private fun renderResourceContent(obj: JsonObject): String {
+        val resource = obj["resource"] as? JsonObject ?: return "[resource content, omitted]"
+        val text = (resource["text"] as? JsonPrimitive)?.contentOrNull
+        return text ?: "[resource content: ${mimeTypeOf(resource)}, omitted]"
     }
 
     private fun mimeTypeOf(obj: JsonObject): String =

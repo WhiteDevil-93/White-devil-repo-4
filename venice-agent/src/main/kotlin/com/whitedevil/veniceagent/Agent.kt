@@ -3,7 +3,7 @@ package com.whitedevil.veniceagent
 import kotlinx.coroutines.CancellationException
 
 class Agent(
-    private val client: VeniceClient,
+    private val client: VeniceApi,
     private val model: String,
     private val tools: ToolRegistry,
     private val systemPrompt: String,
@@ -13,6 +13,9 @@ class Agent(
     private val onToolResult: (name: String, result: String) -> Unit = { _, _ -> },
 ) {
     private val history = mutableListOf(ChatMessage(role = "system", content = systemPrompt))
+
+    /** Test-only window into conversation state; production code never needs to inspect it. */
+    internal fun historySnapshot(): List<ChatMessage> = history.toList()
 
     /**
      * Sends [userMessage] plus prior history, resolving any tool calls, and returns the final
@@ -64,7 +67,24 @@ class Agent(
                     val result = try {
                         tools.execute(call.function.name, call.function.arguments)
                     } catch (e: CancellationException) {
-                        throw e // never swallow cancellation as an ordinary tool failure
+                        // The assistant message carrying every call in `toolCalls` is already in
+                        // history (added above); a chat-completion API rejects a follow-up
+                        // request unless every one of those tool_call_ids has a matching tool
+                        // response. Answer this call and every one still unanswered with a
+                        // cancellation marker before propagating, so history stays valid for a
+                        // caller that catches this and reuses the agent, instead of leaving some
+                        // tool_calls dangling unanswered.
+                        toolCalls.dropWhile { it.id != call.id }.forEach { cancelled ->
+                            history.add(
+                                ChatMessage(
+                                    role = "tool",
+                                    content = "Error: cancelled before completion.",
+                                    toolCallId = cancelled.id,
+                                    name = cancelled.function.name,
+                                ),
+                            )
+                        }
+                        throw e
                     } catch (e: Exception) {
                         "Error: tool '${call.function.name}' threw an unexpected exception: ${e.message}"
                     }

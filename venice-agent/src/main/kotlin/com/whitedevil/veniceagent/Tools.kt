@@ -30,6 +30,9 @@ class ToolBox(
 ) : ToolProvider {
     private val json = Json { ignoreUnknownKeys = true }
 
+    /** Relay-backed tools are unusable without both credentials; don't advertise what always fails. */
+    val relayConfigured: Boolean = relayUser.isNotBlank() && relayPass.isNotBlank()
+
     init {
         workspaceDir.mkdirs()
     }
@@ -77,67 +80,71 @@ class ToolBox(
             )
         }
 
-        // Forge Hub & Pipeline tools
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "get_render_status",
-                    description = "Query active Wan2.2 rendering jobs, Colab GPU status, credit usage, and laptop connection state from Forge Hub.",
-                    parameters = buildJsonObject {
-                        put("type", "object")
-                        putJsonObject("properties") {}
-                    },
-                ),
-            ),
-        )
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "list_prompt_packs",
-                    description = "List prompt packs in the Wan2.2 generation catalog and their render completion status.",
-                    parameters = buildJsonObject {
-                        put("type", "object")
-                        putJsonObject("properties") {}
-                    },
-                ),
-            ),
-        )
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "run_laptop_command",
-                    description = "Execute a bash or python command on the user's WSL laptop via the relay SSH bridge in ~/venice_run.",
-                    parameters = objectSchema(
-                        "code" to "The shell command or python script code to execute.",
-                        "lang" to "Execution language: 'bash' or 'python'. Defaults to 'bash'.",
+        // Forge Hub & Pipeline tools: every one of these terminates in relayHttp() with a
+        // configuration-error string when RELAY_USER/RELAY_PASS aren't set, so a default
+        // installation without them shouldn't advertise tools that can only ever fail.
+        if (relayConfigured) {
+            add(
+                ToolDefinition(
+                    function = ToolFunctionSpec(
+                        name = "get_render_status",
+                        description = "Query active Wan2.2 rendering jobs, Colab GPU status, credit usage, and laptop connection state from Forge Hub.",
+                        parameters = buildJsonObject {
+                            put("type", "object")
+                            putJsonObject("properties") {}
+                        },
                     ),
                 ),
-            ),
-        )
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "download_civitai_lora",
-                    description = "Trigger a download of a LoRA or model from Civitai to the laptop's ~/civitai_dl folder.",
-                    parameters = buildJsonObject {
-                        put("type", "object")
-                        putJsonObject("properties") {
-                            putJsonObject("model_id") {
-                                put("type", "string")
-                                put("description", "Civitai model ID.")
-                            }
-                            putJsonObject("slug") {
-                                put("type", "string")
-                                put("description", "Optional model slug name for file naming.")
-                            }
-                        }
-                        put("required", buildJsonArray {
-                            add(kotlinx.serialization.json.JsonPrimitive("model_id"))
-                        })
-                    },
+            )
+            add(
+                ToolDefinition(
+                    function = ToolFunctionSpec(
+                        name = "list_prompt_packs",
+                        description = "List prompt packs in the Wan2.2 generation catalog and their render completion status.",
+                        parameters = buildJsonObject {
+                            put("type", "object")
+                            putJsonObject("properties") {}
+                        },
+                    ),
                 ),
-            ),
-        )
+            )
+            add(
+                ToolDefinition(
+                    function = ToolFunctionSpec(
+                        name = "run_laptop_command",
+                        description = "Execute a bash or python command on the user's WSL laptop via the relay SSH bridge in ~/venice_run.",
+                        parameters = objectSchema(
+                            "code" to "The shell command or python script code to execute.",
+                            "lang" to "Execution language: 'bash' or 'python'. Defaults to 'bash'.",
+                        ),
+                    ),
+                ),
+            )
+            add(
+                ToolDefinition(
+                    function = ToolFunctionSpec(
+                        name = "download_civitai_lora",
+                        description = "Trigger a download of a LoRA or model from Civitai to the laptop's ~/civitai_dl folder.",
+                        parameters = buildJsonObject {
+                            put("type", "object")
+                            putJsonObject("properties") {
+                                putJsonObject("model_id") {
+                                    put("type", "string")
+                                    put("description", "Civitai model ID.")
+                                }
+                                putJsonObject("slug") {
+                                    put("type", "string")
+                                    put("description", "Optional model slug name for file naming.")
+                                }
+                            }
+                            put("required", buildJsonArray {
+                                add(kotlinx.serialization.json.JsonPrimitive("model_id"))
+                            })
+                        },
+                    ),
+                ),
+            )
+        }
     }
 
     override suspend fun definitions(): List<ToolDefinition> = toolDefinitions

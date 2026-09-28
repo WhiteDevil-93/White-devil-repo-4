@@ -1,4 +1,4 @@
-import sys, json
+import sys, json, time
 
 def send(obj):
     sys.stdout.write(json.dumps(obj) + "\n")
@@ -122,6 +122,23 @@ for line in sys.stdin:
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
         elif name == "exit_process":
             sys.exit(0)
+        elif name == "stop_reading_stdin":
+            # Acks first, then stops consuming stdin without exiting or closing the fd: the OS
+            # pipe just fills up once the client writes enough, forcing a genuinely blocked write.
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "will stop reading"}]}})
+            time.sleep(3600)
+        elif name == "close_own_stdin_and_hang":
+            # Acks first, then closes its own stdin (unlike stop_reading_stdin): a write on the
+            # other end now fails immediately (broken pipe) instead of blocking on a full buffer.
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "closing stdin"}]}})
+            sys.stdin.close()
+            time.sleep(3600)
+        elif name == "return_resource_content":
+            if args.get("withText"):
+                resource = {"uri": "file:///a.txt", "mimeType": "text/plain", "text": "hello resource"}
+            else:
+                resource = {"uri": "file:///a.bin", "mimeType": "application/octet-stream", "blob": "AAAA"}
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "resource", "resource": resource}]}})
         elif name == "fail":
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"isError": True, "content": [{"type": "text", "text": "boom"}]}})
         elif name in ("foo.bar", "foo_bar"):

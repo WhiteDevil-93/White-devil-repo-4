@@ -17,10 +17,15 @@ import kotlinx.serialization.json.Json
 
 class VeniceApiException(val status: Int, message: String) : Exception(message)
 
+/** Narrow seam over the Venice chat-completions call so [Agent] can be tested without real HTTP. */
+interface VeniceApi {
+    suspend fun chatCompletion(request: ChatCompletionRequest): ChatCompletionResponse
+}
+
 class VeniceClient(
     private val apiKey: String,
     private val baseUrl: String = "https://api.venice.ai/api/v1",
-) : AutoCloseable {
+) : VeniceApi, AutoCloseable {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -37,7 +42,7 @@ class VeniceClient(
         }
     }
 
-    suspend fun chatCompletion(request: ChatCompletionRequest): ChatCompletionResponse {
+    override suspend fun chatCompletion(request: ChatCompletionRequest): ChatCompletionResponse {
         val response = http.post("$baseUrl/chat/completions") {
             header("Authorization", "Bearer $apiKey")
             contentType(ContentType.Application.Json)

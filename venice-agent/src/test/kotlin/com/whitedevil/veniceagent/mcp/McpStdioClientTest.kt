@@ -308,4 +308,95 @@ class McpStdioClientTest {
             client.close()
         }
     }
+
+    @Test
+    fun `kills a subprocess that stops reading stdin instead of hanging past the request deadline`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(script.absolutePath)),
+            requestTimeoutMillis = 1_000,
+        )
+        try {
+            client.execute("fake__stop_reading_stdin", "{}")
+
+            // A single argument far larger than any OS pipe's buffer capacity (typically 64KB on
+            // Linux) forces the underlying write itself to block partway through, not just the
+            // wait for a response: this is what withContext(Dispatchers.IO) alone couldn't bound.
+            // Like any other timeout on this client (see the initialize-timeout test), this must
+            // surface as a thrown cancellation, not hang forever or get swallowed as a result string.
+            val hugeArgument = """{"text":"${"x".repeat(2_000_000)}"}"""
+            val elapsedMillis = measureTimeMillis {
+                assertFailsWith<CancellationException> { client.execute("fake__echo", hugeArgument) }
+            }
+            // Generous slack over the 1s deadline: the watchdog fires at the deadline, then the
+            // subprocess has to actually die and unblock the write.
+            assertTrue(elapsedMillis < 10_000, "expected the stuck write to be bounded by the deadline, took ${elapsedMillis}ms")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `preserves cancellation even when its best-effort server notification fails to write`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(script.absolutePath)),
+            requestTimeoutMillis = 10_000,
+        )
+        try {
+            var caughtCancellation = false
+            var caughtOther: Throwable? = null
+            val job = launch {
+                try {
+                    client.execute("fake__hang_forever", "{}")
+                } catch (e: CancellationException) {
+                    caughtCancellation = true
+                    throw e
+                } catch (e: Throwable) {
+                    caughtOther = e
+                }
+            }
+            delay(200) // let hang_forever actually reach the server and register in `pending`
+
+            // The server acks this and then closes its own stdin: the notifications/cancelled
+            // write below will hit a broken pipe instead of merely blocking.
+            client.execute("fake__close_own_stdin_and_hang", "{}")
+            delay(200) // let the server actually close its stdin before cancelling
+
+            job.cancelAndJoin()
+
+            assertTrue(
+                caughtCancellation,
+                "expected CancellationException to still propagate even though the best-effort " +
+                    "cancel notification's write failed, but caught: $caughtOther",
+            )
+            assertEquals(null, caughtOther, "no other exception should have replaced the cancellation")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `preserves text carried by an embedded resource instead of always omitting it`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
+        try {
+            val textResult = client.execute("fake__return_resource_content", """{"withText":true}""")
+            assertEquals("hello resource", textResult)
+
+            // A genuinely binary (blob, no text) resource must still be omitted, not rendered.
+            val blobResult = client.execute("fake__return_resource_content", """{"withText":false}""")
+            assertTrue(blobResult.contains("omitted"), "expected a blob resource to stay omitted: $blobResult")
+        } finally {
+            client.close()
+        }
+    }
 }

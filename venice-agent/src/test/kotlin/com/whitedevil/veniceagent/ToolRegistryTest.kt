@@ -84,6 +84,23 @@ class ToolRegistryTest {
     }
 
     @Test
+    fun `normalizes names from any provider, not just ones that already namespace themselves`() = runBlocking {
+        // Only McpStdioClient sanitizes its own names; a plain ToolProvider (e.g. a third-party
+        // plugin) can hand back characters Venice's function-name schema rejects, or a name
+        // longer than the 64-char cap, and the registry is the only place left to catch it.
+        val provider = FakeToolProvider(listOf("weird.name with spaces", "a".repeat(100)))
+        val registry = ToolRegistry(listOf(provider))
+
+        val names = registry.definitions().map { it.function.name }
+        assertTrue(names.all { Regex("^[a-zA-Z0-9_-]+$").matches(it) }, "unsanitized name leaked through: $names")
+        assertTrue(names.all { it.length <= 64 }, "name exceeds the 64-char limit: $names")
+
+        // Routing must still reach the provider using its own original (unsanitized) name.
+        assertEquals("executed:weird.name with spaces", registry.execute(names[0], "{}"))
+        assertEquals("executed:${"a".repeat(100)}", registry.execute(names[1], "{}"))
+    }
+
+    @Test
     fun `propagates cancellation instead of treating it as a failed provider`() = runBlocking {
         val cancelling = object : ToolProvider {
             override suspend fun definitions(): List<ToolDefinition> = throw CancellationException("test cancellation")

@@ -8,15 +8,21 @@ import java.io.File
 private const val DEFAULT_MODEL = "zai-org-glm-5-2"
 private const val DEFAULT_BASE_URL = "https://api.venice.ai/api/v1"
 
-/** [allowShell] controls whether `run_shell_command` is mentioned; ToolBox omits it entirely when disabled. */
-private fun buildSystemPrompt(allowShell: Boolean): String {
+/**
+ * [allowShell] controls whether `run_shell_command` is mentioned; ToolBox omits it entirely when
+ * disabled. [relayConfigured] does the same for the Forge Hub/laptop relay tools, which ToolBox
+ * also omits entirely unless RELAY_USER/RELAY_PASS are both set.
+ */
+private fun buildSystemPrompt(allowShell: Boolean, relayConfigured: Boolean): String {
     val toolLines = buildList {
         add("Read, write, and inspect files in the local workspace directory (`read_file`, `write_file`, `list_directory`).")
         if (allowShell) add("Run sandboxed shell commands (`run_shell_command`).")
-        add("Query Forge Hub live render status, GPU compute usage, and job queue (`get_render_status`).")
-        add("Inspect prompt chains and pack completion status (`list_prompt_packs`).")
-        add("Execute commands on the connected WSL laptop over SSH (`run_laptop_command`).")
-        add("Trigger LoRA downloads directly on the laptop via Civitai (`download_civitai_lora`).")
+        if (relayConfigured) {
+            add("Query Forge Hub live render status, GPU compute usage, and job queue (`get_render_status`).")
+            add("Inspect prompt chains and pack completion status (`list_prompt_packs`).")
+            add("Execute commands on the connected WSL laptop over SSH (`run_laptop_command`).")
+            add("Trigger LoRA downloads directly on the laptop via Civitai (`download_civitai_lora`).")
+        }
         add("Use additional MCP tools when available; they are namespaced as `<server>__<tool>`.")
     }
     val numberedTools = toolLines.mapIndexed { index, line -> "${index + 1}. $line" }.joinToString("\n")
@@ -54,7 +60,7 @@ fun main(args: Array<String>) = runBlocking {
     val client = VeniceClient(apiKey = apiKey, baseUrl = baseUrl)
 
     try {
-        runCli(client, toolRegistry, mcpClients, model, enableWebSearch, workspaceDir, allowShell, args)
+        runCli(client, toolRegistry, mcpClients, model, enableWebSearch, workspaceDir, allowShell, toolBox.relayConfigured, args)
     } finally {
         client.close()
         toolRegistry.close()
@@ -69,13 +75,14 @@ private suspend fun runCli(
     enableWebSearch: Boolean,
     workspaceDir: File,
     allowShell: Boolean,
+    relayConfigured: Boolean,
     args: Array<String>,
 ) {
     val agent = Agent(
         client = client,
         model = model,
         tools = tools,
-        systemPrompt = buildSystemPrompt(allowShell),
+        systemPrompt = buildSystemPrompt(allowShell, relayConfigured),
         enableWebSearch = enableWebSearch,
         onToolCall = { name, arguments -> println("  -> tool call: $name($arguments)") },
         onToolResult = { name, result ->

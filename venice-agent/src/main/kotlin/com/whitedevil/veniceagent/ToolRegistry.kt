@@ -39,7 +39,12 @@ class ToolRegistry(private val providers: List<ToolProvider>) : AutoCloseable {
             }
             for (definition in providerDefinitions) {
                 val providerToolName = definition.function.name
-                val exposedName = disambiguate(providerToolName, routeMap.keys)
+                // Any provider (not just McpStdioClient, which namespaces and sanitizes its own
+                // names) may hand back a name with characters chat-completion APIs reject, or one
+                // over the length limit; normalize it here so one otherwise-valid plugin can't
+                // make the whole request invalid.
+                val sanitizedName = sanitize(providerToolName)
+                val exposedName = disambiguate(sanitizedName, routeMap.keys)
                 routeMap[exposedName] = Route(provider, providerToolName)
                 allDefinitions.add(
                     if (exposedName == providerToolName) {
@@ -56,6 +61,9 @@ class ToolRegistry(private val providers: List<ToolProvider>) : AutoCloseable {
         cachedDefinitions = if (anyProviderSkipped) null else allDefinitions
         return allDefinitions
     }
+
+    private fun sanitize(name: String): String =
+        name.replace(Regex("[^a-zA-Z0-9_-]"), "_").take(MAX_TOOL_NAME_LENGTH)
 
     private fun disambiguate(name: String, taken: Set<String>): String {
         if (name !in taken) return name
