@@ -41,6 +41,8 @@ On first launch it looks for a hub at `http://127.0.0.1:43173/app/desktop/`. If 
 
 `https://84-12-112-249.sslip.io/app/desktop/`
 
+A **black window** means the relay returned 401 — the app opened without the Caddy password. Press **Ctrl+,** (or Forge Hub → Settings) and paste the password from `relay_access.txt`, then Save. From 1.0.1 the app shows a sign-in form instead of a blank page.
+
 **Forge Hub → Settings…** (`Ctrl+,`) stores hub URL and passwords in the OS user-data folder (`settings.json`, mode 600). Nothing is committed.
 
 | Setting | What |

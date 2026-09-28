@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forge Hub — sign in</title>
+<style>
+:root{--bg:#0a0b0f;--fg:#eceef5;--mut:#a9afc2;--dim:#9097ad;--acc:#8f82ff;--line:#232838;--ok:#3fbf8a;--bad:#f0645a;--acc2:#5b4be8;--panel:#141722;--well:#0c0e14}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:13px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+body{display:flex;align-items:center;justify-content:center;padding:24px}
+.card{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px 22px 24px}
+h1{font-size:20px;font-weight:600;margin:0 0 8px}
+.lead{color:var(--mut);margin:0 0 16px}
+.banner{display:none;padding:10px 12px;border-radius:6px;border:1px solid rgba(229,162,58,.35);background:rgba(229,162,58,.1);color:#e5a23a;font-size:13px;margin-bottom:14px}
+.banner.on{display:block}
+label{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:12px 0 6px}
+input{width:100%;padding:7px 12px;border-radius:6px;border:1px solid #646d8c;background:var(--well);color:var(--fg);font:13px inherit}
+input:focus{outline:none;border-color:#b3a9ff}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.btns{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+button{appearance:none;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:6px;padding:8px 14px;font:600 13px inherit;cursor:pointer;min-height:30px}
+button.primary{background:var(--acc2);color:#fff;border-color:transparent}
+#msg{margin-top:12px;font-size:13px;color:var(--mut);min-height:1.3em}
+#msg.ok{color:var(--ok)}#msg.bad{color:var(--bad)}
+.hint{font-size:12px;color:var(--dim);margin-top:4px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Forge Hub</h1>
+  <p class="lead">The relay is behind Caddy basic auth. A blank password loads a black 401 page. Paste the password from <code>relay_access.txt</code>, then open the Hub.</p>
+  <div class="banner" id="banner"></div>
+  <label for="hubUrl">Hub URL</label>
+  <input id="hubUrl" spellcheck="false">
+  <div class="row">
+    <div>
+      <label for="relayUser">Relay user</label>
+      <input id="relayUser" autocomplete="username">
+    </div>
+    <div>
+      <label for="relayPass">Relay password</label>
+      <input id="relayPass" type="password" autocomplete="current-password" autofocus>
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label for="laptopUser">Laptop user</label>
+      <input id="laptopUser">
+    </div>
+    <div>
+      <label for="laptopPass">Laptop password</label>
+      <input id="laptopPass" type="password">
+    </div>
+  </div>
+  <div class="hint">Laptop user/pass are only for /laptop/term/ and /laptop/files/.</div>
+  <div class="btns">
+    <button class="primary" id="save">Save and open</button>
+    <button id="test">Test connection</button>
+  </div>
+  <div id="msg"></div>
+</div>
+<script>
+const api = window.forgeDesktop;
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+if (params.get("msg")) {
+  $("banner").textContent = params.get("msg");
+  $("banner").classList.add("on");
+}
+function readForm() {
+  return {
+    hubUrl: $("hubUrl").value,
+    relayUser: $("relayUser").value,
+    relayPass: $("relayPass").value,
+    laptopUser: $("laptopUser").value,
+    laptopPass: $("laptopPass").value,
+  };
+}
+function show(text, kind) {
+  $("msg").textContent = text;
+  $("msg").className = kind || "";
+}
+api.getSettings().then(s => {
+  $("hubUrl").value = s.hubUrl || "";
+  $("relayUser").value = s.relayUser || "";
+  $("relayPass").value = s.relayPass || "";
+  $("laptopUser").value = s.laptopUser || "";
+  $("laptopPass").value = s.laptopPass || "";
+  $("relayPass").focus();
+});
+$("test").onclick = async () => {
+  show("Checking…");
+  const r = await api.testHub(readForm());
+  show(r.message, r.ok ? "ok" : "bad");
+};
+$("save").onclick = async () => {
+  const form = readForm();
+  if (!form.relayPass.trim() && !/127\.0\.0\.1|localhost/i.test(form.hubUrl)) {
+    show("Relay password is required, or the Hub stays black.", "bad");
+    $("relayPass").focus();
+    return;
+  }
+  await api.saveSettings(form);
+  show("Saved. Opening Forge Hub…", "ok");
+  await api.openHub();
+};
+</script>
+</body>
+</html>

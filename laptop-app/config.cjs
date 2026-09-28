@@ -53,6 +53,25 @@ function mergeSettings(raw) {
   };
 }
 
+function needsRelayPassword(raw) {
+  const s = mergeSettings(raw);
+  try {
+    const u = new URL(s.hubUrl);
+    if (u.hostname === "127.0.0.1" || u.hostname === "localhost") return false;
+  } catch {
+    return true;
+  }
+  return !(s.relayPass || "").trim();
+}
+
+function hubHost(raw) {
+  try {
+    return new URL(normalizeHubUrl(raw)).host;
+  } catch {
+    return "";
+  }
+}
+
 module.exports = {
   DEFAULT_RELAY,
   DEFAULT_HUB,
@@ -60,4 +79,6 @@ module.exports = {
   normalizeHubUrl,
   isLaptopPath,
   mergeSettings,
+  needsRelayPassword,
+  hubHost,
 };

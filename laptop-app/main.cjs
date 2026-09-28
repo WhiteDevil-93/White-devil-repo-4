@@ -9,7 +9,7 @@ if (process.platform === "linux" && process.env.FORGE_SANDBOX !== "1") {
 }
 const fs = require("fs");
 const path = require("path");
-const { mergeSettings, isLaptopPath, normalizeHubUrl, DEFAULT_HUB } = require("./config.cjs");
+const { mergeSettings, isLaptopPath, normalizeHubUrl, needsRelayPassword } = require("./config.cjs");
 
 const SETTINGS_FILE = () => path.join(app.getPath("userData"), "settings.json");
 const ICON_PNG = path.join(__dirname, "icon.png");
@@ -72,6 +72,46 @@ function credsFor(url) {
   return { user: s.relayUser, pass: s.relayPass };
 }
 
+function attachAuth() {
+  session.defaultSession.webRequest.onBeforeSendHeaders({ urls: ["https://*/*", "http://*/*"] }, (details, cb) => {
+    try {
+      const dest = new URL(details.url);
+      const s = cached || loadSettings();
+      if (dest.host === new URL(hubTarget(s)).host) {
+        const c = credsFor(details.url);
+        if (c.user && c.pass) {
+          details.requestHeaders.Authorization = "Basic " + Buffer.from(c.user + ":" + c.pass, "utf8").toString("base64");
+        }
+      }
+    } catch { /* ignore */ }
+    cb({ requestHeaders: details.requestHeaders });
+  });
+}
+
+function isStartPage() {
+  if (!mainWindow || mainWindow.isDestroyed()) return false;
+  const u = mainWindow.webContents.getURL() || "";
+  return u.startsWith("file:") && /start\.html/i.test(u);
+}
+
+function showStart(msg) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const q = msg ? { query: { msg: String(msg).slice(0, 300) } } : {};
+  mainWindow.loadFile(path.join(__dirname, "start.html"), q);
+  mainWindow.show();
+}
+
+function loadHub() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const s = cached || loadSettings();
+  if (needsRelayPassword(s)) {
+    showStart("The relay needs the Caddy password from relay_access.txt. Without it this window stays black.");
+    return;
+  }
+  attachAuth();
+  mainWindow.loadURL(hubTarget(s));
+}
+
 function createMainWindow() {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.show();
@@ -86,8 +126,8 @@ function createMainWindow() {
     backgroundColor: "#0a0b0f",
     title: "Forge Hub",
     icon: ICON_PNG,
-    autoHideMenuBar: true,
-    show: false,
+    autoHideMenuBar: false,
+    show: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -97,7 +137,20 @@ function createMainWindow() {
     },
   });
   win.webContents.setUserAgent(win.webContents.getUserAgent() + " ForgeHubApp/1.0");
-  win.once("ready-to-show", () => win.show());
+  win.webContents.on("did-fail-load", (_e, code, desc, url, isMainFrame) => {
+    if (!isMainFrame || code === -3) return;
+    showStart("Could not load the Hub (" + (desc || code) + "). Check the URL and password.");
+  });
+  win.webContents.on("did-finish-load", async () => {
+    if (isStartPage()) return;
+    try {
+      const title = win.webContents.getTitle() || "";
+      const href = win.webContents.getURL() || "";
+      if (/401|unauthorized|denied/i.test(title) || href.startsWith("chrome-error://")) {
+        showStart("Relay returned 401. Enter the Caddy password, then Save and open.");
+      }
+    } catch { /* ignore */ }
+  });
   win.on("closed", () => { if (mainWindow === win) mainWindow = null; });
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//i.test(url)) shell.openExternal(url);
@@ -106,12 +159,6 @@ function createMainWindow() {
   mainWindow = win;
   loadHub();
   return win;
-}
-
-function loadHub() {
-  if (!mainWindow || mainWindow.isDestroyed()) return;
-  const s = cached || loadSettings();
-  mainWindow.loadURL(hubTarget(s));
 }
 
 function openSettings() {
@@ -215,10 +262,17 @@ ipcMain.handle("settings:test", async (_e, raw) => {
   }
 });
 
-app.on("login", (event, _webContents, details, _authInfo, callback) => {
+app.on("login", (event, webContents, details, _authInfo, callback) => {
   event.preventDefault();
   const c = credsFor(details.url);
-  callback(c.user || "", c.pass || "");
+  if (c.user && c.pass) {
+    callback(c.user, c.pass);
+    return;
+  }
+  callback();
+  if (mainWindow && !mainWindow.isDestroyed() && webContents.id === mainWindow.webContents.id && !isStartPage()) {
+    showStart("Relay asked for a password. Paste it below — a blank password is a black page.");
+  }
 });
 
 const gotLock = app.requestSingleInstanceLock();
@@ -229,6 +283,14 @@ if (!gotLock) {
   app.whenReady().then(async () => {
     if (process.platform === "linux") app.commandLine.appendSwitch("gtk-version", "3");
     await firstRunDefaults();
+    attachAuth();
+    session.defaultSession.webRequest.onHeadersReceived((details, cb) => {
+      if (details.resourceType === "mainFrame" && details.statusCode === 401 && mainWindow && !mainWindow.isDestroyed()
+          && details.webContentsId === mainWindow.webContents.id && !isStartPage()) {
+        process.nextTick(() => showStart("Relay returned 401. Enter the Caddy password from relay_access.txt."));
+      }
+      cb({});
+    });
     session.defaultSession.setPermissionRequestHandler((_wc, _perm, cb) => cb(true));
     buildMenu();
     createTray();

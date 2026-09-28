@@ -2,7 +2,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { normalizeHubUrl, isLaptopPath, mergeSettings, DEFAULT_HUB } = require("../config.cjs");
+const { normalizeHubUrl, isLaptopPath, mergeSettings, DEFAULT_HUB, needsRelayPassword } = require("../config.cjs");
 
 test("normalizeHubUrl fills /app/desktop/", () => {
   assert.equal(normalizeHubUrl("https://84-12-112-249.sslip.io"), "https://84-12-112-249.sslip.io/app/desktop/");
@@ -24,4 +24,10 @@ test("mergeSettings keeps empty passwords", () => {
   const s = mergeSettings({ hubUrl: "http://127.0.0.1:43173", relayPass: "", laptopPass: "" });
   assert.equal(s.relayPass, "");
   assert.equal(s.hubUrl, "http://127.0.0.1:43173/app/desktop/");
+});
+
+test("needsRelayPassword is true for the public relay without a pass", () => {
+  assert.equal(needsRelayPassword({ hubUrl: "https://84-12-112-249.sslip.io", relayPass: "" }), true);
+  assert.equal(needsRelayPassword({ hubUrl: "https://84-12-112-249.sslip.io", relayPass: "secret" }), false);
+  assert.equal(needsRelayPassword({ hubUrl: "http://127.0.0.1:43173", relayPass: "" }), false);
 });

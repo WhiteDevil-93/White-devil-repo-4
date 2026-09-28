@@ -1,7 +1,7 @@
 {
   "name": "forge-hub-laptop",
   "productName": "Forge Hub",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Native laptop app for Forge Hub — Venice Agent, Shell, renders, and the relay.",
   "main": "main.cjs",
   "author": "WhiteDevil",
@@ -26,6 +26,7 @@
       "preload.cjs",
       "config.cjs",
       "settings.html",
+      "start.html",
       "icon.png",
       "icon.svg"
     ],
