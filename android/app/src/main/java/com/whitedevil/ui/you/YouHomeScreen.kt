@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whitedevil.ui.components.WdScreenBackground
 import com.whitedevil.ui.theme.WdPalette
@@ -40,39 +41,54 @@ fun YouHomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 8.dp),
         ) {
-            Text("You", style = MaterialTheme.typography.headlineLarge, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
-            Text("CONNECTIONS", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
-            Surface(shape = RoundedCornerShape(12.dp), color = WdPalette.surface) {
+            Text("You", style = MaterialTheme.typography.headlineLarge, modifier = Modifier.padding(top = 8.dp))
+            Text(
+                "Control centre",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp, bottom = 20.dp),
+            )
+            Text("ACCOUNT", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
+            Text(
+                connectionSummary,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
+            )
+            if (!veniceReady) {
+                Text(
+                    "Add Venice API key →",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = WdPalette.accent,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp, vertical = 8.dp)
+                        .clickable { onAddVeniceKey() },
+                )
+            }
+            Spacer(Modifier.height(20.dp))
+            Text("CONNECTIONS", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
+            Surface(shape = RoundedCornerShape(10.dp), color = WdPalette.surface) {
                 Column(Modifier.fillMaxWidth()) {
-                    Text(
-                        connectionSummary,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = WdPalette.textSecondary,
-                        modifier = Modifier.padding(16.dp),
-                    )
+                    GroupRow("Settings", subtitle = "Venice, relay, laptop credentials", emphasized = true, onClick = onSettings)
                     HorizontalDivider(color = WdPalette.stroke)
-                    GroupRow("Test connections", onClick = onTestConnections)
-                    if (!veniceReady) {
-                        HorizontalDivider(color = WdPalette.stroke)
-                        GroupRow("Add Venice API key", accent = true, onClick = onAddVeniceKey)
-                    }
+                    GroupRow("Terminal", subtitle = "Relay SSH / WSL shell", onClick = onTerminal)
                 }
             }
-            Spacer(Modifier.height(24.dp))
-            Text("TOOLS", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
-            Surface(shape = RoundedCornerShape(12.dp), color = WdPalette.surface) {
-                Column {
-                    GroupRow("Terminal", subtitle = "Relay shell", onClick = onTerminal)
-                    HorizontalDivider(color = WdPalette.stroke)
-                    GroupRow("Settings", subtitle = "Credentials", onClick = onSettings)
-                }
+            Spacer(Modifier.height(20.dp))
+            Text("DIAGNOSTICS", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
+            Surface(shape = RoundedCornerShape(10.dp), color = WdPalette.surface) {
+                GroupRow("Test connections", subtitle = "Verify Venice and relay reachability", onClick = onTestConnections)
             }
         }
     }
 }
 
 @Composable
-private fun GroupRow(title: String, subtitle: String? = null, accent: Boolean = false, onClick: () -> Unit) {
+private fun GroupRow(
+    title: String,
+    subtitle: String? = null,
+    emphasized: Boolean = false,
+    onClick: () -> Unit,
+) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -83,13 +99,13 @@ private fun GroupRow(title: String, subtitle: String? = null, accent: Boolean = 
         Column(Modifier.weight(1f)) {
             Text(
                 title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (accent) WdPalette.accent else WdPalette.text,
+                style = if (emphasized) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+                fontWeight = if (emphasized) FontWeight.SemiBold else FontWeight.Normal,
             )
             if (subtitle != null) {
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 2.dp))
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 3.dp))
             }
         }
-        Text("›", style = MaterialTheme.typography.bodyLarge, color = WdPalette.textTertiary)
+        Text("›", style = MaterialTheme.typography.bodyLarge, color = WdPalette.textMetadata)
     }
 }

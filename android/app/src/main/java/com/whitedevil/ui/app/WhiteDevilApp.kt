@@ -2,22 +2,20 @@ package com.whitedevil.ui.app
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.whitedevil.*
 import com.whitedevil.MainActivity
 import com.whitedevil.R
 import com.whitedevil.ui.agent.AgentScreen
 import com.whitedevil.ui.components.WdBottomBar
-import com.whitedevil.ui.components.WdScreenBackground
 import com.whitedevil.ui.components.WdTabItem
 import com.whitedevil.ui.hub.ForgeHubScreen
 import com.whitedevil.ui.onboarding.OnboardingScreen
@@ -45,38 +43,10 @@ fun WhiteDevilApp(host: MainActivity) {
             MainActivity.Tab.FORGE_HUB -> "hub"
             MainActivity.Tab.YOU -> "you"
         }
-        WdScreenBackground(Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize()) {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 88.dp),
-                ) {
-                    when (host.uiTabPublic()) {
-                        MainActivity.Tab.AGENT -> AgentScreen(host)
-                        MainActivity.Tab.FORGE_HUB -> ForgeHubScreen(host)
-                        MainActivity.Tab.YOU -> when (host.uiYouSubPublic()) {
-                            MainActivity.YouSub.HOME -> YouHomeScreen(
-                                connectionSummary = host.connectionSummaryPublic(),
-                                veniceReady = host.veniceKeyConfiguredPublic(),
-                                onTerminal = { host.showYouSub(MainActivity.YouSub.TERMINAL) },
-                                onSettings = {
-                                    settingsForm = host.readSettingsForm()
-                                    host.showYouSub(MainActivity.YouSub.SETTINGS)
-                                },
-                                onTestConnections = { host.runQuickConnectionTest(updateYouHome = true) },
-                                onAddVeniceKey = { host.showVeniceKeySheet() },
-                            )
-                            MainActivity.YouSub.TERMINAL -> TerminalScreen(host, showBack = true)
-                            MainActivity.YouSub.SETTINGS -> SettingsScreen(
-                                host = host,
-                                showBack = true,
-                                form = settingsForm,
-                                onFormChange = { settingsForm = it },
-                            )
-                        }
-                    }
-                }
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Black,
+            bottomBar = {
                 WdBottomBar(
                     items = tabs,
                     selectedId = selectedTab,
@@ -87,11 +57,34 @@ fun WhiteDevilApp(host: MainActivity) {
                             "you" -> host.selectTabPublic(MainActivity.Tab.YOU)
                         }
                     },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(horizontal = 48.dp),
                 )
+            },
+        ) { padding ->
+            Box(Modifier.padding(padding)) {
+                when (host.uiTabPublic()) {
+                    MainActivity.Tab.AGENT -> AgentScreen(host)
+                    MainActivity.Tab.FORGE_HUB -> ForgeHubScreen(host)
+                    MainActivity.Tab.YOU -> when (host.uiYouSubPublic()) {
+                        MainActivity.YouSub.HOME -> YouHomeScreen(
+                            connectionSummary = host.connectionSummaryPublic(),
+                            veniceReady = host.veniceKeyConfiguredPublic(),
+                            onTerminal = { host.showYouSub(MainActivity.YouSub.TERMINAL) },
+                            onSettings = {
+                                settingsForm = host.readSettingsForm()
+                                host.showYouSub(MainActivity.YouSub.SETTINGS)
+                            },
+                            onTestConnections = { host.runQuickConnectionTest(updateYouHome = true) },
+                            onAddVeniceKey = { host.showVeniceKeySheet() },
+                        )
+                        MainActivity.YouSub.TERMINAL -> TerminalScreen(host, showBack = true)
+                        MainActivity.YouSub.SETTINGS -> SettingsScreen(
+                            host = host,
+                            showBack = true,
+                            form = settingsForm,
+                            onFormChange = { settingsForm = it },
+                        )
+                    }
+                }
             }
         }
     }

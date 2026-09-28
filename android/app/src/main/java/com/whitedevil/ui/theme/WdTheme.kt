@@ -12,18 +12,18 @@ import androidx.compose.ui.unit.sp
 
 object WdPalette {
     val bg = Color(0xFF000000)
-    val bgElevated = Color(0xFF0C0C0C)
-    val surface = Color(0xFF161616)
-    val surfaceHover = Color(0xFF222222)
-    val stroke = Color(0xFF2C2C2E)
+    val surface = Color(0xFF1C1C1E)
+    val bgElevated = Color(0xFF0A0A0A)
+    val surfaceHover = Color(0xFF2C2C2E)
+    val stroke = Color(0xFF3A3A3C)
     val accent = Color(0xFFD9BF8C)
     val onAccent = Color(0xFF000000)
-    val text = Color(0xFFFAFAFA)
-    val textSecondary = Color(0xFF8A8A8E)
-    val textTertiary = Color(0xFF505054)
-    val userBubble = Color(0xFF1C1C1E)
+    val text = Color(0xFFFFFFFF)
+    val textSecondary = Color(0xFFAEAEB2)
+    val textMetadata = Color(0xFF8E8E93)
+    val userBubble = Color(0xFF2C2C2E)
 
-    val accentDim @Composable get() = accent.copy(alpha = 0.5f)
+    val accentDim @Composable get() = accent.copy(alpha = 0.65f)
     val errorText @Composable get() = accent
 }
 
@@ -32,7 +32,6 @@ private val scheme = darkColorScheme(
     onPrimary = WdPalette.onAccent,
     background = WdPalette.bg,
     surface = WdPalette.surface,
-    surfaceVariant = WdPalette.surfaceHover,
     onBackground = WdPalette.text,
     onSurface = WdPalette.text,
     onSurfaceVariant = WdPalette.textSecondary,
@@ -43,63 +42,68 @@ private val scheme = darkColorScheme(
 private val wdTypography = Typography(
     headlineLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Bold,
         fontSize = 34.sp,
         lineHeight = 40.sp,
-        letterSpacing = (-0.8).sp,
+        letterSpacing = (-0.5).sp,
         color = WdPalette.text,
     ),
     titleLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 17.sp,
-        lineHeight = 22.sp,
-        letterSpacing = (-0.2).sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 20.sp,
+        lineHeight = 26.sp,
         color = WdPalette.text,
     ),
     titleMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 15.sp,
-        lineHeight = 20.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 17.sp,
+        lineHeight = 22.sp,
         color = WdPalette.text,
     ),
     bodyLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
         fontSize = 17.sp,
-        lineHeight = 26.sp,
-        letterSpacing = (-0.1).sp,
+        lineHeight = 24.sp,
         color = WdPalette.text,
     ),
     bodyMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
         fontSize = 15.sp,
-        lineHeight = 22.sp,
+        lineHeight = 21.sp,
         color = WdPalette.text,
     ),
     bodySmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
+        fontSize = 15.sp,
+        lineHeight = 21.sp,
         color = WdPalette.textSecondary,
+    ),
+    labelLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 13.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.6.sp,
+        color = WdPalette.textMetadata,
     ),
     labelMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
         fontSize = 13.sp,
-        lineHeight = 16.sp,
+        lineHeight = 18.sp,
         color = WdPalette.textSecondary,
     ),
     labelSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 13.sp,
-        letterSpacing = 0.4.sp,
-        color = WdPalette.textTertiary,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        color = WdPalette.textMetadata,
     ),
 )
 

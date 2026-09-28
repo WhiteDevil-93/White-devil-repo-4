@@ -116,6 +116,7 @@ class MainActivity : ComponentActivity() {
     internal var connectionSummary by mutableStateOf("Tap Test connections on You home or in Settings.")
     internal var hubBannerText by mutableStateOf("")
     internal var hubBannerVisible by mutableStateOf(false)
+    internal var agentStatusSubtitle by mutableStateOf("On-device agent")
     internal val hubScreensUi = mutableStateListOf<HubScreenUi>()
     internal var hubCurrentScreenIdState by mutableStateOf<String?>(null)
     internal var hubConnectionLabel by mutableStateOf("Checking…")
@@ -335,17 +336,9 @@ class MainActivity : ComponentActivity() {
         if (chatMessages.isNotEmpty()) return
         val restoredHistory = loadAgentHistory()
         if (restoredHistory.isEmpty()) {
-            addMessageBubble(
-                "",
-                "Venice runs on-device. Attach files, share into WhiteDevil, or paste from the clipboard. Add your API key below to start.",
-                ROLE_INFO,
-            )
+            agentStatusSubtitle = "On-device agent"
         } else {
-            addMessageBubble(
-                "History restored",
-                "${restoredHistory.size} messages from your last session are loaded. The agent remembers the conversation.",
-                ROLE_INFO,
-            )
+            agentStatusSubtitle = "${restoredHistory.size} messages restored"
             renderHistoryBubbles(restoredHistory)
         }
     }
@@ -417,6 +410,16 @@ class MainActivity : ComponentActivity() {
             syncPendingAttachmentsUi()
         }
     }
+
+    internal fun dismissHubBanner() {
+        hubBannerVisible = false
+    }
+
+    internal fun agentHasConversation(): Boolean =
+        chatMessages.any {
+            it.role == ROLE_USER || it.role == ROLE_VENICE || it.role == ROLE_TOOL_CALL ||
+                it.role == ROLE_TOOL_OUTPUT || it.role == ROLE_ERROR
+        }
 
     internal fun onHubBannerClick() {
         hubBannerApkUrl?.let { downloadApk(it) }
@@ -561,6 +564,7 @@ class MainActivity : ComponentActivity() {
         agentShowProgress = false
         runCatching { agentHistoryFile().delete() }
         chatMessages.clear()
+        agentStatusSubtitle = "On-device agent"
         addMessageBubble("Agent Reset", "Chat context cleared. Ready for next task.", ROLE_VENICE)
     }
 

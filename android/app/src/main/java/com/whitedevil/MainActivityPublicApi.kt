@@ -48,6 +48,9 @@ fun MainActivity.sendPasteToTerminalPublic() = sendPasteToTerminal()
 fun MainActivity.veniceKeyConfiguredPublic(): Boolean = veniceKeyConfigured()
 fun MainActivity.confirmClearAgentChatPublic() = confirmClearAgentChat()
 fun MainActivity.onHubBannerClickPublic() { onHubBannerClick() }
+fun MainActivity.dismissHubBannerPublic() = dismissHubBanner()
+fun MainActivity.agentHasConversationPublic(): Boolean = agentHasConversation()
+fun MainActivity.agentStatusSubtitlePublic(): String = agentStatusSubtitle
 
 fun MainActivity.selectTabPublic(tab: MainActivity.Tab) = selectTab(tab)
 fun MainActivity.completeOnboardingPublic() = completeOnboarding()

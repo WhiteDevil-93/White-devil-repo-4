@@ -47,7 +47,10 @@ fun AgentChatScreen(
     scrollTrigger: Int,
     onToggleTool: (Long) -> Unit,
     onCopy: (String) -> Unit,
+    includeInfoMessages: Boolean = true,
+    modifier: Modifier = Modifier,
 ) {
+    val visible = if (includeInfoMessages) messages else messages.filter { !it.isInfo() }
     val listState = rememberLazyListState()
     LaunchedEffect(scrollTrigger, agentThinking) {
         val last = messages.size + if (agentThinking) 1 else 0
@@ -56,11 +59,11 @@ fun AgentChatScreen(
 
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        items(messages, key = { it.id }) { msg ->
+        items(visible, key = { it.id }) { msg ->
             ChatBubbleRow(msg, onToggleTool, onCopy)
         }
         if (agentThinking) {
@@ -74,7 +77,7 @@ private fun TypingRow() {
     Row(verticalAlignment = Alignment.CenterVertically) {
         ThinkingDots()
         Spacer(Modifier.size(8.dp))
-        Text("Thinking", style = MaterialTheme.typography.bodySmall, color = WdPalette.textTertiary)
+        Text("Thinking", style = MaterialTheme.typography.labelMedium, color = WdPalette.textSecondary)
     }
 }
 
@@ -106,7 +109,7 @@ private fun InfoLine(msg: ChatUiMessage) {
     Text(
         msg.message,
         style = MaterialTheme.typography.bodySmall,
-        color = WdPalette.textTertiary,
+        color = WdPalette.textMetadata,
         textAlign = TextAlign.Center,
         modifier = Modifier
             .fillMaxWidth()
@@ -164,7 +167,7 @@ private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy:
             Text(
                 if (msg.toolExpanded) "−" else "+",
                 style = MaterialTheme.typography.titleMedium,
-                color = WdPalette.textTertiary,
+                color = WdPalette.textMetadata,
             )
         }
         if (msg.toolExpanded) {
