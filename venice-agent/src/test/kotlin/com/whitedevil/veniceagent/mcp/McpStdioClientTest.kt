@@ -284,8 +284,12 @@ class McpStdioClientTest {
             delay(200) // let the call actually reach the server and register in `pending`
             job.cancelAndJoin()
 
-            val result = client.execute("fake__get_last_cancelled_request_id", "{}")
-            assertTrue(result != "None", "expected the server to have received notifications/cancelled, got: $result")
+            // The notification is fired on the client's own scope, not awaited by
+            // cancelAndJoin(): poll instead of assuming it's already landed by the time
+            // cancelAndJoin() returns.
+            withTimeout(5_000) {
+                while (client.execute("fake__get_last_cancelled_request_id", "{}") == "None") delay(20)
+            }
         } finally {
             client.close()
         }
@@ -546,5 +550,32 @@ class McpStdioClientTest {
             markerFile.readText(),
             "expected close() to kill the wrapper's detached child too, but it's still updating the marker",
         )
+    }
+
+    @Test
+    fun `keeps dispatching responses while replying to a flood of unsolicited pings`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(script.absolutePath)),
+            requestTimeoutMillis = 10_000,
+        )
+        try {
+            var result: String? = null
+            val job = launch { result = client.execute("fake__hang_forever", "{}") }
+            delay(200) // let hang_forever actually reach the server and register in `pending`
+
+            // The server floods thousands of unsolicited pings (enough to fill an OS pipe if
+            // replies were written synchronously on the read loop), then finally answers the
+            // still-pending hang_forever call.
+            client.execute("fake__flood_pings_then_reply_to_hang_forever", "{}")
+
+            withTimeout(5_000) { job.join() }
+            assertEquals("finally answered", result, "the read loop must keep dispatching responses despite the ping flood")
+        } finally {
+            client.close()
+        }
     }
 }

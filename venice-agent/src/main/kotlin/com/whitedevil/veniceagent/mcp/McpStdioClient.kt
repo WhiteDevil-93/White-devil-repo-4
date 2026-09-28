@@ -139,7 +139,15 @@ class McpStdioClient(
                 put("id", id)
                 put("result", buildJsonObject {})
             }
-            writeLine(pong.toString())
+            // Fired on this client's own scope through the same bounded/watchdog-protected path
+            // as a request write, not written inline: handleIncomingRequest runs on the sole
+            // response-loop thread, so a write that blocks (the server floods pings without
+            // draining its own stdin) would otherwise wedge the whole loop -- no further
+            // responses could ever be dispatched, and a blocked write never throws, so the
+            // loop's own exception-triggered cleanup couldn't run either.
+            scope.launch {
+                runCatching { writeLineOrKill(pong.toString()) }
+            }
         }
         // Other server-to-client requests aren't supported by this client and are left unanswered.
     }
@@ -467,12 +475,14 @@ class McpStdioClient(
         exposedToOriginal[exposedName] ?: exposedName.removePrefix("${serverName}__")
 
     override fun close() {
-        runCatching { writer.close() }
         // Snapshot descendants (a launcher command, e.g. a wrapper script or `npx`, may have
-        // spawned its own child process that doesn't die when the launcher does) BEFORE
-        // destroying the launcher: once it exits, an orphaned child gets reparented (typically
-        // to init) and process.descendants() queried afterward would no longer find it.
+        // spawned its own child process that doesn't die when the launcher does) BEFORE any
+        // operation that could make the launcher exit -- including closing its stdin just below,
+        // which a well-behaved server treats as a shutdown signal exactly like destroy() does.
+        // Once the launcher exits, an orphaned child gets reparented (typically to init) and
+        // process.descendants() queried afterward would no longer find it.
         val descendantsBeforeDestroy = runCatching { process.descendants().toList() }.getOrDefault(emptyList())
+        runCatching { writer.close() }
         process.destroy()
         // destroy() only requests termination; a server that ignores stdin EOF (or traps the
         // termination signal) would otherwise keep running past this call returning. Wait

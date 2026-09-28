@@ -20,7 +20,7 @@ class ToolRegistry(private val providers: List<ToolProvider>) : AutoCloseable {
     private var cachedDefinitions: List<ToolDefinition>? = null
 
     suspend fun definitions(): List<ToolDefinition> {
-        if (cachedDefinitions != null && providers.none { it.hasChanged() }) {
+        if (cachedDefinitions != null && providers.none { it.hasChangedOrFailedToTell() }) {
             return cachedDefinitions!!
         }
 
@@ -61,6 +61,23 @@ class ToolRegistry(private val providers: List<ToolProvider>) : AutoCloseable {
         cachedDefinitions = if (anyProviderSkipped) null else allDefinitions
         return allDefinitions
     }
+
+    /**
+     * [ToolProvider.hasChanged] isn't wrapped in the per-provider try/catch the rebuild loop
+     * below uses, so a provider whose `hasChanged()` itself throws (a failed watcher, a dead
+     * backing connection) would otherwise abort this whole cache check for every provider, not
+     * just the failing one. Treat that as "changed" (forces a rebuild pass) instead: the rebuild
+     * loop's own isolation then decides whether this specific provider can actually be listed.
+     */
+    private fun ToolProvider.hasChangedOrFailedToTell(): Boolean =
+        try {
+            hasChanged()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            System.err.println("Warning: a tool provider's hasChanged() threw and will be treated as changed: ${e.message}")
+            true
+        }
 
     private fun sanitize(name: String): String =
         name.replace(Regex("[^a-zA-Z0-9_-]"), "_").take(MAX_TOOL_NAME_LENGTH).ifBlank { "unnamed_tool" }

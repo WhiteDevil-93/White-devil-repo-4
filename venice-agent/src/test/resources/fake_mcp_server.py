@@ -113,7 +113,16 @@ for line in sys.stdin:
             send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
         elif name == "hang_forever":
-            pass  # never respond; simulates a tool call the server never completes on its own
+            # Never responds on its own (simulates a tool call the server never completes), but
+            # remembers its id so a later trigger can reply to it belatedly.
+            state["hang_forever_id"] = msg["id"]
+        elif name == "flood_pings_then_reply_to_hang_forever":
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "flooding"}]}})
+            for i in range(3000):
+                send({"jsonrpc": "2.0", "id": 900000 + i, "method": "ping", "params": {}})
+            hang_id = state.get("hang_forever_id")
+            if hang_id is not None:
+                send({"jsonrpc": "2.0", "id": hang_id, "result": {"content": [{"type": "text", "text": "finally answered"}]}})
         elif name == "get_last_cancelled_request_id":
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": str(state.get("last_cancelled_request_id"))}]}})
         elif name == "trigger_malformed_list":

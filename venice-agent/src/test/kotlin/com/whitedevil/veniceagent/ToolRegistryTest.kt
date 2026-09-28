@@ -17,6 +17,7 @@ private class FakeToolProvider(
     private val toolNames: List<String>,
     private var failNextDefinitionsCall: Boolean = false,
     private val closeShouldThrow: Boolean = false,
+    private val hasChangedShouldThrow: Boolean = false,
 ) : ToolProvider {
     var definitionsCallCount = 0
         private set
@@ -35,6 +36,11 @@ private class FakeToolProvider(
     }
 
     override suspend fun execute(name: String, argumentsJson: String): String = "executed:$name"
+
+    override fun hasChanged(): Boolean {
+        if (hasChangedShouldThrow) throw RuntimeException("simulated hasChanged failure")
+        return false
+    }
 
     override fun close() {
         closeCalled = true
@@ -130,6 +136,21 @@ class ToolRegistryTest {
 
         assertTrue(failing.closeCalled)
         assertTrue(healthy.closeCalled, "a later provider's close() must still run even if an earlier one throws")
+    }
+
+    @Test
+    fun `treats a provider's throwing hasChanged as a signal to rebuild instead of aborting the cache check`() = runBlocking {
+        val healthy = FakeToolProvider(listOf("healthy__tool"))
+        val flaky = FakeToolProvider(listOf("flaky__tool"), hasChangedShouldThrow = true)
+        val registry = ToolRegistry(listOf(healthy, flaky))
+
+        registry.definitions() // establish an initial cache
+
+        // flaky.hasChanged() throws on this call's cache check; it must not abort the whole
+        // definitions() call for every provider, just force a rebuild.
+        val names = registry.definitions().map { it.function.name }
+        assertTrue("healthy__tool" in names, "a throwing hasChanged() on one provider took down the others: $names")
+        assertTrue("flaky__tool" in names)
     }
 
     @Test
