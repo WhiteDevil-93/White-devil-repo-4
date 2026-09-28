@@ -162,8 +162,12 @@ class McpStdioClientTest {
         }
     }
 
-    @Test
-    fun `rejects a malformed tools list page instead of silently truncating`() = runBlocking {
+    /**
+     * Shared body for every "server sends a malformed tools/list page" case: establish a cache,
+     * trigger the given malformed page, confirm it's rejected rather than silently coerced, and
+     * confirm a normal refresh afterward still works (the failed attempt mustn't poison state).
+     */
+    private fun assertRejectsMalformedPage(triggerToolName: String) = runBlocking {
         assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
 
         val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
@@ -171,17 +175,19 @@ class McpStdioClientTest {
         try {
             client.definitions() // establish an initial cache
 
-            client.execute("fake__trigger_malformed_list", "{}")
+            client.execute(triggerToolName, "{}")
             assertFailsWith<McpException> { client.definitions() }
 
-            // The failed attempt must not have poisoned the cache or the pending-change flag:
-            // a normal refresh (once the server stops misbehaving) still works afterward.
             val after = client.definitions().map { it.function.name }
             assertTrue("fake__echo" in after)
         } finally {
             client.close()
         }
     }
+
+    @Test
+    fun `rejects a malformed tools list page instead of silently truncating`() =
+        assertRejectsMalformedPage("fake__trigger_malformed_list")
 
     @Test
     fun `stops pagination when an mcp cursor repeats instead of looping forever`() = runBlocking {
@@ -282,46 +288,12 @@ class McpStdioClientTest {
     }
 
     @Test
-    fun `rejects a tools list page missing the tools array`() = runBlocking {
-        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
-
-        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
-        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
-        try {
-            client.definitions() // establish an initial cache
-
-            client.execute("fake__trigger_missing_tools_field", "{}")
-            assertFailsWith<McpException> { client.definitions() }
-
-            // The failed attempt must not have poisoned the cache or the pending-change flag:
-            // a normal refresh (once the server stops misbehaving) still works afterward.
-            val after = client.definitions().map { it.function.name }
-            assertTrue("fake__echo" in after)
-        } finally {
-            client.close()
-        }
-    }
+    fun `rejects a tools list page missing the tools array`() =
+        assertRejectsMalformedPage("fake__trigger_missing_tools_field")
 
     @Test
-    fun `rejects a non-string nextCursor instead of treating it as the end of pagination`() = runBlocking {
-        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
-
-        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
-        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
-        try {
-            client.definitions() // establish an initial cache
-
-            client.execute("fake__trigger_malformed_next_cursor", "{}")
-            assertFailsWith<McpException> { client.definitions() }
-
-            // The failed attempt must not have poisoned the cache or the pending-change flag:
-            // a normal refresh (once the server stops misbehaving) still works afterward.
-            val after = client.definitions().map { it.function.name }
-            assertTrue("fake__echo" in after)
-        } finally {
-            client.close()
-        }
-    }
+    fun `rejects a non-string nextCursor instead of treating it as the end of pagination`() =
+        assertRejectsMalformedPage("fake__trigger_malformed_next_cursor")
 
     @Test
     fun `rejects non-object tool arguments instead of substituting defaults`() = runBlocking {
