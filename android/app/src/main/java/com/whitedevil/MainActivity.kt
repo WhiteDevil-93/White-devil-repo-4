@@ -1,22 +1,30 @@
 package com.whitedevil
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.text.InputType
 import android.util.Base64
 import android.view.Gravity
@@ -45,22 +53,34 @@ import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.AgentEvent
+import com.whitedevil.agent.Attachments
+import com.whitedevil.agent.ChatMessage
+import com.whitedevil.agent.MessageContent
 import com.whitedevil.agent.ToolBox
 import com.whitedevil.agent.VeniceClient
+import com.whitedevil.agent.stripBlobs
+import com.whitedevil.agent.textContent
+import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.concurrent.thread
 
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
 
     enum class Tab { AGENT, FORGE_HUB, TERMINAL, SETTINGS }
 
@@ -109,6 +129,62 @@ class MainActivity : Activity() {
     private lateinit var agentProgress: ProgressBar
     private var currentAgentJob: Job? = null
 
+    // Agent attachments (photos, videos, audio, documents)
+    private data class PendingAttachment(
+        val uri: Uri,
+        val mime: String,
+        val name: String,
+        val size: Long,
+        val kind: Attachments.Kind,
+    )
+    private val pendingAttachments = mutableListOf<PendingAttachment>()
+    private lateinit var agentAttachmentStrip: LinearLayout
+    private lateinit var agentAttachmentScroll: HorizontalScrollView
+    private var pendingCameraUri: Uri? = null
+    private var pendingPermissionAction: (() -> Unit)? = null
+
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
+            if (grants.values.all { it }) {
+                pendingPermissionAction?.invoke()
+            } else {
+                Toast.makeText(this, "Permission denied — the file picker still works without it", Toast.LENGTH_LONG).show()
+            }
+            pendingPermissionAction = null
+        }
+
+    private val pickImagesLauncher =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+            uris.forEach { addContentAttachment(it) }
+            renderAttachmentStrip()
+        }
+
+    private val pickVideosLauncher =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+            uris.forEach { addContentAttachment(it) }
+            renderAttachmentStrip()
+        }
+
+    private val pickFilesLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+            uris.forEach { addContentAttachment(it) }
+            renderAttachmentStrip()
+        }
+
+    private val takePictureLauncher =
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+            if (ok) pendingCameraUri?.let { addContentAttachment(it) }
+            pendingCameraUri = null
+            renderAttachmentStrip()
+        }
+
+    private val captureVideoLauncher =
+        registerForActivityResult(ActivityResultContracts.CaptureVideo()) { ok ->
+            if (ok) pendingCameraUri?.let { addContentAttachment(it) }
+            pendingCameraUri = null
+            renderAttachmentStrip()
+        }
+
     // Current navigation state
     private var activeTab: Tab = Tab.AGENT
     private var fileCallback: ValueCallback<Array<Uri>>? = null
@@ -135,6 +211,8 @@ class MainActivity : Activity() {
             loadHubManifest()
         }
 
+        handleSharedIntent(intent)
+
         registerReceiver(downloadDone, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), RECEIVER_EXPORTED)
     }
 
@@ -153,6 +231,7 @@ class MainActivity : Activity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         when (intent.data?.getQueryParameter("tab")) {
             "agent" -> selectTab(Tab.AGENT)
             "forge", "hub" -> {
@@ -162,6 +241,7 @@ class MainActivity : Activity() {
             "terminal", "term" -> selectTab(Tab.TERMINAL)
             "settings" -> selectTab(Tab.SETTINGS)
         }
+        handleSharedIntent(intent)
     }
 
     // =========================================================================
@@ -370,12 +450,34 @@ class MainActivity : Activity() {
         agentScrollView.addView(agentMessagesLayout, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
         layout.addView(agentScrollView, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
 
-        // Initial welcome message
-        addMessageBubble(
-            "Agent Ready",
-            "Venice Agent is running natively on device. It has access to local workspace files and can control Forge Hub, check renders, and run laptop tasks via your relay.",
-            ROLE_VENICE
-        )
+        // Initial welcome message, or restored conversation.
+        val restoredHistory = loadAgentHistory()
+        if (restoredHistory.isEmpty()) {
+            addMessageBubble(
+                "Agent Ready",
+                "Venice Agent is running natively on device. It has access to local workspace files and can control Forge Hub, check renders, and run laptop tasks via your relay.",
+                ROLE_VENICE
+            )
+        } else {
+            addMessageBubble(
+                "History restored",
+                "${restoredHistory.size} messages from your last session. The agent remembers the conversation.",
+                ROLE_VENICE
+            )
+            renderHistoryBubbles(restoredHistory)
+        }
+
+        // Attachment strip (pending photos / videos / files), hidden until used
+        agentAttachmentScroll = HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            visibility = View.GONE
+        }
+        agentAttachmentStrip = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 0, 0, dp(6))
+        }
+        agentAttachmentScroll.addView(agentAttachmentStrip)
+        layout.addView(agentAttachmentScroll, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
         // Bottom Input Row
         val inputBar = LinearLayout(this).apply {
@@ -383,6 +485,22 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(4), dp(8), dp(4), dp(4))
             background = createGlassDrawable(BAR_GLASS, dp(24), LINE)
+        }
+
+        val attachBtn = TextView(this).apply {
+            text = "📎"
+            textSize = 20f
+            setPadding(dp(10), dp(8), dp(6), dp(8))
+            isClickable = true
+            setOnClickListener { showAttachSheet() }
+        }
+
+        val pasteBtn = TextView(this).apply {
+            text = "📋"
+            textSize = 20f
+            setPadding(dp(6), dp(8), dp(6), dp(8))
+            isClickable = true
+            setOnClickListener { pasteFromClipboard() }
         }
 
         agentInput = EditText(this).apply {
@@ -409,6 +527,8 @@ class MainActivity : Activity() {
             setOnClickListener { sendAgentMessage() }
         }
 
+        inputBar.addView(attachBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
+        inputBar.addView(pasteBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
         inputBar.addView(agentInput, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         inputBar.addView(agentSendBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(4) })
         layout.addView(inputBar)
@@ -454,13 +574,61 @@ class MainActivity : Activity() {
     private fun resetAgentChat() {
         currentAgentJob?.cancel()
         agentProgress.visibility = View.GONE
+        runCatching { agentHistoryFile().delete() }
         agentMessagesLayout.removeAllViews()
         addMessageBubble("Agent Reset", "Chat context cleared. Ready for next task.", ROLE_VENICE)
     }
 
+    private fun agentHistoryFile() = File(filesDir, "agent_history.json")
+
+    private val historyJson = Json { ignoreUnknownKeys = true }
+
+    /** Persists the conversation (image blobs stripped) so it survives app restarts. */
+    private fun persistAgentHistory(messages: List<ChatMessage>) {
+        runCatching {
+            val lean = messages
+                .filter { it.role in setOf("user", "assistant", "tool") }
+                .takeLast(Agent.MAX_HISTORY_MESSAGES)
+                .map { it.copy(content = stripBlobs(it.content)) }
+            agentHistoryFile().writeText(
+                historyJson.encodeToString(ListSerializer(ChatMessage.serializer()), lean),
+            )
+        }
+    }
+
+    private fun loadAgentHistory(): List<ChatMessage> {
+        return runCatching {
+            val file = agentHistoryFile()
+            if (!file.isFile) return emptyList()
+            historyJson.decodeFromString(ListSerializer(ChatMessage.serializer()), file.readText())
+                .filter { it.role in setOf("user", "assistant", "tool") }
+                .takeLast(Agent.MAX_HISTORY_MESSAGES)
+        }.getOrDefault(emptyList())
+    }
+
+    /** Rebuilds chat bubbles from a restored conversation. */
+    private fun renderHistoryBubbles(history: List<ChatMessage>) {
+        for (msg in history) {
+            when (msg.role) {
+                "user" -> addMessageBubble("You", msg.textContent(), ROLE_USER)
+                "assistant" -> {
+                    val calls = msg.toolCalls
+                    if (calls.isNullOrEmpty()) {
+                        addMessageBubble("Venice", msg.textContent(), ROLE_VENICE)
+                    } else {
+                        calls.forEach { call ->
+                            addMessageBubble("Tool Call: ${call.function.name}", call.function.arguments, ROLE_TOOL_CALL)
+                        }
+                    }
+                }
+                "tool" -> addMessageBubble("Output: ${msg.name ?: "tool"}", msg.textContent(), ROLE_TOOL_OUTPUT)
+            }
+        }
+    }
+
     private fun sendAgentMessage() {
         val text = agentInput.text.toString().trim()
-        if (text.isEmpty()) return
+        if (text.isEmpty() && pendingAttachments.isEmpty()) return
         val apiKey = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim() ?: ""
         if (apiKey.isEmpty()) {
             Toast.makeText(this, "Venice API key not set! Please configure it in Settings tab.", Toast.LENGTH_LONG).show()
@@ -469,6 +637,9 @@ class MainActivity : Activity() {
         }
 
         agentInput.setText("")
+        val attachmentSnapshot = pendingAttachments.toList()
+        pendingAttachments.clear()
+        renderAttachmentStrip()
         val selectedModel = agentModelSpinner.selectedItem?.toString() ?: SettingsManager.DEFAULT_MODEL
         val sysPrompt = prefs.getString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
             ?: SettingsManager.DEFAULT_SYSTEM_PROMPT
@@ -490,7 +661,18 @@ class MainActivity : Activity() {
 
         val currentClient = VeniceClient(apiKey = apiKey)
         currentAgentJob = scope.launch {
+            var finishedAgent: Agent? = null
             try {
+                // Heavy lifting (image downscale, file copies) off the main thread.
+                val (fullText, imageDataUrls) = withContext(Dispatchers.IO) {
+                    buildMessageContent(text, attachmentSnapshot)
+                }
+                if (fullText.isBlank() && imageDataUrls.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "Nothing to send", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
                 val agent = Agent(
                     client = currentClient,
                     model = selectedModel,
@@ -512,15 +694,356 @@ class MainActivity : Activity() {
 
                 withContext(Dispatchers.IO) {
                     currentClient.use {
-                        agent.send(text)
+                        agent.restore(loadAgentHistory())
+                        finishedAgent = agent
+                        agent.send(fullText, imageDataUrls)
                     }
                 }
             } catch (e: Exception) {
                 addMessageBubble("Error", e.message ?: "Unknown error running Venice agent", ROLE_ERROR)
             } finally {
+                finishedAgent?.let { persistAgentHistory(it.snapshot()) }
                 agentProgress.visibility = View.GONE
                 agentSendBtn.isEnabled = true
             }
+        }
+    }
+
+    // =========================================================================
+    // Device integration: attachments, clipboard, share receive, permissions
+    // =========================================================================
+
+    private fun showAttachSheet() {
+        val items = arrayOf("Take photo", "Record video", "Choose images", "Choose video", "Choose file")
+        AlertDialog.Builder(this)
+            .setTitle("Attach to message")
+            .setItems(items) { _, which ->
+                when (which) {
+                    0 -> withCapturePermission(video = false) { launchCamera(photo = true) }
+                    1 -> withCapturePermission(video = true) { launchCamera(photo = false) }
+                    2 -> pickImagesLauncher.launch("image/*")
+                    3 -> pickVideosLauncher.launch("video/*")
+                    4 -> pickFilesLauncher.launch(arrayOf("*/*"))
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun withCapturePermission(video: Boolean, action: () -> Unit) {
+        val need = mutableListOf(android.Manifest.permission.CAMERA)
+        if (video) need += android.Manifest.permission.RECORD_AUDIO
+        val missing = need.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }.toTypedArray()
+        if (missing.isEmpty()) {
+            action()
+        } else {
+            pendingPermissionAction = action
+            permissionLauncher.launch(missing)
+        }
+    }
+
+    private fun launchCamera(photo: Boolean) {
+        val ext = if (photo) "jpg" else "mp4"
+        val dir = File(cacheDir, "capture").apply { mkdirs() }
+        val file = File(dir, "capture_${System.currentTimeMillis()}.$ext")
+        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+        pendingCameraUri = uri
+        if (photo) takePictureLauncher.launch(uri) else captureVideoLauncher.launch(uri)
+    }
+
+    private fun addContentAttachment(uri: Uri) {
+        try {
+            val mime = contentResolver.getType(uri) ?: "application/octet-stream"
+            val kind = Attachments.kindOf(mime)
+            var name: String? = null
+            var size = -1L
+            contentResolver.query(uri, null, null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    val nameIdx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    val sizeIdx = c.getColumnIndex(OpenableColumns.SIZE)
+                    if (nameIdx >= 0) name = c.getString(nameIdx)
+                    if (sizeIdx >= 0) size = c.getLong(sizeIdx)
+                }
+            }
+            if (kind == Attachments.Kind.IMAGE &&
+                pendingAttachments.count { it.kind == Attachments.Kind.IMAGE } >= Attachments.MAX_IMAGES_PER_MESSAGE
+            ) {
+                Toast.makeText(this, "Max ${Attachments.MAX_IMAGES_PER_MESSAGE} images per message", Toast.LENGTH_SHORT).show()
+                return
+            }
+            pendingAttachments += PendingAttachment(
+                uri = uri,
+                mime = mime,
+                name = Attachments.safeFileName(name, "attachment.${Attachments.extensionFor(mime)}"),
+                size = size,
+                kind = kind,
+            )
+            Toast.makeText(this, "Attached $name", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Couldn't attach file: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun renderAttachmentStrip() {
+        agentAttachmentStrip.removeAllViews()
+        if (pendingAttachments.isEmpty()) {
+            agentAttachmentScroll.visibility = View.GONE
+            return
+        }
+        agentAttachmentScroll.visibility = View.VISIBLE
+        pendingAttachments.forEachIndexed { index, attachment ->
+            val chip = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                background = createGlassDrawable(CARD_BG, dp(14), LINE)
+                setPadding(dp(8), dp(6), dp(8), dp(6))
+            }
+            if (attachment.kind == Attachments.Kind.IMAGE) {
+                chip.addView(ImageView(this).apply {
+                    runCatching { setImageURI(attachment.uri) }
+                }, LinearLayout.LayoutParams(dp(40), dp(40)).apply { rightMargin = dp(8) })
+            } else {
+                val icon = when (attachment.kind) {
+                    Attachments.Kind.VIDEO -> "🎬"
+                    Attachments.Kind.AUDIO -> "🎵"
+                    else -> "📄"
+                }
+                chip.addView(TextView(this).apply {
+                    text = icon
+                    textSize = 22f
+                    setPadding(0, 0, dp(8), 0)
+                })
+            }
+            val label = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            label.addView(TextView(this).apply {
+                text = attachment.name
+                textSize = 12f
+                setTextColor(STRONG)
+                maxLines = 1
+            })
+            label.addView(TextView(this).apply {
+                text = if (attachment.size >= 0) Attachments.formatSize(attachment.size) else attachment.mime
+                textSize = 11f
+                setTextColor(MUTED)
+                maxLines = 1
+            })
+            chip.addView(label, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(8) })
+            chip.addView(TextView(this).apply {
+                text = "✕"
+                textSize = 14f
+                setTextColor(MUTED)
+                setPadding(dp(8), dp(8), dp(8), dp(8))
+                isClickable = true
+                setOnClickListener {
+                    pendingAttachments.removeAt(index)
+                    renderAttachmentStrip()
+                }
+            })
+            agentAttachmentStrip.addView(chip, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
+                rightMargin = dp(8)
+            })
+        }
+    }
+
+    /** Builds the outgoing message: images become multimodal data URLs, other files land in the workspace. */
+    private fun buildMessageContent(baseText: String, attachments: List<PendingAttachment>): Pair<String, List<String>> {
+        if (attachments.isEmpty()) return baseText to emptyList()
+        val dataUrls = mutableListOf<String>()
+        val notes = mutableListOf<String>()
+        val uploadsDir = File(filesDir, "workspace/uploads").apply { mkdirs() }
+        for (attachment in attachments) {
+            try {
+                if (attachment.kind == Attachments.Kind.IMAGE && dataUrls.size < Attachments.MAX_IMAGES_PER_MESSAGE) {
+                    val bytes = loadScaledJpeg(attachment.uri)
+                    if (bytes == null) {
+                        notes += "[Image ${attachment.name} could not be read, skipped]"
+                    } else if (bytes.size > Attachments.MAX_IMAGE_BASE64_BYTES) {
+                        notes += "[Image ${attachment.name} too large, skipped]"
+                    } else {
+                        dataUrls += "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                        val dest = uniqueFile(uploadsDir, attachment.name.substringBeforeLast('.') + ".jpg")
+                        dest.writeBytes(bytes)
+                        notes += "[Image saved to workspace uploads/${dest.name}]"
+                    }
+                } else if (attachment.kind == Attachments.Kind.IMAGE) {
+                    notes += "[Image ${attachment.name} skipped: max ${Attachments.MAX_IMAGES_PER_MESSAGE} images per message]"
+                } else {
+                    val dest = copyToUploads(attachment, uploadsDir)
+                    if (dest != null) {
+                        notes += Attachments.workspaceNote("uploads/${dest.name}", attachment.mime, dest.length())
+                    } else {
+                        notes += "[File ${attachment.name} too large (>200 MB), skipped]"
+                    }
+                }
+            } catch (e: Exception) {
+                notes += "[Attachment ${attachment.name} failed: ${e.message}]"
+            }
+        }
+        val fullText = (listOf(baseText.trim()).filter { it.isNotEmpty() } + notes).joinToString("\n")
+        return fullText to dataUrls
+    }
+
+    private fun uniqueFile(dir: File, name: String): File {
+        var candidate = File(dir, Attachments.safeFileName(name, "file.bin"))
+        var n = 1
+        val stem = candidate.nameWithoutExtension
+        val ext = candidate.extension.let { if (it.isEmpty()) "" else ".$it" }
+        while (candidate.exists()) {
+            candidate = File(dir, "$stem-$n$ext")
+            n++
+        }
+        return candidate
+    }
+
+    private fun loadScaledJpeg(uri: Uri): ByteArray? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+        val maxSide = maxOf(bounds.outWidth, bounds.outHeight)
+        if (maxSide <= 0) return null
+        var sample = 1
+        while (maxSide / sample > Attachments.MAX_IMAGE_DIMENSION_PX * 2) sample *= 2
+        val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+        val decoded = contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
+            ?: return null
+        val scale = Attachments.MAX_IMAGE_DIMENSION_PX / maxOf(decoded.width, decoded.height).toFloat()
+        val bitmap = if (scale < 1f) {
+            Bitmap.createScaledBitmap(decoded, (decoded.width * scale).toInt(), (decoded.height * scale).toInt(), true)
+                .also { if (it != decoded) decoded.recycle() }
+        } else {
+            decoded
+        }
+        val out = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, Attachments.IMAGE_JPEG_QUALITY, out)
+        bitmap.recycle()
+        return out.toByteArray()
+    }
+
+    private fun copyToUploads(attachment: PendingAttachment, uploadsDir: File): File? {
+        if (attachment.size > Attachments.MAX_FILE_COPY_BYTES) return null
+        val dest = uniqueFile(uploadsDir, attachment.name)
+        var copied = 0L
+        contentResolver.openInputStream(attachment.uri)?.use { input ->
+            dest.outputStream().use { output ->
+                val buf = ByteArray(64 * 1024)
+                while (true) {
+                    val n = input.read(buf)
+                    if (n < 0) break
+                    copied += n
+                    if (copied > Attachments.MAX_FILE_COPY_BYTES) {
+                        dest.delete()
+                        return null
+                    }
+                    output.write(buf, 0, n)
+                }
+            }
+        } ?: return null
+        return dest
+    }
+
+    private fun copyToClipboard(text: String) {
+        if (text.isBlank()) {
+            Toast.makeText(this, "Nothing to copy", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        cm.setPrimaryClip(ClipData.newPlainText("WhiteDevil", text))
+        Toast.makeText(this, "Copied", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun pasteFromClipboard() {
+        val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = cm.primaryClip
+        if (clip == null || clip.itemCount == 0) {
+            Toast.makeText(this, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val item = clip.getItemAt(0)
+        val uri = item.uri
+        if (uri != null) {
+            val type = runCatching { contentResolver.getType(uri) }.getOrNull()
+            if (type?.startsWith("image/") == true) {
+                addContentAttachment(uri)
+                renderAttachmentStrip()
+                Toast.makeText(this, "Image pasted as attachment", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+        val text = runCatching { item.coerceToText(this)?.toString() }.getOrNull()
+        if (text.isNullOrEmpty()) {
+            Toast.makeText(this, "Nothing pastable on the clipboard", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val pos = agentInput.selectionStart.coerceAtLeast(0).coerceAtMost(agentInput.text.length)
+        agentInput.text.insert(pos, text)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun handleSharedIntent(intent: Intent?) {
+        if (intent == null) return
+        when (intent.action) {
+            Intent.ACTION_SEND -> {
+                var added = false
+                intent.getStringExtra(Intent.EXTRA_TEXT)?.takeIf { it.isNotBlank() }?.let { shared ->
+                    agentInput.append(if (agentInput.text.isEmpty()) shared else "\n$shared")
+                    added = true
+                }
+                intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.let { uri ->
+                    copySharedToCache(uri)?.let { addContentAttachment(it); added = true }
+                }
+                if (added) {
+                    selectTab(Tab.AGENT)
+                    renderAttachmentStrip()
+                    Toast.makeText(this, "Shared content added to Agent", Toast.LENGTH_SHORT).show()
+                }
+            }
+            Intent.ACTION_SEND_MULTIPLE -> {
+                var added = false
+                intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.forEach { uri ->
+                    copySharedToCache(uri)?.let { addContentAttachment(it); added = true }
+                }
+                if (added) {
+                    selectTab(Tab.AGENT)
+                    renderAttachmentStrip()
+                    Toast.makeText(this, "Shared files added to Agent", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    /** Copies a shared content URI into app storage so it survives the granting app going away. */
+    private fun copySharedToCache(uri: Uri): Uri? {
+        return try {
+            val mime = contentResolver.getType(uri) ?: "application/octet-stream"
+            var name: String? = null
+            contentResolver.query(uri, null, null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    val idx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (idx >= 0) name = c.getString(idx)
+                }
+            }
+            val dir = File(cacheDir, "shared").apply { mkdirs() }
+            val dest = uniqueFile(dir, Attachments.safeFileName(name, "shared.${Attachments.extensionFor(mime)}"))
+            var copied = 0L
+            contentResolver.openInputStream(uri)?.use { input ->
+                dest.outputStream().use { output ->
+                    val buf = ByteArray(64 * 1024)
+                    while (true) {
+                        val n = input.read(buf)
+                        if (n < 0) break
+                        copied += n
+                        if (copied > Attachments.MAX_FILE_COPY_BYTES) {
+                            dest.delete()
+                            return null
+                        }
+                        output.write(buf, 0, n)
+                    }
+                }
+            } ?: return null
+            Uri.fromFile(dest)
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -567,6 +1090,23 @@ class MainActivity : Activity() {
 
         bubble.addView(senderView)
         bubble.addView(contentView)
+
+        val copyRow = LinearLayout(this).apply {
+            gravity = Gravity.END
+            setPadding(0, dp(6), 0, 0)
+        }
+        val copyBtn = TextView(this).apply {
+            text = "Copy"
+            textSize = 11f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(MUTED)
+            setPadding(dp(12), dp(6), dp(12), dp(6))
+            background = createGlassDrawable(PILL, dp(12), LINE)
+            isClickable = true
+            setOnClickListener { copyToClipboard(message) }
+        }
+        copyRow.addView(copyBtn)
+        bubble.addView(copyRow)
 
         val params = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
             topMargin = dp(6)

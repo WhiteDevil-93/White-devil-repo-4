@@ -1,5 +1,7 @@
 package com.whitedevil.agent
 
+import kotlinx.serialization.json.JsonPrimitive
+
 sealed class AgentEvent {
     data class User(val text: String) : AgentEvent()
     data class Venice(val text: String) : AgentEvent()
@@ -17,6 +19,10 @@ class Agent(
     private val maxToolIterations: Int = 8,
     private val onEvent: (AgentEvent) -> Unit = {},
 ) {
+    companion object {
+        const val MAX_HISTORY_MESSAGES = 100
+    }
+
     private val history = mutableListOf<ChatMessage>()
 
     init {
@@ -26,14 +32,33 @@ class Agent(
     fun reset() {
         history.clear()
         if (systemPrompt.isNotBlank()) {
-            history.add(ChatMessage(role = "system", content = systemPrompt))
+            history.add(ChatMessage(role = "system", content = MessageContent.text(systemPrompt)))
         }
     }
 
-    /** Sends [userMessage] plus prior history, resolving any tool calls, emitting UI events. */
-    suspend fun send(userMessage: String): String {
-        onEvent(AgentEvent.User(userMessage))
-        history.add(ChatMessage(role = "user", content = userMessage))
+    /** Conversation snapshot for persistence (callers should strip blobs first). */
+    fun snapshot(): List<ChatMessage> = history.toList()
+
+    /**
+     * Restores a persisted conversation. The current system prompt stays authoritative:
+     * stale system messages are dropped and the live prompt is re-anchored first.
+     */
+    fun restore(messages: List<ChatMessage>) {
+        history.clear()
+        if (systemPrompt.isNotBlank()) {
+            history.add(ChatMessage(role = "system", content = MessageContent.text(systemPrompt)))
+        }
+        val validRoles = setOf("user", "assistant", "tool")
+        history.addAll(messages.filter { it.role in validRoles }.takeLast(MAX_HISTORY_MESSAGES))
+    }
+
+    /** Sends [userText] plus prior history, resolving any tool calls, emitting UI events. */
+    suspend fun send(userText: String, imageDataUrls: List<String> = emptyList()): String {
+        val displayText = if (imageDataUrls.isEmpty()) userText
+        else if (userText.isBlank()) "[${imageDataUrls.size} image(s) attached]"
+        else "$userText [${imageDataUrls.size} image(s) attached]"
+        onEvent(AgentEvent.User(displayText))
+        history.add(ChatMessage(role = "user", content = MessageContent.multimodal(userText, imageDataUrls)))
 
         repeat(maxToolIterations) {
             val response = try {
@@ -67,7 +92,7 @@ class Agent(
 
             val toolCalls = message.toolCalls
             if (toolCalls.isNullOrEmpty()) {
-                val reply = message.content ?: ""
+                val reply = message.textContent()
                 onEvent(AgentEvent.Venice(reply))
                 return reply
             }
@@ -84,7 +109,7 @@ class Agent(
                 history.add(
                     ChatMessage(
                         role = "tool",
-                        content = result,
+                        content = JsonPrimitive(result),
                         toolCallId = call.id,
                         name = callName,
                     ),
