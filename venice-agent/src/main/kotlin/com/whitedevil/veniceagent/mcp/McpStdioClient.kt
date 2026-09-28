@@ -27,6 +27,7 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 private const val SUPPORTED_PROTOCOL_VERSION = "2024-11-05"
@@ -90,28 +91,39 @@ class McpStdioClient(
     }
 
     private fun readLoop() {
-        process.inputStream.bufferedReader().useLines { lines ->
-            for (line in lines) {
-                if (line.isBlank()) continue
-                val element = runCatching { json.parseToJsonElement(line) }.getOrNull() as? JsonObject ?: continue
-                if (element.containsKey("method")) {
-                    handleIncomingRequest(element)
-                    continue
+        // Cleanup must run whether this loop ends normally (EOF) or a handler throws partway
+        // through (e.g. handleIncomingRequest's pong write fails because stdin just closed):
+        // either way the response loop is now permanently dead, and skipping cleanup would leave
+        // stale cached tools advertised and in-flight calls waiting out their full timeout instead
+        // of failing fast.
+        try {
+            process.inputStream.bufferedReader().useLines { lines ->
+                for (line in lines) {
+                    if (line.isBlank()) continue
+                    val element = runCatching { json.parseToJsonElement(line) }.getOrNull() as? JsonObject ?: continue
+                    if (element.containsKey("method")) {
+                        handleIncomingRequest(element)
+                        continue
+                    }
+                    val response = runCatching { json.decodeFromString(JsonRpcResponse.serializer(), line) }.getOrNull()
+                        ?: continue
+                    val id = (response.id as? JsonPrimitive)?.longOrNull ?: continue
+                    pending.remove(id)?.complete(response)
                 }
-                val response = runCatching { json.decodeFromString(JsonRpcResponse.serializer(), line) }.getOrNull()
-                    ?: continue
-                val id = (response.id as? JsonPrimitive)?.longOrNull ?: continue
-                pending.remove(id)?.complete(response)
             }
+        } catch (e: Exception) {
+            System.err.println("Warning: MCP server '$serverName' response loop died: ${e.message}")
+        } finally {
+            // The stream closed, or a handler threw: the process exited, its stdout pipe broke,
+            // or writing back to it failed. Treat this like an invalidation so the next
+            // definitions() call re-evaluates this provider instead of ToolRegistry trusting a
+            // stale cache backed by a dead response loop forever.
+            changeVersion.incrementAndGet()
+            // No response can ever arrive for any call still waiting: fail them now instead of
+            // leaving each one to block until its own timeout expires.
+            val deadProcess = McpException("MCP server '$serverName' process exited or its response loop died")
+            pending.keys.toList().forEach { id -> pending.remove(id)?.completeExceptionally(deadProcess) }
         }
-        // The stream closed: the process exited or its stdout pipe broke. Treat this like an
-        // invalidation so the next definitions() call re-evaluates this provider instead of
-        // ToolRegistry trusting a stale cache backed by a dead process forever.
-        changeVersion.incrementAndGet()
-        // No response can ever arrive for any call still waiting: fail them now instead of
-        // leaving each one to block until its own 30s timeout expires.
-        val deadProcess = McpException("MCP server '$serverName' process exited before responding")
-        pending.keys.toList().forEach { id -> pending.remove(id)?.completeExceptionally(deadProcess) }
     }
 
     /** Handles server-to-client requests/notifications (distinct from responses to our own calls). */
@@ -151,24 +163,32 @@ class McpStdioClient(
             // Covers our own timeout (TimeoutCancellationException, a subtype) and a caller
             // cancelling us from outside (an outer timeout, shutdown): either way, the server
             // may still complete this operation without knowing we gave up on it, so a retry
-            // could duplicate a write/deployment. Best-effort tell it to stop: if the notification
-            // itself can't be written (e.g. the process just died and stdin is now closed), that
-            // failure must not replace the cancellation we're about to (re)throw.
-            runCatching {
-                notify(
-                    "notifications/cancelled",
-                    buildJsonObject {
-                        put("requestId", id)
-                        put(
-                            "reason",
-                            if (e is TimeoutCancellationException) {
-                                "client timed out after ${requestTimeoutMillis}ms"
-                            } else {
-                                "client cancelled the request"
-                            },
-                        )
-                    },
-                )
+            // could duplicate a write/deployment. Best-effort tell it to stop.
+            //
+            // Fired on this client's own scope, not awaited here: notify() writes through the
+            // same synchronized writeLine() as the original request, and if THAT write is what's
+            // stuck (the server stopped draining stdin), calling it inline would block this
+            // catch block on the same lock until writeLineOrKill's watchdog eventually kills the
+            // process — holding up the caller's cancelAndJoin() for up to the full deadline
+            // instead of returning promptly. A failure writing it (e.g. the process already died)
+            // is swallowed rather than replacing the cancellation being (re)thrown below.
+            scope.launch {
+                runCatching {
+                    notify(
+                        "notifications/cancelled",
+                        buildJsonObject {
+                            put("requestId", id)
+                            put(
+                                "reason",
+                                if (e is TimeoutCancellationException) {
+                                    "client timed out after ${requestTimeoutMillis}ms"
+                                } else {
+                                    "client cancelled the request"
+                                },
+                            )
+                        },
+                    )
+                }
             }
             throw e
         } finally {
@@ -260,7 +280,29 @@ class McpStdioClient(
 
     override fun hasChanged(): Boolean = changeVersion.get() != fetchedVersion
 
-    override suspend fun definitions(): List<ToolDefinition> {
+    /**
+     * A timeout from THIS client's own [call] (created by its `withTimeout(requestTimeoutMillis)`)
+     * means this one optional MCP server is unresponsive — a provider failure, no different from
+     * a malformed response — not that the caller's whole operation should be cancelled. Converting
+     * it here, at the boundary where it's known to be ours, keeps [ToolRegistry] able to skip just
+     * this provider (its own `catch (e: CancellationException) { throw e }` would otherwise treat
+     * this exactly like a genuine external cancellation and abort the whole registry build). A
+     * plain (non-timeout) [CancellationException] — real external cancellation, e.g. shutdown —
+     * still propagates untouched.
+     */
+    private suspend fun <T> convertingOwnTimeoutToFailure(onTimeout: (TimeoutCancellationException) -> T, block: suspend () -> T): T =
+        try {
+            block()
+        } catch (e: TimeoutCancellationException) {
+            onTimeout(e)
+        }
+
+    override suspend fun definitions(): List<ToolDefinition> = convertingOwnTimeoutToFailure(
+        onTimeout = { throw McpException("MCP server '$serverName' timed out after ${requestTimeoutMillis}ms") },
+        block = { definitionsInternal() },
+    )
+
+    private suspend fun definitionsInternal(): List<ToolDefinition> {
         if (cachedDefinitions != null && !hasChanged()) return cachedDefinitions!!
         val versionAtFetchStart = changeVersion.get()
         ensureInitialized()
@@ -285,7 +327,14 @@ class McpStdioClient(
             // treating it as empty would silently commit a truncated list as if it were complete.
             val tools = result["tools"] as? JsonArray
                 ?: throw McpException("MCP server '$serverName' tools/list result is missing a 'tools' array")
-            tools.forEach { (it as? JsonObject)?.let(rawTools::add) }
+            // A non-object member (null, a string, ...) is a failed page too, not an entry to
+            // skip: silently dropping it would commit a partial list and never retry the provider.
+            tools.forEach { element ->
+                rawTools.add(
+                    element as? JsonObject
+                        ?: throw McpException("MCP server '$serverName' tools/list returned a non-object tool entry"),
+                )
+            }
             val cursorElement = result["nextCursor"]
             val nextCursor = when {
                 cursorElement == null || cursorElement is JsonNull -> null
@@ -331,7 +380,12 @@ class McpStdioClient(
         return definitions
     }
 
-    override suspend fun execute(name: String, argumentsJson: String): String {
+    override suspend fun execute(name: String, argumentsJson: String): String = convertingOwnTimeoutToFailure(
+        onTimeout = { "Error: MCP tool '$name' on server '$serverName' timed out after ${requestTimeoutMillis}ms" },
+        block = { executeInternal(name, argumentsJson) },
+    )
+
+    private suspend fun executeInternal(name: String, argumentsJson: String): String {
         ensureInitialized()
         val arguments = runCatching { json.parseToJsonElement(argumentsJson) }.getOrNull() as? JsonObject
             ?: return "Error: invalid arguments for tool '$name': expected a JSON object, got: $argumentsJson"
@@ -406,6 +460,16 @@ class McpStdioClient(
     override fun close() {
         runCatching { writer.close() }
         process.destroy()
+        // destroy() only requests termination; a server that ignores stdin EOF (or traps the
+        // termination signal) would otherwise keep running past this call returning. Wait
+        // briefly, then escalate.
+        if (!process.waitFor(2, TimeUnit.SECONDS)) {
+            process.destroyForcibly()
+            process.waitFor(2, TimeUnit.SECONDS)
+        }
+        // Best-effort: a launcher command (a wrapper script, `npx`, ...) may have spawned its own
+        // child process that doesn't die when the launcher does.
+        runCatching { process.descendants().forEach { it.destroyForcibly() } }
         scope.cancel()
     }
 }

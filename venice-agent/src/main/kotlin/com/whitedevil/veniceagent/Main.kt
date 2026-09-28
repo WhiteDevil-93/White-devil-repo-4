@@ -2,6 +2,7 @@ package com.whitedevil.veniceagent
 
 import com.whitedevil.veniceagent.mcp.McpServerLoader
 import com.whitedevil.veniceagent.mcp.McpStdioClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
@@ -112,6 +113,8 @@ private suspend fun runCli(
 
         try {
             println("\n${agent.send(line)}")
+        } catch (e: CancellationException) {
+            throw e // the ambient coroutine is shutting down; don't print an error and loop again
         } catch (e: VeniceApiException) {
             System.err.println("Venice API error: ${e.message}")
         } catch (e: Exception) {

@@ -1,4 +1,4 @@
-import sys, json, time
+import sys, json, time, os
 
 def send(obj):
     sys.stdout.write(json.dumps(obj) + "\n")
@@ -52,6 +52,10 @@ for line in sys.stdin:
             if state.get("malformed_tool_schema"):
                 state["malformed_tool_schema"] = False
                 send({"jsonrpc": "2.0", "id": msg["id"], "result": {"tools": [{"name": "bad_schema_tool", "description": "bad schema", "inputSchema": "not an object"}]}})
+                continue
+            if state.get("malformed_tool_entry_type"):
+                state["malformed_tool_entry_type"] = False
+                send({"jsonrpc": "2.0", "id": msg["id"], "result": {"tools": ["not an object either"]}})
                 continue
             # First page: one tool, plus a cursor pointing at a second page. After a
             # notifications/tools/list_changed has been sent, a new tool also appears here,
@@ -132,6 +136,10 @@ for line in sys.stdin:
             state["malformed_tool_schema"] = True
             send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "trigger_malformed_tool_entry_type":
+            state["malformed_tool_entry_type"] = True
+            send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
         elif name == "trigger_cursor_loop":
             state["cursor_loop"] = True
             send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
@@ -149,6 +157,15 @@ for line in sys.stdin:
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "closing stdin"}]}})
             sys.stdin.close()
             time.sleep(3600)
+        elif name == "ping_then_exit":
+            # Acks, sends an unsolicited ping, then exits immediately (os._exit, no cleanup):
+            # by the time the client tries to reply to that ping, the pipe's read end is fully
+            # gone (unlike merely closing the wrapped stdin object, which doesn't reliably do
+            # this), so the write reliably fails with a broken pipe. This makes the client's
+            # read-loop handler throw instead of the loop ending cleanly via EOF.
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "pinging then exiting"}]}})
+            send({"jsonrpc": "2.0", "id": 999998, "method": "ping", "params": {}})
+            os._exit(1)
         elif name == "return_resource_content":
             if args.get("withText"):
                 resource = {"uri": "file:///a.txt", "mimeType": "text/plain", "text": "hello resource"}

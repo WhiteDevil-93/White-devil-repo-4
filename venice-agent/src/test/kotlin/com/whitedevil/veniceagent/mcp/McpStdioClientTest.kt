@@ -1,7 +1,6 @@
 package com.whitedevil.veniceagent.mcp
 
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -220,7 +219,11 @@ class McpStdioClientTest {
             requestTimeoutMillis = 300,
         )
         try {
-            assertFailsWith<TimeoutCancellationException> { client.definitions() }
+            // A timeout is this client's own deadline, not external cancellation: it must
+            // surface as an ordinary provider failure (McpException), not a raw
+            // TimeoutCancellationException that ToolRegistry's cancellation-propagation logic
+            // would otherwise mistake for the whole operation being cancelled.
+            assertFailsWith<McpException> { client.definitions() }
 
             // The connection must be retired, not retried: the next attempt fails immediately
             // with a clear error instead of sending a second initialize to the same session.
@@ -333,11 +336,12 @@ class McpStdioClientTest {
             // A single argument far larger than any OS pipe's buffer capacity (typically 64KB on
             // Linux) forces the underlying write itself to block partway through, not just the
             // wait for a response: this is what withContext(Dispatchers.IO) alone couldn't bound.
-            // Like any other timeout on this client (see the initialize-timeout test), this must
-            // surface as a thrown cancellation, not hang forever or get swallowed as a result string.
+            // This client's own deadline firing is a provider/tool failure (an error string, per
+            // the timeout-conversion test below), not hanging forever.
             val hugeArgument = """{"text":"${"x".repeat(2_000_000)}"}"""
             val elapsedMillis = measureTimeMillis {
-                assertFailsWith<CancellationException> { client.execute("fake__echo", hugeArgument) }
+                val result = client.execute("fake__echo", hugeArgument)
+                assertTrue(result.startsWith("Error:"), "expected the stuck write to time out as an error, got: $result")
             }
             // Generous slack over the 1s deadline: the watchdog fires at the deadline, then the
             // subprocess has to actually die and unblock the write.
@@ -403,6 +407,85 @@ class McpStdioClientTest {
             // A genuinely binary (blob, no text) resource must still be omitted, not rendered.
             val blobResult = client.execute("fake__return_resource_content", """{"withText":false}""")
             assertTrue(blobResult.contains("omitted"), "expected a blob resource to stay omitted: $blobResult")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `rejects a non-object tools list entry instead of silently skipping it`() =
+        assertRejectsMalformedPage("fake__trigger_malformed_tool_entry_type")
+
+    @Test
+    fun `runs read-loop cleanup even when a handler throws instead of only on a clean EOF`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
+        try {
+            client.definitions()
+            assertFalse(client.hasChanged())
+
+            // The server acks this, sends an unsolicited ping, then exits immediately: our reply
+            // to that ping is a write into a pipe whose read end is already fully gone, so the
+            // read loop dies via a thrown exception rather than a clean EOF.
+            client.execute("fake__ping_then_exit", "{}")
+
+            withTimeout(5_000) {
+                while (!client.hasChanged()) delay(20)
+            }
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `does not block cancellation on a stuck write while sending its best-effort notification`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        // Deliberately long: if the bug were still present, the notification write would block
+        // on writeLine's lock until this deadline's watchdog finally kills the process, so a
+        // short timeout here could mask the bug by letting the watchdog itself bail things out.
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(script.absolutePath)),
+            requestTimeoutMillis = 30_000,
+        )
+        try {
+            client.execute("fake__stop_reading_stdin", "{}")
+
+            val hugeArgument = """{"text":"${"x".repeat(2_000_000)}"}"""
+            val job = launch { client.execute("fake__echo", hugeArgument) }
+            delay(300) // let the write actually start blocking
+
+            val elapsedMillis = measureTimeMillis { job.cancelAndJoin() }
+            assertTrue(
+                elapsedMillis < 5_000,
+                "cancelAndJoin() must not block on the stuck write's own notification, took ${elapsedMillis}ms",
+            )
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `converts its own request timeout into a returned error instead of propagating as cancellation`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(script.absolutePath)),
+            requestTimeoutMillis = 300,
+        )
+        try {
+            // hang_forever never replies, so this call's own withTimeout fires. Agent/ToolRegistry
+            // treat any propagated CancellationException as external cancellation of the whole
+            // operation, so this client's own deadline must surface as an ordinary tool failure
+            // (a returned string) instead, or one slow optional tool call would abort everything.
+            val result = client.execute("fake__hang_forever", "{}")
+            assertTrue(result.startsWith("Error:"), "expected a timeout to surface as an error string, got: $result")
         } finally {
             client.close()
         }
