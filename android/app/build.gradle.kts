@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 val signing = Properties().apply {
@@ -50,6 +51,7 @@ android {
     }
     buildFeatures {
         buildConfig = true
+        compose = true
     }
 }
 
@@ -67,6 +69,15 @@ dependencies {
     implementation("androidx.core:core:1.13.1")
     implementation("androidx.activity:activity:1.9.2")
     implementation("com.google.android.material:material:1.12.0")
+
+    val composeBom = platform("androidx.compose:compose-bom:2024.10.01")
+    implementation(composeBom)
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.activity:activity-compose:1.9.2")
+    debugImplementation("androidx.compose.ui:ui-tooling")
 
     testImplementation("junit:junit:4.13.2")
 }

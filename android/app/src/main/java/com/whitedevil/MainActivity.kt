@@ -55,8 +55,20 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.whitedevil.ui.chat.AgentChatScreen
+import com.whitedevil.ui.chat.ChatUiMessage
+import com.whitedevil.ui.onboarding.OnboardingScreen
+import com.whitedevil.ui.theme.WhiteDevilTheme
+import com.whitedevil.ui.you.YouHomeScreen
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.AgentEvent
 import com.whitedevil.agent.Attachments
@@ -82,7 +94,9 @@ import kotlin.concurrent.thread
 
 class MainActivity : ComponentActivity() {
 
-    enum class Tab { AGENT, FORGE_HUB, TERMINAL, SETTINGS }
+    enum class Tab { AGENT, FORGE_HUB, YOU }
+
+    enum class YouSub { HOME, TERMINAL, SETTINGS }
 
     private data class Screen(val id: String, val title: String, val icon: String, val url: String)
 
@@ -90,7 +104,9 @@ class MainActivity : ComponentActivity() {
     private val main = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(Dispatchers.Main + Job())
 
-    private lateinit var root: LinearLayout
+    private lateinit var root: FrameLayout
+    private lateinit var contentColumn: LinearLayout
+    private lateinit var onboardingOverlay: FrameLayout
     private lateinit var tabContentContainer: FrameLayout
     private lateinit var bottomNavBar: LinearLayout
     private lateinit var bottomNavRow: LinearLayout
@@ -99,7 +115,12 @@ class MainActivity : ComponentActivity() {
     private lateinit var agentContainer: FrameLayout
     private lateinit var forgeHubContainer: FrameLayout
     private lateinit var terminalContainer: FrameLayout
+    private lateinit var youContainer: FrameLayout
+    private lateinit var youHomeCompose: ComposeView
+    private lateinit var settingsWrapper: LinearLayout
     private lateinit var settingsContainer: ScrollView
+    private lateinit var youSettingsBack: TextView
+    private lateinit var youTerminalBack: TextView
 
     // Forge Hub UI state (isolated)
     private lateinit var hubLoadBar: View
@@ -121,8 +142,13 @@ class MainActivity : ComponentActivity() {
     private lateinit var terminalPasteInput: EditText
 
     // Agent tab state
-    private lateinit var agentMessagesLayout: LinearLayout
-    private lateinit var agentScrollView: ScrollView
+    private lateinit var agentChatCompose: ComposeView
+    private val chatMessages = mutableStateListOf<ChatUiMessage>()
+    private var chatScrollTrigger by mutableIntStateOf(0)
+    private var agentThinking by mutableStateOf(false)
+    private var nextChatId = 1L
+    private var youSubScreen: YouSub = YouSub.HOME
+    private var youConnectionSummary by mutableStateOf("Tap Test connections on You home or in Settings.")
     private lateinit var agentInput: EditText
     private lateinit var agentSendWrap: FrameLayout
     private lateinit var agentModelChip: TextView
@@ -211,13 +237,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         buildUi()
 
-        val initTab = when (intent?.data?.getQueryParameter("tab")) {
-            "forge", "hub" -> Tab.FORGE_HUB
-            "terminal", "term" -> Tab.TERMINAL
-            "settings" -> Tab.SETTINGS
-            else -> Tab.AGENT
+        when (intent?.data?.getQueryParameter("tab")) {
+            "forge", "hub" -> selectTab(Tab.FORGE_HUB)
+            "terminal", "term" -> {
+                selectTab(Tab.YOU)
+                showYouSub(YouSub.TERMINAL)
+            }
+            "settings" -> {
+                selectTab(Tab.YOU)
+                showYouSub(YouSub.SETTINGS)
+            }
+            else -> selectTab(Tab.AGENT)
         }
-        selectTab(initTab)
+        maybeShowOnboarding()
 
         if (prefs.getString(SettingsManager.KEY_RELAY_PASS, "").isNullOrEmpty()) {
             // First run hint or open settings
@@ -254,8 +286,14 @@ class MainActivity : ComponentActivity() {
                 selectTab(Tab.FORGE_HUB)
                 intent.data?.getQueryParameter("screen")?.let { showHubScreen(it) }
             }
-            "terminal", "term" -> selectTab(Tab.TERMINAL)
-            "settings" -> selectTab(Tab.SETTINGS)
+            "terminal", "term" -> {
+                selectTab(Tab.YOU)
+                showYouSub(YouSub.TERMINAL)
+            }
+            "settings" -> {
+                selectTab(Tab.YOU)
+                showYouSub(YouSub.SETTINGS)
+            }
         }
         handleSharedIntent(intent)
     }
@@ -267,30 +305,24 @@ class MainActivity : ComponentActivity() {
     private fun buildUi() {
         @Suppress("DEPRECATION")
         window.setDecorFitsSystemWindows(false)
-        root = LinearLayout(this).apply {
+        root = FrameLayout(this).apply { setBackgroundColor(BG) }
+        contentColumn = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(BG)
         }
 
         tabContentContainer = FrameLayout(this)
 
-        // 1. Build Agent UI
         agentContainer = buildAgentTab()
         tabContentContainer.addView(agentContainer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        // 2. Build Forge Hub UI
         forgeHubContainer = buildForgeHubTab()
         tabContentContainer.addView(forgeHubContainer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        // 3. Build Terminal UI
         terminalContainer = buildTerminalTab()
-        tabContentContainer.addView(terminalContainer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-
-        // 4. Build Settings UI
         settingsContainer = buildSettingsTab()
-        tabContentContainer.addView(settingsContainer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        youContainer = buildYouTab()
+        tabContentContainer.addView(youContainer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        // Bottom Navigation Bar with dark glass style
         bottomNavRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -303,10 +335,18 @@ class MainActivity : ComponentActivity() {
             addView(bottomNavRow, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
         }
 
-        root.addView(tabContentContainer, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
-        root.addView(bottomNavBar, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        contentColumn.addView(tabContentContainer, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
+        contentColumn.addView(bottomNavBar, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
-        root.setOnApplyWindowInsetsListener { v, insets ->
+        root.addView(contentColumn, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+
+        onboardingOverlay = FrameLayout(this).apply {
+            visibility = View.GONE
+            setBackgroundColor(Color.parseColor("#FF080809"))
+        }
+        root.addView(onboardingOverlay, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+
+        contentColumn.setOnApplyWindowInsetsListener { v, insets ->
             val bars = insets.getInsets(WindowInsets.Type.systemBars())
             val ime = insets.getInsets(WindowInsets.Type.ime())
             val typing = ime.bottom > bars.bottom
@@ -320,12 +360,32 @@ class MainActivity : ComponentActivity() {
         renderBottomNav()
     }
 
+    private fun maybeShowOnboarding() {
+        if (prefs.getBoolean(SettingsManager.KEY_ONBOARDING_COMPLETE, false)) return
+        onboardingOverlay.visibility = View.VISIBLE
+        onboardingOverlay.removeAllViews()
+        val compose = ComposeView(this).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                WhiteDevilTheme {
+                    OnboardingScreen(onFinished = { completeOnboarding() })
+                }
+            }
+        }
+        onboardingOverlay.addView(compose, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+    }
+
+    private fun completeOnboarding() {
+        prefs.edit().putBoolean(SettingsManager.KEY_ONBOARDING_COMPLETE, true).apply()
+        onboardingOverlay.visibility = View.GONE
+        onboardingOverlay.removeAllViews()
+    }
+
     private fun renderBottomNav() {
         bottomNavRow.removeAllViews()
         bottomNavRow.addView(navTabItem(R.drawable.ic_venice, "Agent", activeTab == Tab.AGENT) { selectTab(Tab.AGENT) })
         bottomNavRow.addView(navTabItem(R.drawable.ic_home, "Forge Hub", activeTab == Tab.FORGE_HUB) { selectTab(Tab.FORGE_HUB) })
-        bottomNavRow.addView(navTabItem(R.drawable.ic_terminal, "Terminal", activeTab == Tab.TERMINAL) { selectTab(Tab.TERMINAL) })
-        bottomNavRow.addView(navTabItem(R.drawable.ic_settings, "Settings", activeTab == Tab.SETTINGS) { selectTab(Tab.SETTINGS) })
+        bottomNavRow.addView(navTabItem(R.drawable.ic_settings, "You", activeTab == Tab.YOU) { selectTab(Tab.YOU) })
     }
 
     private fun navTabItem(icon: Int, label: String, active: Boolean, onClick: () -> Unit) = LinearLayout(this).apply {
@@ -376,16 +436,119 @@ class MainActivity : ComponentActivity() {
         activeTab = tab
         agentContainer.visibility = if (tab == Tab.AGENT) View.VISIBLE else View.GONE
         forgeHubContainer.visibility = if (tab == Tab.FORGE_HUB) View.VISIBLE else View.GONE
-        terminalContainer.visibility = if (tab == Tab.TERMINAL) View.VISIBLE else View.GONE
-        settingsContainer.visibility = if (tab == Tab.SETTINGS) View.VISIBLE else View.GONE
+        youContainer.visibility = if (tab == Tab.YOU) View.VISIBLE else View.GONE
 
-        if (tab == Tab.TERMINAL && terminalWebView == null) {
-            setupTerminalWebView()
+        if (tab == Tab.YOU) {
+            showYouSub(YouSub.HOME)
+            refreshYouHomeSummary()
         }
         if (tab == Tab.FORGE_HUB && hubScreens.isEmpty()) {
             loadHubManifest()
         }
         renderBottomNav()
+    }
+
+    private fun showYouSub(sub: YouSub) {
+        youSubScreen = sub
+        if (sub == YouSub.TERMINAL && terminalWebView == null) {
+            setupTerminalWebView()
+        }
+        if (sub == YouSub.HOME) refreshYouHomeSummary()
+        renderYouSubVisibility()
+    }
+
+    private fun renderYouSubVisibility() {
+        if (!::youHomeCompose.isInitialized) return
+        youHomeCompose.visibility = if (youSubScreen == YouSub.HOME) View.VISIBLE else View.GONE
+        terminalContainer.visibility = if (youSubScreen == YouSub.TERMINAL) View.VISIBLE else View.GONE
+        settingsWrapper.visibility = if (youSubScreen == YouSub.SETTINGS) View.VISIBLE else View.GONE
+        if (::youTerminalBack.isInitialized) {
+            youTerminalBack.visibility = if (youSubScreen == YouSub.TERMINAL) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun buildYouTab(): FrameLayout {
+        val shell = FrameLayout(this).apply {
+            background = UiPolish.screenGradient(this@MainActivity)
+        }
+
+        youHomeCompose = ComposeView(this).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent { YouHomeComposeHost() }
+        }
+        shell.addView(youHomeCompose, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+
+        settingsWrapper = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = View.GONE
+        }
+        youSettingsBack = TextView(this).apply {
+            text = "← You"
+            textSize = 14f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(ACCENT)
+            setPadding(dp(20), dp(40), dp(20), dp(8))
+            isClickable = true
+            setOnClickListener { showYouSub(YouSub.HOME) }
+        }
+        settingsWrapper.addView(youSettingsBack)
+        settingsWrapper.addView(settingsContainer, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
+        shell.addView(settingsWrapper, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+
+        shell.addView(terminalContainer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        terminalContainer.visibility = View.GONE
+        return shell
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun YouHomeComposeHost() {
+        WhiteDevilTheme {
+            YouHomeScreen(
+                connectionSummary = youConnectionSummary,
+                veniceReady = veniceKeyConfigured(),
+                onTerminal = { showYouSub(YouSub.TERMINAL) },
+                onSettings = { showYouSub(YouSub.SETTINGS) },
+                onTestConnections = { runQuickConnectionTest(updateYouHome = true) },
+                onAddVeniceKey = { showVeniceKeySheet() },
+            )
+        }
+    }
+
+    private fun refreshYouHomeSummary() {
+        scope.launch {
+            val snap = withContext(Dispatchers.IO) {
+                ConnectionHealth.evaluate(
+                    veniceKey = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim().orEmpty(),
+                    relayUrl = prefs.getString(SettingsManager.KEY_RELAY_URL, SettingsManager.DEFAULT_RELAY_URL).orEmpty(),
+                    relayUser = prefs.getString(SettingsManager.KEY_RELAY_USER, SettingsManager.DEFAULT_RELAY_USER).orEmpty(),
+                    relayPass = prefs.getString(SettingsManager.KEY_RELAY_PASS, "").orEmpty(),
+                    laptopUser = prefs.getString(SettingsManager.KEY_LAPTOP_USER, SettingsManager.DEFAULT_LAPTOP_USER).orEmpty(),
+                    laptopPass = prefs.getString(SettingsManager.KEY_LAPTOP_PASS, "").orEmpty(),
+                )
+            }
+            youConnectionSummary = snap.multiline()
+        }
+    }
+
+    private fun runQuickConnectionTest(updateYouHome: Boolean = false) {
+        if (::settingsConnectionSummary.isInitialized) {
+            settingsConnectionSummary.text = "Testing…"
+        }
+        scope.launch {
+            val snap = withContext(Dispatchers.IO) {
+                ConnectionHealth.evaluate(
+                    veniceKey = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim().orEmpty(),
+                    relayUrl = prefs.getString(SettingsManager.KEY_RELAY_URL, SettingsManager.DEFAULT_RELAY_URL).orEmpty(),
+                    relayUser = prefs.getString(SettingsManager.KEY_RELAY_USER, SettingsManager.DEFAULT_RELAY_USER).orEmpty(),
+                    relayPass = prefs.getString(SettingsManager.KEY_RELAY_PASS, "").orEmpty(),
+                    laptopUser = prefs.getString(SettingsManager.KEY_LAPTOP_USER, SettingsManager.DEFAULT_LAPTOP_USER).orEmpty(),
+                    laptopPass = prefs.getString(SettingsManager.KEY_LAPTOP_PASS, "").orEmpty(),
+                )
+            }
+            val text = snap.multiline()
+            if (updateYouHome) youConnectionSummary = text
+            if (::settingsConnectionSummary.isInitialized) settingsConnectionSummary.text = text
+        }
     }
 
     // =========================================================================
@@ -451,17 +614,21 @@ class MainActivity : ComponentActivity() {
         }
         layout.addView(agentProgress, LinearLayout.LayoutParams(MATCH_PARENT, dp(3)).apply { topMargin = dp(8) })
 
-        // Scrollable Chat Messages
-        agentScrollView = ScrollView(this).apply {
-            isFillViewport = true
-            overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
+        agentChatCompose = ComposeView(this).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                WhiteDevilTheme {
+                    AgentChatScreen(
+                        messages = chatMessages,
+                        agentThinking = agentThinking,
+                        scrollTrigger = chatScrollTrigger,
+                        onToggleTool = { id -> toggleToolMessage(id) },
+                        onCopy = { copyToClipboard(it) },
+                    )
+                }
+            }
         }
-        agentMessagesLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, dp(4), 0, dp(8))
-        }
-        agentScrollView.addView(agentMessagesLayout, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-        layout.addView(agentScrollView, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
+        layout.addView(agentChatCompose, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
 
         // Initial welcome message, or restored conversation.
         val restoredHistory = loadAgentHistory()
@@ -672,7 +839,7 @@ class MainActivity : ComponentActivity() {
         currentAgentJob?.cancel()
         agentProgress.visibility = View.GONE
         runCatching { agentHistoryFile().delete() }
-        agentMessagesLayout.removeAllViews()
+        chatMessages.clear()
         addMessageBubble("Agent Reset", "Chat context cleared. Ready for next task.", ROLE_VENICE)
     }
 
@@ -754,6 +921,7 @@ class MainActivity : ComponentActivity() {
         )
 
         agentProgress.visibility = View.VISIBLE
+        agentThinking = true
         setAgentComposerEnabled(false)
 
         val currentClient = VeniceClient(apiKey = apiKey)
@@ -766,6 +934,9 @@ class MainActivity : ComponentActivity() {
                 }
                 if (fullText.isBlank() && imageDataUrls.isEmpty()) {
                     withContext(Dispatchers.Main) {
+                        agentThinking = false
+                        agentProgress.visibility = View.GONE
+                        setAgentComposerEnabled(true)
                         Toast.makeText(this@MainActivity, "Nothing to send", Toast.LENGTH_SHORT).show()
                     }
                     return@launch
@@ -801,9 +972,17 @@ class MainActivity : ComponentActivity() {
             } finally {
                 finishedAgent?.let { persistAgentHistory(it.snapshot()) }
                 agentProgress.visibility = View.GONE
+                agentThinking = false
                 setAgentComposerEnabled(true)
             }
         }
+    }
+
+    private fun toggleToolMessage(id: Long) {
+        val idx = chatMessages.indexOfFirst { it.id == id }
+        if (idx < 0) return
+        val cur = chatMessages[idx]
+        chatMessages[idx] = cur.copy(toolExpanded = !cur.toolExpanded)
     }
 
     private fun setAgentComposerEnabled(enabled: Boolean) {
@@ -1147,166 +1326,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun addMessageBubble(sender: String, message: String, role: Int) {
-        val radius = dp(18).toFloat()
-        val isUser = role == ROLE_USER
-        val isTool = role == ROLE_TOOL_CALL || role == ROLE_TOOL_OUTPUT
-        val isInfo = role == ROLE_INFO
-
-        val avatarLetter = when (role) {
-            ROLE_USER -> "Y"
-            ROLE_VENICE -> "V"
-            ROLE_INFO -> "✦"
-            ROLE_TOOL_CALL -> "⚙"
-            ROLE_TOOL_OUTPUT -> "↳"
-            else -> "!"
-        }
-        val avatarBg = when (role) {
-            ROLE_USER -> Color.parseColor("#554A3828")
-            ROLE_VENICE -> Color.parseColor("#442A2A30")
-            ROLE_INFO -> Color.parseColor("#443D3528")
-            ROLE_TOOL_CALL -> Color.parseColor("#441F2E3D")
-            ROLE_TOOL_OUTPUT -> Color.parseColor("#331D1D24")
-            else -> Color.parseColor("#44CC5555")
-        }
-        val avatarFg = when (role) {
-            ROLE_USER -> ACCENT
-            ROLE_VENICE -> STRONG
-            ROLE_INFO -> ACCENT
-            ROLE_TOOL_CALL -> Color.parseColor("#FF82B6E8")
-            ROLE_TOOL_OUTPUT -> MUTED
-            else -> Color.parseColor("#FFFF6B6B")
-        }
-
-        val bubble = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = UiPolish.bubbleDrawable(role, radius)
-            setPadding(dp(14), dp(12), dp(14), dp(10))
-        }
-
-        val headerRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        val titleView = TextView(this).apply {
-            text = if (isTool) sender else sender
-            textSize = 12f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(avatarFg)
-        }
-        headerRow.addView(titleView, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        val expandLabel = if (isTool) {
-            TextView(this).apply {
-                text = "Show details"
-                textSize = 11f
-                setTextColor(MUTED)
-            }
-        } else null
-        expandLabel?.let { headerRow.addView(it) }
-        if (!isInfo && !isTool) {
-            val time = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
-                .format(java.util.Date())
-            headerRow.addView(TextView(this).apply {
-                text = time
-                textSize = 12f
-                setTextColor(MUTED)
-            })
-        }
-        bubble.addView(headerRow)
-
-        val contentView = TextView(this).apply {
-            text = message
-            textSize = when {
-                isTool -> 11.5f
-                isInfo -> 13f
-                else -> 14f
-            }
-            setTextColor(
-                when (role) {
-                    ROLE_TOOL_OUTPUT -> MUTED
-                    ROLE_INFO -> Color.parseColor("#FFD8D2C8")
-                    else -> FG
-                },
-            )
-            setTextIsSelectable(true)
-            setLineSpacing(0f, 1.15f)
-            if (isTool) typeface = Typeface.MONOSPACE
-            setPadding(0, dp(6), 0, 0)
-            if (isTool) visibility = View.GONE
-        }
-        bubble.addView(contentView)
-
-        val copyRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.END
-            setPadding(0, dp(6), 0, 0)
-            visibility = if (isTool) View.GONE else View.VISIBLE
-        }
-        if (!isInfo && message.length > 24) {
-            copyRow.addView(
-                UiPolish.iconCircle(this, R.drawable.ic_copy, MUTED, "Copy message") { copyToClipboard(message) }.apply {
-                    layoutParams = LinearLayout.LayoutParams(dp(48), dp(48))
-                },
-            )
-            bubble.addView(copyRow)
-        }
-
-        if (isTool) {
-            var expanded = false
-            val toggle = {
-                expanded = !expanded
-                contentView.visibility = if (expanded) View.VISIBLE else View.GONE
-                copyRow.visibility = if (expanded && message.length > 24) View.VISIBLE else View.GONE
-                expandLabel?.text = if (expanded) "Hide details" else "Show details"
-            }
-            headerRow.isClickable = true
-            headerRow.setOnClickListener { toggle() }
-            bubble.setOnClickListener { toggle() }
-        }
-
-        val avatar = UiPolish.avatar(this, avatarLetter, avatarBg, avatarFg).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
-        }
-
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = if (isUser) Gravity.END else Gravity.START
-        }
-
-        if (isInfo) {
-            row.gravity = Gravity.CENTER_HORIZONTAL
-            val infoWrap = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER_HORIZONTAL
-            }
-            infoWrap.addView(
-                UiPolish.avatar(this, avatarLetter, avatarBg, avatarFg).apply {
-                    layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply { bottomMargin = dp(8) }
-                },
-            )
-            infoWrap.addView(bubble, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-            row.addView(infoWrap, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-        } else if (isUser) {
-            row.addView(bubble, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply {
-                leftMargin = dp(48)
-                rightMargin = dp(8)
-            })
-            row.addView(avatar)
-        } else if (isTool) {
-            row.addView(bubble, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-                leftMargin = dp(8)
-                rightMargin = dp(8)
-            })
-        } else {
-            row.addView(avatar, LinearLayout.LayoutParams(dp(36), dp(36)).apply { rightMargin = dp(8) })
-            row.addView(bubble, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { rightMargin = dp(24) })
-        }
-
-        val params = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-            topMargin = dp(8)
-            bottomMargin = dp(8)
-        }
-        agentMessagesLayout.addView(row, params)
-        agentScrollView.post { agentScrollView.fullScroll(View.FOCUS_DOWN) }
+        chatMessages.add(
+            ChatUiMessage(
+                id = nextChatId++,
+                sender = sender,
+                message = message,
+                role = role,
+                toolExpanded = false,
+            ),
+        )
+        chatScrollTrigger++
     }
 
     // =========================================================================
@@ -1656,6 +1685,17 @@ class MainActivity : ComponentActivity() {
             setPadding(dp(16), dp(36), dp(16), dp(8))
         }
 
+        youTerminalBack = TextView(this).apply {
+            text = "← You"
+            textSize = 14f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(ACCENT)
+            setPadding(0, 0, dp(12), 0)
+            visibility = View.GONE
+            isClickable = true
+            setOnClickListener { showYouSub(YouSub.HOME) }
+        }
+        topBar.addView(youTerminalBack)
         topBar.addView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             addView(TextView(context).apply {
@@ -2194,6 +2234,10 @@ class MainActivity : ComponentActivity() {
                 wv.goBack()
                 return
             }
+        }
+        if (activeTab == Tab.YOU && youSubScreen != YouSub.HOME) {
+            showYouSub(YouSub.HOME)
+            return
         }
         if (activeTab != Tab.AGENT) {
             selectTab(Tab.AGENT)

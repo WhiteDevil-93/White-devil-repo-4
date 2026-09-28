@@ -18,6 +18,7 @@ object SettingsManager {
     const val KEY_RELAY_PASS = "relay_pass"
     const val KEY_LAPTOP_USER = "laptop_user"
     const val KEY_LAPTOP_PASS = "laptop_pass"
+    const val KEY_ONBOARDING_COMPLETE = "onboarding_complete_v1"
 
     const val DEFAULT_RELAY_URL = "https://84-12-112-249.sslip.io"
     const val DEFAULT_RELAY_USER = "anon3"
