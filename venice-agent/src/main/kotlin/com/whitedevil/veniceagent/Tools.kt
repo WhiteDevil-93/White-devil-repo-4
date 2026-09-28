@@ -264,8 +264,8 @@ class ToolBox(
             val id = args.stringOrNull("model_id") ?: return "Error: 'model_id' argument is required."
             val slug = args.stringOrNull("slug") ?: ""
             val cmd = buildString {
-                append("python3 tools/civitai_red_dl.py --id $id")
-                if (slug.isNotBlank()) append(" --slug $slug")
+                append("python3 tools/civitai_red_dl.py --id ${shellQuote(id)}")
+                if (slug.isNotBlank()) append(" --slug ${shellQuote(slug)}")
             }
             val payload = buildJsonObject {
                 put("lang", "bash")
@@ -277,6 +277,8 @@ class ToolBox(
             "Error invoking Civitai downloader: ${e.message}"
         }
     }
+
+    private fun shellQuote(value: String): String = "'${value.replace("'", "'\"'\"'")}'"
 
     private fun objectSchema(vararg params: Pair<String, String>): JsonObject = buildJsonObject {
         put("type", "object")
