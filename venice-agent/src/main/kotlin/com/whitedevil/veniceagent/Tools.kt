@@ -205,15 +205,16 @@ class ToolBox(
     // ---------- Forge Hub & Relay Tool Handlers ----------
 
     private fun relayHttp(path: String, method: String = "GET", postBody: String? = null): String {
+        if (relayPass.isBlank()) {
+            return "Error: RELAY_PASS environment variable is not configured."
+        }
         val url = java.net.URI("${relayBaseUrl.trimEnd('/')}$path").toURL()
         val conn = url.openConnection() as HttpURLConnection
         conn.requestMethod = method
         conn.connectTimeout = 15000
         conn.readTimeout = 30000
-        if (relayPass.isNotBlank()) {
-            val auth = "Basic " + Base64.getEncoder().encodeToString("$relayUser:$relayPass".toByteArray())
-            conn.setRequestProperty("Authorization", auth)
-        }
+        val auth = "Basic " + Base64.getEncoder().encodeToString("$relayUser:$relayPass".toByteArray())
+        conn.setRequestProperty("Authorization", auth)
         if (postBody != null) {
             conn.doOutput = true
             conn.setRequestProperty("Content-Type", "application/json")
