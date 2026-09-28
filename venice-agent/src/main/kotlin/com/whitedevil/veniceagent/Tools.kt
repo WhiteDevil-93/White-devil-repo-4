@@ -119,7 +119,7 @@ class ToolBox(
                     name = "download_civitai_lora",
                     description = "Trigger a download of a LoRA or model from Civitai to the laptop's ~/civitai_dl folder.",
                     parameters = objectSchema(
-                        "model_id" to "Civitai model ID or version ID.",
+                        "model_id" to "Civitai model ID.",
                         "slug" to "Optional model slug name for file naming.",
                     ),
                 ),
