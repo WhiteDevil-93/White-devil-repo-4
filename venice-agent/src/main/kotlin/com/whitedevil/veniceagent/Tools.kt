@@ -1,5 +1,7 @@
 package com.whitedevil.veniceagent
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -9,20 +11,21 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
- * Tools are sandboxed to [workspaceDir]: file paths are resolved relative to it and any path
- * that escapes it (via ".." or an absolute path elsewhere) is rejected before touching disk.
+ * Built-in file/shell tools, sandboxed to [workspaceDir]: file paths are resolved relative to
+ * it and any path that escapes it (via ".." or an absolute path elsewhere) is rejected before
+ * touching disk.
  */
 class ToolBox(
     private val workspaceDir: File,
     private val allowShell: Boolean,
-) {
+) : ToolProvider {
     private val json = Json { ignoreUnknownKeys = true }
 
     init {
         workspaceDir.mkdirs()
     }
 
-    val definitions: List<ToolDefinition> = buildList {
+    private val toolDefinitions: List<ToolDefinition> = buildList {
         add(
             ToolDefinition(
                 function = ToolFunctionSpec(
@@ -66,8 +69,10 @@ class ToolBox(
         }
     }
 
-    fun execute(name: String, argumentsJson: String): String {
-        return try {
+    override suspend fun definitions(): List<ToolDefinition> = toolDefinitions
+
+    override suspend fun execute(name: String, argumentsJson: String): String = withContext(Dispatchers.IO) {
+        try {
             when (name) {
                 "read_file" -> readFile(argumentsJson)
                 "write_file" -> writeFile(argumentsJson)

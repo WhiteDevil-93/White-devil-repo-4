@@ -3,7 +3,7 @@ package com.whitedevil.veniceagent
 class Agent(
     private val client: VeniceClient,
     private val model: String,
-    private val toolBox: ToolBox,
+    private val tools: ToolRegistry,
     private val systemPrompt: String,
     private val enableWebSearch: Boolean,
     private val maxToolIterations: Int = 8,
@@ -21,7 +21,7 @@ class Agent(
                 ChatCompletionRequest(
                     model = model,
                     messages = history,
-                    tools = toolBox.definitions.ifEmpty { null },
+                    tools = tools.definitions().ifEmpty { null },
                     veniceParameters = if (enableWebSearch) {
                         VeniceParameters(enableWebSearch = "on")
                     } else {
@@ -42,7 +42,7 @@ class Agent(
 
             for (call in toolCalls) {
                 onToolCall(call.function.name, call.function.arguments)
-                val result = toolBox.execute(call.function.name, call.function.arguments)
+                val result = tools.execute(call.function.name, call.function.arguments)
                 onToolResult(call.function.name, result)
                 history.add(
                     ChatMessage(

@@ -1,5 +1,6 @@
 package com.whitedevil.veniceagent
 
+import com.whitedevil.veniceagent.mcp.McpServerLoader
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
@@ -9,8 +10,9 @@ private const val DEFAULT_BASE_URL = "https://api.venice.ai/api/v1"
 private val SYSTEM_PROMPT = """
 You are a helpful autonomous coding and task agent running in a Kotlin CLI.
 You have tools to read, write, and list files inside a sandboxed workspace directory,
-and (if enabled) to run shell commands there. Use tools when they help you complete
-the user's request accurately. Be concise in your final answers.
+and (if enabled) to run shell commands there. Additional tools from connected MCP
+servers may also be available, namespaced as <server>__<tool>. Use tools when they
+help you complete the user's request accurately. Be concise in your final answers.
 """.trim()
 
 fun main(args: Array<String>) = runBlocking {
@@ -29,14 +31,17 @@ fun main(args: Array<String>) = runBlocking {
     val allowShell = System.getenv("AGENT_ALLOW_SHELL")?.equals("true", ignoreCase = true) ?: false
     val enableWebSearch = System.getenv("AGENT_WEB_SEARCH")?.equals("true", ignoreCase = true) ?: false
     val workspaceDir = File(System.getenv("AGENT_WORKSPACE_DIR")?.takeIf { it.isNotBlank() } ?: "./workspace")
+    val mcpConfigFile = File(System.getenv("AGENT_MCP_CONFIG")?.takeIf { it.isNotBlank() } ?: "./mcp-servers.json")
 
     val toolBox = ToolBox(workspaceDir = workspaceDir, allowShell = allowShell)
+    val mcpClients = McpServerLoader.load(mcpConfigFile)
+    val toolRegistry = ToolRegistry(listOf(toolBox) + mcpClients)
     val client = VeniceClient(apiKey = apiKey, baseUrl = baseUrl)
 
     val agent = Agent(
         client = client,
         model = model,
-        toolBox = toolBox,
+        tools = toolRegistry,
         systemPrompt = SYSTEM_PROMPT,
         enableWebSearch = enableWebSearch,
         onToolCall = { name, arguments -> println("  -> tool call: $name($arguments)") },
@@ -46,28 +51,33 @@ fun main(args: Array<String>) = runBlocking {
         },
     )
 
-    client.use {
-        println("Venice agent ready. Model: $model | workspace: ${workspaceDir.absolutePath} | shell: $allowShell")
-        if (args.isNotEmpty()) {
-            val task = args.joinToString(" ")
-            println("> $task")
-            println(agent.send(task))
-            return@runBlocking
-        }
+    toolRegistry.use {
+        client.use {
+            if (mcpClients.isNotEmpty()) {
+                println("Connected MCP servers: ${mcpClients.joinToString(", ") { it.serverName }}")
+            }
+            println("Venice agent ready. Model: $model | workspace: ${workspaceDir.absolutePath} | shell: $allowShell")
+            if (args.isNotEmpty()) {
+                val task = args.joinToString(" ")
+                println("> $task")
+                println(agent.send(task))
+                return@runBlocking
+            }
 
-        println("Type a message and press Enter. Type 'exit' or 'quit' to stop.")
-        while (true) {
-            print("\n> ")
-            val line = readLine() ?: break
-            if (line.equals("exit", ignoreCase = true) || line.equals("quit", ignoreCase = true)) break
-            if (line.isBlank()) continue
+            println("Type a message and press Enter. Type 'exit' or 'quit' to stop.")
+            while (true) {
+                print("\n> ")
+                val line = readLine() ?: break
+                if (line.equals("exit", ignoreCase = true) || line.equals("quit", ignoreCase = true)) break
+                if (line.isBlank()) continue
 
-            try {
-                println(agent.send(line))
-            } catch (e: VeniceApiException) {
-                System.err.println("Venice API error: ${e.message}")
-            } catch (e: Exception) {
-                System.err.println("Unexpected error: ${e.message}")
+                try {
+                    println(agent.send(line))
+                } catch (e: VeniceApiException) {
+                    System.err.println("Venice API error: ${e.message}")
+                } catch (e: Exception) {
+                    System.err.println("Unexpected error: ${e.message}")
+                }
             }
         }
     }
