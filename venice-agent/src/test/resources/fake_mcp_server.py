@@ -44,6 +44,11 @@ for line in sys.stdin:
             # Interleave an unsolicited server-to-client request before the real response, to
             # check the client doesn't mis-route it as the response to a pending call.
             send({"jsonrpc": "2.0", "id": 999999, "method": "ping", "params": {}})
+            if state.get("emit_change_on_page2"):
+                # Simulates a second, newer invalidation arriving while this very refresh is
+                # still in flight (between page 1 and page 2).
+                state["emit_change_on_page2"] = False
+                send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
             send({
                 "jsonrpc": "2.0",
                 "id": msg["id"],
@@ -69,6 +74,13 @@ for line in sys.stdin:
             state["fail_next_list"] = True
             send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "trigger_list_changed_mid_fetch":
+            state["list_version"] = 2
+            state["emit_change_on_page2"] = True
+            send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
+            send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "exit_process":
+            sys.exit(0)
         elif name == "fail":
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"isError": True, "content": [{"type": "text", "text": "boom"}]}})
         elif name in ("foo.bar", "foo_bar"):

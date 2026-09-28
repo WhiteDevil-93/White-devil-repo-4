@@ -23,7 +23,6 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 private const val SUPPORTED_PROTOCOL_VERSION = "2024-11-05"
@@ -61,7 +60,16 @@ class McpStdioClient(
 
     private var cachedDefinitions: List<ToolDefinition>? = null
     private var initialized = false
-    private val toolsChanged = AtomicBoolean(false)
+
+    // A monotonic counter of tool-list invalidations: bumped on notifications/tools/list_changed
+    // and when the subprocess exits. [fetchedVersion] records which version definitions() last
+    // successfully fetched, so hasChanged() (their inequality) survives both a failed refresh
+    // attempt (fetchedVersion is simply never advanced) and a new invalidation arriving *during*
+    // an in-flight refresh (changeVersion moves past whatever version that refresh started at).
+    private val changeVersion = AtomicLong(0)
+
+    @Volatile
+    private var fetchedVersion = -1L
 
     init {
         scope.launch { readLoop() }
@@ -83,13 +91,17 @@ class McpStdioClient(
                 pending.remove(id)?.complete(response)
             }
         }
+        // The stream closed: the process exited or its stdout pipe broke. Treat this like an
+        // invalidation so the next definitions() call re-evaluates this provider instead of
+        // ToolRegistry trusting a stale cache backed by a dead process forever.
+        changeVersion.incrementAndGet()
     }
 
     /** Handles server-to-client requests/notifications (distinct from responses to our own calls). */
     private fun handleIncomingRequest(element: JsonObject) {
         val method = (element["method"] as? JsonPrimitive)?.contentOrNull ?: return
         if (method == "notifications/tools/list_changed") {
-            toolsChanged.set(true)
+            changeVersion.incrementAndGet()
             return
         }
         val id = element["id"] ?: return // a notification from the server; nothing to reply to
@@ -166,10 +178,11 @@ class McpStdioClient(
         initialized = true
     }
 
-    override fun hasChanged(): Boolean = toolsChanged.get()
+    override fun hasChanged(): Boolean = changeVersion.get() != fetchedVersion
 
     override suspend fun definitions(): List<ToolDefinition> {
-        if (cachedDefinitions != null && !toolsChanged.get()) return cachedDefinitions!!
+        if (cachedDefinitions != null && !hasChanged()) return cachedDefinitions!!
+        val versionAtFetchStart = changeVersion.get()
         ensureInitialized()
 
         val rawTools = mutableListOf<JsonObject>()
@@ -204,7 +217,10 @@ class McpStdioClient(
         exposedToOriginal.clear()
         exposedToOriginal.putAll(newExposedToOriginal)
         cachedDefinitions = definitions
-        toolsChanged.set(false)
+        // Only advance to the version this fetch actually captured: if a newer invalidation
+        // arrived while we were fetching, changeVersion has already moved past it, so
+        // hasChanged() correctly stays true and the next call refreshes again.
+        fetchedVersion = versionAtFetchStart
         return definitions
     }
 

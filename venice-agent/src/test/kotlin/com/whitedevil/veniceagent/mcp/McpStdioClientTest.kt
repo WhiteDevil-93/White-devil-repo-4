@@ -1,11 +1,14 @@
 package com.whitedevil.veniceagent.mcp
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -91,6 +94,58 @@ class McpStdioClientTest {
             // has to retry rather than silently serving the stale pre-change list forever.
             val after = client.definitions().map { it.function.name }
             assertTrue("fake__new_tool" in after, "expected the retry to pick up new_tool: $after")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `preserves an invalidation that arrives during an in-flight refresh`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient("fake", McpServerConfig(command = "python3", args = listOf(script.absolutePath)))
+        try {
+            client.definitions() // establish an initial cache
+
+            // Triggers notifications/tools/list_changed, and the refresh it causes will itself
+            // receive a *second* such notification between page 1 and page 2 of tools/list.
+            client.execute("fake__trigger_list_changed_mid_fetch", "{}")
+            client.definitions()
+
+            assertTrue(client.hasChanged(), "a change that arrived mid-refresh must not be lost")
+
+            // The next call must actually re-fetch (not serve the cache from the first refresh)
+            // and only then settle.
+            client.definitions()
+            assertFalse(client.hasChanged(), "should have caught up after the follow-up refresh")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `marks the provider changed when its subprocess exits`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(script.absolutePath)),
+            requestTimeoutMillis = 500,
+        )
+        try {
+            client.definitions()
+            assertFalse(client.hasChanged())
+
+            // The fake server exits without replying, simulating a crash; execute() must not
+            // hang (it times out and reports an error) or throw out of this test.
+            client.execute("fake__exit_process", "{}")
+
+            // readLoop notices the closed stream asynchronously; poll briefly for it.
+            withTimeout(5_000) {
+                while (!client.hasChanged()) delay(20)
+            }
         } finally {
             client.close()
         }
