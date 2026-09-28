@@ -44,15 +44,22 @@ html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;backgroun
 .empty{padding:48px 10px 18px;text-align:center}
 .empty h2{font-size:20px;letter-spacing:-.03em;text-transform:none;color:var(--strong);margin:0 0 10px;font-weight:600}
 .composer{flex:none;padding:12px 22px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#161210}
-.composer textarea{min-height:44px;max-height:140px;resize:none;background:transparent;border:0;padding:0;font-size:13.5px}
-.composer .box{flex:1;border-radius:12px;border:1px solid rgba(253,242,214,.12);background:rgba(253,242,214,.03);padding:12px 16px}
+.composer textarea{min-height:22px;max-height:140px;resize:none;background:transparent;border:0;padding:0;font-size:13.5px;line-height:1.45}
+.composer .box{flex:1;border-radius:16px;border:1px solid rgba(253,242,214,.12);background:rgba(253,242,214,.03);padding:12px 16px}
 .composer .box:focus-within{border-color:rgba(201,184,150,.4)}
 .controls{display:flex;gap:14px;align-items:center;margin:0 0 12px;flex-wrap:wrap}
 .controls input[type=range]{width:96px;flex:none;accent-color:var(--acc)}
+.controls #stop{color:var(--bad)}
 .keystrip{flex:none;padding:10px 16px 12px;background:rgba(155,191,160,.06);border-bottom:1px solid rgba(155,191,160,.14)}
 .keystrip label{display:block;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
 .keystrip input{width:100%;font:14px var(--mono);padding:12px;border-radius:12px;border:1px solid rgba(253,242,214,.14);
   background:rgba(20,17,16,.7);color:var(--fg)}
+.keystrip .savedrow{display:none;align-items:center;justify-content:space-between;gap:12px}
+.keystrip.saved{padding:8px 22px}
+.keystrip.saved .form{display:none}
+.keystrip.saved .savedrow{display:flex}
+.keystrip .savedmsg{font-size:12.5px;color:var(--ok);display:flex;align-items:center;gap:8px;min-width:0}
+.keystrip .change{appearance:none;border:0;background:transparent;color:var(--mut);font:600 12.5px "Inter",system-ui;cursor:pointer;padding:4px 0}
 .thread{font-size:11.5px;color:var(--dim);margin-top:2px;max-width:48vw}
 .prog{height:2px;background:transparent;flex:none}
 .prog i{display:block;height:100%;width:40%;background:linear-gradient(90deg,var(--acc2),var(--acc3));animation:slide 1.1s infinite}
@@ -73,22 +80,29 @@ html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;backgroun
 .toggle input{accent-color:var(--acc2)}
 .head .row{flex-wrap:wrap;gap:8px;align-items:center}
 #model{max-width:180px;padding:6px 28px 6px 10px;font-size:12px;border-radius:9px;background:rgba(253,242,214,.03)}
-#go.send{height:44px;min-width:44px;width:44px;padding:0;border-radius:12px;font-size:0;background:linear-gradient(180deg,var(--gold-from),var(--gold-to));
-  color:var(--ink);box-shadow:var(--shadow);position:relative}
+#go.send{height:44px;min-width:44px;width:44px;padding:0;border-radius:50%;font-size:0;background:linear-gradient(180deg,var(--gold-from),var(--gold-to));
+  color:var(--ink);box-shadow:var(--shadow);position:relative;flex:none}
 #go.send::after{content:"↑";font-size:16px;font-weight:600}
-@media (max-width:720px){.msg{max-width:92%}.log,.composer{padding-left:14px;padding-right:14px}#go.send{width:auto;min-width:72px;font-size:13.5px}
+#openShell.gold{border-radius:999px;padding:7px 14px}
+@media (max-width:720px){.msg{max-width:92%}.log,.composer{padding-left:14px;padding-right:14px}#go.send{width:auto;min-width:72px;font-size:13.5px;border-radius:12px}
   #go.send::after{content:"Send";font-size:13.5px}#model{max-width:120px}}
-.desk .head{min-height:48px;padding:6px 18px}
+.desk body{padding:0;margin:0;max-width:none;background:var(--bg);min-height:0}
+.desk .head{min-height:52px;padding:0 20px;justify-content:center}
+.desk .thread,.desk #base{display:none}
 .desk .brand span{display:none}
-.desk #base{display:none}
+.desk-only{display:none}
+.desk .desk-only{display:block;flex:1;min-width:8px}
+.desk .head .chrome-left{flex:none}
+.desk .head .row{flex-wrap:nowrap;height:52px}
+.desk #model{max-width:170px;flex:none}
 </style>
 </head>
 <body>
 <div class="shell">
   <div class="head">
     <div class="row">
-      <div class="grow">
-        <div class="brand">Venice Agent<span>tools + Shell</span></div>
+      <div class="grow chrome-left">
+        <div class="brand">Venice Agent</div>
         <div class="thread trunc" id="threadTitle">New chat</div>
       </div>
       <select class="input" id="model"></select>
@@ -96,6 +110,7 @@ html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;backgroun
         <div class="pill bad" id="st">Need key</div>
         <div class="tiny mut" id="base">https://api.venice.ai/api/v1</div>
       </div>
+      <span class="grow desk-only"></span>
       <button class="btn sm" id="openPrompt">Prompt</button>
       <button class="btn sm" id="newChat">Clear</button>
       <button class="btn sm" id="openChats">Chats</button>
@@ -104,13 +119,19 @@ html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;backgroun
   </div>
 
   <div class="keystrip" id="keystrip">
-    <label for="key">Venice API key</label>
-    <input id="key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="VENICE_…  (venice.ai → Settings → API)">
-    <div class="row wrap" style="margin-top:8px">
-      <button class="btn gold grow" id="saveRelay">Save on relay</button>
-      <button class="btn grow" id="savePhone">Save on this device</button>
+    <div class="savedrow">
+      <div class="savedmsg"><span aria-hidden="true">✓</span><span id="keySavedMsg">API key saved</span></div>
+      <button type="button" class="change" id="changeKey">Change</button>
     </div>
-    <div class="tiny mut" id="keyHint" style="margin-top:8px">Same key the Android Agent uses. Do not paste it in chat.</div>
+    <div class="form">
+      <label for="key">Venice API key</label>
+      <input id="key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="VENICE_…  (venice.ai → Settings → API)">
+      <div class="row wrap" style="margin-top:8px">
+        <button class="btn gold grow" id="saveRelay">Save on relay</button>
+        <button class="btn grow" id="savePhone">Save on this device</button>
+      </div>
+      <div class="tiny mut" id="keyHint" style="margin-top:8px">Same key the Android Agent uses. Do not paste it in chat.</div>
+    </div>
   </div>
 
   <div class="prog off" id="prog"><i></i></div>
@@ -179,6 +200,22 @@ function headers() {
 function setStatus(text, kind) {
   $('st').textContent = text;
   $('st').className = 'pill ' + (kind || '');
+}
+function maskKey(k) {
+  const s = String(k || '').trim();
+  if (s.length < 8) return '';
+  return '·••••••••' + s.slice(-2);
+}
+function collapseKeystrip() {
+  const strip = $('keystrip');
+  strip.classList.add('saved');
+  const local = localStorage.getItem(LS_KEY);
+  const mask = local ? maskKey(local) : '';
+  $('keySavedMsg').textContent = mask ? ('API key saved  ' + mask) : 'API key saved';
+}
+function expandKeystrip() {
+  $('keystrip').classList.remove('saved');
+  $('key').focus();
 }
 function setBusy(on) {
   busy = on;
@@ -537,7 +574,8 @@ async function saveRelay() {
     localStorage.removeItem(LS_KEY);
     $('key').value = '';
     $('key').placeholder = 'Saved on relay · paste a new one to replace';
-    setStatus('Ready', 'ok');
+    collapseKeystrip();
+    setStatus('connected', 'ok');
     configured = true;
     $('keyHint').textContent = 'Saved at ' + (j.where || '~/.venice_key') + '.';
     F.toast('Key saved on the relay');
@@ -548,11 +586,13 @@ function savePhone() {
   if (!v) { localStorage.removeItem(LS_KEY); F.toast('Device key cleared'); return; }
   localStorage.setItem(LS_KEY, v);
   configured = true;
-  setStatus('Ready', 'ok');
+  collapseKeystrip();
+  setStatus('connected', 'ok');
   F.toast('Key saved on this device only');
 }
 $('saveRelay').onclick = saveRelay;
 $('savePhone').onclick = savePhone;
+$('changeKey').onclick = expandKeystrip;
 $('key').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveRelay(); } });
 
 function parseToolResult(output) {
@@ -592,7 +632,8 @@ async function boot() {
   try { st = await F.api('/api/venice/status'); } catch (e) {}
   configured = !!st.configured || !!localStorage.getItem(LS_KEY);
   if (st.base) $('base').textContent = st.base;
-  setStatus(configured ? 'Ready' : 'Need key', configured ? 'ok' : 'warn');
+  setStatus(configured ? 'connected' : 'Need key', configured ? 'ok' : 'warn');
+  if (configured) collapseKeystrip();
   if (st.configured) {
     $('key').placeholder = 'Relay already has a key · paste a new one here to replace it';
     $('keyHint').textContent = 'Relay file: ' + (st.key_file || '~/.venice_key');
@@ -683,7 +724,7 @@ async function send() {
         const reply = msg.content || '';
         if (!reply.trim()) throw new Error('Empty reply');
         pushUi('assistant', reply);
-        setStatus('Ready', 'ok');
+        setStatus('connected', 'ok');
         configured = true;
         persist(true);
         return;
@@ -699,7 +740,7 @@ async function send() {
       }
     }
     pushUi('error', 'Reached maximum tool iterations (' + MAX_ITERS + ').');
-    setStatus('Ready', 'ok');
+    setStatus('connected', 'ok');
   } catch (e) {
     if (e.name === 'AbortError') {
       pushUi('error', 'Stopped');

@@ -37,14 +37,29 @@ nav a.on::before{content:"";position:absolute;left:0;top:50%;transform:translate
 nav a svg{width:16px;height:16px;flex:none;opacity:.72;color:#8a8178}
 nav a.on svg{opacity:1;color:#e7dbbf}
 nav a .k{margin-left:auto;font-size:10.5px;color:#65656c;font-variant-numeric:tabular-nums}
-.foot{margin:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(253,242,214,.04);
-  font-size:12px;color:var(--dim);display:grid;gap:5px;flex:none}
-.foot .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--dim);margin-right:7px;vertical-align:1px}
+.foot{margin:12px;padding:8px 10px;border:1px solid var(--line);border-radius:14px;background:rgba(253,242,214,.04);
+  font-size:12px;color:var(--dim);display:flex;align-items:center;gap:10px;flex:none}
+.foot .av{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;overflow:hidden;
+  background:linear-gradient(135deg,var(--gold-from),#c9a35c);box-shadow:1px 1px 16px -2px hsl(0 63% 18% / .25)}
+.foot .av svg{width:18px;height:18px;color:var(--ink)}
+.foot .who{min-width:0;flex:1}
+.foot .nm{font-weight:600;font-size:13px;color:var(--strong);letter-spacing:-.02em}
+.foot .sess{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px;margin-top:1px}
+.foot .dots{display:flex;align-items:center;gap:4px;flex:none}
+.foot .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--dim)}
 .foot .dot.ok{background:var(--ok);box-shadow:0 0 6px rgba(155,191,160,.7)}.foot .dot.bad{background:var(--bad)}
 main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
-.bar{display:flex;align-items:center;gap:8px;height:52px;padding:0 16px 0 20px;border-bottom:1px solid var(--line);flex:none;
+.bar{display:flex;align-items:center;gap:10px;height:52px;padding:0 20px;border-bottom:1px solid var(--line);flex:none;
   background:rgba(20,17,16,.95)}
-.bar h1{font-size:14px;font-weight:600;margin:0;letter-spacing:-.02em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--strong)}
+.bar h1{font-size:14px;font-weight:600;margin:0;letter-spacing:-.02em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--strong)}
+.bar .grow{flex:1;min-width:0}
+.bar .clock{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px;flex:none}
+.bar .clock svg{width:14px;height:14px;opacity:.7}
+.bar .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;
+  background:rgba(155,191,160,.08);color:var(--ok);border:1px solid rgba(155,191,160,.18);flex:none}
+.bar .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.bar .pill.warn{color:var(--warn);background:rgba(215,180,117,.1);border-color:rgba(215,180,117,.18)}
+.bar .pill.bad{color:var(--bad);background:rgba(217,147,147,.08);border-color:rgba(217,147,147,.22)}
 .bar button{background:transparent;border:1px solid transparent;color:var(--mut);border-radius:9px;height:32px;min-width:32px;
   padding:0 9px;cursor:pointer;display:grid;place-items:center;font:inherit;transition:background .15s,color .15s,border-color .15s}
 .bar button.text{display:inline-flex;align-items:center;gap:0;font-size:12.5px;font-weight:600;padding:0 12px;border-color:var(--line);color:var(--fg)}
@@ -53,14 +68,17 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(
 .bar button:hover{background:var(--hover);color:var(--fg);border-color:var(--line)}
 .bar button.gold:hover{background:linear-gradient(180deg,#fff6e0,var(--gold-to));border-color:transparent;color:var(--ink);filter:brightness(1.04)}
 .bar svg{width:16px;height:16px}
+html.venice-chrome .bar{display:none}
+html:not(.term-chrome) #reload,html:not(.term-chrome) #updateHub,html:not(.term-chrome) #pop{display:none}
+html.term-chrome #deskPill,html.term-chrome #clock{display:none}
+@media (max-width:860px){.shell{grid-template-columns:64px minmax(0,1fr)}.brand>span:last-child,nav a span,nav a .k,.sec,.foot .nm,.foot .sess,.foot .dots{display:none}
+  nav a{justify-content:center}.brand{justify-content:center;padding:0}.foot{justify-content:center;margin:8px}}
 .frames{position:relative;flex:1;min-height:0}
 .frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg);visibility:hidden}
 .frames iframe.on{visibility:visible}
 .load{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,#c9a35c,var(--gold-from));width:0;opacity:0;transition:width .6s,opacity .3s;z-index:3}
 .load.go{width:70%;opacity:1}
 .err{padding:60px;color:var(--dim);text-align:center}
-@media (max-width:860px){.shell{grid-template-columns:64px minmax(0,1fr)}.brand>span:last-child,nav a span,nav a .k,.sec,.foot{display:none}
-  nav a{justify-content:center}.brand{justify-content:center;padding:0}}
 html.app #pop{display:none}
 </style>
 </head>
@@ -69,11 +87,24 @@ html.app #pop{display:none}
   <aside>
     <div class="brand"><span class="mark"><img src="/app/desktop/icon.svg" alt=""></span><span>Forge Hub</span></div>
     <nav id="nav"></nav>
-    <div class="foot" id="foot"><div><span class="dot"></span>Connecting…</div></div>
+    <div class="foot" id="foot">
+      <div class="av" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg></div>
+      <div class="who">
+        <div class="nm">Operator</div>
+        <div class="sess">local session</div>
+      </div>
+      <div class="dots" title="Clip freshness and laptop">
+        <span class="dot" id="dClip"></span>
+        <span class="dot" id="dLap"></span>
+      </div>
+    </div>
   </aside>
   <main>
-    <div class="bar">
+    <div class="bar" id="bar">
       <h1 id="title">Forge Hub</h1>
+      <span class="pill" id="deskPill">connecting</span>
+      <span class="grow"></span>
+      <span class="clock" id="clock"></span>
       <button id="reload" title="Reload screen (Ctrl+R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
       <button id="updateHub" class="text gold" title="Publish this Hub to wan-relay">Update Hub</button>
       <button id="pop" title="Open in a browser tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>
@@ -250,6 +281,8 @@ function show(id, reload, href) {
   document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.id === s.id));
   $('title').textContent = s.title;
   document.title = s.title + ' · Forge Hub';
+  document.documentElement.classList.toggle('venice-chrome', s.id === 'venice');
+  document.documentElement.classList.toggle('term-chrome', s.id === 'term');
   if (location.hash !== '#' + s.id) history.replaceState(null, '', '#' + s.id);
   localStorage.setItem('desk_screen', s.id);
 }
@@ -260,18 +293,42 @@ function keys(e) {
   else if (e.key === 'r' && current) { e.preventDefault(); show(current.id, true); }
 }
 
+function tickClock() {
+  const el = $('clock');
+  if (!el) return;
+  const d = new Date();
+  const day = new Intl.DateTimeFormat(undefined, {weekday: 'short', month: 'short', day: 'numeric'}).format(d);
+  const tm = new Intl.DateTimeFormat(undefined, {hour: '2-digit', minute: '2-digit', hour12: false}).format(d);
+  el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>' +
+    day + ' · ' + tm;
+}
+
 async function status() {
   if (document.hidden) return;
+  tickClock();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
     const s = await (await fetch('/api/status', {cache: 'no-store', signal: controller.signal})).json();
     const age = s.newest_age_min;
-    $('foot').innerHTML =
-      `<div><span class="dot ${age != null && age < 30 ? 'ok' : 'bad'}"></span>Newest clip ${age == null ? '—' : age < 1 ? 'just now' : age + ' min ago'}</div>` +
-      `<div><span class="dot ${s.laptop && s.laptop.online ? 'ok' : ''}"></span>${s.clips} clips on relay</div>`;
+    const lapOn = !!(s.laptop && s.laptop.online);
+    const clipOk = age != null && age < 45;
+    const alerts = (s.alerts || []).length;
+    $('dClip').className = 'dot ' + (clipOk ? 'ok' : 'bad');
+    $('dLap').className = 'dot ' + (lapOn ? 'ok' : 'bad');
+    $('dClip').title = age == null ? 'No clips' : 'Newest clip ' + (age < 1 ? 'just now' : age + ' min ago');
+    $('dLap').title = lapOn ? 'Laptop online' : 'Laptop offline';
+    const pill = $('deskPill');
+    if (alerts) { pill.textContent = 'alerts'; pill.className = 'pill bad'; }
+    else if (!lapOn) { pill.textContent = 'laptop offline'; pill.className = 'pill warn'; }
+    else if (!clipOk) { pill.textContent = 'clips stale'; pill.className = 'pill warn'; }
+    else { pill.textContent = 'all systems nominal'; pill.className = 'pill'; }
   } catch (e) {
-    $('foot').innerHTML = '<div><span class="dot bad"></span>Relay unreachable</div>';
+    $('dClip').className = 'dot bad';
+    $('dLap').className = 'dot bad';
+    const pill = $('deskPill');
+    pill.textContent = 'relay unreachable';
+    pill.className = 'pill bad';
   } finally {
     clearTimeout(timer);
   }
@@ -294,7 +351,8 @@ async function boot() {
   }
   buildNav();
   show(location.hash.slice(1) || localStorage.getItem('desk_screen') || screens[0].id);
-  status(); setInterval(status, 60000);
+  tickClock();
+  status(); setInterval(status, 60000); setInterval(tickClock, 30000);
 }
 
 document.addEventListener('keydown', keys);

@@ -5,38 +5,42 @@
 </head><body>
 
 <div class="row" style="margin:2px 2px 4px">
-  <div class="grow"><div class="tiny mut" id="hello">Forge Hub</div><h1 style="margin:2px 0 0">Overview</h1>
-    <p class="lead" id="sub">Here's what the render farm has been up to.</p></div>
-  <span id="live" class="pill">…</span>
+  <div class="grow"><div class="tiny mut phone-only" id="hello">Forge Hub</div>
+    <h1 style="margin:2px 0 0">Welcome back</h1>
+    <p class="lead">Here's what the render farm has been up to.</p></div>
+  <span id="live" class="pill phone-only">…</span>
 </div>
 
-<div id="hero" class="hero skel"></div>
-
+<div id="now" class="now-banner" hidden></div>
+<div id="pageErr"></div>
 <div id="alerts"></div>
 
 <div class="cta">
   <div class="mark">↻</div>
   <div class="grow">
-    <div class="tiny mut" id="hubWhere">Laptop app</div>
-    <div class="t">Update Hub publishes this UI to the relay.</div>
-    <div class="small mut" style="margin-top:4px">Open Terminal, Send the script, wait for “Done!”, then reload. That is the laptop via ttyd — no extra keyboard.</div>
+    <div class="row wrap" style="gap:8px;align-items:center">
+      <div class="t">Update available</div>
+      <span class="ver" id="hubVer">Hub</span>
+    </div>
+    <div class="small mut" id="hubWhere" style="margin-top:4px">Publishes this UI to the relay. Open Terminal, Send, wait for Done, then reload.</div>
   </div>
   <div class="row wrap">
     <a class="btn primary" href="/app/term/?update=1">Update Hub</a>
-    <a class="btn" href="/app/term/">Open Terminal</a>
   </div>
 </div>
 
-<h2>At a glance</h2>
 <div class="tiles" id="tiles">
-  <div class="tile skel" style="height:86px"></div><div class="tile skel" style="height:86px"></div>
-  <div class="tile skel" style="height:86px"></div><div class="tile skel" style="height:86px"></div>
+  <div class="tile skel" style="height:118px"></div><div class="tile skel" style="height:118px"></div>
+  <div class="tile skel" style="height:118px"></div><div class="tile skel" style="height:118px"></div>
 </div>
 
 <div id="nextWrap" style="display:none"><h2>Up next</h2><div class="card tight" id="next"></div></div>
 
-<div class="row" style="margin:22px 4px 10px"><h2 class="grow" style="margin:0;font-size:13.5px;letter-spacing:-.02em;text-transform:none;color:var(--strong)">Latest clips</h2><a class="small" href="/app/renders/">See all</a></div>
-<div class="strip" id="latest"><div class="thumb skel"></div><div class="thumb skel"></div></div>
+<div class="clips-head"><h2 class="grow">Latest clips</h2><a class="small" href="/app/gallery/">Open Gallery →</a></div>
+<div class="clip-rail" id="latest">
+  <div class="thumb skel" style="aspect-ratio:9/16;width:142px;flex:none"></div>
+  <div class="thumb skel" style="aspect-ratio:9/16;width:142px;flex:none"></div>
+</div>
 
 <script>
 const {$, esc} = F;
@@ -47,68 +51,104 @@ const jobTitle = j => groupTitle(j.chain_id) || (j.name || 'Job').replace(/[_-]+
 function greet(){
   const h = new Date().getHours();
   $('hello').textContent = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-  try {
-    if (parent !== window && /\/app\/desktop/.test(parent.location.pathname)) {
-      $('hubWhere').textContent = 'Laptop app';
-    } else {
-      $('hubWhere').textContent = 'Phone or browser';
-    }
-  } catch (e) {}
 }
 
-function hero(s){
-  const job = s.jobs.find(j => j.status === 'rendering');
-  const el = $('hero'); el.classList.remove('skel');
-  let bg = '', body;
-  if (job){
-    const p = job.progress || {}, pct = p.total ? Math.round(100 * p.done / p.total) : 0;
-    const g = lib.find(g => g.id === job.chain_id), last = g && g.clips[g.clips.length - 1];
-    if (last) bg = `<img src="${F.thumbUrl(last.name)}" alt="">`;
-    const left = job.avg_seconds && p.total ? job.avg_seconds * (p.total - p.done) : null;
-    body = `<div class="kicker">Now rendering</div>
-      <div class="row" style="align-items:flex-end">
-        <div class="grow"><div class="title trunc">${esc(jobTitle(job))}</div>
-          <div class="mut small">Clip ${job.current || p.done + 1} of ${p.total || '?'}${job.avg_seconds ? ' · ~' + job.avg_seconds + ' s per clip' : ''}</div>
-          <div class="small" style="margin-top:6px;color:var(--acc)">${left ? 'About ' + F.dur(left) + ' left' : 'Estimating time left…'}</div></div>
-        <div class="ring" style="--p:${pct}"><span>${pct}%</span></div>
-      </div>`;
-  } else if (s.paused){
-    body = `<div class="kicker" style="color:var(--warn)">Stopped</div><div class="title">Rendering is paused</div>
-      <div class="mut small">The runtime was stopped ${esc(s.paused)}. Auto-restart is off until you start it.</div>
-      <div style="margin-top:12px"><button class="btn primary" onclick="startRt()">Start runtime</button></div>`;
-  } else if (s.recover_running){
-    body = `<div class="kicker" style="color:var(--warn)">Starting</div><div class="title">Spinning up a G4…</div>
-      <div class="mut small">Clips start flowing about 5 minutes after the runtime is up.</div>`;
-  } else {
-    const q = s.jobs.filter(j => ['queued', 'waiting'].includes(j.status)).length;
-    body = `<div class="kicker">Idle</div><div class="title">${s.runner_online ? 'Nothing rendering' : 'Runner offline'}</div>
-      <div class="mut small">${s.runner_online ? (q ? q + ' job(s) waiting' : 'Queue is empty. Queue packs from the Colab tab.') : 'The heartbeat restarts it automatically if the runtime died.'}</div>`;
-  }
-  el.innerHTML = bg + '<div class="veil"></div><div class="body">' + body + '</div>';
-  if (job) el.onclick = () => { const g = lib.find(g => g.id === job.chain_id); if (g) F.viewer(g.clips, g.clips.length - 1, c => g.title + (c.idx ? ' · clip ' + c.idx : '')); };
-  else el.onclick = null;
+function prettyAgo(t){
+  if (!t) return '—';
+  const sec = Math.max(0, Math.round(Date.now() / 1000 - t));
+  if (sec < 60) return 'just now';
+  const m = Math.round(sec / 60);
+  if (m < 60) return m + ' min ago';
+  const h = Math.floor(m / 60), rm = m % 60;
+  if (h < 24) return rm ? h + 'h ' + rm + 'm ago' : h + 'h ago';
+  if (h < 48) return 'Yesterday';
+  return Math.floor(h / 24) + 'd ago';
+}
+function ageLabel(min){
+  if (min == null) return '—';
+  if (min < 1) return 'just now';
+  if (min < 60) return min + ' min ago';
+  const h = Math.floor(min / 60), rm = min % 60;
+  if (h < 24) return rm ? h + 'h ' + rm + 'm ago' : h + 'h ago';
+  if (h < 48) return 'Yesterday';
+  return Math.floor(h / 24) + 'd ago';
+}
+function shortClip(name){
+  return String(name || '').replace(/^smoke_/, '').replace(/\.mp4$/i, '');
+}
+function mmss(sec){
+  if (sec == null || !isFinite(sec)) return '';
+  const s = Math.max(0, Math.round(sec));
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
 
+function nowBanner(s){
+  const job = (s.jobs || []).find(j => j.status === 'rendering');
+  const el = $('now');
+  if (!job) { el.hidden = true; el.classList.remove('on'); el.innerHTML = ''; return; }
+  const p = job.progress || {}, pct = p.total ? Math.round(100 * p.done / p.total) : 0;
+  const left = job.avg_seconds && p.total ? job.avg_seconds * (p.total - p.done) : null;
+  el.hidden = false;
+  el.classList.add('on');
+  el.innerHTML = `<div class="grow">
+      <div class="kicker">Now rendering</div>
+      <div class="trunc" style="font-weight:600;font-size:15px;margin-top:2px">${esc(jobTitle(job))}</div>
+      <div class="mut small">Clip ${job.current || p.done + 1} of ${p.total || '?'}${left ? ' · about ' + F.dur(left) + ' left' : ''}</div>
+    </div>
+    <div class="ring" style="--p:${pct}"><span>${pct}%</span></div>`;
+}
+
+function livePill(s){
   const live = $('live');
-  if (job){ live.textContent = 'Rendering'; live.className = 'pill ok live'; }
-  else if (s.paused){ live.textContent = 'Stopped'; live.className = 'pill warn'; }
-  else if (s.runner_online){ live.textContent = 'Idle'; live.className = 'pill'; }
-  else { live.textContent = 'Offline'; live.className = 'pill bad'; }
+  const job = (s.jobs || []).find(j => j.status === 'rendering');
+  if (job){ live.textContent = 'Rendering'; live.className = 'pill ok live phone-only'; }
+  else if (s.paused){ live.textContent = 'Stopped'; live.className = 'pill warn phone-only'; }
+  else if (s.runner_online){ live.textContent = 'Idle'; live.className = 'pill phone-only'; }
+  else { live.textContent = 'Offline'; live.className = 'pill bad phone-only'; }
+}
+
+function tile(k, v, sub, icon, extra){
+  return `<div class="tile${extra && extra.warn ? ' warn' : ''}"${extra && extra.href ? ` onclick="location.href='${extra.href}'"` : ''}>
+    <div class="k">${esc(k)}<span class="mark">${icon || ''}</span></div>
+    <div class="v">${v}</div>
+    <div class="s">${sub}</div></div>`;
 }
 
 function tiles(s, st){
-  const u = s.usage || {}, lap = st.laptop || {};
-  const gpu = (s.gpu && s.gpu[0] || '').replace(/NVIDIA |Server Edition|Blackwell /g, '').split(',')[0].trim();
-  const hrs = u.balance != null && u.rate_per_hr ? Math.floor(u.balance / u.rate_per_hr) : null;
-  const t = (k, v, sub, onclick) => `<div class="tile"${onclick ? ` onclick="${onclick}"` : ''}><div class="k">${k}</div><div class="v">${v}</div><div class="s">${sub}</div></div>`;
+  const lap = st.laptop || {};
+  const jobs = s.jobs || [];
+  const rendering = jobs.filter(j => j.status === 'rendering').length;
+  const queued = jobs.filter(j => ['queued', 'waiting'].includes(j.status)).length;
+  const failed = jobs.filter(j => j.status === 'error').length;
+  const qn = rendering + queued;
+  let qSub = !s.runner_online ? 'runner offline' : s.paused ? 'runtime paused' : rendering ? 'rendering now' : queued ? 'waiting' : 'idle';
+  if (failed) qSub = failed + ' failed';
+  const qWarn = !s.runner_online || failed > 0 || s.paused;
+
+  const allClips = lib.flatMap(g => g.clips);
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const today = allClips.filter(c => c.mtime * 1000 >= start.getTime()).length;
+
+  let storeV = '—', storeS = 'storage unknown';
+  if (lap.used_gb != null) {
+    storeV = Math.round(lap.used_gb) + ' GB';
+    storeS = lap.total_gb != null ? 'of ' + Math.round(lap.total_gb) + ' GB local volume' : 'on laptop';
+  } else if (lap.free_gb != null) {
+    storeV = Math.round(lap.free_gb) + ' GB';
+    storeS = 'free on laptop';
+  } else if (!lap.online) {
+    storeS = 'laptop offline';
+  }
+
   $('tiles').innerHTML =
-    t('Runtime', s.runner_online || (u.active > 0) ? 'G4 on' : s.paused ? 'Stopped' : 'Off', esc(gpu || (s.runner_mode ? 'runner: ' + s.runner_mode : '—'))) +
-    t('Credits', u.balance != null ? Math.round(u.balance) : '—', hrs != null ? `~${hrs} h left at ${u.rate_per_hr}/h` : 'checking…') +
-    t('Laptop', lap.online ? 'Online' : 'Offline', lap.online ? `${lap.free_gb ?? '?'} GB free · ${lap.clips ?? '?'} clips` : (lap.last_seen ? 'seen ' + F.ago(lap.last_seen) : 'not connected')) +
-    t('Library', st.clips ?? '—', st.newest_age_min != null ? 'newest ' + F.ago(Date.now() / 1000 - st.newest_age_min * 60) : '', "location.href='/app/renders/'");
+    tile('Newest clip', ageLabel(st.newest_age_min), esc(st.newest ? shortClip(st.newest) : 'no clips yet'), '◷', {href: '/app/renders/'}) +
+    tile('Clip count', st.clips != null ? String(st.clips) : '—', today ? '+' + today + ' today' : 'on relay', '▣', {href: '/app/renders/'}) +
+    tile('Render queue', String(qn), esc(qSub), '▦', {warn: qWarn, href: '/app/colab/'}) +
+    tile('Storage used', storeV, esc(storeS), '▤');
 }
 
 function upNext(s){
-  const q = s.jobs.filter(j => ['queued', 'waiting', 'error'].includes(j.status)).reverse();
+  const q = (s.jobs || []).filter(j => ['queued', 'waiting', 'error'].includes(j.status)).reverse();
   $('nextWrap').style.display = q.length ? '' : 'none';
   $('next').innerHTML = q.map(j => {
     const p = j.progress || {};
@@ -118,19 +158,47 @@ function upNext(s){
   }).join('');
 }
 
-function alerts(st){
-  $('alerts').innerHTML = st.alerts && st.alerts.length ? `<div class="card" style="margin-top:12px;border-color:rgba(217,147,147,.35)">
-    <div class="row"><span class="pill bad">Alert</span><span class="grow"></span></div>
-    <div class="small" style="margin-top:8px">${st.alerts.map(esc).join('<br>')}</div></div>` : '';
+function alerts(st, s){
+  const rows = [];
+  if (s && s.paused) rows.push('Rendering is paused' + (s.paused !== true ? ' · ' + s.paused : '') + '. Auto-restart is off until you start it.');
+  if (s && s.recover_running) rows.push('Spinning up a G4… clips start flowing about 5 minutes after the runtime is up.');
+  if (st.alerts && st.alerts.length) rows.push(...st.alerts);
+  $('alerts').innerHTML = rows.length ? `<div class="card" style="margin-top:0;margin-bottom:14px;border-color:rgba(217,147,147,.35)">
+    <div class="row"><span class="pill ${s && s.paused ? 'warn' : 'bad'}">${s && s.paused ? 'Stopped' : 'Alert'}</span><span class="grow"></span>
+      ${s && s.paused ? '<button class="btn sm gold" onclick="startRt()">Start runtime</button>' : ''}</div>
+    <div class="small" style="margin-top:8px">${rows.map(esc).join('<br>')}</div></div>` : '';
+}
+
+function clipCard(c){
+  const dur = mmss(c.seconds);
+  return `<div class="clip-card" data-clip="${esc(c.name)}">
+    <div class="thumb" data-clip="${esc(c.name)}">
+      <img loading="lazy" src="${F.thumbUrl(c.name)}" onload="this.classList.add('ld')" onerror="this.classList.add('ld');this.style.opacity='.25'" alt="">
+      ${dur ? `<span class="badge">${esc(dur)}</span>` : ''}${F.isNew(c) ? '<span class="new">NEW</span>' : ''}
+    </div>
+    <div class="name trunc">${esc(shortClip(c.name))}</div>
+    <div class="ago">${esc(prettyAgo(c.mtime))}</div>
+  </div>`;
 }
 
 function strip(){
-  latest = lib.flatMap(g => g.clips.map(c => Object.assign({group: g.title}, c))).sort((a, b) => b.mtime - a.mtime).slice(0, 14);
-  $('latest').innerHTML = latest.length ? latest.map(c => F.thumb(c, c.idx ? 'Clip ' + c.idx : '')).join('') : '<div class="empty">No clips yet</div>';
+  const all = lib.flatMap(g => g.clips.map(c => Object.assign({group: g.title}, c))).sort((a, b) => b.mtime - a.mtime);
+  latest = all.slice(0, 5);
+  if (!all.length) {
+    $('latest').innerHTML = '<div class="empty">No clips yet</div>';
+    return;
+  }
+  const more = all.length - latest.length;
+  $('latest').innerHTML = latest.map(clipCard).join('') + (more > 0
+    ? `<a class="clip-more" href="/app/gallery/"><span class="ph">▭</span><div class="n">${more} more</div><div>Open Gallery</div></a>`
+    : '');
 }
 $('latest').addEventListener('click', e => {
-  const n = e.target.closest('.thumb')?.dataset.clip; if (!n) return;
-  F.viewer(latest, latest.findIndex(c => c.name === n), c => c.group + (c.idx ? ' · clip ' + c.idx : ''));
+  const n = e.target.closest('[data-clip]')?.dataset.clip; if (!n) return;
+  e.preventDefault();
+  const all = lib.flatMap(g => g.clips.map(c => Object.assign({group: g.title}, c))).sort((a, b) => b.mtime - a.mtime);
+  latest = all;
+  F.viewer(all, all.findIndex(c => c.name === n), c => c.group + (c.idx ? ' · clip ' + c.idx : ''));
 });
 
 async function startRt(){
@@ -138,15 +206,27 @@ async function startRt(){
   try { await F.post('/api/colab/recover'); F.toast('Starting a runtime (about 5 min).'); setTimeout(load, 2000); } catch (e) { F.toast(e.message); }
 }
 
+function showErr(msg){
+  $('pageErr').innerHTML = msg ? `<div class="err-banner">${esc(msg)}</div>` : '';
+}
+
 async function load(){
   greet();
-  const [s, st, l] = await Promise.allSettled([F.api('/api/colab/state'), F.api('/api/status'), F.api('/api/media/library')]);
+  const [s, st, l, man] = await Promise.allSettled([
+    F.api('/api/colab/state'), F.api('/api/status'), F.api('/api/media/library'), F.api('/api/manifest')
+  ]);
+  if (man.status === 'fulfilled' && man.value.web_rev != null) $('hubVer').textContent = 'v' + man.value.web_rev;
   if (l.status === 'fulfilled') { lib = l.value; strip(); }
-  if (s.status === 'fulfilled') { hero(s.value); upNext(s.value); }
+  else $('latest').innerHTML = '<div class="empty">Could not load clips.</div>';
+  if (s.status === 'fulfilled') { nowBanner(s.value); upNext(s.value); livePill(s.value); }
   if (s.status === 'fulfilled' && st.status === 'fulfilled') tiles(s.value, st.value);
-  if (st.status === 'fulfilled') alerts(st.value);
-  const bad = [s, st, l].find(x => x.status === 'rejected');
-  if (bad) F.toast('Some info failed to load: ' + bad.reason.message);
+  else if (st.status === 'fulfilled') tiles({jobs: [], runner_online: false}, st.value);
+  else $('tiles').innerHTML = '<div class="empty" style="grid-column:1/-1">Could not load farm status.</div>';
+  if (st.status === 'fulfilled') alerts(st.value, s.status === 'fulfilled' ? s.value : null);
+  const bad = [s, st, l].filter(x => x.status === 'rejected');
+  if (bad.length === 3) showErr('Relay unreachable. Check your connection and reload.');
+  else if (bad.length) showErr('Some info failed to load: ' + bad.map(x => x.reason.message).join(' · '));
+  else showErr('');
 }
 F.pull(load);
 load();
