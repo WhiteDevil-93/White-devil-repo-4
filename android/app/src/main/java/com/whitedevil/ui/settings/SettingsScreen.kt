@@ -139,7 +139,7 @@ private fun Field(
         visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = WdPalette.strokeStrong,
+            focusedBorderColor = WdPalette.stroke,
             unfocusedBorderColor = WdPalette.stroke,
             focusedContainerColor = WdPalette.bgElevated,
             unfocusedContainerColor = WdPalette.bgElevated,

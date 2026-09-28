@@ -10,30 +10,20 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-/**
- * AMOLED black shell with a **single accent** ([accent]).
- * All interactive / selected / emphasis states use accent or grayscale only.
- */
 object WdPalette {
     val bg = Color(0xFF000000)
-    val bgElevated = Color(0xFF0A0A0A)
-    val surface = Color(0xFF121212)
-    val surfaceHover = Color(0xFF1A1A1A)
-    val stroke = Color(0x10FFFFFF)
-    val strokeStrong = Color(0x1FFFFFFF)
-
-    /** The only chromatic brand color in the UI. */
+    val bgElevated = Color(0xFF0C0C0C)
+    val surface = Color(0xFF161616)
+    val surfaceHover = Color(0xFF222222)
+    val stroke = Color(0xFF2C2C2E)
     val accent = Color(0xFFD9BF8C)
-
     val onAccent = Color(0xFF000000)
-    val text = Color(0xFFF5F5F5)
-    val textSecondary = Color(0xFF8E8E93)
-    val textTertiary = Color(0xFF636366)
+    val text = Color(0xFFFAFAFA)
+    val textSecondary = Color(0xFF8A8A8E)
+    val textTertiary = Color(0xFF505054)
+    val userBubble = Color(0xFF1C1C1E)
 
-    /** Muted accent for labels (still derived from [accent]). */
-    val accentDim @Composable get() = accent.copy(alpha = 0.55f)
-
-    /** Errors use accent — no second hue. */
+    val accentDim @Composable get() = accent.copy(alpha = 0.5f)
     val errorText @Composable get() = accent
 }
 
@@ -46,39 +36,40 @@ private val scheme = darkColorScheme(
     onBackground = WdPalette.text,
     onSurface = WdPalette.text,
     onSurfaceVariant = WdPalette.textSecondary,
-    outline = WdPalette.strokeStrong,
+    outline = WdPalette.stroke,
     error = WdPalette.accent,
 )
 
 private val wdTypography = Typography(
     headlineLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 34.sp,
-        letterSpacing = (-0.5).sp,
+        fontWeight = FontWeight.Normal,
+        fontSize = 34.sp,
+        lineHeight = 40.sp,
+        letterSpacing = (-0.8).sp,
         color = WdPalette.text,
     ),
     titleLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        lineHeight = 26.sp,
-        letterSpacing = (-0.3).sp,
+        fontWeight = FontWeight.Medium,
+        fontSize = 17.sp,
+        lineHeight = 22.sp,
+        letterSpacing = (-0.2).sp,
         color = WdPalette.text,
     ),
     titleMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 22.sp,
+        fontSize = 15.sp,
+        lineHeight = 20.sp,
         color = WdPalette.text,
     ),
     bodyLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
+        fontSize = 17.sp,
+        lineHeight = 26.sp,
+        letterSpacing = (-0.1).sp,
         color = WdPalette.text,
     ),
     bodyMedium = TextStyle(
@@ -98,28 +89,23 @@ private val wdTypography = Typography(
     labelMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
+        fontSize = 13.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.2.sp,
         color = WdPalette.textSecondary,
     ),
     labelSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 0.3.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.4.sp,
         color = WdPalette.textTertiary,
     ),
 )
 
 @Composable
 fun WhiteDevilTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = scheme,
-        typography = wdTypography,
-        content = content,
-    )
+    MaterialTheme(colorScheme = scheme, typography = wdTypography, content = content)
 }
 
 object WdColors {
@@ -127,5 +113,5 @@ object WdColors {
     val muted @Composable get() = WdPalette.textSecondary
     val strong @Composable get() = WdPalette.text
     val fg @Composable get() = WdPalette.text
-    val line @Composable get() = WdPalette.strokeStrong
+    val line @Composable get() = WdPalette.stroke
 }

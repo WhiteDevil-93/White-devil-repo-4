@@ -291,6 +291,10 @@ class MainActivity : ComponentActivity() {
     private fun buildUi() {
         @Suppress("DEPRECATION")
         window.setDecorFitsSystemWindows(false)
+        @Suppress("DEPRECATION")
+        window.statusBarColor = Color.BLACK
+        @Suppress("DEPRECATION")
+        window.navigationBarColor = Color.BLACK
         agentSelectedModel = prefs.getString(SettingsManager.KEY_VENICE_MODEL, SettingsManager.DEFAULT_MODEL)
             ?: SettingsManager.DEFAULT_MODEL
         snackbarAnchor = window.decorView
@@ -332,8 +336,8 @@ class MainActivity : ComponentActivity() {
         val restoredHistory = loadAgentHistory()
         if (restoredHistory.isEmpty()) {
             addMessageBubble(
-                "Ready for beta",
-                "Chat with Venice on-device, attach photos and files, and run tools against your workspace and relay. Tap attach, or share from another app into WhiteDevil.",
+                "",
+                "Venice runs on-device. Attach files, share into WhiteDevil, or paste from the clipboard. Add your API key below to start.",
                 ROLE_INFO,
             )
         } else {
