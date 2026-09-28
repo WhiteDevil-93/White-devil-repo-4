@@ -49,7 +49,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.ScrollView
-import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -96,7 +95,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var bottomNavRow: LinearLayout
 
     // Containers for the 4 tabs
-    private lateinit var agentContainer: LinearLayout
+    private lateinit var agentContainer: FrameLayout
     private lateinit var forgeHubContainer: FrameLayout
     private lateinit var terminalContainer: FrameLayout
     private lateinit var settingsContainer: ScrollView
@@ -124,9 +123,18 @@ class MainActivity : ComponentActivity() {
     private lateinit var agentMessagesLayout: LinearLayout
     private lateinit var agentScrollView: ScrollView
     private lateinit var agentInput: EditText
-    private lateinit var agentSendBtn: TextView
-    private lateinit var agentModelSpinner: Spinner
+    private lateinit var agentSendWrap: FrameLayout
+    private lateinit var agentModelChip: TextView
     private lateinit var agentProgress: ProgressBar
+    private val agentModels = listOf(
+        "zai-org-glm-5-2",
+        "zai-org-glm-5",
+        "venice-uncensored",
+        "venice-uncensored-1-2",
+        "kimi-k2-6",
+        "claude-opus-4-8",
+    )
+    private var agentSelectedModel: String = SettingsManager.DEFAULT_MODEL
     private var currentAgentJob: Job? = null
 
     // Agent attachments (photos, videos, audio, documents)
@@ -320,8 +328,19 @@ class MainActivity : ComponentActivity() {
 
         val pill = FrameLayout(context).apply {
             background = GradientDrawable().apply {
-                cornerRadius = dp(16).toFloat()
+                cornerRadius = dp(18).toFloat()
                 setColor(if (active) PILL else Color.TRANSPARENT)
+                if (active) setStroke(dp(1), Color.parseColor("#33CDB88F"))
+            }
+            if (active) {
+                addView(View(context).apply {
+                    background = GradientDrawable().apply {
+                        cornerRadius = dp(2).toFloat()
+                        setColor(ACCENT)
+                    }
+                }, FrameLayout.LayoutParams(dp(20), dp(3), Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply {
+                    topMargin = dp(4)
+                })
             }
             addView(ImageView(context).apply {
                 setImageResource(icon)
@@ -329,7 +348,7 @@ class MainActivity : ComponentActivity() {
             }, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
         }
 
-        addView(pill, LinearLayout.LayoutParams(dp(56), dp(32)))
+        addView(pill, LinearLayout.LayoutParams(dp(58), dp(36)))
         addView(TextView(context).apply {
             text = label
             textSize = 11f
@@ -365,78 +384,91 @@ class MainActivity : ComponentActivity() {
     // Tab 1: Native Venice Agent Tab
     // =========================================================================
 
-    private fun buildAgentTab(): LinearLayout {
+    private fun buildAgentTab(): FrameLayout {
+        val shell = FrameLayout(this).apply {
+            background = UiPolish.screenGradient(this@MainActivity)
+        }
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(BG)
-            setPadding(dp(12), dp(40), dp(12), dp(8))
+            setPadding(dp(16), dp(36), dp(16), dp(10))
         }
 
-        // Header bar with Title, Model Spinner, and Reset button
-        val header = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(4), dp(4), dp(4), dp(10))
-        }
+        agentSelectedModel = prefs.getString(SettingsManager.KEY_VENICE_MODEL, SettingsManager.DEFAULT_MODEL)
+            ?: SettingsManager.DEFAULT_MODEL
 
-        val title = TextView(this).apply {
-            text = "Venice Agent"
-            textSize = 18f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(STRONG)
+        val titleBlock = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(2), 0, dp(2), dp(12))
         }
-
-        val models = listOf(
-            "zai-org-glm-5-2",
-            "zai-org-glm-5",
-            "venice-uncensored",
-            "venice-uncensored-1-2",
-            "kimi-k2-6",
-            "claude-opus-4-8"
-        )
-        agentModelSpinner = Spinner(this).apply {
-            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, models)
-            val savedModel = prefs.getString(SettingsManager.KEY_VENICE_MODEL, SettingsManager.DEFAULT_MODEL)
-            val idx = models.indexOf(savedModel).coerceAtLeast(0)
-            setSelection(idx)
-            background = createGlassDrawable(CARD_BG, dp(8), LINE)
-        }
-
-        val resetBtn = TextView(this).apply {
-            text = "Clear"
-            textSize = 13f
+        titleBlock.addView(TextView(this).apply {
+            text = "WHITEDEVIL"
+            textSize = 10f
+            letterSpacing = 0.14f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(ACCENT)
-            setPadding(dp(12), dp(6), dp(12), dp(6))
+        })
+        titleBlock.addView(TextView(this).apply {
+            text = "Venice Agent"
+            textSize = 24f
+            letterSpacing = -0.02f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(STRONG)
+            setPadding(0, dp(2), 0, 0)
+        })
+        titleBlock.addView(TextView(this).apply {
+            text = "Native tools · relay · laptop · attachments"
+            textSize = 12.5f
+            setTextColor(MUTED)
+            setPadding(0, dp(4), 0, 0)
+        })
+        layout.addView(titleBlock)
+
+        val toolRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        agentModelChip = TextView(this).apply {
+            text = "${UiPolish.modelLabel(agentSelectedModel)}  ▾"
+            textSize = 12.5f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(STRONG)
+            setPadding(dp(14), dp(8), dp(14), dp(8))
+            background = createGlassDrawable(CARD_BG, dp(14), LINE)
+            isClickable = true
+            setOnClickListener { showModelPicker() }
+        }
+        val promptBtn = TextView(this).apply {
+            text = "Prompt"
+            textSize = 12.5f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(MUTED)
+            setPadding(dp(14), dp(8), dp(14), dp(8))
+            background = createGlassDrawable(PILL, dp(14), LINE)
+            isClickable = true
+            setOnClickListener { showSystemPromptDialog() }
+        }
+        val resetBtn = TextView(this).apply {
+            text = "Clear"
+            textSize = 12.5f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(ACCENT)
+            setPadding(dp(14), dp(8), dp(14), dp(8))
             background = createGlassDrawable(PILL, dp(14), LINE)
             isClickable = true
             setOnClickListener { resetAgentChat() }
         }
+        toolRow.addView(agentModelChip, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
+        toolRow.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
+        toolRow.addView(promptBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(8) })
+        toolRow.addView(resetBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
+        layout.addView(toolRow)
 
-        val promptBtn = TextView(this).apply {
-            text = "Prompt"
-            textSize = 13f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(STRONG)
-            setPadding(dp(12), dp(6), dp(12), dp(6))
-            background = createGlassDrawable(CARD_BG, dp(14), LINE)
-            isClickable = true
-            setOnClickListener { showSystemPromptDialog() }
-        }
-
-        header.addView(title, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        header.addView(agentModelSpinner, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(6) })
-        header.addView(promptBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(6) })
-        header.addView(resetBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
-
-        layout.addView(header)
-
-        // Progress indicator
         agentProgress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
             isIndeterminate = true
             visibility = View.GONE
+            indeterminateTintList = ColorStateList.valueOf(ACCENT)
         }
-        layout.addView(agentProgress, LinearLayout.LayoutParams(MATCH_PARENT, dp(4)))
+        layout.addView(agentProgress, LinearLayout.LayoutParams(MATCH_PARENT, dp(3)).apply { topMargin = dp(8) })
 
         // Scrollable Chat Messages
         agentScrollView = ScrollView(this).apply {
@@ -454,15 +486,15 @@ class MainActivity : ComponentActivity() {
         val restoredHistory = loadAgentHistory()
         if (restoredHistory.isEmpty()) {
             addMessageBubble(
-                "Agent Ready",
-                "Venice Agent is running natively on device. It has access to local workspace files and can control Forge Hub, check renders, and run laptop tasks via your relay.",
-                ROLE_VENICE
+                "Ready for beta",
+                "Chat with Venice on-device, attach photos and files, and run tools against your workspace and relay. Tap 📎 to attach, or share from another app into WhiteDevil.",
+                ROLE_INFO
             )
         } else {
             addMessageBubble(
                 "History restored",
-                "${restoredHistory.size} messages from your last session. The agent remembers the conversation.",
-                ROLE_VENICE
+                "${restoredHistory.size} messages from your last session are loaded. The agent remembers the conversation.",
+                ROLE_INFO
             )
             renderHistoryBubbles(restoredHistory)
         }
@@ -477,63 +509,72 @@ class MainActivity : ComponentActivity() {
             setPadding(0, 0, 0, dp(6))
         }
         agentAttachmentScroll.addView(agentAttachmentStrip)
-        layout.addView(agentAttachmentScroll, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
-        // Bottom Input Row
+        val composer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(6), 0, 0)
+        }
+        composer.addView(agentAttachmentScroll, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+
         val inputBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(4), dp(8), dp(4), dp(4))
-            background = createGlassDrawable(BAR_GLASS, dp(24), LINE)
-        }
-
-        val attachBtn = TextView(this).apply {
-            text = "📎"
-            textSize = 20f
-            setPadding(dp(10), dp(8), dp(6), dp(8))
-            isClickable = true
-            setOnClickListener { showAttachSheet() }
-        }
-
-        val pasteBtn = TextView(this).apply {
-            text = "📋"
-            textSize = 20f
             setPadding(dp(6), dp(8), dp(6), dp(8))
-            isClickable = true
-            setOnClickListener { pasteFromClipboard() }
+            background = createGlassDrawable(BAR_GLASS, dp(22), LINE)
         }
-
+        val attachBtn = UiPolish.iconCircle(this, R.drawable.ic_attach, ACCENT) { showAttachSheet() }.apply {
+            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(6) }
+        }
+        val pasteBtn = UiPolish.iconCircle(this, R.drawable.ic_clipboard, MUTED) { pasteFromClipboard() }.apply {
+            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(8) }
+        }
         agentInput = EditText(this).apply {
-            hint = "Ask Venice or give a task…"
+            hint = "Message Venice…"
             setHintTextColor(MUTED)
             setTextColor(STRONG)
-            textSize = 14f
-            background = null
-            setPadding(dp(16), dp(10), dp(12), dp(10))
-            maxLines = 4
+            textSize = 15f
+            background = createGlassDrawable(Color.parseColor("#28000000"), dp(16), LINE)
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            maxLines = 5
         }
-
-        agentSendBtn = TextView(this).apply {
-            text = "Send"
-            textSize = 14f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.parseColor("#FF111111"))
-            setPadding(dp(18), dp(10), dp(18), dp(10))
+        agentSendWrap = FrameLayout(this).apply {
             background = GradientDrawable().apply {
-                cornerRadius = dp(20).toFloat()
+                shape = GradientDrawable.OVAL
                 setColor(ACCENT)
             }
             isClickable = true
             setOnClickListener { sendAgentMessage() }
+            layoutParams = LinearLayout.LayoutParams(dp(46), dp(46)).apply { leftMargin = dp(8) }
+            addView(ImageView(this@MainActivity).apply {
+                setImageResource(R.drawable.ic_send)
+                imageTintList = ColorStateList.valueOf(Color.parseColor("#FF111111"))
+            }, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
         }
 
-        inputBar.addView(attachBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
-        inputBar.addView(pasteBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
+        inputBar.addView(attachBtn)
+        inputBar.addView(pasteBtn)
         inputBar.addView(agentInput, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        inputBar.addView(agentSendBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(4) })
-        layout.addView(inputBar)
+        inputBar.addView(agentSendWrap)
+        composer.addView(inputBar)
+        layout.addView(composer)
 
-        return layout
+        shell.addView(layout, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        return shell
+    }
+
+    private fun showModelPicker() {
+        val labels = agentModels.map { UiPolish.modelLabel(it) }.toTypedArray()
+        val current = agentModels.indexOf(agentSelectedModel).coerceAtLeast(0)
+        AlertDialog.Builder(this)
+            .setTitle("Venice model")
+            .setSingleChoiceItems(labels, current) { dialog, which ->
+                agentSelectedModel = agentModels[which]
+                agentModelChip.text = "${UiPolish.modelLabel(agentSelectedModel)}  ▾"
+                prefs.edit().putString(SettingsManager.KEY_VENICE_MODEL, agentSelectedModel).apply()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun showSystemPromptDialog() {
@@ -640,7 +681,7 @@ class MainActivity : ComponentActivity() {
         val attachmentSnapshot = pendingAttachments.toList()
         pendingAttachments.clear()
         renderAttachmentStrip()
-        val selectedModel = agentModelSpinner.selectedItem?.toString() ?: SettingsManager.DEFAULT_MODEL
+        val selectedModel = agentSelectedModel
         val sysPrompt = prefs.getString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
             ?: SettingsManager.DEFAULT_SYSTEM_PROMPT
         val webSearch = prefs.getBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, false)
@@ -657,7 +698,7 @@ class MainActivity : ComponentActivity() {
         )
 
         agentProgress.visibility = View.VISIBLE
-        agentSendBtn.isEnabled = false
+        setAgentComposerEnabled(false)
 
         val currentClient = VeniceClient(apiKey = apiKey)
         currentAgentJob = scope.launch {
@@ -704,9 +745,15 @@ class MainActivity : ComponentActivity() {
             } finally {
                 finishedAgent?.let { persistAgentHistory(it.snapshot()) }
                 agentProgress.visibility = View.GONE
-                agentSendBtn.isEnabled = true
+                setAgentComposerEnabled(true)
             }
         }
+    }
+
+    private fun setAgentComposerEnabled(enabled: Boolean) {
+        agentSendWrap.isEnabled = enabled
+        agentSendWrap.alpha = if (enabled) 1f else 0.42f
+        agentInput.isEnabled = enabled
     }
 
     // =========================================================================
@@ -1048,78 +1095,141 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun addMessageBubble(sender: String, message: String, role: Int) {
+        val radius = dp(18).toFloat()
+        val isUser = role == ROLE_USER
+        val isTool = role == ROLE_TOOL_CALL || role == ROLE_TOOL_OUTPUT
+        val isInfo = role == ROLE_INFO
+
+        val avatarLetter = when (role) {
+            ROLE_USER -> "Y"
+            ROLE_VENICE -> "V"
+            ROLE_INFO -> "✦"
+            ROLE_TOOL_CALL -> "⚙"
+            ROLE_TOOL_OUTPUT -> "↳"
+            else -> "!"
+        }
+        val avatarBg = when (role) {
+            ROLE_USER -> Color.parseColor("#554A3828")
+            ROLE_VENICE -> Color.parseColor("#442A2A30")
+            ROLE_INFO -> Color.parseColor("#443D3528")
+            ROLE_TOOL_CALL -> Color.parseColor("#441F2E3D")
+            ROLE_TOOL_OUTPUT -> Color.parseColor("#331D1D24")
+            else -> Color.parseColor("#44CC5555")
+        }
+        val avatarFg = when (role) {
+            ROLE_USER -> ACCENT
+            ROLE_VENICE -> STRONG
+            ROLE_INFO -> ACCENT
+            ROLE_TOOL_CALL -> Color.parseColor("#FF82B6E8")
+            ROLE_TOOL_OUTPUT -> MUTED
+            else -> Color.parseColor("#FFFF6B6B")
+        }
+
         val bubble = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            val bg = when (role) {
-                ROLE_USER -> createGlassDrawable(Color.parseColor("#334C3D28"), dp(16), ACCENT)
-                ROLE_VENICE -> createGlassDrawable(CARD_BG, dp(16), LINE)
-                ROLE_TOOL_CALL -> createGlassDrawable(Color.parseColor("#331F2E3D"), dp(12), Color.parseColor("#FF5C8BB5"))
-                ROLE_TOOL_OUTPUT -> createGlassDrawable(Color.parseColor("#291D1D24"), dp(12), LINE)
-                else -> createGlassDrawable(Color.parseColor("#44331111"), dp(12), Color.parseColor("#FFCC5555"))
-            }
-            background = bg
-            setPadding(dp(14), dp(10), dp(14), dp(10))
+            background = UiPolish.bubbleDrawable(role, radius)
+            setPadding(dp(14), dp(12), dp(14), dp(10))
         }
 
-        val senderView = TextView(this).apply {
-            this.text = sender
-            textSize = 11f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(
-                when (role) {
-                    ROLE_USER -> ACCENT
-                    ROLE_VENICE -> STRONG
-                    ROLE_TOOL_CALL -> Color.parseColor("#FF82B6E8")
-                    ROLE_TOOL_OUTPUT -> MUTED
-                    else -> Color.parseColor("#FFFF6B6B")
-                }
-            )
-            setPadding(0, 0, 0, dp(4))
+        val headerRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
+        headerRow.addView(TextView(this).apply {
+            text = sender
+            textSize = 11.5f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(avatarFg)
+        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        if (!isInfo) {
+            val time = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                .format(java.util.Date())
+            headerRow.addView(TextView(this).apply {
+                text = time
+                textSize = 10f
+                setTextColor(MUTED)
+            })
+        }
+        bubble.addView(headerRow)
 
         val contentView = TextView(this).apply {
-            this.text = message
-            textSize = 13.5f
-            setTextColor(if (role == ROLE_TOOL_OUTPUT) MUTED else FG)
-            setTextIsSelectable(true)
-            if (role == ROLE_TOOL_CALL || role == ROLE_TOOL_OUTPUT) {
-                typeface = Typeface.MONOSPACE
-                textSize = 11.5f
+            text = message
+            textSize = when {
+                isTool -> 11.5f
+                isInfo -> 13f
+                else -> 14f
             }
-        }
-
-        bubble.addView(senderView)
-        bubble.addView(contentView)
-
-        val copyRow = LinearLayout(this).apply {
-            gravity = Gravity.END
+            setTextColor(
+                when (role) {
+                    ROLE_TOOL_OUTPUT -> MUTED
+                    ROLE_INFO -> Color.parseColor("#FFD8D2C8")
+                    else -> FG
+                },
+            )
+            setTextIsSelectable(true)
+            setLineSpacing(0f, 1.15f)
+            if (isTool) typeface = Typeface.MONOSPACE
             setPadding(0, dp(6), 0, 0)
         }
-        val copyBtn = TextView(this).apply {
-            text = "Copy"
-            textSize = 11f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(MUTED)
-            setPadding(dp(12), dp(6), dp(12), dp(6))
-            background = createGlassDrawable(PILL, dp(12), LINE)
-            isClickable = true
-            setOnClickListener { copyToClipboard(message) }
+        bubble.addView(contentView)
+
+        if (!isInfo && message.length > 24) {
+            val copyRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.END
+                setPadding(0, dp(6), 0, 0)
+            }
+            copyRow.addView(
+                UiPolish.iconCircle(this, R.drawable.ic_copy, MUTED) { copyToClipboard(message) }.apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+                },
+            )
+            bubble.addView(copyRow)
         }
-        copyRow.addView(copyBtn)
-        bubble.addView(copyRow)
+
+        val avatar = UiPolish.avatar(this, avatarLetter, avatarBg, avatarFg).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(36), dp(36))
+        }
+
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = if (isUser) Gravity.END else Gravity.START
+        }
+
+        if (isInfo) {
+            row.gravity = Gravity.CENTER_HORIZONTAL
+            val infoWrap = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+            }
+            infoWrap.addView(
+                UiPolish.avatar(this, avatarLetter, avatarBg, avatarFg).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply { bottomMargin = dp(8) }
+                },
+            )
+            infoWrap.addView(bubble, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+            row.addView(infoWrap, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        } else if (isUser) {
+            row.addView(bubble, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply {
+                leftMargin = dp(48)
+                rightMargin = dp(8)
+            })
+            row.addView(avatar)
+        } else if (isTool) {
+            row.addView(bubble, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+                leftMargin = dp(8)
+                rightMargin = dp(8)
+            })
+        } else {
+            row.addView(avatar, LinearLayout.LayoutParams(dp(36), dp(36)).apply { rightMargin = dp(8) })
+            row.addView(bubble, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { rightMargin = dp(24) })
+        }
 
         val params = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-            topMargin = dp(6)
-            bottomMargin = dp(6)
-            if (role == ROLE_USER) {
-                leftMargin = dp(32)
-            } else if (role == ROLE_TOOL_CALL || role == ROLE_TOOL_OUTPUT) {
-                leftMargin = dp(16)
-                rightMargin = dp(16)
-            }
+            topMargin = dp(8)
+            bottomMargin = dp(8)
         }
-
-        agentMessagesLayout.addView(bubble, params)
+        agentMessagesLayout.addView(row, params)
         agentScrollView.post { agentScrollView.fullScroll(View.FOCUS_DOWN) }
     }
 
@@ -1596,7 +1706,7 @@ class MainActivity : ComponentActivity() {
 
     private fun buildSettingsTab(): ScrollView {
         val scroll = ScrollView(this).apply {
-            setBackgroundColor(BG)
+            background = UiPolish.screenGradient(this@MainActivity)
             isFillViewport = true
         }
 
@@ -1605,79 +1715,112 @@ class MainActivity : ComponentActivity() {
             setPadding(dp(20), dp(40), dp(20), dp(32))
         }
 
-        val title = TextView(this).apply {
-            text = "WhiteDevil Settings"
-            textSize = 22f
+        box.addView(TextView(this).apply {
+            text = "WHITEDEVIL"
+            textSize = 10f
+            letterSpacing = 0.14f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(ACCENT)
+        })
+        box.addView(TextView(this).apply {
+            text = "Settings"
+            textSize = 26f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(STRONG)
-            setPadding(0, 0, 0, dp(4))
-        }
-        val sub = TextView(this).apply {
+            setPadding(0, dp(4), 0, dp(6))
+        })
+        box.addView(TextView(this).apply {
             text = "Credentials are encrypted on-device via Android Jetpack Security."
-            textSize = 12f
+            textSize = 12.5f
             setTextColor(MUTED)
-            setPadding(0, 0, 0, dp(24))
-        }
-        box.addView(title)
-        box.addView(sub)
+            setPadding(0, 0, 0, dp(20))
+        })
 
         fun sectionHeader(txt: String) = TextView(this).apply {
             text = txt
-            textSize = 14f
+            textSize = 13f
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(ACCENT)
-            setPadding(0, dp(16), 0, dp(8))
+            setTextColor(STRONG)
+            setPadding(0, 0, 0, dp(10))
         }
 
-        fun field(label: String, key: String, def: String = "", secret: Boolean = false): EditText {
-            val lbl = TextView(this).apply {
+        fun fieldIn(parent: LinearLayout, label: String, key: String, def: String = "", secret: Boolean = false): EditText {
+            parent.addView(TextView(this).apply {
                 text = label
-                textSize = 12f
+                textSize = 11.5f
                 setTextColor(MUTED)
-                setPadding(0, dp(6), 0, dp(4))
-            }
+                setPadding(0, dp(4), 0, dp(4))
+            })
             val ed = EditText(this).apply {
                 setText(prefs.getString(key, def))
                 setTextColor(STRONG)
                 textSize = 14f
-                background = createGlassDrawable(CARD_BG, dp(8), LINE)
-                setPadding(dp(12), dp(10), dp(12), dp(10))
+                background = createGlassDrawable(Color.parseColor("#28000000"), dp(12), LINE)
+                setPadding(dp(14), dp(12), dp(14), dp(12))
                 inputType = if (secret) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                 else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
             }
-            box.addView(lbl)
-            box.addView(ed)
+            parent.addView(ed)
             return ed
         }
 
-        box.addView(sectionHeader("Venice AI Agent Config"))
-        val fVeniceKey = field("VENICE_API_KEY", SettingsManager.KEY_VENICE_API_KEY, secret = true)
-        val fPrompt = field("System Prompt", SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
-
-        val webSearchRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(12), 0, dp(12))
-            addView(TextView(context).apply {
-                text = "Enable Venice Web Search"
-                textSize = 13.5f
-                setTextColor(STRONG)
-            }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        fun sectionCard(title: String, block: LinearLayout.() -> Unit): LinearLayout {
+            val card = UiPolish.sectionCard(this)
+            card.addView(sectionHeader(title))
+            card.block()
+            box.addView(card, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = dp(14) })
+            return card
         }
-        val webSearchSwitch = Switch(this).apply {
-            isChecked = prefs.getBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, false)
+
+        val veniceCard = sectionCard("Venice AI Agent") {
+            val fVeniceKey = fieldIn(this, "Venice API key", SettingsManager.KEY_VENICE_API_KEY, secret = true)
+            val fPrompt = fieldIn(this, "System prompt", SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
+            val webSearchRow = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dp(12), 0, 0)
+                addView(TextView(context).apply {
+                    text = "Venice web search"
+                    textSize = 13.5f
+                    setTextColor(STRONG)
+                }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+            }
+            val webSearchSwitch = Switch(this@MainActivity).apply {
+                isChecked = prefs.getBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, false)
+            }
+            webSearchRow.addView(webSearchSwitch)
+            addView(webSearchRow)
+            tag = listOf(fVeniceKey, fPrompt, webSearchSwitch)
         }
-        webSearchRow.addView(webSearchSwitch)
-        box.addView(webSearchRow)
+        @Suppress("UNCHECKED_CAST")
+        val veniceTags = veniceCard.tag as List<Any>
+        val fVeniceKey = veniceTags[0] as EditText
+        val fPrompt = veniceTags[1] as EditText
+        val webSearchSwitch = veniceTags[2] as Switch
 
-        box.addView(sectionHeader("Remote Relay & Forge Hub Config"))
-        val fRelayUrl = field("Relay Base URL", SettingsManager.KEY_RELAY_URL, SettingsManager.DEFAULT_RELAY_URL)
-        val fRelayUser = field("Relay User", SettingsManager.KEY_RELAY_USER, SettingsManager.DEFAULT_RELAY_USER)
-        val fRelayPass = field("Relay Password", SettingsManager.KEY_RELAY_PASS, secret = true)
+        val relayCard = sectionCard("Relay & Forge Hub") {
+            tag = listOf(
+                fieldIn(this, "Relay base URL", SettingsManager.KEY_RELAY_URL, SettingsManager.DEFAULT_RELAY_URL),
+                fieldIn(this, "Relay user", SettingsManager.KEY_RELAY_USER, SettingsManager.DEFAULT_RELAY_USER),
+                fieldIn(this, "Relay password", SettingsManager.KEY_RELAY_PASS, secret = true),
+            )
+        }
+        @Suppress("UNCHECKED_CAST")
+        val relayTags = relayCard.tag as List<EditText>
+        val fRelayUrl = relayTags[0]
+        val fRelayUser = relayTags[1]
+        val fRelayPass = relayTags[2]
 
-        box.addView(sectionHeader("Laptop SSH Tunnel Config"))
-        val fLaptopUser = field("Laptop User", SettingsManager.KEY_LAPTOP_USER, SettingsManager.DEFAULT_LAPTOP_USER)
-        val fLaptopPass = field("Laptop Password", SettingsManager.KEY_LAPTOP_PASS, secret = true)
+        val laptopCard = sectionCard("Laptop SSH tunnel") {
+            tag = listOf(
+                fieldIn(this, "Laptop user", SettingsManager.KEY_LAPTOP_USER, SettingsManager.DEFAULT_LAPTOP_USER),
+                fieldIn(this, "Laptop password", SettingsManager.KEY_LAPTOP_PASS, secret = true),
+            )
+        }
+        @Suppress("UNCHECKED_CAST")
+        val laptopTags = laptopCard.tag as List<EditText>
+        val fLaptopUser = laptopTags[0]
+        val fLaptopPass = laptopTags[1]
 
         val saveBtn = TextView(this).apply {
             text = "Save Settings"
@@ -1929,6 +2072,7 @@ class MainActivity : ComponentActivity() {
         const val ROLE_TOOL_CALL = 3
         const val ROLE_TOOL_OUTPUT = 4
         const val ROLE_ERROR = 5
+        const val ROLE_INFO = 6
 
         val BG = Color.parseColor("#FF0B0B0C")
         val BAR_GLASS = Color.parseColor("#D9121216")
