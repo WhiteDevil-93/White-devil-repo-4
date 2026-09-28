@@ -54,6 +54,19 @@ class ToolRegistryTest {
     }
 
     @Test
+    fun `keeps disambiguated names within the chat-completion function-name limit`() = runBlocking {
+        // A name already at the 64-char cap must still fit after a "_1" suffix is appended.
+        val maxLengthName = "a".repeat(64)
+        val providerA = FakeToolProvider(listOf(maxLengthName))
+        val providerB = FakeToolProvider(listOf(maxLengthName))
+        val registry = ToolRegistry(listOf(providerA, providerB))
+
+        val names = registry.definitions().map { it.function.name }
+        assertEquals(names.size, names.toSet().size, "exposed names must be unique: $names")
+        names.forEach { assertTrue(it.length <= 64, "name exceeds the 64-char limit: $it") }
+    }
+
+    @Test
     fun `retries a provider that failed to list its tools instead of caching the gap`() = runBlocking {
         val healthy = FakeToolProvider(listOf("healthy__tool"))
         val flaky = FakeToolProvider(listOf("flaky__tool"), failNextDefinitionsCall = true)

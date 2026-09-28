@@ -8,19 +8,27 @@ import java.io.File
 private const val DEFAULT_MODEL = "zai-org-glm-5-2"
 private const val DEFAULT_BASE_URL = "https://api.venice.ai/api/v1"
 
-private val SYSTEM_PROMPT = """
+/** [allowShell] controls whether `run_shell_command` is mentioned; ToolBox omits it entirely when disabled. */
+private fun buildSystemPrompt(allowShell: Boolean): String {
+    val toolLines = buildList {
+        add("Read, write, and inspect files in the local workspace directory (`read_file`, `write_file`, `list_directory`).")
+        if (allowShell) add("Run sandboxed shell commands (`run_shell_command`).")
+        add("Query Forge Hub live render status, GPU compute usage, and job queue (`get_render_status`).")
+        add("Inspect prompt chains and pack completion status (`list_prompt_packs`).")
+        add("Execute commands on the connected WSL laptop over SSH (`run_laptop_command`).")
+        add("Trigger LoRA downloads directly on the laptop via Civitai (`download_civitai_lora`).")
+        add("Use additional MCP tools when available; they are namespaced as `<server>__<tool>`.")
+    }
+    val numberedTools = toolLines.mapIndexed { index, line -> "${index + 1}. $line" }.joinToString("\n")
+
+    return """
 You are an autonomous AI engineering agent connected to Forge Hub and Wan2.2 video generation pipelines.
 You have tools to:
-1. Read, write, and inspect files in the local workspace directory (`read_file`, `write_file`, `list_directory`).
-2. Run sandboxed shell commands (`run_shell_command`).
-3. Query Forge Hub live render status, GPU compute usage, and job queue (`get_render_status`).
-4. Inspect prompt chains and pack completion status (`list_prompt_packs`).
-5. Execute commands on the connected WSL laptop over SSH (`run_laptop_command`).
-6. Trigger LoRA downloads directly on the laptop via Civitai (`download_civitai_lora`).
-7. Use additional MCP tools when available; they are namespaced as `<server>__<tool>`.
+$numberedTools
 
 Use tools proactively to inspect state, diagnose issues, or execute rendering and pipeline workflows. Be concise and direct in your answers.
 """.trim()
+}
 
 fun main(args: Array<String>) = runBlocking {
     val apiKey = System.getenv("VENICE_API_KEY")
@@ -67,7 +75,7 @@ private suspend fun runCli(
         client = client,
         model = model,
         tools = tools,
-        systemPrompt = SYSTEM_PROMPT,
+        systemPrompt = buildSystemPrompt(allowShell),
         enableWebSearch = enableWebSearch,
         onToolCall = { name, arguments -> println("  -> tool call: $name($arguments)") },
         onToolResult = { name, result ->

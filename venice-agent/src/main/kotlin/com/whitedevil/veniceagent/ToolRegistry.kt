@@ -1,5 +1,8 @@
 package com.whitedevil.veniceagent
 
+/** Chat-completion APIs (OpenAI-compatible, including Venice) cap function names at 64 chars. */
+private const val MAX_TOOL_NAME_LENGTH = 64
+
 /**
  * Aggregates one or more [ToolProvider]s into a single tool namespace for [Agent].
  * Providers are expected to namespace their own tool names to avoid collisions (see MCP's
@@ -56,7 +59,8 @@ class ToolRegistry(private val providers: List<ToolProvider>) : AutoCloseable {
         var suffix = 1
         var candidate: String
         do {
-            candidate = "${name}_$suffix"
+            val suffixText = "_$suffix"
+            candidate = name.take((MAX_TOOL_NAME_LENGTH - suffixText.length).coerceAtLeast(0)) + suffixText
             suffix++
         } while (candidate in taken)
         return candidate
