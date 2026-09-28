@@ -25,5 +25,6 @@ test("Windows dist produces named Setup and Portable exes", () => {
   assert.equal(pkg.build.portable.artifactName, "Forge-Hub-Portable.${ext}");
   const readme = fs.readFileSync(path.join(__dirname, "..", "README.md"), "utf8");
   assert.match(readme, /Forge-Hub-Setup\.exe/);
-  assert.match(readme, /Ctrl\+,/);
+  assert.match(readme, /Forge-Hub-Portable\.exe/);
+  assert.match(readme, /Another program is currently using this file/);
 });

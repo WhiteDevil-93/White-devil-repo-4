@@ -67,9 +67,14 @@ npm start
 
 ## Windows: double-click the installer
 
-1. Download **Forge-Hub-Setup.exe** (NSIS installer) or **Forge-Hub-Portable.exe** (no install).
-2. Double-click it. First run opens `https://84-12-112-249.sslip.io/app/desktop/`.
-3. Press **Ctrl+,** to store relay / laptop passwords (same fields as Settings in the app).
+The real **Forge-Hub-Setup.exe** is about **88 MB**. If Explorer shows a few hundred KB, the download is still running or failed — wait, or grab **Forge-Hub-Portable.exe** instead.
+
+1. Close the browser tab that downloaded it (Chrome/Edge keep a lock on `Downloads\*.exe`).
+2. Copy the `.exe` to the Desktop (`C:\Users\anon3\Desktop`), not `A:\Users\anon3\Downloads`.
+3. Confirm size is ~88 MB, then double-click. First run opens `https://84-12-112-249.sslip.io/app/desktop/`.
+4. Press **Ctrl+,** to store relay / laptop passwords.
+
+If Windows says **“Another program is currently using this file”**, the installer itself is locked — not a broken build. Close Forge Hub if it is already open, wait for Defender to finish scanning, then run the **copy on the Desktop**. Fastest path: **Forge-Hub-Portable.exe** (no installer, just run it).
 
 WSL users can still use `install-home.sh` (see above) instead of the `.exe`.
 
