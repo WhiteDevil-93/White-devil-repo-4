@@ -1,7 +1,10 @@
 package com.whitedevil.veniceagent.mcp
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -220,6 +223,37 @@ class McpStdioClientTest {
                 secondAttempt.message.orEmpty().contains("will not be retried"),
                 "unexpected message: ${secondAttempt.message}",
             )
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `propagates cancellation from a tool call instead of returning an error string`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(script.absolutePath)),
+            requestTimeoutMillis = 10_000,
+        )
+        try {
+            var result: String? = null
+            var caughtCancellation = false
+            val job = launch {
+                try {
+                    result = client.execute("fake__hang_forever", "{}")
+                } catch (e: CancellationException) {
+                    caughtCancellation = true
+                    throw e
+                }
+            }
+            delay(200) // let the call actually reach the server and register in `pending`
+            job.cancelAndJoin()
+
+            assertTrue(caughtCancellation, "cancellation must propagate out of execute(), not become a result string")
+            assertEquals(null, result)
         } finally {
             client.close()
         }

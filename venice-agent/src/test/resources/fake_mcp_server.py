@@ -90,6 +90,8 @@ for line in sys.stdin:
             state["emit_change_on_page2"] = True
             send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
             send({"jsonrpc": "2.0", "id": msg["id"], "result": {"content": [{"type": "text", "text": "triggered"}]}})
+        elif name == "hang_forever":
+            pass  # never respond; simulates a tool call the server never completes on its own
         elif name == "trigger_malformed_list":
             state["malformed_next_list"] = True
             send({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})

@@ -1,5 +1,7 @@
 package com.whitedevil.veniceagent
 
+import kotlinx.coroutines.CancellationException
+
 class Agent(
     private val client: VeniceClient,
     private val model: String,
@@ -61,6 +63,8 @@ class Agent(
                     onToolCall(call.function.name, call.function.arguments)
                     val result = try {
                         tools.execute(call.function.name, call.function.arguments)
+                    } catch (e: CancellationException) {
+                        throw e // never swallow cancellation as an ordinary tool failure
                     } catch (e: Exception) {
                         "Error: tool '${call.function.name}' threw an unexpected exception: ${e.message}"
                     }

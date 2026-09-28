@@ -1,5 +1,6 @@
 package com.whitedevil.veniceagent
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -154,6 +155,8 @@ class ToolBox(
                 "download_civitai_lora" -> downloadCivitaiLora(argumentsJson)
                 else -> "Error: unknown tool '$name'."
             }
+        } catch (e: CancellationException) {
+            throw e // never swallow cancellation as an ordinary tool failure
         } catch (e: Exception) {
             "Error: ${e.message}"
         }
@@ -251,6 +254,8 @@ class ToolBox(
             val status = relayHttp("/api/status")
             val colab = relayHttp("/api/colab/state")
             "Forge Hub Status:\n$status\n\nColab Pipeline State:\n$colab"
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             "Error querying render status: ${e.message}"
         }
@@ -259,6 +264,8 @@ class ToolBox(
     private fun listPromptPacks(): String {
         return try {
             relayHttp("/api/colab/packs")
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             "Error fetching prompt packs: ${e.message}"
         }
@@ -275,6 +282,8 @@ class ToolBox(
                 put("timeout", 90)
             }.toString()
             relayHttp("/api/laptop/run", method = "POST", postBody = payload)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             "Error running laptop command: ${e.message}"
         }
@@ -295,6 +304,8 @@ class ToolBox(
                 put("timeout", 180)
             }.toString()
             relayHttp("/api/laptop/run", method = "POST", postBody = payload)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             "Error invoking Civitai downloader: ${e.message}"
         }

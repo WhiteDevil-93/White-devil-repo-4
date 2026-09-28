@@ -1,11 +1,13 @@
 package com.whitedevil.veniceagent
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 private fun emptyObjectSchema(): JsonObject = buildJsonObject { put("type", "object") }
@@ -79,5 +81,18 @@ class ToolRegistryTest {
         val secondPass = registry.definitions().map { it.function.name }
         assertTrue("flaky__tool" in secondPass, "flaky provider should be retried on the next call: $secondPass")
         assertEquals(2, flaky.definitionsCallCount, "flaky provider must be re-queried, not served from a stale cache")
+    }
+
+    @Test
+    fun `propagates cancellation instead of treating it as a failed provider`() = runBlocking {
+        val cancelling = object : ToolProvider {
+            override suspend fun definitions(): List<ToolDefinition> = throw CancellationException("test cancellation")
+            override suspend fun execute(name: String, argumentsJson: String): String = "unused"
+        }
+        val registry = ToolRegistry(listOf(cancelling))
+
+        assertFailsWith<CancellationException> { registry.definitions() }
+        Unit // see the comment on the equivalent McpStdioClientTest case: assertFailsWith's
+        // return value would otherwise leak out as this function's inferred return type.
     }
 }

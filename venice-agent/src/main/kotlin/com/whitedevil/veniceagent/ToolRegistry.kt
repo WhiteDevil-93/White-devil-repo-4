@@ -1,5 +1,7 @@
 package com.whitedevil.veniceagent
 
+import kotlinx.coroutines.CancellationException
+
 /** Chat-completion APIs (OpenAI-compatible, including Venice) cap function names at 64 chars. */
 private const val MAX_TOOL_NAME_LENGTH = 64
 
@@ -28,6 +30,8 @@ class ToolRegistry(private val providers: List<ToolProvider>) : AutoCloseable {
         for (provider in providers) {
             val providerDefinitions = try {
                 provider.definitions()
+            } catch (e: CancellationException) {
+                throw e // never swallow cancellation as an ordinary provider failure
             } catch (e: Exception) {
                 System.err.println("Warning: a tool provider failed to list its tools and was skipped: ${e.message}")
                 anyProviderSkipped = true

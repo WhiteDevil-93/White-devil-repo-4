@@ -3,6 +3,7 @@ package com.whitedevil.veniceagent.mcp
 import com.whitedevil.veniceagent.ToolDefinition
 import com.whitedevil.veniceagent.ToolFunctionSpec
 import com.whitedevil.veniceagent.ToolProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -274,6 +275,8 @@ class McpStdioClient(
         }
         val response = try {
             call("tools/call", params)
+        } catch (e: CancellationException) {
+            throw e // never swallow cancellation as an ordinary tool failure
         } catch (e: Exception) {
             return "Error: MCP tool call to '$name' failed: ${e.message}"
         }
