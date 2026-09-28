@@ -9,7 +9,11 @@ if (process.platform === "linux" && process.env.FORGE_SANDBOX !== "1") {
 }
 const fs = require("fs");
 const path = require("path");
-const { mergeSettings, isLaptopPath, normalizeHubUrl, needsRelayPassword } = require("./config.cjs");
+const { mergeSettings, isLaptopPath, normalizeHubUrl, DEFAULT_HUB, needsRelayPassword } = require("./config.cjs");
+
+if (process.platform === "win32") {
+  app.disableHardwareAcceleration();
+}
 
 const SETTINGS_FILE = () => path.join(app.getPath("userData"), "settings.json");
 const ICON_PNG = path.join(__dirname, "icon.png");
