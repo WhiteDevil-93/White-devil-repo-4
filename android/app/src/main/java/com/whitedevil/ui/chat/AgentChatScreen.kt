@@ -60,8 +60,8 @@ fun AgentChatScreen(
     LazyColumn(
         state = listState,
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(visible, key = { it.id }) { msg ->
             ChatBubbleRow(msg, onToggleTool, onCopy)
@@ -126,7 +126,7 @@ private fun UserBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
             color = WdPalette.text,
             modifier = Modifier
                 .widthIn(max = 320.dp)
-                .background(WdPalette.userBubble, RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp))
+                .background(WdPalette.userBubble, RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp))
                 .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         )

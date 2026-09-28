@@ -13,14 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -35,8 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.whitedevil.*
 import com.whitedevil.MainActivity
+import com.whitedevil.ui.components.WdHairline
 import com.whitedevil.ui.components.WdScreenBackground
-import com.whitedevil.ui.components.WdScreenTitle
+import com.whitedevil.ui.components.WdTopBar
 import com.whitedevil.ui.theme.WdPalette
 
 @Composable
@@ -44,68 +43,68 @@ fun ForgeHubScreen(host: MainActivity) {
     val progress = host.hubLoadProgressPublic()
     val loading = progress in 0.01f..0.99f || host.hubScreensUiPublic().isEmpty()
     WdScreenBackground(Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().statusBarsPadding()) {
-            Row(
-                Modifier.padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(Modifier.weight(1f)) {
-                    WdScreenTitle(title = "Forge Hub", subtitle = host.hubConnectionLabelPublic())
-                    if (host.hubBannerVisiblePublic()) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
-                            Text(
-                                "Update available",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = WdPalette.accent,
-                                modifier = Modifier.clickable { host.onHubBannerClickPublic() },
-                            )
-                            IconButton(
-                                onClick = { host.dismissHubBannerPublic() },
-                                modifier = Modifier.size(32.dp),
-                            ) {
-                                Icon(Icons.Outlined.Close, contentDescription = "Dismiss update notice", tint = WdPalette.textMetadata)
-                            }
-                        }
+        Column(Modifier.fillMaxSize()) {
+            WdTopBar(
+                title = "Forge Hub",
+                subtitle = host.hubConnectionLabelPublic(),
+                trailing = {
+                    IconButton(onClick = { host.reloadCurrentHubScreen() }) {
+                        Icon(Icons.Outlined.Refresh, contentDescription = "Reload", tint = WdPalette.textSecondary)
                     }
-                }
-                IconButton(onClick = { host.reloadCurrentHubScreen() }) {
-                    Icon(Icons.Outlined.Refresh, contentDescription = "Reload", tint = WdPalette.textSecondary)
+                },
+            )
+            if (host.hubBannerVisiblePublic()) {
+                Row(
+                    Modifier.padding(horizontal = 16.dp, vertical = 0.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "Update available",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = WdPalette.textSecondary,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { host.onHubBannerClickPublic() },
+                    )
+                    IconButton(onClick = { host.dismissHubBannerPublic() }, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Outlined.Close, contentDescription = "Dismiss", tint = WdPalette.textMetadata)
+                    }
                 }
             }
             if (loading) {
                 LinearProgressIndicator(
-                    progress = { if (progress > 0f) progress else 0.15f },
-                    modifier = Modifier.fillMaxWidth(),
+                    progress = { if (progress > 0f) progress else 0.12f },
+                    modifier = Modifier.fillMaxWidth().height(2.dp),
                     color = WdPalette.accent,
-                    trackColor = WdPalette.surface,
+                    trackColor = Color.Transparent,
                 )
             }
-            LazyRow(Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp)) {
+            LazyRow(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 items(host.hubScreensUiPublic(), key = { it.id }) { screen ->
                     val active = screen.id == host.hubCurrentScreenIdPublic()
                     Column(
                         Modifier
                             .clickable { host.showHubScreen(screen.id) }
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
                             screen.title,
                             style = MaterialTheme.typography.labelMedium,
                             color = if (active) WdPalette.text else WdPalette.textMetadata,
-                            fontWeight = if (active) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Normal,
                         )
                         Spacer(Modifier.height(6.dp))
                         Box(
                             Modifier
                                 .height(2.dp)
                                 .fillMaxWidth()
+                                .clip(RoundedCornerShape(1.dp))
                                 .background(if (active) WdPalette.accent else Color.Transparent),
                         )
                     }
                 }
             }
-            HorizontalDivider(color = WdPalette.stroke, modifier = Modifier.padding(top = 4.dp))
+            WdHairline()
             Box(Modifier.fillMaxWidth().weight(1f)) {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
@@ -129,23 +128,24 @@ fun ForgeHubScreen(host: MainActivity) {
 private fun HubLoadingSkeleton(modifier: Modifier = Modifier) {
     Column(
         modifier
-            .background(WdPalette.bg.copy(alpha = 0.92f))
-            .padding(24.dp),
+            .background(WdPalette.bg.copy(alpha = 0.88f))
+            .padding(20.dp),
     ) {
-        Text("Loading Hub…", style = MaterialTheme.typography.titleMedium)
+        Text("Loading…", style = MaterialTheme.typography.titleMedium)
         Text(
-            "Connecting to your relay and preparing dashboards.",
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(top = 8.dp),
+            "Preparing your hub",
+            style = MaterialTheme.typography.labelMedium,
+            color = WdPalette.textMetadata,
+            modifier = Modifier.padding(top = 4.dp),
         )
-        Spacer(Modifier.height(24.dp))
-        repeat(4) {
+        Spacer(Modifier.height(20.dp))
+        repeat(3) { i ->
             Box(
                 Modifier
-                    .fillMaxWidth()
-                    .height(12.dp)
-                    .padding(vertical = 6.dp)
-                    .clip(RoundedCornerShape(6.dp))
+                    .fillMaxWidth(if (i == 1) 0.72f else 0.9f)
+                    .height(10.dp)
+                    .padding(vertical = 5.dp)
+                    .clip(RoundedCornerShape(5.dp))
                     .background(WdPalette.surface),
             )
         }

@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,17 +26,24 @@ fun AgentSetupEmptyState(onAddKey: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = 28.dp),
+            .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Icon(
+            Icons.Outlined.Key,
+            contentDescription = null,
+            modifier = Modifier.size(40.dp),
+            tint = WdPalette.accent,
+        )
+        Spacer(Modifier.height(16.dp))
         Text("Connect Venice", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Add an API key to chat on-device and use tools on your relay.",
+            "Your API key stays on this device. You can attach files and run tools on your relay once connected.",
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(24.dp))
         Button(
             onClick = onAddKey,
             shape = RoundedCornerShape(12.dp),
@@ -48,13 +59,13 @@ fun AgentReadyEmptyState(modifier: Modifier = Modifier) {
     Column(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = 28.dp),
+            .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("Start a conversation", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        Text("Message Venice", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Message Venice below — attach a file from the clip icon.",
+            "Ask anything or attach a file with the clip.",
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
         )

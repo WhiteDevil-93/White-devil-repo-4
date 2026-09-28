@@ -1,6 +1,6 @@
 package com.whitedevil.ui.agent
 
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,14 +12,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -35,40 +36,37 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whitedevil.*
 import com.whitedevil.MainActivity
 import com.whitedevil.UiPolish
 import com.whitedevil.ui.app.AttachmentUi
 import com.whitedevil.ui.chat.AgentChatScreen
+import com.whitedevil.ui.components.WdHairline
 import com.whitedevil.ui.components.WdScreenBackground
-import com.whitedevil.ui.components.WdScreenTitle
+import com.whitedevil.ui.components.WdTopBar
 import com.whitedevil.ui.theme.WdPalette
+
+private const val DEFAULT_AGENT_SUBTITLE = "On-device agent"
 
 @Composable
 fun AgentScreen(host: MainActivity) {
     var overflowOpen by remember { mutableStateOf(false) }
     val hasKey = host.veniceKeyConfiguredPublic()
     val hasConversation = host.agentHasConversationPublic()
+    val status = host.agentStatusSubtitlePublic()
+    val showStatus = status != DEFAULT_AGENT_SUBTITLE
     WdScreenBackground(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-            ) {
-                Row(verticalAlignment = Alignment.Top) {
-                    WdScreenTitle(
-                        title = "Venice",
-                        subtitle = host.agentStatusSubtitlePublic(),
-                        modifier = Modifier.weight(1f),
-                    )
+            WdTopBar(
+                title = "Venice",
+                subtitle = if (showStatus) status else null,
+                trailing = {
                     Box {
                         IconButton(onClick = { overflowOpen = true }) {
                             Icon(Icons.Outlined.MoreHoriz, null, tint = WdPalette.textSecondary)
@@ -88,17 +86,30 @@ fun AgentScreen(host: MainActivity) {
                             })
                         }
                     }
-                }
-                Text(
-                    UiPolish.modelLabel(host.agentSelectedModelPublic()) + "  ▾",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = WdPalette.accent,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .padding(top = 8.dp)
+                },
+            )
+            if (hasKey) {
+                Row(
+                    Modifier
+                        .padding(horizontal = 16.dp, vertical = 0.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .clickable { host.showModelPicker() }
-                        .semantics { contentDescription = "Choose model" },
-                )
+                        .semantics { contentDescription = "Choose model" }
+                        .padding(horizontal = 4.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        UiPolish.modelLabel(host.agentSelectedModelPublic()),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = WdPalette.textSecondary,
+                    )
+                    Icon(
+                        Icons.Outlined.ExpandMore,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = WdPalette.textMetadata,
+                    )
+                }
             }
             if (host.agentShowProgressPublic()) {
                 LinearProgressIndicator(
@@ -107,12 +118,12 @@ fun AgentScreen(host: MainActivity) {
                     trackColor = Color.Transparent,
                 )
             }
+            WdHairline()
             Box(
                 Modifier
                     .weight(1f)
-                    .fillMaxWidth()
-                    .padding(top = 48.dp),
-                contentAlignment = Alignment.TopCenter,
+                    .fillMaxWidth(),
+                contentAlignment = if (hasKey && hasConversation) Alignment.TopStart else Alignment.Center,
             ) {
                 when {
                     !hasKey -> AgentSetupEmptyState(onAddKey = { host.showVeniceKeySheet() })
@@ -126,17 +137,20 @@ fun AgentScreen(host: MainActivity) {
                         includeInfoMessages = false,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 20.dp),
+                            .padding(horizontal = 16.dp),
                     )
                 }
             }
-            CompactComposer(
-                host,
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .imePadding(),
-            )
+            if (hasKey) {
+                CompactComposer(
+                    host,
+                    Modifier
+                        .fillMaxWidth()
+                        .background(WdPalette.bg)
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .imePadding(),
+                )
+            }
         }
     }
 }
@@ -144,9 +158,11 @@ fun AgentScreen(host: MainActivity) {
 @Composable
 private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
     val attachments = host.pendingAttachmentsUiPublic()
+    val input = host.agentInputTextPublic()
+    val canSend = host.agentComposerEnabledPublic() && input.isNotBlank()
     Column(modifier) {
         if (attachments.isNotEmpty()) {
-            LazyRow(modifier = Modifier.padding(bottom = 8.dp)) {
+            LazyRow(modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)) {
                 itemsIndexed(attachments) { index, item ->
                     AttachmentChip(item) { host.removePendingAttachment(index) }
                 }
@@ -155,30 +171,31 @@ private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .border(1.dp, WdPalette.stroke, RoundedCornerShape(22.dp))
-                .padding(start = 2.dp, end = 6.dp, top = 2.dp, bottom = 2.dp),
+                .clip(RoundedCornerShape(24.dp))
+                .background(WdPalette.surface)
+                .padding(start = 4.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
                 onClick = { host.showAttachSheet() },
-                modifier = Modifier.size(44.dp).semantics { contentDescription = "Attach file" },
+                modifier = Modifier.size(40.dp).semantics { contentDescription = "Attach file" },
             ) {
                 Icon(Icons.Outlined.AttachFile, null, tint = WdPalette.textSecondary)
             }
             BasicTextField(
-                value = host.agentInputTextPublic(),
+                value = input,
                 onValueChange = { host.setAgentInputText(it) },
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 10.dp),
                 enabled = host.agentComposerEnabledPublic(),
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = WdPalette.text),
                 cursorBrush = SolidColor(WdPalette.accent),
                 maxLines = 6,
                 decorationBox = { inner ->
                     Box {
-                        if (host.agentInputTextPublic().isEmpty()) {
-                            Text("Message Venice", style = MaterialTheme.typography.bodyLarge, color = WdPalette.textSecondary)
+                        if (input.isEmpty()) {
+                            Text("Message", style = MaterialTheme.typography.bodyLarge, color = WdPalette.textMetadata)
                         }
                         inner()
                     }
@@ -186,14 +203,25 @@ private fun CompactComposer(host: MainActivity, modifier: Modifier = Modifier) {
             )
             IconButton(
                 onClick = { host.sendAgentMessage() },
-                enabled = host.agentComposerEnabledPublic(),
-                modifier = Modifier.semantics { contentDescription = "Send" },
+                enabled = canSend,
+                modifier = Modifier
+                    .size(36.dp)
+                    .semantics { contentDescription = "Send" },
             ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.Send,
-                    null,
-                    tint = if (host.agentComposerEnabledPublic()) WdPalette.accent else WdPalette.textMetadata,
-                )
+                Box(
+                    Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(if (canSend) WdPalette.accent else WdPalette.surfaceHover),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Send,
+                        null,
+                        modifier = Modifier.size(18.dp),
+                        tint = if (canSend) WdPalette.onAccent else WdPalette.textMetadata,
+                    )
+                }
             }
         }
     }
@@ -204,6 +232,7 @@ private fun AttachmentChip(item: AttachmentUi, onRemove: () -> Unit) {
     Text(
         item.name.take(24) + if (item.name.length > 24) "…" else "",
         style = MaterialTheme.typography.labelMedium,
+        color = WdPalette.textSecondary,
         modifier = Modifier
             .padding(end = 8.dp)
             .clickable { onRemove() },
