@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>laptop</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+<style>
+html,body{margin:0;height:100%;background:#0b0b0c;color:#ededea}
+#terminal-container{position:absolute;inset:0}
+.xterm{height:100%;padding:6px}
+.xterm-viewport{overflow-y:scroll}
+</style>
+</head>
+<body>
+<div id="terminal-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+<script src="/app/term/patch.js"></script>
+<script>
+const term = window.term = new Terminal({
+  cursorBlink: true,
+  fontSize: 13,
+  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+  scrollback: 5000,
+  theme: {background: '#0b0b0c', foreground: '#ededea', cursor: '#cdb88f'}
+});
+term.open(document.getElementById('terminal-container'));
+const banner = [
+  'laptop  (local preview — ttyd is not on this machine)',
+  'Swipe up to scroll back. Paste only from the toolbar above.',
+  ''
+];
+for (let i = 1; i <= 80; i++) banner.push(`  ${String(i).padStart(3,' ')}  dmesg-style line so you can scroll. leftover pack ${i}`);
+banner.push('');
+banner.push('anon3@WhiteDevil:~$ ');
+term.write(banner.join('\r\n'));
+term.focus();
+let buf = '';
+term.onData(d => {
+  if (d === '\r') {
+    term.write('\r\n');
+    if (buf.trim()) term.write(`(preview) ${buf}\r\n`);
+    buf = '';
+    term.write('anon3@WhiteDevil:~$ ');
+    return;
+  }
+  if (d === '\u007f') {
+    if (!buf) return;
+    buf = buf.slice(0, -1);
+    term.write('\b \b');
+    return;
+  }
+  if (d.length === 1 && d.charCodeAt(0) >= 32) { buf += d; term.write(d); }
+});
+if (window.ForgeTerm) ForgeTerm.install(window);
+</script>
+</body>
+</html>

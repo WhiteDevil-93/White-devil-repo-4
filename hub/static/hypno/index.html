@@ -1,0 +1,238 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c"><title>HypnoForge</title>
+<link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
+<style>
+.ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--accsoft);color:var(--acc);flex:none;font-size:17px}
+.item{cursor:pointer}
+.reply{white-space:pre-wrap;font-size:14px;margin-top:10px;padding:12px;border-radius:var(--r2);background:rgba(0,0,0,.25)}
+.fab{position:sticky;bottom:12px;display:flex;justify-content:center;pointer-events:none;margin-top:6px}
+.fab .btn{pointer-events:auto;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</head><body>
+
+<div class="row" style="margin:4px 2px 12px">
+  <div class="grow"><div class="tiny mut">On your laptop</div><h1 style="margin:2px 0 0">HypnoForge</h1></div>
+  <span id="st" class="pill">…</span>
+</div>
+
+<div class="chips" id="tabs">
+  <button class="chip on" data-t="make">Make</button><button class="chip" data-t="renders">Renders</button>
+  <button class="chip" data-t="write">Write</button><button class="chip" data-t="ingest">Ingest</button>
+  <button class="chip" data-t="chat">Chat</button><button class="chip" data-t="jobs">Jobs <span id="nrun"></span></button>
+</div>
+
+<section data-p="make">
+  <h2>Render a project</h2>
+  <div class="card">
+    <label class="field"><span>Project</span><select class="input" id="proj"></select></label>
+    <div class="two">
+      <label class="field"><span>Visual preset (optional)</span><select class="input" id="preset"></select></label>
+      <label class="field"><span>Session kit (optional)</span><select class="input" id="kit"></select></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>Audience</span><select class="input" id="aud"><option value="">From project</option><option>gay</option><option>bi</option><option>straight</option><option>trans</option></select></label>
+      <label class="field"><span>Mode</span><select class="input" id="mode"><option value="">From project</option><option value="normal">Normal</option><option value="pmv">PMV</option></select></label>
+    </div>
+    <div class="field"><span>Quality</span><div class="seg" id="q"><button data-v="preview">Preview 8 s</button><button data-v="draft">Draft</button><button class="on" data-v="full">Full</button></div></div>
+    <label class="toggle"><input type="checkbox" class="check" id="notts"> No voice-over (TTS)</label>
+    <div class="tiny mut" style="margin:4px 2px 12px">A preset or kit is saved into the project before it renders.</div>
+    <button class="btn primary" style="width:100%" id="go" onclick="render()">Render</button>
+  </div>
+
+  <h2>Queue several</h2>
+  <div class="card"><div class="small mut" style="margin-bottom:4px">Tick projects to render one after another.</div><div id="plist"><div class="skel" style="height:40px"></div></div></div>
+  <div class="fab" id="fab" style="display:none"><button class="btn primary" onclick="queueSel()">Queue <span id="nsel"></span></button></div>
+</section>
+
+<section data-p="renders" hidden>
+  <div class="chips" id="rk" style="margin-top:12px"><button class="chip on" data-k="completed">Completed</button><button class="chip" data-k="previews">Previews</button></div>
+  <div class="card" style="margin-top:10px"><div id="rlist"><div class="skel" style="height:60px"></div></div></div>
+</section>
+
+<section data-p="write" hidden>
+  <h2>New caption pack</h2>
+  <div class="card">
+    <label class="field"><span>Theme / focus</span><input class="input" id="ctheme" placeholder="e.g. good boy obedience, slow edging"></label>
+    <label class="field"><span>Style</span><select class="input" id="cstyle"></select></label>
+    <div class="two">
+      <label class="field"><span>Lines</span><input class="input" id="clines" type="number" min="5" max="300" placeholder="default"></label>
+      <label class="field"><span>Pack name</span><input class="input" id="cname" placeholder="from theme"></label>
+    </div>
+    <button class="btn primary" style="width:100%;margin-top:14px" onclick="captions()">Write pack</button>
+  </div>
+  <h2>AI assist</h2>
+  <div class="card">
+    <label class="field"><span>What to do</span><select class="input" id="amode"></select></label>
+    <label class="field"><span>Theme / vibe</span><input class="input" id="atheme"></label>
+    <label class="field"><span>Save as pack (rewrite, expand, polish)</span><input class="input" id="asave" placeholder="optional"></label>
+    <button class="btn primary" style="width:100%;margin-top:14px" onclick="assist()">Run</button>
+  </div>
+  <h2>Themes</h2>
+  <div class="card"><div id="themes"></div></div>
+</section>
+
+<section data-p="ingest" hidden>
+  <h2>Download media</h2>
+  <div class="card">
+    <label class="field"><span>Page or file URLs, one per line</span><textarea class="input" id="urls"></textarea></label>
+    <label class="toggle"><input type="checkbox" class="check" id="first"> Only the best file per page</label>
+    <label class="toggle"><input type="checkbox" class="check" id="qai"> Tag with AI after download</label>
+    <button class="btn primary" style="width:100%;margin-top:8px" onclick="ingest()">Download</button>
+  </div>
+  <h2>Search the library</h2>
+  <div class="card">
+    <div class="row"><input class="input grow" id="lq" placeholder="search tags or names"><select class="input" id="lk" style="width:auto"><option value="">All</option><option>video</option><option>image</option><option>audio</option></select></div>
+    <button class="btn" style="width:100%;margin-top:10px" onclick="libsearch()">Search</button>
+    <pre class="log" id="lout" hidden></pre>
+  </div>
+</section>
+
+<section data-p="chat" hidden>
+  <h2>Ask HypnoForge</h2>
+  <div class="card">
+    <textarea class="input" id="msg" placeholder="Ask about projects, presets, renders…"></textarea>
+    <div class="tiny mut" style="margin:6px 2px 0">Answers only; it won't change anything from here.</div>
+    <button class="btn primary" style="width:100%;margin-top:10px" id="send" onclick="chat()">Send</button>
+    <div id="replies"></div>
+  </div>
+</section>
+
+<section data-p="jobs" hidden>
+  <h2>Started from the app</h2>
+  <div class="card"><div id="jlist"><div class="skel" style="height:40px"></div></div></div>
+</section>
+
+<script>
+const {$, esc} = F;
+let ov = null, rkind = 'completed', jobsCache = [];
+const pretty = s => s.replace(/\.(json|mp4)$/, '').replace(/[_-]+/g, ' ');
+const opt = (v, t, sel) => `<option value="${esc(v)}"${sel ? ' selected' : ''}>${esc(t ?? v)}</option>`;
+
+document.querySelectorAll('#tabs .chip').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#tabs .chip').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('section').forEach(s => s.hidden = s.dataset.p !== b.dataset.t);
+  if (b.dataset.t === 'jobs') loadJobs();
+});
+document.querySelectorAll('#q button').forEach(b => b.onclick = () => document.querySelectorAll('#q button').forEach(x => x.classList.toggle('on', x === b)));
+document.querySelectorAll('#rk .chip').forEach(b => b.onclick = () => {
+  rkind = b.dataset.k; document.querySelectorAll('#rk .chip').forEach(x => x.classList.toggle('on', x === b)); drawRenders();
+});
+
+async function load(fresh){
+  try {
+    ov = await F.api('/api/laptop/hypno/overview' + (fresh ? '?fresh=1' : ''));
+    $('st').textContent = 'Laptop online'; $('st').className = 'pill ok';
+  } catch (e) {
+    $('st').textContent = 'Offline'; $('st').className = 'pill bad';
+    $('plist').innerHTML = $('rlist').innerHTML = `<div class="empty">${esc(e.message)}</div>`;
+    return;
+  }
+  const keep = id => $(id).value;
+  const p0 = keep('proj');
+  $('proj').innerHTML = ov.projects.map(p => opt(p.path, pretty(p.name) + (p.path.includes('/renders/') ? ' (renders)' : ''), p.path === p0)).join('');
+  const pr0 = keep('preset'), k0 = keep('kit'), s0 = keep('cstyle'), a0 = keep('amode');
+  $('preset').innerHTML = opt('', 'Keep project’s') + ov.presets.map(p => opt(p, p.replace(/^(Visual|Utility) - /, ''), p === pr0)).join('');
+  $('kit').innerHTML = opt('', 'None') + ov.kits.map(k => opt(k, k.replace(/^Kit - /, ''), k === k0)).join('');
+  $('cstyle').innerHTML = ov.styles.map(s => opt(s, pretty(s), s0 ? s === s0 : s === 'filthy_short')).join('');
+  $('amode').innerHTML = ov.assist_modes.map(s => opt(s, pretty(s), s === a0)).join('');
+  $('themes').innerHTML = ov.themes.map(t => `<div class="item" style="cursor:default"><div class="grow"><div style="font-weight:600">${esc(t.name.replace(/^Visual - /, ''))}</div><div class="tiny mut">${esc(t.hint)}</div></div></div>`).join('') || '<div class="empty">No themes.</div>';
+  const sel = new Set([...document.querySelectorAll('#plist input:checked')].map(i => i.value));
+  $('plist').innerHTML = ov.projects.map(p => `<label class="item"><input type="checkbox" class="check" value="${esc(p.path)}"${sel.has(p.path) ? ' checked' : ''}>
+      <div class="grow"><div class="trunc" style="font-weight:600">${esc(pretty(p.name))}</div><div class="tiny mut">edited ${F.ago(p.mtime)}</div></div></label>`).join('') || '<div class="empty">No projects found.</div>';
+  selChanged(); drawRenders();
+}
+
+function drawRenders(){
+  if (!ov) return;
+  const rs = ov.renders.filter(r => r.kind === rkind);
+  $('rlist').innerHTML = rs.map((r, i) => `<div class="item" data-i="${i}"><div class="ico">▶</div>
+      <div class="grow"><div class="trunc" style="font-weight:600">${esc(pretty(r.name))}</div><div class="tiny mut">${F.ago(r.mtime)} · ${r.mb} MB</div></div></div>`).join('')
+    || '<div class="empty">Nothing here yet.</div>';
+}
+$('rlist').addEventListener('click', e => {
+  const i = e.target.closest('[data-i]')?.dataset.i; if (i == null) return;
+  const rs = ov.renders.filter(r => r.kind === rkind).map(r => Object.assign({}, r, {url: `${ov.video_base}/${r.kind}/${encodeURIComponent(r.name)}`}));
+  F.viewer(rs, +i, c => pretty(c.name));
+});
+
+function selChanged(){
+  const n = document.querySelectorAll('#plist input:checked').length;
+  $('fab').style.display = n ? '' : 'none'; $('nsel').textContent = n + ' project' + (n === 1 ? '' : 's');
+}
+$('plist').addEventListener('change', selChanged);
+
+async function start(path, body, btn, msg){
+  if (btn?.disabled) return;
+  if (btn) btn.disabled = true;
+  try { await F.post('/api/laptop/hypno/' + path, body); F.toast(msg + ' Follow it under Jobs.'); loadJobs(); }
+  catch (e) { F.toast(e.message); }
+  finally { if (btn) btn.disabled = false; }
+}
+const q = () => document.querySelector('#q .on').dataset.v;
+function render(){
+  const p = $('proj').value; if (!p) return F.toast('Pick a project');
+  start('render', {project: p, preview: q() === 'preview', draft: q() === 'draft', no_tts: $('notts').checked,
+    audience: $('aud').value || null, mode: $('mode').value || null, preset: $('preset').value || null, kit: $('kit').value || null},
+    $('go'), 'Render started.');
+}
+function queueSel(){
+  const ps = [...document.querySelectorAll('#plist input:checked')].map(i => i.value);
+  start('queue', {projects: ps, preview: q() === 'preview', draft: q() === 'draft'}, $('fab').querySelector('button'), `Queued ${ps.length}.`)
+    .then(() => { document.querySelectorAll('#plist input:checked').forEach(i => i.checked = false); selChanged(); });
+}
+function captions(){
+  const t = $('ctheme').value.trim(); if (!t) return F.toast('Add a theme');
+  start('captions', {theme: t, style: $('cstyle').value, name: $('cname').value.trim() || null, lines: +$('clines').value || null}, null, 'Writing the pack.');
+}
+function assist(){
+  start('assist', {mode: $('amode').value, theme: $('atheme').value.trim() || null, save: $('asave').value.trim() || null}, null, 'AI assist started.');
+}
+function ingest(){
+  const urls = $('urls').value.split(/\s+/).filter(Boolean); if (!urls.length) return F.toast('Add a URL');
+  start('ingest', {urls, first_only: $('first').checked, queue_ai: $('qai').checked}, null, 'Downloading.').then(() => $('urls').value = '');
+}
+async function libsearch(){
+  $('lout').hidden = false; $('lout').textContent = 'Searching…';
+  try {
+    const r = await F.api(`/api/laptop/hypno/library?q=${encodeURIComponent($('lq').value)}&kind=${$('lk').value}`);
+    $('lout').textContent = r.output || 'No matches.';
+  } catch (e) { $('lout').textContent = e.message; }
+}
+async function chat(){
+  const m = $('msg').value.trim(), b = $('send'); if (!m || b.disabled) return;
+  b.disabled = true; b.textContent = 'Thinking…';
+  const box = document.createElement('div'); box.className = 'reply';
+  box.innerHTML = `<div class="tiny mut">You</div>${esc(m)}`; $('replies').prepend(box);
+  try {
+    const r = await F.post('/api/laptop/hypno/chat', {message: m});
+    box.innerHTML += `<div class="tiny mut" style="margin-top:10px">HypnoForge</div>${esc(r.reply || '(no answer)')}`; $('msg').value = '';
+  } catch (e) { box.innerHTML += `<div class="tiny" style="color:#e3a9a9;margin-top:8px">${esc(e.message)}</div>`; }
+  finally { b.disabled = false; b.textContent = 'Send'; }
+}
+
+const JST = {running: ['Running', 'ok live'], done: ['Done', 'ok'], failed: ['Failed', 'bad']};
+async function loadJobs(){
+  try { jobsCache = await F.api('/api/laptop/hypno/jobs'); } catch (e) { $('jlist').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  const n = jobsCache.filter(j => j.status === 'running').length;
+  $('nrun').textContent = n ? `· ${n}` : '';
+  const open = new Set([...document.querySelectorAll('#jlist details[open]')].map(d => d.dataset.id));
+  $('jlist').innerHTML = jobsCache.map(j => {
+    const [l, c] = JST[j.status] || [j.status, ''];
+    return `<div class="item" style="display:block;cursor:default"><div class="row"><div class="grow"><div class="trunc" style="font-weight:600">${esc(j.title)}</div>
+      <div class="tiny mut">${esc(j.kind)} · started ${F.ago(j.created)}</div></div><span class="pill ${c}">${l}</span></div>
+      <details data-id="${esc(j.id)}"${open.has(j.id) ? ' open' : ''}><summary style="margin-top:8px">Log</summary><pre class="log">…</pre></details></div>`;
+  }).join('') || '<div class="empty">Nothing started from the app yet.</div>';
+  document.querySelectorAll('#jlist details').forEach(d => { d.ontoggle = () => d.open && showLog(d); if (d.open) showLog(d); });
+  if (jobsCache.some(j => j.status === 'done' && Date.now() / 1000 - (j.finished || 0) < 60)) load(true);
+}
+async function showLog(d){
+  try { d.querySelector('pre').textContent = (await F.api('/api/laptop/hypno/jobs/' + d.dataset.id)).log || '(empty)'; }
+  catch (e) { d.querySelector('pre').textContent = e.message; }
+}
+
+F.pull(() => Promise.all([load(true), loadJobs()]));
+load(); loadJobs();
+setInterval(() => { if (!document.hidden && !document.querySelector('.viewer')) loadJobs(); }, 20000);
+</script>
+</body></html>

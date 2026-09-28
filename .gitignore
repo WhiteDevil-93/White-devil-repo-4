@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+.venice_key
+hub/venice.key
+hub/venice.chats.json
+hub/.venv/
+*.apk
+.venv/
+credentials.json
+.gradle/
+build/

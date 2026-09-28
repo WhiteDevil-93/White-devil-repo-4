@@ -1,0 +1,141 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c"><title>Colab</title>
+<link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
+<style>
+.job{padding:14px 0;border-top:1px solid var(--line)}.job:first-child{border-top:0;padding-top:4px}
+.job .strip .thumb{width:30%}
+.pack{display:flex;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}.pack:first-child{border-top:0}
+.fab{position:sticky;bottom:12px;display:flex;justify-content:center;pointer-events:none;margin-top:6px}
+.fab .btn{pointer-events:auto;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</head><body>
+
+<div class="row" style="margin:4px 2px 12px">
+  <div class="grow"><div class="tiny mut" id="gpu">Google Colab</div><h1 style="margin:2px 0 0">Colab</h1></div>
+  <span id="rt" class="pill">…</span>
+</div>
+
+<div class="card">
+  <div class="tiles" id="tiles"><div class="tile skel" style="height:80px"></div><div class="tile skel" style="height:80px"></div></div>
+  <div class="small mut" id="hb" style="margin:12px 2px 0"></div>
+  <div class="row wrap" style="margin-top:14px">
+    <button class="btn primary grow" onclick="act('recover','Start a new G4 runtime and resume the queued packs?')">Start / restart</button>
+    <button class="btn danger grow" onclick="act('stop-runtime','Stop the Colab runtime? Rendering stops and credits stop being used. Auto-restart pauses until you start it again.')">Stop</button>
+  </div>
+</div>
+
+<h2>Queue</h2>
+<div class="card" id="jobs"><div class="skel" style="height:60px"></div></div>
+
+<h2>Packs</h2>
+<div class="card">
+  <div class="small mut" style="margin-bottom:6px">Tick packs to queue. Queued packs resume where they stopped.</div>
+  <div id="packs"><div class="skel" style="height:40px"></div></div>
+</div>
+<div class="fab" id="fab" style="display:none"><button class="btn primary" onclick="queueSel()">Queue <span id="nsel"></span></button></div>
+
+<h2>Create</h2>
+<a class="card row" href="/generator.html?target=colab" style="color:inherit">
+  <div class="ico" style="width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--accsoft);color:var(--acc);font-size:20px">✦</div>
+  <div class="grow"><div style="font-weight:700">Prompt generator</div><div class="small mut">Make new chains. "Send to runner" is already connected.</div></div>
+  <div class="mut" style="font-size:22px">›</div>
+</a>
+
+<div class="card"><details><summary>Recovery log</summary><pre class="log" id="rlog"></pre></details></div>
+
+<script>
+const {$, esc} = F;
+let lib = [];
+const groupOf = id => lib.find(g => g.id === id);
+const jobTitle = j => groupOf(j.chain_id)?.title || (j.name || 'Job').replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+const STATUS = {rendering: ['Rendering', 'ok live'], queued: ['Queued', ''], waiting: ['Waiting', 'warn'], error: ['Failed', 'bad'],
+                cancelled: ['Cancelled', ''], done: ['Done', 'ok']};
+
+async function load(){
+  try { lib = await F.api('/api/media/library'); } catch (e) {}
+  try {
+    const s = await F.api('/api/colab/state'), u = s.usage || {};
+    const rt = $('rt');
+    if (s.paused){ rt.textContent = 'Stopped'; rt.className = 'pill warn'; }
+    else if (s.recover_running){ rt.textContent = 'Starting…'; rt.className = 'pill warn live'; }
+    else if (s.runner_online || u.active > 0){ rt.textContent = 'Running'; rt.className = 'pill ok live'; }
+    else { rt.textContent = 'No runtime'; rt.className = 'pill bad'; }
+    $('gpu').textContent = (s.gpu && s.gpu[0] || '').split(',')[0].replace('NVIDIA ', '') || 'Google Colab';
+    const hrs = u.balance != null && u.rate_per_hr ? Math.floor(u.balance / u.rate_per_hr) : null;
+    $('tiles').innerHTML =
+      `<div class="tile"><div class="k">Credits</div><div class="v">${u.balance != null ? Math.round(u.balance) : '—'}</div><div class="s">${u.rate_per_hr ? u.rate_per_hr + ' per hour' : '—'}</div></div>
+       <div class="tile"><div class="k">Time left</div><div class="v">${hrs != null ? hrs + ' h' : '—'}</div><div class="s">at the current rate</div></div>`;
+    $('hb').textContent = s.heartbeat.at ? `Last health check ${F.ago(s.heartbeat.at)}${s.heartbeat.DRIVE ? ' · Drive ' + s.heartbeat.DRIVE : ''}${s.runner_mode ? ' · runner: ' + s.runner_mode : ''}` : '';
+
+    const jobs = s.jobs.filter(j => j.status !== 'done' || Date.now() / 1000 - (groupOf(j.chain_id)?.updated || 0) < 6 * 3600);
+    $('jobs').innerHTML = jobs.length ? jobs.map(j => {
+      const p = j.progress || {}, pct = p.total ? Math.round(100 * p.done / p.total) : 0;
+      const [label, cls] = STATUS[j.status] || [j.status, ''];
+      const g = groupOf(j.chain_id), recent = g ? g.clips.slice(-3).reverse() : [];
+      const left = j.status === 'rendering' && j.avg_seconds && p.total ? ' · about ' + F.dur(j.avg_seconds * (p.total - p.done)) + ' left' : '';
+      return `<div class="job" data-g="${esc(j.chain_id || '')}">
+        <div class="row"><div class="grow trunc" style="font-weight:700;font-size:16px">${esc(jobTitle(j))}</div><span class="pill ${cls}">${label}</span></div>
+        <div class="bar" style="margin:10px 0 6px"><i style="width:${pct}%"></i></div>
+        <div class="tiny mut">${p.done || 0} of ${p.total || '?'} clips${j.current ? ' · on clip ' + j.current : ''}${j.avg_seconds ? ' · ~' + j.avg_seconds + ' s each' : ''}${left}</div>
+        ${recent.length ? `<div class="strip" style="margin-top:10px">${recent.map(c => F.thumb(c, 'Clip ' + c.idx)).join('')}</div>` : ''}
+        ${j.error ? `<div class="tiny" style="color:#e3a9a9;margin-top:8px">${esc(j.error).slice(0, 240)}</div>` : ''}
+        <div class="row" style="margin-top:10px;justify-content:flex-end">
+          ${['error', 'cancelled'].includes(j.status) ? `<button class="btn sm" onclick="jobAct('${j.id}','retry')">Retry</button>` : ''}
+          ${['queued', 'rendering', 'waiting'].includes(j.status) ? `<button class="btn danger sm" onclick="jobAct('${j.id}','cancel')">Cancel</button>` : ''}
+        </div></div>`;
+    }).join('') : `<div class="empty">${s.runner_online ? 'Nothing queued.' : s.runner_mode === 'old' ? 'Rendering on the old runner (no queue view).' : 'Runner offline.'}</div>`;
+    $('rlog').textContent = s.recover_log.join('\n');
+  } catch (e) { F.toast('Load failed: ' + e.message); }
+  try {
+    const sel = new Set([...document.querySelectorAll('#packs input:checked')].map(i => +i.value));
+    const ps = await F.api('/api/colab/packs');
+    $('packs').innerHTML = ps.map(p => {
+      const pct = p.clips ? Math.round(100 * p.rendered / p.clips) : 0;
+      return `<label class="pack"><input class="check" type="checkbox" value="${p.index}"${sel.has(p.index) ? ' checked' : ''}>
+        <div class="grow"><div class="trunc" style="font-weight:600">Pack ${p.index} <span class="mut" style="font-weight:400">· ${esc(p.title)}</span></div>
+        <div class="bar" style="margin-top:7px"><i style="width:${pct}%"></i></div></div>
+        <span class="tiny ${pct === 100 ? '' : 'mut'}" style="${pct === 100 ? 'color:var(--acc)' : ''}">${pct === 100 ? '✓ done' : p.rendered + '/' + p.clips}</span></label>`;
+    }).join('');
+    selChanged();
+  } catch (e) { $('packs').innerHTML = `<div class="empty">Packs unavailable: ${esc(e.message)}</div>`; }
+}
+
+function selChanged(){
+  const n = document.querySelectorAll('#packs input:checked').length;
+  $('fab').style.display = n ? '' : 'none'; $('nsel').textContent = n + ' pack' + (n === 1 ? '' : 's');
+}
+$('packs').addEventListener('change', selChanged);
+$('jobs').addEventListener('click', e => {
+  const n = e.target.closest('.thumb')?.dataset.clip; if (!n) return;
+  const g = groupOf(e.target.closest('.job').dataset.g); if (!g) return;
+  F.viewer(g.clips, g.clips.findIndex(c => c.name === n), c => g.title + ' · clip ' + c.idx);
+});
+
+async function act(what, question){
+  if (!confirm(question)) return;
+  try {
+    const j = await F.post('/api/colab/' + what);
+    F.toast(what === 'recover' ? (j.already_running ? 'Already starting.' : 'Starting a new runtime (about 5 min before clips flow).') : (j.ok ? 'Runtime stopped.' : 'Stop failed: ' + (j.output || '')));
+    setTimeout(load, 1500);
+  } catch (e) { F.toast(e.message); }
+}
+async function jobAct(id, a){
+  if (a === 'cancel' && !confirm('Cancel this job? Finished clips are kept.')) return;
+  try { await F.post(`/api/colab/jobs/${id}/${a}`); F.toast(a === 'retry' ? 'Retrying.' : 'Cancelled.'); load(); } catch (e) { F.toast(e.message); }
+}
+async function queueSel(){
+  const btn = $('fab').querySelector('button');
+  if (btn.disabled) return;
+  const packs = [...document.querySelectorAll('#packs input:checked')].map(i => +i.value);
+  btn.disabled = true; $('nsel').textContent = '…';
+  try {
+    await F.post('/api/colab/queue', {packs}); F.toast('Queued pack ' + packs.join(', '));
+    document.querySelectorAll('#packs input:checked').forEach(i => i.checked = false); load();
+  } catch (e) { F.toast('Queue failed: ' + e.message); }
+  finally { btn.disabled = false; selChanged(); }
+}
+F.pull(load);
+load(); setInterval(() => { if (!document.hidden && !document.querySelector('.viewer')) load(); }, 30000);
+</script>
+</body></html>

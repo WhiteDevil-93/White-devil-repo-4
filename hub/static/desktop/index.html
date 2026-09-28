@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forge Hub</title>
+<meta name="theme-color" content="#0b0b0c">
+<link rel="manifest" href="/app/desktop/manifest.webmanifest" crossorigin="use-credentials">
+<link rel="icon" href="/app/desktop/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/app/desktop/icon-192.png">
+<style>
+:root{--bg:#0b0b0c;--side:#101012;--fg:#ededea;--mut:#9b9ba1;--dim:#65656c;--strong:#f4f1ea;--acc:#cdb88f;
+  --line:rgba(255,255,255,.075);--hover:rgba(255,255,255,.045);--on:rgba(255,255,255,.085);--ok:#93bba3;--bad:#d99393}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden;
+  font:14px/1.4 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);height:100%}
+aside{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.brand{display:flex;align-items:center;gap:10px;padding:20px 18px 18px;font-weight:600;letter-spacing:-.02em;font-size:15px}
+.brand img{width:26px;height:26px}
+nav{flex:1;overflow:auto;padding:4px 10px}
+.sec{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:18px 10px 6px}
+nav a{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:10px;color:var(--mut);text-decoration:none;
+  font-weight:500;cursor:pointer;user-select:none}
+nav a:hover{background:var(--hover);color:var(--fg)}
+nav a.on{background:var(--on);color:var(--strong)}
+nav a svg{width:18px;height:18px;flex:none;opacity:.9}
+nav a .k{margin-left:auto;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+.foot{border-top:1px solid var(--line);padding:12px 18px 14px;font-size:12px;color:var(--mut);display:grid;gap:6px}
+.foot .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--dim);margin-right:7px;vertical-align:1px}
+.foot .dot.ok{background:var(--ok)}.foot .dot.bad{background:var(--bad)}
+main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.bar{display:flex;align-items:center;gap:8px;height:52px;padding:0 14px 0 22px;border-bottom:1px solid var(--line);flex:none}
+.bar h1{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar button{background:transparent;border:1px solid transparent;color:var(--mut);border-radius:9px;height:32px;min-width:32px;
+  padding:0 9px;cursor:pointer;display:grid;place-items:center;font:inherit}
+.bar button:hover{background:var(--hover);color:var(--fg);border-color:var(--line)}
+.bar svg{width:17px;height:17px}
+.frames{position:relative;flex:1;min-height:0}
+.frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg);visibility:hidden}
+.frames iframe.on{visibility:visible}
+.load{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--acc),#a8916a);width:0;opacity:0;transition:width .6s,opacity .3s;z-index:3}
+.load.go{width:70%;opacity:1}
+.err{padding:60px;color:var(--mut);text-align:center}
+@media (max-width:860px){.shell{grid-template-columns:64px minmax(0,1fr)}.brand span,nav a span,nav a .k,.sec,.foot{display:none}
+  nav a{justify-content:center}.brand{justify-content:center;padding:18px 0}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="brand"><img src="/app/desktop/icon.svg" alt=""><span>Forge Hub</span></div>
+    <nav id="nav"></nav>
+    <div class="foot" id="foot"><div><span class="dot"></span>Connecting…</div></div>
+  </aside>
+  <main>
+    <div class="bar">
+      <h1 id="title">Forge Hub</h1>
+      <button id="reload" title="Reload screen (Ctrl+R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
+      <button id="pop" title="Open in a browser tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>
+    </div>
+    <div class="frames" id="frames"><div class="load" id="load"></div></div>
+  </main>
+</div>
+<script>
+const ICONS = {
+  home: 'M10,20v-6h4v6h5v-8h3L12,3 2,12h3v8z',
+  movie: 'M18,4l2,4h-3l-2,-4h-2l2,4h-3l-2,-4H8l2,4H7L5,4H4c-1.1,0 -1.99,0.9 -1.99,2L2,18c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V4h-4z',
+  cloud: 'M19.35,10.04C18.67,6.59 15.64,4 12,4 9.11,4 6.6,5.64 5.35,8.04 2.34,8.36 0,10.91 0,14c0,3.31 2.69,6 6,6h13c2.76,0 5,-2.24 5,-5 0,-2.64 -2.05,-4.78 -4.65,-4.96z',
+  bolt: 'M13,2L4,14h6.5L9.5,22 20,9.5h-6.6z',
+  folder: 'M10,4H4c-1.1,0 -1.99,0.9 -1.99,2L2,18c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V8c0,-1.1 -0.9,-2 -2,-2h-8l-2,-2z',
+  terminal: 'M20,4H4C2.89,4 2,4.9 2,6v12c0,1.1 0.89,2 2,2h16c1.1,0 2,-0.9 2,-2V6C22,4.9 21.11,4 20,4zM20,18H4V8h16V18zM18,17h-6v-2h6V17zM7.5,17l-1.41,-1.41L8.67,13l-2.59,-2.59L7.5,9l4,4L7.5,17z',
+  pen: 'M3,17.25V21h3.75L17.81,9.94l-3.75,-3.75L3,17.25zM20.71,7.04c0.39,-0.39 0.39,-1.02 0,-1.41l-2.34,-2.34c-0.39,-0.39 -1.02,-0.39 -1.41,0l-1.83,1.83 3.75,3.75 1.83,-1.83z',
+  bot: 'M12,2a2,2 0 0 1 2,2c0,.74 -.4,1.39 -1,1.73V7h1a7,7 0 0 1 7,7h1v3h-1v1a2,2 0 0 1 -2,2H5a2,2 0 0 1 -2,-2v-1H2v-3h1a7,7 0 0 1 7,-7h1V5.73C10.4,5.39 10,4.74 10,4a2,2 0 0 1 2,-2zM8.5,13a1.5,1.5 0 1 0 0,3 1.5,1.5 0 0 0 0,-3zM15.5,13a1.5,1.5 0 1 0 0,3 1.5,1.5 0 0 0 0,-3z',
+  venice: 'M12,2l1.8,5.4L19,9l-4,3.2L16.2,18 12,15.2 7.8,18 9,12.2 5,9l5.2,-1.6L12,2zM19,13.2l.9,2.6L22,16.5 20,18.1 20.6,21 19,19.6 17.4,21 18,18.1 16,16.5 18.1,15.8z',
+};
+const SPIRAL = 'M12,12m-1.5,0a1.5,1.5 0,1 1,3 0a3,3 0,1 1,-6 0a4.5,4.5 0,1 1,9 0a6,6 0,1 1,-12 0a7.5,7.5 0,1 1,15 0';
+const ALIAS = {renders: 'movie', gallery: 'movie', hypno: 'spiral', spiral: 'spiral', thunder: 'bolt', colab: 'cloud', files: 'folder', term: 'terminal', venice: 'venice', chat: 'venice'};
+function icon(name) {
+  const n = ALIAS[name] || name;
+  if (n === 'spiral') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="${SPIRAL}"/></svg>`;
+  return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="${ICONS[n] || ICONS.bot}"/></svg>`;
+}
+const EXTRA = [
+  {id: 'gen-colab', title: 'Colab 5B', icon: 'pen', url: '/generator.html?target=colab', group: 'Prompt creator'},
+  {id: 'gen-thunder', title: 'Thunder 14B', icon: 'pen', url: '/generator.html?target=thunder', group: 'Prompt creator'},
+];
+const $ = id => document.getElementById(id);
+let screens = [], current = null;
+const frames = {};
+
+function groupOf(s) {
+  if (s.group) return s.group === 'bots' ? 'Bots' : s.group;
+  return s.url.startsWith('/laptop/') ? 'Laptop' : 'Studio';
+}
+
+function buildNav() {
+  const nav = $('nav'); nav.innerHTML = '';
+  let last = null, n = 0;
+  for (const s of screens) {
+    const g = groupOf(s);
+    if (g !== last) { nav.insertAdjacentHTML('beforeend', `<div class="sec">${g}</div>`); last = g; }
+    n++;
+    const a = document.createElement('a');
+    a.dataset.id = s.id; a.href = '#' + s.id;
+    a.innerHTML = `${icon(s.icon)}<span>${s.title}</span>${n <= 9 ? `<span class="k">Ctrl ${n}</span>` : ''}`;
+    a.onclick = e => { e.preventDefault(); show(s.id); };
+    nav.appendChild(a);
+  }
+}
+
+function screenForUrl(href) {
+  let u; try { u = new URL(href, location.href); } catch { return null; }
+  if (u.origin !== location.origin) return null;
+  const path = u.pathname + u.search;
+  return screens.find(s => s.url === path || (s.url.endsWith('/') && u.pathname === s.url && !s.url.includes('?')));
+}
+
+function hookFrame(f) {
+  f.addEventListener('load', () => {
+    $('load').classList.remove('go');
+    try {
+      const d = f.contentDocument;
+      d.addEventListener('click', e => {
+        const a = e.target.closest && e.target.closest('a[href]');
+        if (!a || a.target === '_blank' || e.ctrlKey || e.metaKey) return;
+        const s = screenForUrl(a.getAttribute('href'));
+        if (s && s.id !== f.dataset.id) { e.preventDefault(); show(s.id); }
+      }, true);
+      d.addEventListener('keydown', keys);
+    } catch (e) {}
+  });
+}
+
+function show(id, reload) {
+  const s = screens.find(x => x.id === id) || screens[0];
+  if (!s) return;
+  current = s;
+  let f = frames[s.id];
+  if (!f) {
+    f = frames[s.id] = document.createElement('iframe');
+    f.dataset.id = s.id;
+    f.allow = s.id === 'term'
+      ? 'fullscreen; autoplay'
+      : 'fullscreen; clipboard-read; clipboard-write; autoplay';
+    hookFrame(f); f.src = s.url; $('frames').appendChild(f); $('load').classList.add('go');
+  } else if (reload) {
+    $('load').classList.add('go'); f.contentWindow.location.reload();
+  }
+  for (const [k, el] of Object.entries(frames)) el.classList.toggle('on', k === s.id);
+  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.id === s.id));
+  $('title').textContent = s.title;
+  document.title = s.title + ' · Forge Hub';
+  if (location.hash !== '#' + s.id) history.replaceState(null, '', '#' + s.id);
+  localStorage.setItem('desk_screen', s.id);
+}
+
+function keys(e) {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+  if (/^[1-9]$/.test(e.key) && screens[+e.key - 1]) { e.preventDefault(); show(screens[+e.key - 1].id); }
+  else if (e.key === 'r' && current) { e.preventDefault(); show(current.id, true); }
+}
+
+async function status() {
+  try {
+    const s = await (await fetch('/api/status', {cache: 'no-store'})).json();
+    const age = s.newest_age_min;
+    $('foot').innerHTML =
+      `<div><span class="dot ${age != null && age < 30 ? 'ok' : 'bad'}"></span>Newest clip ${age == null ? '—' : age < 1 ? 'just now' : age + ' min ago'}</div>` +
+      `<div><span class="dot ${s.laptop && s.laptop.online ? 'ok' : ''}"></span>${s.clips} clips on relay</div>`;
+  } catch (e) {
+    $('foot').innerHTML = '<div><span class="dot bad"></span>Relay unreachable</div>';
+  }
+}
+
+async function boot() {
+  try {
+    const m = await (await fetch('/api/manifest', {cache: 'no-store'})).json();
+    const main = m.screens.filter(s => s.group !== 'bots');
+    const pc = main.filter(s => s.group === 'Prompt creator');
+    screens = [...main.filter(s => s.group !== 'Prompt creator'), ...EXTRA, ...pc, ...m.screens.filter(s => s.group === 'bots')];
+    localStorage.setItem('desk_manifest', JSON.stringify(screens));
+  } catch (e) {
+    screens = JSON.parse(localStorage.getItem('desk_manifest') || '[]');
+    if (!screens.length) { $('frames').innerHTML = '<div class="err">Relay unreachable. Check your connection and reload.</div>'; return; }
+  }
+  buildNav();
+  show(location.hash.slice(1) || localStorage.getItem('desk_screen') || screens[0].id);
+  status(); setInterval(status, 60000);
+}
+
+document.addEventListener('keydown', keys);
+window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (!current || id !== current.id) show(id); });
+$('reload').onclick = () => current && show(current.id, true);
+$('pop').onclick = () => { const f = current && frames[current.id]; window.open(f ? f.contentWindow.location.href : current.url, '_blank'); };
+boot();
+</script>
+</body>
+</html>
