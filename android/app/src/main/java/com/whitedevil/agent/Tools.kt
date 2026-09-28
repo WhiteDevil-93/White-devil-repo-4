@@ -1,15 +1,27 @@
 package com.whitedevil.agent
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
-import android.util.Base64
+import java.net.URLEncoder
+import java.util.Base64
+
+data class ToolExecution(
+    val text: String,
+    val imageDataUrls: List<String> = emptyList(),
+)
 
 /**
  * Android Device & Remote Relay/Forge Hub ToolBox:
@@ -90,6 +102,18 @@ class ToolBox(
         add(
             ToolDefinition(
                 function = ToolFunctionSpec(
+                    name = "review_latest_render",
+                    description = "Fetch the newest completed Forge Hub render and its actual preview image so you can visually review it. You MUST use this whenever the user asks to review, inspect, critique, describe, or check the latest/newest/recent render; do not ask the user to attach it.",
+                    parameters = buildJsonObject {
+                        put("type", "object")
+                        putJsonObject("properties") {}
+                    },
+                ),
+            ),
+        )
+        add(
+            ToolDefinition(
+                function = ToolFunctionSpec(
                     name = "list_prompt_packs",
                     description = "List prompt packs in the Wan2.2 generation catalog and their render completion status from Forge Hub.",
                     parameters = buildJsonObject {
@@ -125,21 +149,26 @@ class ToolBox(
         )
     }
 
-    fun execute(name: String, argumentsJson: String): String {
+    fun execute(name: String, argumentsJson: String): String =
+        executeDetailed(name, argumentsJson).text
+
+    fun executeDetailed(name: String, argumentsJson: String): ToolExecution {
         return try {
-            when (name) {
-                "read_file" -> readFile(argumentsJson)
-                "write_file" -> writeFile(argumentsJson)
-                "list_directory" -> listDirectory(argumentsJson)
-                "delete_file" -> deleteFile(argumentsJson)
-                "get_render_status" -> getRenderStatus()
-                "list_prompt_packs" -> listPromptPacks()
-                "run_laptop_command" -> runLaptopCommand(argumentsJson)
-                "download_civitai_lora" -> downloadCivitaiLora(argumentsJson)
-                else -> "Error: unknown tool '$name'."
+            val result = when (name) {
+                "read_file" -> ToolExecution(readFile(argumentsJson))
+                "write_file" -> ToolExecution(writeFile(argumentsJson))
+                "list_directory" -> ToolExecution(listDirectory(argumentsJson))
+                "delete_file" -> ToolExecution(deleteFile(argumentsJson))
+                "get_render_status" -> ToolExecution(getRenderStatus())
+                "review_latest_render" -> reviewLatestRender()
+                "list_prompt_packs" -> ToolExecution(listPromptPacks())
+                "run_laptop_command" -> ToolExecution(runLaptopCommand(argumentsJson))
+                "download_civitai_lora" -> ToolExecution(downloadCivitaiLora(argumentsJson))
+                else -> ToolExecution("Error: unknown tool '$name'.")
             }
+            result
         } catch (e: Exception) {
-            "Error: ${e.message}"
+            ToolExecution("Error: ${e.message}")
         }
     }
 
@@ -204,7 +233,7 @@ class ToolBox(
         conn.connectTimeout = 15000
         conn.readTimeout = 30000
         if (relayPass.isNotBlank()) {
-            val auth = "Basic " + Base64.encodeToString("$relayUser:$relayPass".toByteArray(), Base64.NO_WRAP)
+            val auth = "Basic " + Base64.getEncoder().encodeToString("$relayUser:$relayPass".toByteArray())
             conn.setRequestProperty("Authorization", auth)
         }
         if (postBody != null) {
@@ -217,6 +246,29 @@ class ToolBox(
         return stream?.bufferedReader()?.readText() ?: "HTTP $code"
     }
 
+    private fun relayBytes(path: String): Pair<String, ByteArray> {
+        val cleanBase = relayBaseUrl.trimEnd('/')
+        require(cleanBase.isNotBlank()) { "Relay Base URL is not configured. Check settings." }
+        val conn = URI("$cleanBase$path").toURL().openConnection() as HttpURLConnection
+        conn.requestMethod = "GET"
+        conn.connectTimeout = 15000
+        conn.readTimeout = 30000
+        if (relayPass.isNotBlank()) {
+            val auth = "Basic " + Base64.getEncoder().encodeToString("$relayUser:$relayPass".toByteArray())
+            conn.setRequestProperty("Authorization", auth)
+        }
+        val code = conn.responseCode
+        if (code !in 200..299) {
+            val detail = conn.errorStream?.bufferedReader()?.readText().orEmpty()
+            error("HTTP $code fetching render preview${if (detail.isBlank()) "" else ": $detail"}")
+        }
+        val contentType = conn.contentType?.substringBefore(';') ?: "image/jpeg"
+        val bytes = conn.inputStream.use { it.readBytes() }
+        require(bytes.isNotEmpty()) { "Render preview was empty" }
+        require(bytes.size <= 8 * 1024 * 1024) { "Render preview is too large (${bytes.size} bytes)" }
+        return contentType to bytes
+    }
+
     private fun getRenderStatus(): String {
         return try {
             val status = relayHttp("/api/status")
@@ -225,6 +277,40 @@ class ToolBox(
         } catch (e: Exception) {
             "Error querying render status: ${e.message}"
         }
+    }
+
+    private fun reviewLatestRender(): ToolExecution {
+        val groups = json.parseToJsonElement(relayHttp("/api/media/library")) as? JsonArray
+            ?: return ToolExecution("Error: Forge Hub returned an invalid media library.")
+        val clips = groups.flatMap { groupElement ->
+            val group = groupElement.jsonObject
+            val groupTitle = group["title"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            val source = group["source"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            val groupClips = group["clips"] as? JsonArray ?: JsonArray(emptyList())
+            groupClips.mapNotNull { clipElement ->
+                val clip = clipElement.jsonObject
+                val name = clip["name"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                val mtime = clip["mtime"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
+                RenderPreview(name, groupTitle, source, mtime)
+            }
+        }
+        val latest = clips.maxByOrNull { it.mtime }
+            ?: return ToolExecution("No completed Forge Hub renders were found.")
+        val encodedName = URLEncoder.encode(latest.name, Charsets.UTF_8.name()).replace("+", "%20")
+        val (mime, bytes) = runCatching {
+            relayBytes("/api/media/contact/$encodedName")
+        }.getOrElse {
+            relayBytes("/api/media/thumb/$encodedName")
+        }
+        val dataUrl = "data:$mime;base64," + Base64.getEncoder().encodeToString(bytes)
+        val text = buildString {
+            appendLine("Latest completed Forge Hub render:")
+            appendLine("name: ${latest.name}")
+            if (latest.groupTitle.isNotBlank()) appendLine("group: ${latest.groupTitle}")
+            if (latest.source.isNotBlank()) appendLine("source: ${latest.source}")
+            append("A four-frame contact sheet from the actual render is attached to this tool result (or a single preview frame when contact sheets are unavailable). Review visible composition, consistency, motion progression across frames, and artifacts. Do not claim to have assessed audio.")
+        }
+        return ToolExecution(text, listOf(dataUrl))
     }
 
     private fun listPromptPacks(): String {
@@ -286,6 +372,13 @@ class ToolBox(
         })
     }
 }
+
+private data class RenderPreview(
+    val name: String,
+    val groupTitle: String,
+    val source: String,
+    val mtime: Double,
+)
 
 private fun kotlinx.serialization.json.JsonElement.jsonObjectOrEmpty(): JsonObject =
     this as? JsonObject ?: JsonObject(emptyMap())

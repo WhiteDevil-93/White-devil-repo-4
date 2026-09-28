@@ -98,20 +98,33 @@ class Agent(
             }
 
             // Execute each tool call
+            val toolImages = mutableListOf<String>()
             for (call in toolCalls) {
                 val callName = call.function.name
                 val callArgs = call.function.arguments
                 onEvent(AgentEvent.ToolCall(callName, callArgs))
 
-                val result = toolBox.execute(callName, callArgs)
-                onEvent(AgentEvent.ToolOutput(callName, result))
+                val result = toolBox.executeDetailed(callName, callArgs)
+                onEvent(AgentEvent.ToolOutput(callName, result.text))
+                toolImages += result.imageDataUrls
 
                 history.add(
                     ChatMessage(
                         role = "tool",
-                        content = JsonPrimitive(result),
+                        content = JsonPrimitive(result.text),
                         toolCallId = call.id,
                         name = callName,
+                    ),
+                )
+            }
+            if (toolImages.isNotEmpty()) {
+                history.add(
+                    ChatMessage(
+                        role = "user",
+                        content = MessageContent.multimodal(
+                            "These image(s) were retrieved by your app integration for the requested task. Analyze them directly and answer the user's original request. Clearly state any limitation of reviewing a still frame rather than full video motion or audio.",
+                            toolImages,
+                        ),
                     ),
                 )
             }

@@ -112,3 +112,48 @@ def thumb(name: str):
         if not out.exists():
             raise HTTPException(500, "thumbnail failed")
     return FileResponse(out, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=604800"})
+
+
+@router.get("/contact/{name}")
+def contact_sheet(name: str):
+    """Four evenly spaced frames for multimodal agent review of a completed video."""
+    src = RENDERS / name
+    if "/" in name or not name.endswith(".mp4") or not src.is_file():
+        raise HTTPException(404)
+    out = THUMBS / (name + ".contact.jpg")
+    if not out.exists() or out.stat().st_mtime < src.stat().st_mtime:
+        THUMBS.mkdir(exist_ok=True)
+        try:
+            probe = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", str(src)],
+                capture_output=True, text=True, timeout=30, check=True,
+            )
+            duration = max(float(probe.stdout.strip()), 0.1)
+        except (subprocess.SubprocessError, ValueError):
+            raise HTTPException(500, "could not inspect render duration")
+        frames = [THUMBS / f".{name}.contact-{i}.jpg" for i in range(4)]
+        tmp = out.with_suffix(".tmp.jpg")
+        with _ffmpeg:
+            try:
+                for frame, fraction in zip(frames, (0.1, 0.35, 0.65, 0.9)):
+                    subprocess.run(
+                        ["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{duration * fraction:.3f}", "-i", str(src),
+                         "-frames:v", "1", "-vf", "scale=360:-2", "-q:v", "4", str(frame)],
+                        capture_output=True, timeout=60, check=True,
+                    )
+                subprocess.run(
+                    ["ffmpeg", "-y", "-loglevel", "error",
+                     "-i", str(frames[0]), "-i", str(frames[1]), "-i", str(frames[2]), "-i", str(frames[3]),
+                     "-filter_complex", "[0:v][1:v]hstack=inputs=2[top];[2:v][3:v]hstack=inputs=2[bottom];"
+                                        "[top][bottom]vstack=inputs=2[out]",
+                     "-map", "[out]", "-q:v", "4", str(tmp)],
+                    capture_output=True, timeout=60, check=True,
+                )
+                tmp.replace(out)
+            except subprocess.SubprocessError:
+                raise HTTPException(500, "contact sheet generation failed")
+            finally:
+                tmp.unlink(missing_ok=True)
+                for frame in frames:
+                    frame.unlink(missing_ok=True)
+    return FileResponse(out, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=604800"})

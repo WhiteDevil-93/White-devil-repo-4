@@ -7,6 +7,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.net.ServerSocket
+import kotlin.concurrent.thread
 
 class ToolBoxTest {
 
@@ -29,9 +31,59 @@ class ToolBoxTest {
         assertTrue(names.contains("list_directory"))
         assertTrue(names.contains("delete_file"))
         assertTrue(names.contains("get_render_status"))
+        assertTrue(names.contains("review_latest_render"))
         assertTrue(names.contains("list_prompt_packs"))
         assertTrue(names.contains("run_laptop_command"))
         assertTrue(names.contains("download_civitai_lora"))
+    }
+
+    @Test
+    fun testLatestRenderIncludesActualPreviewImage() {
+        val server = ServerSocket(0)
+        val library = """
+            [
+              {"title":"Older","source":"colab","clips":[{"name":"old.mp4","mtime":10}]},
+              {"title":"Newest pack","source":"thunder","clips":[{"name":"latest render.mp4","mtime":20}]}
+            ]
+        """.trimIndent().toByteArray()
+        val jpeg = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 1, 2, 0xFF.toByte(), 0xD9.toByte())
+        val serving = thread(start = true, isDaemon = true) {
+            repeat(2) {
+                server.accept().use { socket ->
+                    val reader = socket.getInputStream().bufferedReader()
+                    val requestPath = reader.readLine().split(" ")[1]
+                    while (reader.readLine().isNotEmpty()) Unit
+                    val (contentType, body) = if (requestPath == "/api/media/library") {
+                        "application/json" to library
+                    } else {
+                        "image/jpeg" to jpeg
+                    }
+                    socket.getOutputStream().use { output ->
+                        output.write(
+                            "HTTP/1.1 200 OK\r\nContent-Type: $contentType\r\nContent-Length: ${body.size}\r\nConnection: close\r\n\r\n".toByteArray(),
+                        )
+                        output.write(body)
+                    }
+                }
+            }
+        }
+        try {
+            val box = ToolBox(
+                workspaceDir = folder.newFolder("latest_render"),
+                relayBaseUrl = "http://127.0.0.1:${server.localPort}",
+                relayUser = "",
+                relayPass = "",
+            )
+            val result = box.executeDetailed("review_latest_render", "{}")
+
+            assertTrue(result.text.contains("latest render.mp4"))
+            assertTrue(result.text.contains("Newest pack"))
+            assertEquals(1, result.imageDataUrls.size)
+            assertTrue(result.imageDataUrls.single().startsWith("data:image/jpeg;base64,"))
+        } finally {
+            server.close()
+            serving.join(1000)
+        }
     }
 
     @Test

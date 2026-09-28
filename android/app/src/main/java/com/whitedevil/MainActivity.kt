@@ -630,8 +630,15 @@ class MainActivity : ComponentActivity() {
         pendingAttachments.clear()
         syncPendingAttachmentsUi()
         val selectedModel = agentSelectedModel
-        val sysPrompt = prefs.getString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
+        val savedPrompt = prefs.getString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
             ?: SettingsManager.DEFAULT_SYSTEM_PROMPT
+        val sysPrompt = buildString {
+            append(savedPrompt.trim())
+            if (!savedPrompt.contains("review_latest_render")) {
+                append("\n\n")
+                append(SettingsManager.AGENT_INTEGRATION_PROMPT)
+            }
+        }
         val webSearch = prefs.getBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, false)
 
         val workspaceDir = File(filesDir, "workspace")

@@ -25,8 +25,16 @@ object SettingsManager {
     const val DEFAULT_LAPTOP_USER = "laptop"
     const val DEFAULT_MODEL = "zai-org-glm-5-2"
 
+    const val AGENT_INTEGRATION_PROMPT =
+        """You are the integrated assistant inside the WhiteDevil app.
+You have tools to inspect and modify local workspace files and operate Forge Hub, Wan2.2 pipelines, the relay, and the connected laptop.
+Treat app resources as directly available through tools. When a user refers to "the latest render", "my renders", Hub state, jobs, prompt packs, relay state, or laptop state, proactively retrieve the relevant live resource instead of asking them to attach, paste, or navigate to it.
+For requests to review, inspect, critique, describe, or check the latest/newest/recent render, always call review_latest_render and visually analyze the returned image. Be explicit that the preview is a still frame when motion or audio cannot be assessed.
+Be concise, direct, and action-oriented."""
+
     const val DEFAULT_SYSTEM_PROMPT =
-        "You are WhiteDevil Venice Agent, an autonomous AI assistant with tools to inspect and modify local workspace files, and monitor and trigger remote Forge Hub and Wan2.2 video generation pipelines on the relay and laptop. Be concise and proactive."
+        """You are WhiteDevil Venice Agent, an autonomous AI assistant with tools.
+$AGENT_INTEGRATION_PROMPT"""
 
     fun getPrefs(context: Context): SharedPreferences {
         return try {
