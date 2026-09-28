@@ -318,7 +318,7 @@ fun HubHypnoBody(json: String, host: MainActivity) {
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("make", "renders", "jobs", "chat").forEach { t ->
+                listOf("make", "renders", "write", "ingest", "jobs", "chat").forEach { t ->
                     HubPill(
                         t.replaceFirstChar { it.uppercase() },
                         ok = tab == t,
@@ -356,6 +356,55 @@ fun HubHypnoBody(json: String, host: MainActivity) {
                     HubCard {
                         Text(r.optString("name", r.optString("path", "render")), fontWeight = FontWeight.SemiBold)
                         Text(formatAgo(r.optDouble("mtime")), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+            "write" -> {
+                val styles = overview.optJSONArray("styles") ?: JSONArray()
+                item {
+                    HubCard {
+                        HubSectionTitle("Caption pack")
+                        BasicTextField(
+                            value = capTheme,
+                            onValueChange = { capTheme = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = WdPalette.text),
+                            decorationBox = {
+                                if (capTheme.isEmpty()) Text("Theme / focus", color = WdPalette.textMetadata)
+                                it()
+                            },
+                        )
+                        Row(Modifier.horizontalScroll(rememberScrollState()).padding(top = 8.dp)) {
+                            (0 until minOf(styles.length(), 8)).map { styles.optString(it) }.forEach { s ->
+                                HubPill(s.take(16), ok = capStyle == s, onClick = { capStyle = s })
+                            }
+                        }
+                        HubPrimaryButton("Write pack", enabled = capTheme.isNotBlank()) {
+                            val body = JSONObject()
+                                .put("theme", capTheme)
+                                .put("style", capStyle)
+                                .toString()
+                            host.hubRelayPostPublic("/api/laptop/hypno/captions", body)
+                        }
+                    }
+                }
+            }
+            "ingest" -> {
+                item {
+                    HubCard {
+                        HubSectionTitle("Download media")
+                        BasicTextField(
+                            value = ingestUrls,
+                            onValueChange = { ingestUrls = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = WdPalette.text),
+                            minLines = 4,
+                        )
+                        HubPrimaryButton("Start ingest", enabled = ingestUrls.isNotBlank()) {
+                            val urls = ingestUrls.lines().map { it.trim() }.filter { it.startsWith("http") }
+                            val body = JSONObject().put("urls", JSONArray(urls)).toString()
+                            host.hubRelayPostPublic("/api/laptop/hypno/ingest", body)
+                        }
                     }
                 }
             }
