@@ -8,12 +8,11 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -154,47 +153,57 @@ class McpStdioClient(
         val deferred = CompletableDeferred<JsonRpcResponse>()
         pending[id] = deferred
         try {
-            return withTimeout(requestTimeoutMillis) {
+            // withTimeoutOrNull, not withTimeout: a caller wrapping this whole call in its own
+            // shorter withTimeout would otherwise be indistinguishable from our own deadline —
+            // both surface as TimeoutCancellationException at this level (verified: an outer
+            // withTimeout firing while suspended inside an inner one is observed here as a
+            // TimeoutCancellationException carrying the OUTER's message, not ours). withTimeoutOrNull
+            // instead resolves that by identity: it returns null only when *this* call's own
+            // requestTimeoutMillis elapses, while an outer/ambient cancellation still propagates
+            // out of it as an exception rather than being swallowed as null.
+            val response = withTimeoutOrNull(requestTimeoutMillis) {
                 val request = JsonRpcRequest(id = id, method = method, params = params)
                 writeLineOrKill(json.encodeToString(JsonRpcRequest.serializer(), request))
                 deferred.await()
             }
+            if (response != null) return response
+            sendCancelledNotification(id, "client timed out after ${requestTimeoutMillis}ms")
+            // A plain Exception (never CancellationException): this is our own deadline, an
+            // ordinary request failure, not something that should be treated like the ambient
+            // coroutine being cancelled by ToolRegistry/Agent's cancellation-propagation logic.
+            throw McpRequestTimedOutException("MCP server '$serverName' request '$method' timed out after ${requestTimeoutMillis}ms")
         } catch (e: CancellationException) {
-            // Covers our own timeout (TimeoutCancellationException, a subtype) and a caller
-            // cancelling us from outside (an outer timeout, shutdown): either way, the server
-            // may still complete this operation without knowing we gave up on it, so a retry
-            // could duplicate a write/deployment. Best-effort tell it to stop.
-            //
-            // Fired on this client's own scope, not awaited here: notify() writes through the
-            // same synchronized writeLine() as the original request, and if THAT write is what's
-            // stuck (the server stopped draining stdin), calling it inline would block this
-            // catch block on the same lock until writeLineOrKill's watchdog eventually kills the
-            // process — holding up the caller's cancelAndJoin() for up to the full deadline
-            // instead of returning promptly. A failure writing it (e.g. the process already died)
-            // is swallowed rather than replacing the cancellation being (re)thrown below.
-            scope.launch {
-                runCatching {
-                    notify(
-                        "notifications/cancelled",
-                        buildJsonObject {
-                            put("requestId", id)
-                            put(
-                                "reason",
-                                if (e is TimeoutCancellationException) {
-                                    "client timed out after ${requestTimeoutMillis}ms"
-                                } else {
-                                    "client cancelled the request"
-                                },
-                            )
-                        },
-                    )
-                }
-            }
+            // Genuine external cancellation (an outer timeout, shutdown): the server may still
+            // complete this operation without knowing we gave up on it, so a retry could
+            // duplicate a write/deployment. Best-effort tell it to stop.
+            sendCancelledNotification(id, "client cancelled the request")
             throw e
         } finally {
             // Covers writeLine() too: if it throws (e.g. the process already died and stdin
             // is closed), pending[id] was still stored and must not be left there forever.
             pending.remove(id)
+        }
+    }
+
+    /**
+     * Fired on this client's own [scope], not awaited: notify() writes through the same
+     * synchronized [writeLine] as the original request, and if THAT write is what's stuck (the
+     * server stopped draining stdin), awaiting it inline would block the caller on the same lock
+     * until writeLineOrKill's watchdog eventually kills the process — holding up the caller's
+     * cancelAndJoin() for up to the full deadline instead of returning promptly. A failure
+     * writing it (e.g. the process already died) is swallowed: it's best-effort.
+     */
+    private fun sendCancelledNotification(requestId: Long, reason: String) {
+        scope.launch {
+            runCatching {
+                notify(
+                    "notifications/cancelled",
+                    buildJsonObject {
+                        put("requestId", requestId)
+                        put("reason", reason)
+                    },
+                )
+            }
         }
     }
 
@@ -281,26 +290,20 @@ class McpStdioClient(
     override fun hasChanged(): Boolean = changeVersion.get() != fetchedVersion
 
     /**
-     * A timeout from THIS client's own [call] (created by its `withTimeout(requestTimeoutMillis)`)
-     * means this one optional MCP server is unresponsive — a provider failure, no different from
-     * a malformed response — not that the caller's whole operation should be cancelled. Converting
-     * it here, at the boundary where it's known to be ours, keeps [ToolRegistry] able to skip just
-     * this provider (its own `catch (e: CancellationException) { throw e }` would otherwise treat
-     * this exactly like a genuine external cancellation and abort the whole registry build). A
-     * plain (non-timeout) [CancellationException] — real external cancellation, e.g. shutdown —
-     * still propagates untouched.
+     * [McpRequestTimedOutException] means this one optional MCP server is unresponsive — a
+     * provider failure, no different from a malformed response — not that the caller's whole
+     * operation should be cancelled. Converting it to [McpException] here keeps [ToolRegistry]
+     * able to skip just this provider (its own `catch (e: CancellationException) { throw e }`
+     * would otherwise treat a raw cancellation-shaped timeout exactly like genuine external
+     * cancellation and abort the whole registry build) — but [McpRequestTimedOutException] is a
+     * plain [Exception], never [CancellationException], so that confusion can't happen regardless.
      */
-    private suspend fun <T> convertingOwnTimeoutToFailure(onTimeout: (TimeoutCancellationException) -> T, block: suspend () -> T): T =
+    override suspend fun definitions(): List<ToolDefinition> =
         try {
-            block()
-        } catch (e: TimeoutCancellationException) {
-            onTimeout(e)
+            definitionsInternal()
+        } catch (e: McpRequestTimedOutException) {
+            throw McpException(e.message ?: "MCP server '$serverName' timed out")
         }
-
-    override suspend fun definitions(): List<ToolDefinition> = convertingOwnTimeoutToFailure(
-        onTimeout = { throw McpException("MCP server '$serverName' timed out after ${requestTimeoutMillis}ms") },
-        block = { definitionsInternal() },
-    )
 
     private suspend fun definitionsInternal(): List<ToolDefinition> {
         if (cachedDefinitions != null && !hasChanged()) return cachedDefinitions!!
@@ -380,10 +383,16 @@ class McpStdioClient(
         return definitions
     }
 
-    override suspend fun execute(name: String, argumentsJson: String): String = convertingOwnTimeoutToFailure(
-        onTimeout = { "Error: MCP tool '$name' on server '$serverName' timed out after ${requestTimeoutMillis}ms" },
-        block = { executeInternal(name, argumentsJson) },
-    )
+    // executeInternal()'s own catch around call("tools/call", ...) already turns a plain
+    // Exception into an "Error: ..." string, which McpRequestTimedOutException is — but
+    // ensureInitialized() (called before that point) isn't covered by that catch, so its own
+    // initialize-call timing out needs this same conversion applied uniformly here too.
+    override suspend fun execute(name: String, argumentsJson: String): String =
+        try {
+            executeInternal(name, argumentsJson)
+        } catch (e: McpRequestTimedOutException) {
+            "Error: ${e.message}"
+        }
 
     private suspend fun executeInternal(name: String, argumentsJson: String): String {
         ensureInitialized()
@@ -475,3 +484,12 @@ class McpStdioClient(
 }
 
 class McpException(message: String) : Exception(message)
+
+/**
+ * Thrown internally by [McpStdioClient.call] when its own `withTimeoutOrNull(requestTimeoutMillis)`
+ * returns null. Deliberately a plain [Exception], never a [kotlinx.coroutines.CancellationException]:
+ * that's what lets callers convert it into an ordinary failure (an [McpException] from
+ * `definitions()`, an error string from `execute()`) without any risk of it being confused with
+ * genuine external cancellation, which propagates through `call()` unchanged instead.
+ */
+private class McpRequestTimedOutException(message: String) : Exception(message)

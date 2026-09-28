@@ -490,4 +490,28 @@ class McpStdioClientTest {
             client.close()
         }
     }
+
+    @Test
+    fun `still propagates an outer caller's own shorter timeout instead of swallowing it as a provider failure`() = runBlocking {
+        assumeTrue(python3Available(), "python3 not available; skipping MCP stdio integration test")
+
+        val script = File(javaClass.classLoader.getResource("fake_mcp_server.py")!!.toURI())
+        // Deliberately much longer than the outer deadline below: if this client's own timeout
+        // fired instead of the outer one, that would prove the outer deadline was ignored, not
+        // that this test's assertion is just lenient.
+        val client = McpStdioClient(
+            "fake",
+            McpServerConfig(command = "python3", args = listOf(script.absolutePath)),
+            requestTimeoutMillis = 10_000,
+        )
+        try {
+            assertFailsWith<CancellationException> {
+                withTimeout(200) { client.execute("fake__hang_forever", "{}") }
+            }
+        } finally {
+            client.close()
+        }
+        Unit // assertFailsWith above returns the caught exception; without this the function's
+        // inferred return type stops being Unit and JUnit silently won't register it as a @Test.
+    }
 }
