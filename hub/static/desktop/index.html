@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Forge Hub</title>
-<meta name="theme-color" content="#141110">
+<meta name="theme-color" content="#0a0b0f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,105 +12,118 @@
 <link rel="icon" href="/app/desktop/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/app/desktop/icon-192.png">
 <style>
-:root{--bg:#141110;--side:#17130f;--fg:#f0e9e0;--mut:#c9c2b8;--dim:#7a7168;--strong:#f5efe6;--acc:#c9b896;
-  --line:rgba(253,242,214,.08);--hover:rgba(253,242,214,.05);--on:rgba(253,242,214,.08);--ok:#9bbfa0;--bad:#d99393;
-  --gold-from:#fdf2d6;--gold-to:#e7d19f;--ink:#1a1410}
+:root{--bg:#0a0b0f;--side:#0f1117;--fg:#eceef5;--mut:#a9afc2;--dim:#9097ad;--strong:#eceef5;--acc:#8f82ff;
+  --line:#232838;--hover:rgba(255,255,255,.04);--on:rgba(91,75,232,.16);--ok:#3fbf8a;--warn:#e5a23a;--bad:#f0645a;
+  --acc2:#5b4be8;--panel:#141722;--well:#0c0e14;--ink:#fff}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden;
-  font:13.5px/1.4 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.011em}
-.shell{display:grid;grid-template-columns:236px minmax(0,1fr);height:100%}
-aside{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
-.brand{display:flex;align-items:center;gap:10px;height:52px;padding:0 20px;font-weight:600;letter-spacing:-.02em;font-size:13.5px;
-  color:var(--strong);border-bottom:1px solid var(--line);flex:none}
-.brand .mark{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none;
-  background:linear-gradient(135deg,var(--gold-from),#c9a35c);box-shadow:1px 1px 16px -2px hsl(0 63% 18% / .3)}
-.brand img{width:18px;height:18px}
-nav{flex:1;overflow:auto;padding:16px 12px}
-.sec{font-size:10.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#65656c;margin:16px 10px 8px}
-nav .sec:first-child{margin-top:0}
-nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--mut);text-decoration:none;
-  font-weight:500;font-size:13px;cursor:pointer;user-select:none;position:relative;transition:background .15s,color .15s}
+  font:13px/1.4 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.011em}
+.shell{display:grid;grid-template-columns:244px minmax(0,1fr);grid-template-rows:52px minmax(0,1fr) 28px;height:100%}
+.titlebar{grid-column:1/-1;display:flex;align-items:center;gap:12px;height:52px;padding:0 12px 0 16px;
+  background:var(--side);border-bottom:1px solid var(--line);flex:none}
+.word{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;color:var(--strong);flex:none}
+.word .mark{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;
+  background:var(--acc2)}
+.word img{width:14px;height:14px}
+.proj{font-size:13px;color:var(--mut);padding:4px 8px;border-radius:6px;border:1px solid transparent}
+.proj b{color:var(--strong);font-weight:600}
+.dot-unsaved{width:7px;height:7px;border-radius:50%;background:var(--warn);flex:none}
+.grow{flex:1;min-width:0}
+.seg{display:flex;background:var(--well);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg button{appearance:none;border:0;background:none;color:var(--mut);padding:5px 14px;border-radius:999px;
+  font:600 12px inherit;cursor:pointer}
+.seg button.on{background:var(--acc2);color:#fff}
+.titlebar .ai{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;
+  height:30px;padding:0 12px;font:600 12px inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.titlebar .ai:hover{border-color:var(--acc2);color:var(--strong)}
+.titlebar button.icon{appearance:none;background:transparent;border:1px solid transparent;color:var(--mut);border-radius:6px;
+  height:30px;min-width:30px;padding:0 8px;cursor:pointer;display:grid;place-items:center}
+.titlebar button.icon:hover{background:var(--hover);color:var(--fg)}
+.titlebar button.text{appearance:none;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:6px;
+  height:30px;padding:0 12px;font:600 12px inherit;cursor:pointer}
+.titlebar button.gold{background:var(--acc2);color:#fff;border-color:transparent}
+.titlebar svg{width:14px;height:14px}
+.clock{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px}
+aside{grid-row:2;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+nav{flex:1;overflow:auto;padding:12px 10px}
+.sec{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:16px 8px 8px}
+nav .sec:first-child{margin-top:4px}
+nav a{display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:8px;color:var(--mut);text-decoration:none;
+  font-weight:500;font-size:13px;cursor:pointer;user-select:none;position:relative;min-height:44px}
 nav a:hover{background:var(--hover);color:var(--fg)}
 nav a.on{background:var(--on);color:var(--strong)}
 nav a.on::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:99px;
-  background:linear-gradient(180deg,var(--gold-from),#c9a35c)}
-nav a svg{width:16px;height:16px;flex:none;opacity:.72;color:#8a8178}
-nav a.on svg{opacity:1;color:#e7dbbf}
-nav a .k{margin-left:auto;font-size:10.5px;color:#65656c;font-variant-numeric:tabular-nums}
-.foot{margin:12px;padding:8px 10px;border:1px solid var(--line);border-radius:14px;background:rgba(253,242,214,.04);
-  font-size:12px;color:var(--dim);display:flex;align-items:center;gap:10px;flex:none}
-.foot .av{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;overflow:hidden;
-  background:linear-gradient(135deg,var(--gold-from),#c9a35c);box-shadow:1px 1px 16px -2px hsl(0 63% 18% / .25)}
-.foot .av svg{width:18px;height:18px;color:var(--ink)}
-.foot .who{min-width:0;flex:1}
-.foot .nm{font-weight:600;font-size:13px;color:var(--strong);letter-spacing:-.02em}
-.foot .sess{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px;margin-top:1px}
-.foot .dots{display:flex;align-items:center;gap:4px;flex:none}
-.foot .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--dim)}
-.foot .dot.ok{background:var(--ok);box-shadow:0 0 6px rgba(155,191,160,.7)}.foot .dot.bad{background:var(--bad)}
-main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
-.bar{display:flex;align-items:center;gap:10px;height:52px;padding:0 20px;border-bottom:1px solid var(--line);flex:none;
-  background:rgba(20,17,16,.95)}
-.bar h1{font-size:14px;font-weight:600;margin:0;letter-spacing:-.02em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--strong)}
-.bar .grow{flex:1;min-width:0}
-.bar .clock{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px;flex:none}
-.bar .clock svg{width:14px;height:14px;opacity:.7}
-.bar .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;
-  background:rgba(155,191,160,.08);color:var(--ok);border:1px solid rgba(155,191,160,.18);flex:none}
-.bar .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
-.bar .pill.warn{color:var(--warn);background:rgba(215,180,117,.1);border-color:rgba(215,180,117,.18)}
-.bar .pill.bad{color:var(--bad);background:rgba(217,147,147,.08);border-color:rgba(217,147,147,.22)}
-.bar button{background:transparent;border:1px solid transparent;color:var(--mut);border-radius:9px;height:32px;min-width:32px;
-  padding:0 9px;cursor:pointer;display:grid;place-items:center;font:inherit;transition:background .15s,color .15s,border-color .15s}
-.bar button.text{display:inline-flex;align-items:center;gap:0;font-size:12.5px;font-weight:600;padding:0 12px;border-color:var(--line);color:var(--fg)}
-.bar button.gold{background:linear-gradient(180deg,var(--gold-from),var(--gold-to));color:var(--ink);border-color:transparent;
-  box-shadow:1px 1px 16px -2px hsl(0 63% 18% / .22)}
-.bar button:hover{background:var(--hover);color:var(--fg);border-color:var(--line)}
-.bar button.gold:hover{background:linear-gradient(180deg,#fff6e0,var(--gold-to));border-color:transparent;color:var(--ink);filter:brightness(1.04)}
-.bar svg{width:16px;height:16px}
-html.venice-chrome .bar{display:none}
-html:not(.term-chrome) #reload,html:not(.term-chrome) #updateHub,html:not(.term-chrome) #pop{display:none}
-html.term-chrome #deskPill,html.term-chrome #clock{display:none}
-@media (max-width:860px){.shell{grid-template-columns:64px minmax(0,1fr)}.brand>span:last-child,nav a span,nav a .k,.sec,.foot .nm,.foot .sess,.foot .dots{display:none}
-  nav a{justify-content:center}.brand{justify-content:center;padding:0}.foot{justify-content:center;margin:8px}}
+  background:var(--acc2)}
+nav a svg{width:16px;height:16px;flex:none;opacity:.8;color:var(--dim)}
+nav a.on svg{opacity:1;color:var(--acc)}
+nav a .meta{min-width:0;flex:1;display:flex;flex-direction:column;gap:1px}
+nav a .name{display:block}
+nav a .sum{display:block;font-size:11px;color:var(--dim);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav a .k{margin-left:auto;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums;align-self:flex-start}
+.ready{margin:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02);flex:none}
+.ready .hd{display:flex;align-items:center;justify-content:space-between;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:8px}
+.ready .hd b{color:var(--strong);letter-spacing:0;text-transform:none;font-size:13px}
+.ready .row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);margin-top:5px}
+.ready .st{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:none}
+.ready .st.ok{background:var(--ok)}.ready .st.bad{background:var(--bad)}.ready .st.warn{background:var(--warn)}
+main{grid-row:2;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
 .frames{position:relative;flex:1;min-height:0}
 .frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg);visibility:hidden}
 .frames iframe.on{visibility:visible}
-.load{position:absolute;left:0;top:0;height:2px;background:linear-gradient(90deg,#c9a35c,var(--gold-from));width:0;opacity:0;transition:width .6s,opacity .3s;z-index:3}
+.load{position:absolute;left:0;top:0;height:2px;background:var(--acc2);width:0;opacity:0;transition:width .6s,opacity .3s;z-index:3}
 .load.go{width:70%;opacity:1}
 .err{padding:60px;color:var(--dim);text-align:center}
+.jobs{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--side);
+  border-top:1px solid var(--line);font-size:11px;color:var(--dim)}
+.jobs .dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.jobs .dot.ok{background:var(--ok)}.jobs .dot.warn{background:var(--warn)}.jobs .dot.bad{background:var(--bad)}
+.jobs .right{margin-left:auto;display:flex;gap:16px}
 html.app #pop{display:none}
+@media (max-width:1180px){
+  .shell{grid-template-columns:72px minmax(0,1fr)}
+  .proj,.seg,.clock,nav a .name,nav a .sum,nav a .k,.sec,.ready .txt,.ready .hd span:first-child,.jobs .right{display:none}
+  nav a{justify-content:center;padding:10px}
+  .word span{display:none}
+}
 </style>
 </head>
 <body>
 <div class="shell">
+  <div class="titlebar">
+    <div class="word"><span class="mark"><img src="/app/desktop/icon.svg" alt=""></span><span>Forge Hub</span></div>
+    <div class="proj"><b id="title">Forge Hub</b> · <span>local session</span></div>
+    <span class="dot-unsaved" id="unsaved" hidden title="Update Hub pending"></span>
+    <span class="grow"></span>
+    <div class="seg" role="tablist">
+      <button type="button" class="on" id="modeHub">Hub</button>
+      <button type="button" id="modeVenice">Agent</button>
+    </div>
+    <button type="button" class="ai" id="aiAssist" title="Venice Agent (Ctrl+Shift+V)">AI Assist</button>
+    <span class="clock" id="clock"></span>
+    <button type="button" class="icon" id="reload" title="Reload screen (Ctrl+R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
+    <button type="button" class="text gold" id="updateHub" title="Publish this Hub to wan-relay">Update Hub</button>
+    <button type="button" class="icon" id="pop" title="Open in a browser tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>
+  </div>
   <aside>
-    <div class="brand"><span class="mark"><img src="/app/desktop/icon.svg" alt=""></span><span>Forge Hub</span></div>
     <nav id="nav"></nav>
-    <div class="foot" id="foot">
-      <div class="av" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg></div>
-      <div class="who">
-        <div class="nm">Operator</div>
-        <div class="sess">local session</div>
-      </div>
-      <div class="dots" title="Clip freshness and laptop">
-        <span class="dot" id="dClip"></span>
-        <span class="dot" id="dLap"></span>
+    <div class="ready" id="foot">
+      <div class="hd"><span>Readiness</span><b id="readyN">—</b></div>
+      <div class="txt">
+        <div class="row"><span class="st" id="stRelay"></span><span>Relay</span></div>
+        <div class="row"><span class="st" id="stLap"></span><span>Laptop</span></div>
+        <div class="row"><span class="st" id="stClip"></span><span>Newest clip</span></div>
+        <div class="row"><span class="st" id="stRun"></span><span>Runner</span></div>
       </div>
     </div>
   </aside>
   <main>
-    <div class="bar" id="bar">
-      <h1 id="title">Forge Hub</h1>
-      <span class="pill" id="deskPill">connecting</span>
-      <span class="grow"></span>
-      <span class="clock" id="clock"></span>
-      <button id="reload" title="Reload screen (Ctrl+R)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
-      <button id="updateHub" class="text gold" title="Publish this Hub to wan-relay">Update Hub</button>
-      <button id="pop" title="Open in a browser tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>
-    </div>
     <div class="frames" id="frames"><div class="load" id="load"></div></div>
   </main>
+  <div class="jobs" id="jobs">
+    <span class="dot" id="jobDot"></span>
+    <span id="jobMsg">Connecting…</span>
+    <span class="right" id="jobRight"></span>
+  </div>
 </div>
 <script>
 const ICONS = {
@@ -142,6 +155,7 @@ const EXTRA = [
 const $ = id => document.getElementById(id);
 let screens = [], current = null;
 const frames = {};
+let lastSt = {}, lastColab = {};
 
 function groupOf(s) {
   if (s.group) return s.group === 'bots' ? 'Bots' : s.group;
@@ -157,10 +171,15 @@ function buildNav() {
     n++;
     const a = document.createElement('a');
     a.dataset.id = s.id; a.href = '#' + s.id;
-    a.innerHTML = `${icon(s.icon)}<span>${s.title}</span>${n <= 9 ? `<span class="k">Ctrl ${n}</span>` : ''}`;
+    a.innerHTML = `${icon(s.icon)}<span class="meta"><span class="name">${s.title}</span><span class="sum" data-sum="${s.id}"></span></span>${n <= 9 ? `<span class="k">Ctrl ${n}</span>` : ''}`;
     a.onclick = e => { e.preventDefault(); show(s.id); };
     nav.appendChild(a);
   }
+}
+
+function setSum(id, text) {
+  const el = document.querySelector(`[data-sum="${id}"]`);
+  if (el) el.textContent = text || '';
 }
 
 function screenForUrl(href) {
@@ -281,13 +300,14 @@ function show(id, reload, href) {
   document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.id === s.id));
   $('title').textContent = s.title;
   document.title = s.title + ' · Forge Hub';
-  document.documentElement.classList.toggle('venice-chrome', s.id === 'venice');
-  document.documentElement.classList.toggle('term-chrome', s.id === 'term');
+  $('modeHub').classList.toggle('on', s.id !== 'venice');
+  $('modeVenice').classList.toggle('on', s.id === 'venice');
   if (location.hash !== '#' + s.id) history.replaceState(null, '', '#' + s.id);
   localStorage.setItem('desk_screen', s.id);
 }
 
 function keys(e) {
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'V' || e.key === 'v')) { e.preventDefault(); show('venice'); return; }
   if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
   if (/^[1-9]$/.test(e.key) && screens[+e.key - 1]) { e.preventDefault(); show(screens[+e.key - 1].id); }
   else if (e.key === 'r' && current) { e.preventDefault(); show(current.id, true); }
@@ -299,9 +319,10 @@ function tickClock() {
   const d = new Date();
   const day = new Intl.DateTimeFormat(undefined, {weekday: 'short', month: 'short', day: 'numeric'}).format(d);
   const tm = new Intl.DateTimeFormat(undefined, {hour: '2-digit', minute: '2-digit', hour12: false}).format(d);
-  el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>' +
-    day + ' · ' + tm;
+  el.textContent = day + ' · ' + tm;
 }
+
+function mark(el, kind) { if (el) el.className = 'st ' + (kind || ''); }
 
 async function status() {
   if (document.hidden) return;
@@ -309,26 +330,45 @@ async function status() {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const s = await (await fetch('/api/status', {cache: 'no-store', signal: controller.signal})).json();
-    const age = s.newest_age_min;
-    const lapOn = !!(s.laptop && s.laptop.online);
+    const [st, colab] = await Promise.all([
+      fetch('/api/status', {cache: 'no-store', signal: controller.signal}).then(r => r.json()),
+      fetch('/api/colab/state', {cache: 'no-store', signal: controller.signal}).then(r => r.json()).catch(() => ({}))
+    ]);
+    lastSt = st; lastColab = colab;
+    const age = st.newest_age_min;
+    const lapOn = !!(st.laptop && st.laptop.online);
     const clipOk = age != null && age < 45;
-    const alerts = (s.alerts || []).length;
-    $('dClip').className = 'dot ' + (clipOk ? 'ok' : 'bad');
-    $('dLap').className = 'dot ' + (lapOn ? 'ok' : 'bad');
-    $('dClip').title = age == null ? 'No clips' : 'Newest clip ' + (age < 1 ? 'just now' : age + ' min ago');
-    $('dLap').title = lapOn ? 'Laptop online' : 'Laptop offline';
-    const pill = $('deskPill');
-    if (alerts) { pill.textContent = 'alerts'; pill.className = 'pill bad'; }
-    else if (!lapOn) { pill.textContent = 'laptop offline'; pill.className = 'pill warn'; }
-    else if (!clipOk) { pill.textContent = 'clips stale'; pill.className = 'pill warn'; }
-    else { pill.textContent = 'all systems nominal'; pill.className = 'pill'; }
+    const alerts = (st.alerts || []).length;
+    const job = (colab.jobs || []).find(j => j.status === 'rendering');
+    const runner = !!(colab.runner_online || (colab.usage && colab.usage.active > 0));
+    mark($('stRelay'), alerts ? 'bad' : 'ok');
+    mark($('stLap'), lapOn ? 'ok' : 'bad');
+    mark($('stClip'), clipOk ? 'ok' : (age == null ? 'warn' : 'bad'));
+    mark($('stRun'), colab.paused ? 'warn' : runner ? 'ok' : 'bad');
+    const bits = [!alerts, lapOn, clipOk, !colab.paused && runner];
+    const n = bits.filter(Boolean).length;
+    $('readyN').textContent = n + '/4';
+    $('unsaved').hidden = true;
+    setSum('home', job ? 'Rendering' : runner ? 'Idle' : 'Runner off');
+    setSum('renders', st.clips != null ? st.clips + ' clips' : '');
+    setSum('term', 'ttyd shell');
+    setSum('venice', 'Agent + tools');
+    setSum('colab', runner ? 'G4 on' : 'Off');
+    const jdot = $('jobDot');
+    if (job) { jdot.className = 'dot warn'; $('jobMsg').textContent = 'Rendering · ' + (job.name || 'job'); }
+    else if (colab.paused) { jdot.className = 'dot warn'; $('jobMsg').textContent = 'Paused · auto-restart off'; }
+    else if (runner) { jdot.className = 'dot ok'; $('jobMsg').textContent = 'No active render · Idle'; }
+    else { jdot.className = 'dot'; $('jobMsg').textContent = 'No active render · Runner offline'; }
+    const free = st.laptop && st.laptop.free_gb;
+    $('jobRight').textContent = (st.clips != null ? st.clips + ' clips' : '') + (free != null ? ' · ' + Math.round(free) + ' GB free' : '');
   } catch (e) {
-    $('dClip').className = 'dot bad';
-    $('dLap').className = 'dot bad';
-    const pill = $('deskPill');
-    pill.textContent = 'relay unreachable';
-    pill.className = 'pill bad';
+    mark($('stRelay'), 'bad');
+    mark($('stLap'), 'bad');
+    mark($('stClip'), 'bad');
+    mark($('stRun'), 'bad');
+    $('readyN').textContent = '0/4';
+    $('jobDot').className = 'dot bad';
+    $('jobMsg').textContent = 'Relay unreachable';
   } finally {
     clearTimeout(timer);
   }
@@ -360,6 +400,9 @@ window.addEventListener('hashchange', () => { const id = location.hash.slice(1);
 $('reload').onclick = () => current && show(current.id, true);
 $('updateHub').onclick = () => show('term', false, '/app/term/?update=1');
 $('pop').onclick = () => { const f = current && frames[current.id]; window.open(f ? f.contentWindow.location.href : current.url, '_blank'); };
+$('aiAssist').onclick = () => show('venice');
+$('modeVenice').onclick = () => show('venice');
+$('modeHub').onclick = () => show(current && current.id !== 'venice' ? current.id : 'home');
 boot();
 </script>
 </body>

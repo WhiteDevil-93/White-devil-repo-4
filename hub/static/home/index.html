@@ -1,9 +1,11 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#141110"><title>Forge Hub</title>
+<meta name="theme-color" content="#0a0b0f"><title>Forge Hub</title>
 <link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
 </head><body>
 
+<div class="home-lib">
+<div class="home-main">
 <div class="row" style="margin:2px 2px 4px">
   <div class="grow"><div class="tiny mut phone-only" id="hello">Forge Hub</div>
     <h1 style="margin:2px 0 0">Welcome back</h1>
@@ -30,16 +32,31 @@
 </div>
 
 <div class="tiles" id="tiles">
-  <div class="tile skel" style="height:118px"></div><div class="tile skel" style="height:118px"></div>
-  <div class="tile skel" style="height:118px"></div><div class="tile skel" style="height:118px"></div>
+  <div class="tile skel" style="height:96px"></div><div class="tile skel" style="height:96px"></div>
+  <div class="tile skel" style="height:96px"></div><div class="tile skel" style="height:96px"></div>
 </div>
 
 <div id="nextWrap" style="display:none"><h2>Up next</h2><div class="card tight" id="next"></div></div>
 
 <div class="clips-head"><h2 class="grow">Latest clips</h2><a class="small" href="/app/gallery/">Open Gallery →</a></div>
 <div class="clip-rail" id="latest">
-  <div class="thumb skel" style="aspect-ratio:9/16;width:142px;flex:none"></div>
-  <div class="thumb skel" style="aspect-ratio:9/16;width:142px;flex:none"></div>
+  <div class="thumb skel" style="aspect-ratio:1;width:148px;flex:none"></div>
+  <div class="thumb skel" style="aspect-ratio:1;width:148px;flex:none"></div>
+</div>
+</div>
+
+<aside class="home-insp phone-insp" id="insp">
+  <h3 id="inspName">No clip selected</h3>
+  <div class="tiny mut" id="inspAgo">Pick a clip from the library.</div>
+  <div class="meta">
+    <div><div class="k">Duration</div><div class="v" id="inspDur">—</div></div>
+    <div><div class="k">Size</div><div class="v" id="inspMb">—</div></div>
+    <div><div class="k">Category</div><div class="v" id="inspGroup">Relay</div></div>
+    <div><div class="k">Queue</div><div class="v" id="inspQ">—</div></div>
+  </div>
+  <a class="btn primary" href="/app/term/?update=1" style="width:100%;margin-top:8px">Update Hub</a>
+  <a class="btn ghost" href="/app/gallery/" style="width:100%;margin-top:8px">Open Gallery</a>
+</aside>
 </div>
 
 <script>
@@ -169,6 +186,19 @@ function alerts(st, s){
     <div class="small" style="margin-top:8px">${rows.map(esc).join('<br>')}</div></div>` : '';
 }
 
+function fillInsp(c, s){
+  if (!c) return;
+  $('inspName').textContent = shortClip(c.name);
+  $('inspAgo').textContent = prettyAgo(c.mtime) + (c.group ? ' · ' + c.group : '');
+  $('inspDur').textContent = mmss(c.seconds) || '—';
+  $('inspMb').textContent = c.mb != null ? c.mb + ' MB' : '—';
+  $('inspGroup').textContent = c.group || 'Relay';
+  const jobs = (s && s.jobs) || [];
+  const qn = jobs.filter(j => ['rendering','queued','waiting'].includes(j.status)).length;
+  $('inspQ').textContent = qn ? qn + ' jobs' : 'idle';
+  document.querySelectorAll('.clip-card .thumb').forEach(t => t.classList.toggle('on', t.dataset.clip === c.name));
+}
+
 function clipCard(c){
   const dur = mmss(c.seconds);
   return `<div class="clip-card" data-clip="${esc(c.name)}">
@@ -181,9 +211,9 @@ function clipCard(c){
   </div>`;
 }
 
-function strip(){
+function strip(s){
   const all = lib.flatMap(g => g.clips.map(c => Object.assign({group: g.title}, c))).sort((a, b) => b.mtime - a.mtime);
-  latest = all.slice(0, 5);
+  latest = all.slice(0, 12);
   if (!all.length) {
     $('latest').innerHTML = '<div class="empty">No clips yet</div>';
     return;
@@ -192,13 +222,16 @@ function strip(){
   $('latest').innerHTML = latest.map(clipCard).join('') + (more > 0
     ? `<a class="clip-more" href="/app/gallery/"><span class="ph">▭</span><div class="n">${more} more</div><div>Open Gallery</div></a>`
     : '');
+  fillInsp(all[0], s);
 }
 $('latest').addEventListener('click', e => {
   const n = e.target.closest('[data-clip]')?.dataset.clip; if (!n) return;
   e.preventDefault();
   const all = lib.flatMap(g => g.clips.map(c => Object.assign({group: g.title}, c))).sort((a, b) => b.mtime - a.mtime);
   latest = all;
-  F.viewer(all, all.findIndex(c => c.name === n), c => c.group + (c.idx ? ' · clip ' + c.idx : ''));
+  const c = all.find(x => x.name === n);
+  fillInsp(c, window._forgeColab);
+  F.viewer(all, all.findIndex(x => x.name === n), x => x.group + (x.idx ? ' · clip ' + x.idx : ''));
 });
 
 async function startRt(){
@@ -216,9 +249,9 @@ async function load(){
     F.api('/api/colab/state'), F.api('/api/status'), F.api('/api/media/library'), F.api('/api/manifest')
   ]);
   if (man.status === 'fulfilled' && man.value.web_rev != null) $('hubVer').textContent = 'v' + man.value.web_rev;
-  if (l.status === 'fulfilled') { lib = l.value; strip(); }
+  if (l.status === 'fulfilled') { lib = l.value; strip(s.status === 'fulfilled' ? s.value : null); }
   else $('latest').innerHTML = '<div class="empty">Could not load clips.</div>';
-  if (s.status === 'fulfilled') { nowBanner(s.value); upNext(s.value); livePill(s.value); }
+  if (s.status === 'fulfilled') { window._forgeColab = s.value; nowBanner(s.value); upNext(s.value); livePill(s.value); }
   if (s.status === 'fulfilled' && st.status === 'fulfilled') tiles(s.value, st.value);
   else if (st.status === 'fulfilled') tiles({jobs: [], runner_online: false}, st.value);
   else $('tiles').innerHTML = '<div class="empty" style="grid-column:1/-1">Could not load farm status.</div>';

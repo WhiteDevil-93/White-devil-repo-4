@@ -104,7 +104,7 @@ def test_desktop_app_caching_and_manifest():
     assert res_manifest.status_code == 200
     assert "no-store" in res_manifest.headers.get("Cache-Control", "")
     manifest_data = res_manifest.json()
-    assert manifest_data.get("web_rev") == 15
+    assert manifest_data.get("web_rev") == 16
 
     # Desktop HTML should return no-store
     res_desktop = client.get("/app/desktop/index.html")
@@ -115,9 +115,10 @@ def test_desktop_app_caching_and_manifest():
     assert "ForgeDesktopTermPaste" in res_desktop.text
     assert "html.app #pop" in res_desktop.text
     assert "forge:term-paste" in res_desktop.text
-    assert "Operator" in res_desktop.text
+    assert "Readiness" in res_desktop.text
     assert "local session" in res_desktop.text
-    assert "venice-chrome" in res_desktop.text
+    assert "AI Assist" in res_desktop.text
+    assert "modeVenice" in res_desktop.text
 
     res_home = client.get("/app/home/")
     assert res_home.status_code == 200

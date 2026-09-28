@@ -5,8 +5,8 @@
   "start_url": "/app/desktop/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#141110",
-  "theme_color": "#141110",
+  "background_color": "#0a0b0f",
+  "theme_color": "#0a0b0f",
   "icons": [
     {"src": "/app/desktop/icon.svg", "sizes": "any", "type": "image/svg+xml"},
     {"src": "/app/desktop/icon-192.png", "sizes": "192x192", "type": "image/png"},
