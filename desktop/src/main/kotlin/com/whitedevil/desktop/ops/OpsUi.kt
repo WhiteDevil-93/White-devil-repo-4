@@ -55,6 +55,13 @@ import kotlinx.coroutines.delay
 /** Poll cadence for read-only status. Slow on purpose: the hub shells out to CLIs behind these routes. */
 const val OPS_POLL_MS = 15_000L
 
+/**
+ * Colab /state shells out to `colab usage` and `colab status` on every call (up to
+ * 60s + 45s), against a live billing session. The hub's own web screen polls it every
+ * 30s; polling faster from here would double that load, so match it.
+ */
+const val COLAB_POLL_MS = 30_000L
+
 enum class Tone { Ok, Warn, Bad, Neutral }
 
 @Composable

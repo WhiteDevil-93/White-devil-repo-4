@@ -30,7 +30,7 @@ import com.whitedevil.desktop.ops.KeyValue
 import com.whitedevil.desktop.ops.LoadOnce
 import com.whitedevil.desktop.ops.MonoBlock
 import com.whitedevil.desktop.ops.Note
-import com.whitedevil.desktop.ops.OPS_POLL_MS
+import com.whitedevil.desktop.ops.COLAB_POLL_MS
 import com.whitedevil.desktop.ops.OpsState
 import com.whitedevil.desktop.ops.PanelState
 import com.whitedevil.desktop.ops.PanelView
@@ -72,13 +72,13 @@ fun ColabScreen(settings: Settings) {
     // screen shows what the hub now says instead of what it said before the action.
     val controller = remember(state) { ActionController(onFinished = { scope.launch { state.refresh(followUp = true) } }) }
 
-    PollWhileVisible(state, OPS_POLL_MS)
+    PollWhileVisible(state, COLAB_POLL_MS)
     LoadOnce(packs)
 
     OpsScreenFrame(
         title = "Colab",
-        subtitle = state.lastGood?.let { "Updated ${formatClock(it.atMillis)} · refreshes every ${OPS_POLL_MS / 1000}s" }
-            ?: "Read-only · refreshes every ${OPS_POLL_MS / 1000}s",
+        subtitle = state.lastGood?.let { "Updated ${formatClock(it.atMillis)} · refreshes every ${COLAB_POLL_MS / 1000}s" }
+            ?: "Read-only · refreshes every ${COLAB_POLL_MS / 1000}s",
         refreshing = state.refreshing,
         onRefresh = { scope.launch { state.refresh() }; scope.launch { packs.refresh() } },
     ) {
