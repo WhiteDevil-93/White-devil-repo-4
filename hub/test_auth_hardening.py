@@ -44,7 +44,7 @@ def isolate(tmp_path, monkeypatch):
         monkeypatch.delenv(var, raising=False)
     auth._challenges.clear()
     auth._tokens.clear()
-    auth._enrol_codes.clear()
+    auth._void_all_codes()  # codes are files under DATA now, not a module-level dict
     auth.reset_rate_limits()
     yield
     # Leave no allowance spent for whatever test file runs next.
@@ -365,10 +365,10 @@ def test_a_revoked_device_cannot_administer_with_its_old_token():
 # ---------------------------------------------------------------------------
 
 def _simulate_restart():
-    """Everything a hub restart loses: the module-level dicts."""
+    """Everything a hub restart loses: the module-level dicts. (Enrolment codes are
+    files, so unlike before they now survive it -- test_auth_ports.py covers that.)"""
     auth._tokens.clear()
     auth._challenges.clear()
-    auth._enrol_codes.clear()
     auth._loaded_from = None
 
 
