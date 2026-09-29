@@ -16,3 +16,9 @@ build/
 # .NET build output (desktop/hello-helper)
 bin/
 obj/
+
+# Agent worktrees and local session state
+.claude/
+# UX Pilot API dumps kept for reference while redesigning the screens
+hub/uxpilot-*.json
+hub/uxpilot-*.html

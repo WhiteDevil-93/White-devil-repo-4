@@ -1,0 +1,126 @@
+{
+  "id": "ltx25",
+  "title": "LTX-2.5 NSFW kit (ComfyUI)",
+  "summary": "LTX-2.5 22B image-to-video with audio: Stubelius Remix or the official distilled transformer, the LTX Gemma 4 encoder, 2.5 video + audio VAEs, the full Lightricks Setup pack (distilled 450 + 8 IC + 2 control), and every NSFW content LoRA (mylo, sexgod, CoachBate, Praxis, BEANFLK, SexThrust, CGS23, Defined Muscle, cumsplash, plora_sulfter, solo-male, sulphur, bwc). Built for a 96 GB card.",
+  "script": "setup.sh",
+  "log": "logs/setup.log",
+  "done_marker": "SETUP_COMPLETE",
+  "fail_markers": [
+    "FATAL:",
+    "RESULT: PROBLEM"
+  ],
+  "minutes": 40,
+  "min_vram_gb": 80,
+  "recommended_vram_gb": 96,
+  "secrets": {
+    "HF_TOKEN": "required",
+    "CIVITAI_TOKEN": "required"
+  },
+  "disk_gb": {
+    "base": 30,
+    "add": {
+      "TRANSFORMER=stubelius_b1": 51,
+      "TRANSFORMER=stubelius_b2": 51,
+      "TRANSFORMER=stubelius_b2_int8": 31,
+      "TRANSFORMER=distilled": 42,
+      "GEMMA=bf16": 27,
+      "GEMMA=int8": 16,
+      "SEX_LORA=mylo": 2,
+      "SEX_LORA=sexgod": 2,
+      "EXTRAS=true": 1,
+      "SEX_LORA=all": 8,
+      "CONTENT_LORAS=true": 12
+    }
+  },
+  "fixed_env": {
+    "LISTEN": "127.0.0.1",
+    "START": "1",
+    "PACK_LORAS": "1",
+    "CONTENT_LORAS": "1",
+    "SEX_LORA": "all"
+  },
+  "options": [
+    {
+      "key": "TRANSFORMER",
+      "label": "Transformer",
+      "type": "choice",
+      "default": "stubelius_b1",
+      "choices": [
+        [
+          "stubelius_b1",
+          "Stubelius Remix NSFW beta1 (recommended start)"
+        ],
+        [
+          "stubelius_b2",
+          "Stubelius Remix beta2 bf16 (newer)"
+        ],
+        [
+          "stubelius_b2_int8",
+          "Stubelius Remix beta2 int8 (half the size)"
+        ],
+        [
+          "distilled",
+          "Official distilled (fallback for photoreal)"
+        ]
+      ]
+    },
+    {
+      "key": "GEMMA",
+      "label": "Text encoder (Gemma 4)",
+      "type": "choice",
+      "default": "bf16",
+      "choices": [
+        [
+          "bf16",
+          "BF16 (26 GB)"
+        ],
+        [
+          "int8",
+          "INT8 (15 GB, if memory is tight)"
+        ]
+      ]
+    },
+    {
+      "key": "SEX_LORA",
+      "label": "Sex LoRA",
+      "type": "choice",
+      "default": "all",
+      "choices": [
+        [
+          "all",
+          "All sex LoRAs (mylo + sexgod) \u2014 content pack still downloads every NSFW LoRA"
+        ],
+        [
+          "mylo",
+          "mylo1337 I2V NSFW v2 only (content pack still downloads the rest)"
+        ],
+        [
+          "sexgod",
+          "SexGod Female Nudity v2 only (trigger LTXNUDES)"
+        ],
+        [
+          "none",
+          "Skip mylo/sexgod (content pack still downloads the rest unless CONTENT off)"
+        ]
+      ]
+    },
+    {
+      "key": "EXTRAS",
+      "label": "Also get the x2 temporal upscaler (smoother motion)",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "key": "SKIP_COMFY",
+      "label": "Keep the existing ComfyUI (only add LTX nodes and models)",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "key": "CONTENT_LORAS",
+      "label": "Download ALL NSFW content LoRAs (CoachBate, Praxis, BEANFLK, \u2026)",
+      "type": "bool",
+      "default": true
+    }
+  ]
+}

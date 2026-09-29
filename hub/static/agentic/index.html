@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Agentic side-track</title>
+<style>
+  :root { --bg:#12110f; --fg:#e8e2d6; --mut:#9a9286; --line:#2a2620; --acc:#c4a574; --bad:#c45c4a; --ok:#6a9a6a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font: 14px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:16px 20px; border-bottom:1px solid var(--line); }
+  header h1 { margin:0; font-size:18px; font-weight:600; }
+  header p { margin:6px 0 0; color:var(--mut); font-size:13px; }
+  main { display:grid; gap:16px; padding:16px 20px 40px; max-width:960px; }
+  section { border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  section h2 { margin:0 0 10px; font-size:14px; color:var(--acc); font-weight:600; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:8px 0; }
+  input, textarea, button, select { font:inherit; color:var(--fg); background:#1c1a17; border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+  textarea { width:100%; min-height:72px; }
+  button { cursor:pointer; background:#2a241c; }
+  button.primary { background:var(--acc); color:#1a140c; border-color:transparent; font-weight:600; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#1c1a17; color:var(--mut); }
+  .pill.on { color:var(--ok); } .pill.off { color:var(--bad); }
+  pre { white-space:pre-wrap; word-break:break-word; font-size:12px; color:var(--mut); margin:0; max-height:280px; overflow:auto; }
+  .job { border-top:1px solid var(--line); padding:8px 0; }
+  label { color:var(--mut); font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Agentic side-track</h1>
+  <p>Parallel to Venice Agent — does not change chat, LTX, or the phone Agent tab. Runners default <b>off</b>.</p>
+</header>
+<main>
+  <section>
+    <h2>Status</h2>
+    <div class="row">
+      <span id="enPill" class="pill off">runners off</span>
+      <button type="button" id="btnEnable">Enable runners</button>
+      <button type="button" id="btnDisable">Disable</button>
+      <button type="button" id="btnRefresh">Refresh</button>
+    </div>
+    <pre id="status">…</pre>
+  </section>
+  <section>
+    <h2>Start background goal</h2>
+    <textarea id="goal" placeholder="e.g. Check Colab/GPU status and summarize active Hub jobs"></textarea>
+    <div class="row">
+      <label>max steps <input id="steps" type="number" value="12" min="1" max="40" style="width:72px"/></label>
+      <button type="button" class="primary" id="btnStart">Start job</button>
+    </div>
+    <pre id="startOut"></pre>
+  </section>
+  <section>
+    <h2>Jobs</h2>
+    <div id="jobs"></div>
+  </section>
+  <section>
+    <h2>Memory (long-term notes)</h2>
+    <div class="row">
+      <input id="note" style="flex:1" placeholder="Append a preference or note"/>
+      <button type="button" id="btnNote">Save note</button>
+    </div>
+    <pre id="memory"></pre>
+  </section>
+  <section>
+    <h2>Permissions</h2>
+    <pre id="perms"></pre>
+  </section>
+</main>
+<script>
+async function api(path, opts) {
+  const r = await fetch(path, Object.assign({credentials:'same-origin', headers:{'Content-Type':'application/json'}}, opts||{}));
+  const t = await r.text();
+  let j; try { j = JSON.parse(t); } catch { j = {raw:t}; }
+  if (!r.ok) throw new Error(j.detail || j.error || t || r.status);
+  return j;
+}
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+function pill(on) {
+  const el = document.getElementById('enPill');
+  el.textContent = on ? 'runners on' : 'runners off';
+  el.className = 'pill ' + (on ? 'on' : 'off');
+}
+async function refresh() {
+  const st = await api('/api/agentic/status');
+  pill(!!st.enabled);
+  document.getElementById('status').textContent = JSON.stringify(st, null, 2);
+  const jobs = await api('/api/agentic/jobs');
+  const box = document.getElementById('jobs');
+  box.innerHTML = (jobs.jobs||[]).slice(0,15).map(j => {
+    return `<div class="job"><b>${esc(j.id)}</b> · ${esc(j.status)} · step ${j.step||0}<br/><span style="color:#9a9286">${esc((j.goal||'').slice(0,120))}</span><br/><pre>${esc((j.result||j.error||j.last||'').toString().slice(0,500))}</pre>
+      <button data-stop="${esc(j.id)}" type="button">Stop</button></div>`;
+  }).join('') || '<div class="pill">no jobs</div>';
+  box.querySelectorAll('[data-stop]').forEach(btn => btn.onclick = async () => {
+    try {
+      await api('/api/agentic/jobs/'+btn.dataset.stop+'/stop', {method:'POST', body:'{}'});
+    } catch (e) { alert('Stop failed: ' + e.message); return; }
+    refresh().catch(e => alert(e.message));
+  });
+  document.getElementById('memory').textContent = JSON.stringify(await api('/api/agentic/memory'), null, 2);
+  document.getElementById('perms').textContent = JSON.stringify(await api('/api/agentic/permissions'), null, 2);
+}
+document.getElementById('btnRefresh').onclick = () => refresh().catch(e => alert(e.message));
+async function setEnabled(on) {
+  try {
+    await api('/api/agentic/config', {method:'PUT', body: JSON.stringify({enabled:on})});
+  } catch (e) { alert('Could not change runners: ' + e.message); return; }
+  refresh().catch(e => alert(e.message));
+}
+document.getElementById('btnEnable').onclick = () => setEnabled(true);
+document.getElementById('btnDisable').onclick = () => setEnabled(false);
+document.getElementById('btnStart').onclick = async () => {
+  const goal = document.getElementById('goal').value.trim();
+  if (!goal) return alert('Enter a goal');
+  const max_steps = Number(document.getElementById('steps').value)||12;
+  let j;
+  try {
+    j = await api('/api/agentic/jobs', {method:'POST', body: JSON.stringify({goal, max_steps})});
+  } catch (e) { document.getElementById('startOut').textContent = 'Could not start: ' + e.message; return; }
+  document.getElementById('startOut').textContent = JSON.stringify(j, null, 2);
+  refresh().catch(e => alert(e.message));
+};
+document.getElementById('btnNote').onclick = async () => {
+  const append_note = document.getElementById('note').value.trim();
+  if (!append_note) return;
+  try {
+    await api('/api/agentic/memory', {method:'PUT', body: JSON.stringify({append_note})});
+  } catch (e) { alert('Could not save the note: ' + e.message); return; }
+  document.getElementById('note').value = '';
+  refresh().catch(e => alert(e.message));
+};
+refresh().catch(e => document.getElementById('status').textContent = String(e));
+setInterval(() => refresh().catch(()=>{}), 8000);
+</script>
+</body>
+</html>

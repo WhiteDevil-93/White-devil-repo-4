@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in · WhiteDevil</title>
+<style>
+:root{--bg:#000000;--fg:#f0e9e0;--mut:#a89e93;--dim:#7a7168;--strong:#f5efe6;--acc:#D9BF8C;
+  --line:rgba(255,255,255,.08);--glass:rgba(255,255,255,.04);--ok:#9bbfa0;--bad:#d99393;--card:#121212}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
+  font:15px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+body{display:grid;place-items:center;padding:28px}
+.card{width:min(440px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 26px 24px;
+  box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.kicker{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin:0 0 8px}
+h1{font-size:24px;font-weight:650;letter-spacing:-.03em;margin:0 0 8px}
+.lead{color:var(--mut);font-size:14px;margin:0 0 20px}
+label{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:14px 0 6px}
+input{width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:#0e0f14;color:var(--fg);font:14px inherit}
+input:focus{outline:none;border-color:rgba(217,191,140,.55)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.btns{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap}
+button{appearance:none;border:1px solid var(--line);background:var(--glass);color:var(--fg);border-radius:999px;
+  padding:11px 18px;font:600 13px inherit;cursor:pointer}
+button.primary{background:var(--acc);color:#111;border-color:transparent}
+button:disabled{opacity:.5;cursor:default}
+#msg{margin-top:14px;font-size:13px;color:var(--mut);min-height:1.4em}
+#msg.ok{color:var(--ok)}#msg.bad{color:var(--bad)}
+.hint{font-size:12px;color:var(--dim);margin-top:6px}
+code{font:12px ui-monospace,Consolas,monospace;color:var(--fg)}
+</style>
+</head>
+<body>
+  <div class="card">
+    <p class="kicker">WhiteDevil</p>
+    <h1>Sign in to the relay</h1>
+    <p class="lead">Relay basic auth unlocks Agent and the Forge Hub domain. A black window is usually a 401, not a crash.</p>
+
+    <div class="row">
+      <div>
+        <label for="relayUser">Relay user</label>
+        <input id="relayUser" autocomplete="username" value="anon3">
+      </div>
+      <div>
+        <label for="relayPass">Relay password</label>
+        <input id="relayPass" type="password" autocomplete="current-password" autofocus>
+      </div>
+    </div>
+    <div class="hint">From <code>C:\Users\anon3\wan_outputs\relay_access.txt</code> (<code>user</code> / <code>password</code>).</div>
+
+    <div class="row">
+      <div>
+        <label for="laptopUser">Laptop user</label>
+        <input id="laptopUser" value="laptop">
+      </div>
+      <div>
+        <label for="laptopPass">Laptop password</label>
+        <input id="laptopPass" type="password">
+      </div>
+    </div>
+    <div class="hint">For Shell &amp; Files only (<code>laptop_user</code> / <code>laptop_password</code> in the same file).</div>
+
+    <div class="btns">
+      <button class="primary" id="go">Sign in</button>
+      <button id="fill">Fill from relay_access.txt</button>
+    </div>
+    <div id="msg"></div>
+  </div>
+<script>
+const api = window.forgeDesktop;
+const $ = id => document.getElementById(id);
+function readForm() {
+  return {
+    hubUrl: undefined, // keep existing / default
+    relayUser: $('relayUser').value,
+    relayPass: $('relayPass').value,
+    laptopUser: $('laptopUser').value,
+    laptopPass: $('laptopPass').value,
+  };
+}
+function show(text, kind) {
+  $('msg').textContent = text;
+  $('msg').className = kind || '';
+}
+api.getSettings().then(s => {
+  if (s.relayUser) $('relayUser').value = s.relayUser;
+  if (s.relayPass) $('relayPass').value = s.relayPass;
+  if (s.laptopUser) $('laptopUser').value = s.laptopUser;
+  if (s.laptopPass) $('laptopPass').value = s.laptopPass;
+});
+$('fill').onclick = async () => {
+  show('Looking for relay_access.txt…');
+  const r = await api.importRelayAccess();
+  if (!r.ok) { show(r.message || 'Not found', 'bad'); return; }
+  if (r.user) $('relayUser').value = r.user;
+  if (r.password) $('relayPass').value = r.password;
+  if (r.laptop_user) $('laptopUser').value = r.laptop_user;
+  if (r.laptop_password) $('laptopPass').value = r.laptop_password;
+  show('Filled from ' + (r.path || 'relay_access.txt'), 'ok');
+};
+$('go').onclick = async () => {
+  const f = readForm();
+  if (!f.relayPass) { show('Paste the relay password first.', 'bad'); return; }
+  show('Checking…');
+  $('go').disabled = true;
+  try {
+    const cur = await api.getSettings();
+    const merged = { ...cur, ...f, hubUrl: cur.hubUrl };
+    const t = await api.testHub(merged);
+    if (!t.ok) { show(t.message || 'Auth failed', 'bad'); return; }
+    await api.saveSettings(merged);
+    show('Signed in. Opening Agent…', 'ok');
+    if (api.openAgent) await api.openAgent();
+    else await api.openHub();
+  } finally {
+    $('go').disabled = false;
+  }
+};
+$('relayPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "id": "remix14",
+  "title": "Wan 2.2 Remix 14B (ComfyUI)",
+  "summary": "ComfyUI 0.37 with the Remix NSFW 14B models (fp8 image-to-video v3, text-to-video v2), the NSFW UMT5 text encoder, Lightning 4-step LoRAs and optional recipe LoRA kits.",
+  "script": "setup.sh",
+  "log": "logs/setup.log",
+  "done_marker": "SETUP_COMPLETE",
+  "fail_markers": ["FATAL:", "RESULT: PROBLEM"],
+  "minutes": 25,
+  "min_vram_gb": 40,
+  "disk_gb": {"i2v": 80, "t2v": 80, "both": 130, "sfw_extra": 40},
+  "fixed_env": {"LISTEN": "127.0.0.1", "START": "1"},
+  "options": [
+    {"key": "MODE", "label": "Models", "type": "choice", "default": "both",
+     "choices": [["i2v", "Image-to-video"], ["t2v", "Text-to-video"], ["both", "Both"]]},
+    {"key": "KIT", "label": "LoRA kits", "type": "choice", "default": "recipes",
+     "choices": [["recipes", "Recipe kits (gay, straight, softcore, T2V poses)"], ["none", "Lightning only"]]},
+    {"key": "INSTALL_SFW", "label": "Also install the SFW models", "type": "bool", "default": false},
+    {"key": "SKIP_COMFY", "label": "Keep the existing ComfyUI (only add missing models)", "type": "bool", "default": false}
+  ]
+}

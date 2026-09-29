@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WhiteDevil</title>
+<style>
+:root{
+  --bg:#000000;--panel:#0a0a0a;--fg:#f0e9e0;--mut:#a89e93;--dim:#6a635c;
+  --acc:#D9BF8C;--line:rgba(255,255,255,.08);--on:rgba(217,191,140,.14);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
+  font:13px/1.4 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;overflow:hidden}
+#app{display:grid;grid-template-columns:72px 1fr;height:100%}
+nav{
+  background:var(--panel);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:stretch;padding:10px 8px;gap:4px;
+}
+.brand{
+  font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--acc);text-align:center;padding:8px 4px 14px;line-height:1.3;
+}
+.tab{
+  appearance:none;border:0;background:transparent;color:var(--mut);border-radius:10px;
+  padding:12px 6px;cursor:pointer;font:600 11px inherit;letter-spacing:.04em;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.tab svg{width:20px;height:20px;opacity:.75}
+.tab.on{background:var(--on);color:var(--acc)}
+.tab.on svg{opacity:1}
+.tab:hover{color:var(--fg)}
+.spacer{flex:1}
+.foot{font-size:9px;color:var(--dim);text-align:center;padding:8px 4px;letter-spacing:.08em;text-transform:uppercase}
+main{position:relative;min-width:0;background:var(--bg)}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;display:none}
+iframe.on{display:block}
+#pane-you{padding:28px 32px;overflow:auto;display:none;height:100%}
+#pane-you.on{display:block}
+#pane-you h1{font-size:22px;font-weight:650;letter-spacing:-.03em;margin:0 0 6px;color:var(--acc)}
+#pane-you .lead{color:var(--mut);margin:0 0 22px;max-width:42rem}
+#pane-you label{display:block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:14px 0 6px}
+#pane-you input{width:min(520px,100%);padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#121212;color:var(--fg);font:14px inherit}
+#pane-you .row{display:flex;gap:10px;flex-wrap:wrap;max-width:520px}
+#pane-you .row>*{flex:1;min-width:180px}
+#pane-you .btns{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+#pane-you button{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--fg);border-radius:999px;padding:10px 16px;font:600 13px inherit;cursor:pointer}
+#pane-you button.primary{background:var(--acc);color:#111;border-color:transparent}
+#msg{margin-top:14px;font-size:13px;color:var(--mut);min-height:1.4em}
+#msg.ok{color:#9bbfa0}#msg.bad{color:#d99393}
+.hint{font-size:12px;color:var(--dim);margin-top:4px;max-width:40rem}
+.badge{display:inline-block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:3px 8px;margin-bottom:12px}
+.sec{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);max-width:520px}
+.sec h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin:0 0 8px}
+</style>
+</head>
+<body>
+<div id="app">
+  <nav>
+    <div class="brand">White<br>Devil</div>
+    <button class="tab on" data-domain="agent" title="Agent (Ctrl+1)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.4L19 9l-4 3.2L16.2 18 12 15.2 7.8 18 9 12.2 5 9l5.2-1.6L12 2z"/></svg>
+      Agent
+    </button>
+    <button class="tab" data-domain="hub" title="Forge Hub domain (Ctrl+2)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Hub
+    </button>
+    <button class="tab" data-domain="gallery" title="Gallery (Ctrl+4)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5-4 4-2-2-5 5"/></svg>
+      Gallery
+    </button>
+    <button class="tab" data-domain="you" title="You / settings (Ctrl+3)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"/></svg>
+      You
+    </button>
+    <div class="spacer"></div>
+    <div class="foot">exe</div>
+  </nav>
+  <main>
+    <iframe id="frame-agent" title="Agent" allow="clipboard-read; clipboard-write"></iframe>
+    <iframe id="frame-hub" title="Forge Hub" allow="clipboard-read; clipboard-write"></iframe>
+    <iframe id="frame-gallery" title="Gallery" allow="clipboard-read; clipboard-write"></iframe>
+    <div id="pane-you">
+      <span class="badge">Native · You</span>
+      <h1>You</h1>
+      <p class="lead">Relay credentials, API keys, and laptop bridge. Agent is the product; Forge Hub / Gallery stay on the web surface inside this shell.</p>
+
+      <label for="hubUrl">Relay / Hub base</label>
+      <input id="hubUrl" spellcheck="false" placeholder="https://…sslip.io/app/desktop/">
+      <div class="hint">Same origin powers Agent (<code>/app/venice/</code>), Hub (<code>/app/desktop/</code>), and Gallery (<code>/app/gallery/</code>).</div>
+
+      <div class="row">
+        <div>
+          <label for="relayUser">Relay user</label>
+          <input id="relayUser" autocomplete="username">
+        </div>
+        <div>
+          <label for="relayPass">Relay password</label>
+          <input id="relayPass" type="password" autocomplete="current-password">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="laptopUser">Laptop user</label>
+          <input id="laptopUser">
+        </div>
+        <div>
+          <label for="laptopPass">Laptop password</label>
+          <input id="laptopPass" type="password">
+        </div>
+      </div>
+      <div class="hint">Laptop auth is only for /laptop/term/ and /laptop/files/.</div>
+
+      <div class="sec">
+        <h2>API keys</h2>
+        <label for="veniceKey">Venice API key</label>
+        <input id="veniceKey" type="password" autocomplete="off" spellcheck="false" placeholder="VENICE_…">
+        <div class="hint">Saved on this PC and pushed to the relay for the Agent.</div>
+        <label for="openRouterKey">OpenRouter API key</label>
+        <input id="openRouterKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-or-v1-…">
+        <div class="hint">Used by LTX prompt writers / review on the relay.</div>
+      </div>
+
+      <div class="btns">
+        <button class="primary" id="save">Save</button>
+        <button id="test">Test Hub</button>
+        <button id="fill">Import relay_access.txt</button>
+        <button id="fillKeys">Import local keys</button>
+        <button id="openAgent">Open Agent</button>
+        <button id="openHub">Open Hub</button>
+        <button id="openGallery">Open Gallery</button>
+      </div>
+      <div id="msg"></div>
+    </div>
+  </main>
+</div>
+<script>
+const api = window.whiteDevil || window.forgeDesktop;
+const $ = id => document.getElementById(id);
+let current = "agent";
+let hubScreen = "home";
+let agentLoaded = "";
+let hubLoaded = "";
+let galleryLoaded = "";
+let webRev = "";
+
+function withRev(url) {
+  if (!webRev) return url;
+  try {
+    const u = new URL(url);
+    u.searchParams.set("v", String(webRev));
+    return u.toString();
+  } catch {
+    return url + (url.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(webRev);
+  }
+}
+
+async function refreshWebRev() {
+  try {
+    const origin = new URL(await api.agentUrl()).origin;
+    const r = await fetch(origin + "/api/manifest", { credentials: "include", cache: "no-store" });
+    if (!r.ok) return;
+    const m = await r.json();
+    const next = String(m.web_rev || m.apk_version || "");
+    if (next && next !== webRev) {
+      webRev = next;
+      agentLoaded = "";
+      hubLoaded = "";
+      galleryLoaded = "";
+    }
+  } catch (_) { /* offline */ }
+}
+
+function setChrome(domain) {
+  current = domain === "hub" || domain === "you" || domain === "gallery" ? domain : "agent";
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.domain === current));
+  $("frame-agent").classList.toggle("on", current === "agent");
+  $("frame-hub").classList.toggle("on", current === "hub");
+  $("frame-gallery").classList.toggle("on", current === "gallery");
+  $("pane-you").classList.toggle("on", current === "you");
+  document.title = current === "hub" ? "Forge Hub · WhiteDevil"
+    : current === "gallery" ? "Gallery · WhiteDevil"
+    : current === "you" ? "You · WhiteDevil" : "Agent · WhiteDevil";
+  api.setDomain(current).catch(() => {});
+}
+
+async function loadAgentFrame(force) {
+  await refreshWebRev();
+  const u = withRev(await api.agentUrl());
+  if (force || agentLoaded !== u) {
+    agentLoaded = u;
+    $("frame-agent").src = u;
+  }
+}
+
+async function loadHubFrame(screen, force) {
+  if (screen) hubScreen = String(screen).replace(/^#/, "") || "home";
+  await refreshWebRev();
+  const u = withRev(await api.hubUrlFor(hubScreen));
+  if (force || hubLoaded !== u) {
+    hubLoaded = u;
+    $("frame-hub").src = u;
+  } else {
+    try {
+      const id = "#" + hubScreen;
+      if ($("frame-hub").contentWindow && $("frame-hub").contentWindow.location.hash !== id) {
+        $("frame-hub").contentWindow.location.hash = hubScreen;
+      }
+    } catch (e) {
+      $("frame-hub").src = u;
+    }
+  }
+}
+
+async function loadGalleryFrame(force) {
+  await refreshWebRev();
+  const u = withRev(await api.galleryUrl());
+  if (force || galleryLoaded !== u) {
+    galleryLoaded = u;
+    $("frame-gallery").src = u;
+  }
+}
+
+async function reloadPanes() {
+  agentLoaded = "";
+  hubLoaded = "";
+  galleryLoaded = "";
+  webRev = "";
+  await refreshWebRev();
+  if (current === "hub") await loadHubFrame(hubScreen, true);
+  else if (current === "gallery") await loadGalleryFrame(true);
+  else if (current === "agent") await loadAgentFrame(true);
+}
+
+async function show(domain, screen) {
+  if (domain === "hub") await loadHubFrame(screen || hubScreen);
+  else if (domain === "gallery") await loadGalleryFrame();
+  else if (domain === "agent") await loadAgentFrame();
+  setChrome(domain || "agent");
+}
+
+function readForm() {
+  return {
+    hubUrl: $("hubUrl").value,
+    relayUser: $("relayUser").value,
+    relayPass: $("relayPass").value,
+    laptopUser: $("laptopUser").value,
+    laptopPass: $("laptopPass").value,
+    veniceKey: $("veniceKey").value,
+    openRouterKey: $("openRouterKey").value,
+  };
+}
+function msg(text, kind) {
+  $("msg").textContent = text || "";
+  $("msg").className = kind || "";
+}
+
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => show(btn.dataset.domain));
+});
+
+$("save").onclick = async () => {
+  msg("Saving…");
+  const s = await api.saveSettings({ ...readForm(), startDomain: current });
+  agentLoaded = "";
+  hubLoaded = "";
+  galleryLoaded = "";
+  $("hubUrl").value = s.hubUrl || "";
+  $("veniceKey").value = s.veniceKey || "";
+  $("openRouterKey").value = s.openRouterKey || "";
+  await loadAgentFrame();
+  await loadHubFrame(hubScreen);
+  await loadGalleryFrame();
+  msg("Saved. Keys synced to relay when online.", "ok");
+};
+$("test").onclick = async () => {
+  msg("Testing…");
+  const t = await api.testHub(readForm());
+  msg(t.message || (t.ok ? "OK" : "Failed"), t.ok ? "ok" : "bad");
+};
+$("fill").onclick = async () => {
+  const r = await api.importRelayAccess();
+  if (!r.ok) { msg(r.message || "Not found", "bad"); return; }
+  if (r.user) $("relayUser").value = r.user;
+  if (r.password) $("relayPass").value = r.password;
+  if (r.laptop_user) $("laptopUser").value = r.laptop_user;
+  if (r.laptop_password) $("laptopPass").value = r.laptop_password;
+  msg("Filled from " + (r.path || "relay_access.txt"), "ok");
+};
+$("fillKeys").onclick = async () => {
+  const r = await api.importLocalKeys();
+  if (!r.ok) { msg(r.message || "No keys", "bad"); return; }
+  if (r.veniceKey) $("veniceKey").value = r.veniceKey;
+  if (r.openRouterKey) $("openRouterKey").value = r.openRouterKey;
+  msg(r.message || "Keys loaded", "ok");
+};
+$("openAgent").onclick = () => show("agent");
+$("openHub").onclick = () => show("hub", "home");
+$("openGallery").onclick = () => show("gallery");
+
+api.getSettings().then(async s => {
+  $("hubUrl").value = s.hubUrl || "";
+  $("relayUser").value = s.relayUser || "";
+  $("relayPass").value = s.relayPass || "";
+  $("laptopUser").value = s.laptopUser || "";
+  $("laptopPass").value = s.laptopPass || "";
+  $("veniceKey").value = s.veniceKey || "";
+  $("openRouterKey").value = s.openRouterKey || "";
+  await show(s.startDomain || "agent");
+});
+
+document.addEventListener("keydown", e => {
+  if (!(e.ctrlKey || e.metaKey)) return;
+  if (e.key === "r" || e.key === "R") {
+    e.preventDefault();
+    reloadPanes();
+    return;
+  }
+  if (e.shiftKey || e.altKey) return;
+  if (e.key === "1") { e.preventDefault(); show("agent"); }
+  if (e.key === "2") { e.preventDefault(); show("hub", "home"); }
+  if (e.key === "3") { e.preventDefault(); show("you"); }
+  if (e.key === "4") { e.preventDefault(); show("gallery"); }
+});
+
+window.addEventListener("focus", () => { refreshWebRev().catch(() => {}); });
+api.onNavigate((payload) => {
+  if (payload && payload.reload) { reloadPanes(); return; }
+  show((payload && payload.domain) || "agent", payload && payload.screen);
+});
+</script>
+</body>
+</html>
