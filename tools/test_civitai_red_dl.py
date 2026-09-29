@@ -1,3 +1,4 @@
+import civitai_red_dl
 from civitai_red_dl import parse_ids, pick_files
 
 
@@ -69,3 +70,61 @@ def test_pick_files_skips_checkpoints_unless_weights():
     with_weights = [f["name"] for _, f in pick_files(model, include_weights=True)]
     assert "ltx25_dev.safetensors" in with_weights
     assert "t5.safetensors" in with_weights
+
+
+class FakeResponse:
+    """Minimal stand-in for requests.Response for save()/open_stream()."""
+
+    def __init__(self, body, total, status_code=200, headers=None):
+        self.body = body
+        self.status_code = status_code
+        self.url = "https://civitai.red/api/download/models/10?token=SECRET"
+        self.headers = {"content-type": "application/octet-stream", "content-length": str(len(body))}
+        if status_code == 206:
+            start = total - len(body)
+            self.headers["content-range"] = f"bytes {start}-{total - 1}/{total}"
+        if headers:
+            self.headers.update(headers)
+
+    def iter_content(self, _size):
+        yield self.body
+
+    def close(self):
+        pass
+
+
+def test_mask_hides_token():
+    assert civitai_red_dl.mask("https://h/f?type=Model&token=SECRET&fileId=3") == (
+        "https://h/f?type=Model&token=***&fileId=3"
+    )
+
+
+def test_truncated_download_is_not_promoted_and_resumes(tmp_path, monkeypatch):
+    import pytest
+
+    dest = tmp_path / "lora.safetensors"
+    full = b"A" * 10 + b"B" * 6
+
+    # first attempt: the connection drops after 10 of 16 bytes
+    def first(url, tok, stream=False, extra=None):
+        return FakeResponse(full[:10], 16, 200, {"content-length": "16"})
+
+    monkeypatch.setattr(civitai_red_dl, "get", first)
+    with pytest.raises(SystemExit) as e:
+        civitai_red_dl.save("https://h/f", dest, "tok", None)
+    assert "incomplete download" in str(e.value)
+    assert not dest.exists()                                   # never promoted
+    assert (tmp_path / "lora.safetensors.part").read_bytes() == full[:10]
+
+    # second attempt: resumes from byte 10 with a range request
+    seen = {}
+
+    def second(url, tok, stream=False, extra=None):
+        seen["range"] = (extra or {}).get("Range")
+        return FakeResponse(full[10:], 16, 206)
+
+    monkeypatch.setattr(civitai_red_dl, "get", second)
+    civitai_red_dl.save("https://h/f", dest, "tok", None)
+    assert seen["range"] == "bytes=10-"
+    assert dest.read_bytes() == full
+    assert not (tmp_path / "lora.safetensors.part").exists()

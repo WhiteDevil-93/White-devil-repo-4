@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><title>Compact scale</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#000;--a:#d9bf8c;--t:#fff;--b:#aeaeb2;--m:#8e8e93;--s:#3a3a3c}
+body{font:14px/1.35 -apple-system,sans-serif;background:#000;color:var(--t);padding:16px}
+h1{font-size:13px;font-weight:500;color:var(--b);text-align:center;margin-bottom:14px}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.p{width:240px;height:500px;background:var(--bg);border:1px solid #222;border-radius:16px;display:flex;flex-direction:column;font-size:14px}
+.bar{padding:10px 12px 8px;display:flex;justify-content:space-between;align-items:center}
+.bar b{font-size:17px;font-weight:600}
+.line{height:1px;background:var(--s);opacity:.5}
+.body{flex:1;padding:16px 14px}
+.body h2{font-size:15px;font-weight:500;margin-bottom:4px}
+.body p{font-size:13px;color:var(--b)}
+.link{font-size:12px;color:var(--a);margin-top:10px}
+.comp{border-top:1px solid var(--s);padding:6px 8px;display:flex;align-items:center;gap:4px;color:var(--m);font-size:14px}
+.comp input{flex:1;border:none;background:transparent;color:var(--t);font-size:14px;outline:none}
+.nav{border-top:1px solid var(--s);display:flex;height:44px;align-items:center;font-size:10px;color:var(--m)}
+.nav div{flex:1;text-align:center}
+.nav .on{color:var(--t)}
+.row2{padding:10px 12px;border-bottom:1px solid rgba(58,58,60,.4);display:flex;justify-content:space-between}
+.row2 small{display:block;font-size:11px;color:var(--m);margin-top:1px}
+</style></head><body>
+<h1>Compact scale — 17px titles, hairlines, no gray pills</h1>
+<div class="row">
+<div class="p"><div class="bar"><b>Venice</b><span style="color:var(--b)">⋯</span></div><div class="line"></div>
+<div class="body"><h2>Connect Venice</h2><p>Add an API key on this device to chat and run tools on your relay.</p><div class="link">Add API key</div></div>
+<div class="nav"><div class="on">Agent</div><div>Hub</div><div>You</div></div></div>
+<div class="p"><div class="bar"><b>Venice</b><span style="color:var(--b)">⋯</span></div><div style="padding:0 12px 4px;font-size:11px;color:var(--m)">GLM 5.2 ⌄</div><div class="line"></div>
+<div class="body"><h2>No messages yet</h2><p>Send a message below.</p></div>
+<div class="comp"><span>📎</span><span style="flex:1;color:var(--m)">Message</span><span style="color:var(--m)">➤</span></div>
+<div class="nav"><div class="on">Agent</div><div>Hub</div><div>You</div></div></div>
+<div class="p"><div class="bar"><b>You</b></div><div style="padding:0 12px 6px;font-size:11px;color:var(--m)">Venice: not configured · Relay: reachable</div><div class="line"></div>
+<div class="row2"><div>Settings<small>Venice, relay, laptop</small></div><span style="color:var(--m)">›</span></div>
+<div class="row2"><div>Terminal<small>SSH / WSL on relay</small></div><span style="color:var(--m)">›</span></div>
+<div class="line" style="margin-top:6px"></div>
+<div class="row2" style="color:var(--b)"><div>Test connections<small>Venice & relay health</small></div><span>›</span></div>
+<div class="nav"><div>Agent</div><div>Hub</div><div class="on">You</div></div></div>
+</div></body></html>

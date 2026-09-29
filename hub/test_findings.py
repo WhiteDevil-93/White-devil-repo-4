@@ -104,7 +104,8 @@ def test_desktop_app_caching_and_manifest():
     assert res_manifest.status_code == 200
     assert "no-store" in res_manifest.headers.get("Cache-Control", "")
     manifest_data = res_manifest.json()
-    assert manifest_data.get("web_rev") == 16
+    # web_rev bumps with every static-UI rev; only require a sane minimum.
+    assert int(manifest_data.get("web_rev") or 0) >= 15
 
     # Desktop HTML should return no-store
     res_desktop = client.get("/app/desktop/index.html")
@@ -115,18 +116,22 @@ def test_desktop_app_caching_and_manifest():
     assert "ForgeDesktopTermPaste" in res_desktop.text
     assert "html.app #pop" in res_desktop.text
     assert "forge:term-paste" in res_desktop.text
+    # The shell page is the restyled one from main (Readiness panel, AI Assist / Agent toggle).
     assert "Readiness" in res_desktop.text
     assert "local session" in res_desktop.text
     assert "AI Assist" in res_desktop.text
     assert "modeVenice" in res_desktop.text
+    # The manifest calls the Agent screen 'agent'; the shell must map it to the id it knows.
+    assert "id === 'agent' ? {...s, id: 'venice'}" in res_desktop.text
 
     res_home = client.get("/app/home/")
     assert res_home.status_code == 200
     assert "Welcome back" in res_home.text
     assert "Here's what the render farm has been up to." in res_home.text
-    assert "Newest clip" in res_home.text
-    assert "Render queue" in res_home.text
-    assert "Storage used" in res_home.text
+    # Stat-card labels are title-case since the UX Pilot home redesign.
+    assert "Newest Clip" in res_home.text
+    assert "Render Queue" in res_home.text
+    assert "Storage Used" in res_home.text
     assert "Update available" in res_home.text
     assert "/app/term/?update=1" in res_home.text
     assert "Open Gallery" in res_home.text
@@ -141,15 +146,14 @@ def test_desktop_app_caching_and_manifest():
 
     res_venice = client.get("/app/venice/")
     assert res_venice.status_code == 200
-    assert "Venice Agent" in res_venice.text
+    assert "Venice" in res_venice.text
     assert "Venice Bench" not in res_venice.text
     assert "run_laptop_command" in res_venice.text
     assert "run_in_terminal" in res_venice.text
     assert "forge:term-paste" in res_venice.text
-    assert "Ask Venice or give a task" in res_venice.text
-    assert "API key saved" in res_venice.text
-    assert "changeKey" in res_venice.text
-    assert "Show in Shell" in res_venice.text
+    assert "Give Venice a goal or feedback" in res_venice.text
+    assert "btn-send" in res_venice.text
+    assert "idea-input" in res_venice.text
 
     # Static CSS and JS assets under /app/ should return no-cache (allowing 304 validation)
     res_css = client.get("/app/ui/forge.css")
@@ -163,7 +167,7 @@ def test_desktop_app_caching_and_manifest():
     assert "no-cache" in res_js.headers.get("Cache-Control", "")
 
 
-def test_setup_saves_all_eleven_ltx_loras(monkeypatch, tmp_path):
+def test_setup_saves_full_ltx_lora_pack(monkeypatch, tmp_path):
     import setup as setup_mod
     monkeypatch.setattr(setup_mod, "STATE", tmp_path / "forge_setup.json")
     client = TestClient(app)
@@ -174,24 +178,32 @@ def test_setup_saves_all_eleven_ltx_loras(monkeypatch, tmp_path):
     empty = client.get("/api/setup")
     assert empty.status_code == 200
     data = empty.json()
-    assert data["count"] == 11
+    # The pack is the 11 Lightricks LoRAs plus the NSFW content set, so pin the
+    # Lightricks half exactly and let the content set grow (setup.py _lightricks
+    # already hard-fails if the Lightricks catalog is not exactly 11).
+    assert data["lightricks"] == 11
+    assert data["nsfw"] > 0
+    assert data["count"] == data["lightricks"] + data["nsfw"]
     assert data["saved"] is False
     assert data["enabled"] == 0
     names = [r["name"] for r in data["loras"]]
     assert "Distilled 450" in names
     assert "Cinemagraph" in names
-    assert len({r["id"] for r in data["loras"]}) == 11
+    assert len({r["id"] for r in data["loras"]}) == data["count"]
 
     saved = client.post("/api/setup", json={})
     assert saved.status_code == 200
     body = saved.json()
     assert body["saved"] is True
-    assert body["enabled"] == 11
+    assert body["enabled"] == data["count"]
     assert all(r["enabled"] for r in body["loras"])
 
     ltx = client.get("/app/ltx/")
     assert ltx.status_code == 200
-    assert "LoRAs from Setup" in ltx.text
+    # The Setup pack surfaces on LTX as the "Setup pack" pill (it was an <h2>
+    # before the redesign); what matters is that LTX still reads /api/setup.
+    assert "Setup pack" in ltx.text
+    assert "/api/setup" in ltx.text
 
     sh = client.get("/api/setup/download.sh")
     assert sh.status_code == 200

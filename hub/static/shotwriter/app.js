@@ -322,14 +322,21 @@ The "variations" array must contain exactly ${n} items.`;
     genBtn.disabled = true;
     genBtn.innerHTML = `<span class="spinner"></span><span>Writing takes…</span>`;
     const n = +$("#variations").value;
+    // No takes on screen until this run renders. Left enabled, a failed run kept the previous run's
+    // button live and "Copy all" copied an empty string while still saying "All prompts copied".
+    $("#copyAllBtn").disabled = true;
     $("#results").innerHTML = Array.from({ length: Math.min(n, 3) }, () => `<div class="skel"></div>`).join("");
     renderSettingsCard();
     if (matchMedia("(max-width: 880px)").matches) $("#resultsPanel").scrollIntoView({ behavior: "smooth", block: "start" });
 
-    const messages = buildMessages();
-    const c = cfg();
-    let llm = c.llm, out, usedLLM = llm;
+    let out, usedLLM;
     try {
+      // buildMessages() used to run outside this try: anything it threw left busy=true and the
+      // button stuck on "Writing takes…" for the rest of the session.
+      const messages = buildMessages();
+      const c = cfg();
+      const llm = c.llm;
+      usedLLM = llm;
       try { out = await callLLM(messages, llm); }
       catch (e) {
         const isDolphin = llm.startsWith(DEFAULT_LLM);

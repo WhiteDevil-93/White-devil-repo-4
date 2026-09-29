@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    WhiteDevil Windows Hello helper.
+
+    Exists because the desktop app is Kotlin/JVM and the JVM has no clean path to
+    Windows Hello. This is the smallest possible native surface: create a
+    Hello-protected key, and sign a nonce with it. Nothing else lives here.
+
+    net8.0-windows10.0.17763.0 targets the Windows SDK projections so
+    Windows.Security.Credentials.KeyCredentialManager is available. 17763 (1809)
+    is the floor for the APIs used; .NET 8 is installed on this machine.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>wd-hello</AssemblyName>
+    <RootNamespace>WhiteDevil.Hello</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Single self-contained exe so the Kotlin app can ship it as one file. -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+</Project>

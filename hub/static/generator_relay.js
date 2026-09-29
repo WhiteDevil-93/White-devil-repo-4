@@ -96,7 +96,15 @@ window.addEventListener('DOMContentLoaded', () => {
     const r = await origFetch(path, body === undefined ? {credentials: 'same-origin'} :
       {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.detail || 'HTTP ' + r.status);
+    // FastAPI validation errors put a list of objects in `detail`; stringifying it as-is shows "[object Object]".
+    if (!r.ok) {
+      const err = new Error(
+        typeof j.detail === 'string' ? j.detail
+        : j.detail ? JSON.stringify(j.detail)
+        : 'HTTP ' + r.status);
+      err.status = r.status;  // the relay answered: distinguishes a rejection from an unreachable relay
+      throw err;
+    }
     return j;
   };
 
@@ -128,7 +136,26 @@ window.addEventListener('DOMContentLoaded', () => {
     for (;;) {
       let j;
       try { j = await api('/api/gen/jobs/' + id); }
-      catch (e) { status().textContent = 'Relay unreachable, retrying… (generation continues on the relay)'; await new Promise(r => setTimeout(r, 5000)); continue; }
+      catch (e) {
+        // A job the relay no longer has (404) never comes back — stop, don't poll forever.
+        if (/No such generation job|HTTP 404/i.test(e.message || '')) {
+          localStorage.removeItem(KEYJOB);
+          status().className = 'status';
+          status().textContent = 'That generation is no longer on the relay. Start a new one.';
+          return;
+        }
+        // Any other answer FROM the relay (bad id, corrupt job file) is permanent too: a gateway
+        // timeout is the only server status worth retrying. Retrying the rest says "unreachable" forever.
+        if (e.status && e.status !== 502 && e.status !== 504) {
+          localStorage.removeItem(KEYJOB);
+          status().className = 'status err';
+          status().textContent = 'Relay rejected the generation: ' + e.message;
+          return;
+        }
+        status().textContent = 'Relay unreachable, retrying… (generation continues on the relay)';
+        await new Promise(r => setTimeout(r, 5000));
+        continue;
+      }
       if (j.chain.clips.length !== shown) { shown = j.chain.clips.length; if (shown) renderChain(j.chain, j.meta); }
       if (j.status === 'done') {
         localStorage.removeItem(KEYJOB);

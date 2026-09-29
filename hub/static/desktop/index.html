@@ -271,6 +271,7 @@ window.addEventListener('message', ev => {
 });
 
 function show(id, reload, href) {
+  if (id === 'agent') id = 'venice'; // ltx/index.html calls parent.show('agent', ...)
   const s = screens.find(x => x.id === id) || screens[0];
   if (!s) return;
   current = s;
@@ -382,6 +383,8 @@ async function boot() {
     const main = m.screens.filter(s => s.group !== 'bots');
     const pc = main.filter(s => s.group === 'Prompt creator');
     screens = [...main.filter(s => s.group !== 'Prompt creator'), ...EXTRA, ...pc, ...m.screens.filter(s => s.group === 'bots')];
+    // The manifest calls the Agent screen 'agent'; this shell (and the Electron app that loads it) knows it as 'venice'.
+    screens = screens.map(s => s.id === 'agent' ? {...s, id: 'venice'} : s);
     localStorage.setItem('desk_manifest', JSON.stringify(screens));
   } catch (e) {
     screens = JSON.parse(localStorage.getItem('desk_manifest') || '[]');

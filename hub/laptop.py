@@ -1,8 +1,9 @@
 """Run a Venice snippet on the laptop over `ssh laptop` (same path as HypnoForge).
 
-The Venice Agent POSTs here from run_laptop_command (and from the old Run sheet).
-Scripts land in ~/venice_run on the WSL laptop. Live Shell paste is separate
-(ttyd via forge:term-paste) so the user can watch commands in the Terminal tab.
+The native Android agent and Hub terminal POST here (run_laptop_command / Run sheet).
+Scripts land in ~/venice_run on the WSL laptop and may execute from a caller-selected
+directory under the laptop home. Live Shell paste is separate (ttyd via forge:term-paste)
+so the user can watch commands in the Terminal tab.
 """
 from __future__ import annotations
 
@@ -36,9 +37,13 @@ def ssh(cmd: str, timeout: int = 60, stdin: Optional[str] = None) -> subprocess.
         )
     except subprocess.TimeoutExpired:
         raise HTTPException(504, "The laptop took too long to answer.")
-    if r.returncode == 255:
-        raise HTTPException(503, "Laptop is offline (asleep, or WSL not running).")
     r.stdout, r.stderr = decode(r.stdout), decode(r.stderr)
+    # 255 is ssh's own transport failure code, but it is also a perfectly legal
+    # exit code for the remote command. Only call the laptop offline when the
+    # error actually looks like ssh failing to connect, so a script exiting 255
+    # is not reported as a dead machine.
+    if r.returncode == 255 and (not r.stderr.strip() or "ssh:" in r.stderr.lower()):
+        raise HTTPException(503, "Laptop is offline (asleep, or WSL not running).")
     return r
 
 
@@ -62,6 +67,7 @@ class RunIn(BaseModel):
     lang: str = "bash"
     code: str
     timeout: int = Field(default=90, ge=10, le=180)
+    cwd: str = Field(default="venice_run", max_length=240)
 
 
 @router.post("/run")
@@ -78,8 +84,29 @@ def run(body: RunIn):
         raise HTTPException(400, "Nothing to run.")
     if len(code) > MAX_CODE:
         raise HTTPException(400, "That snippet is too large.")
+    cwd_input = (body.cwd or "venice_run").strip().replace("\\", "/")
+    if cwd_input.startswith("/"):
+        raise HTTPException(400, "cwd must be relative to the laptop home directory.")
+    if cwd_input.startswith("~/"):
+        cwd_input = cwd_input[2:]
+    cwd = cwd_input.strip("/")
+    if not cwd:
+        cwd = "venice_run"
+    parts = cwd.split("/")
+    if any(part in ("", ".", "..") for part in parts) or not all(
+        part.replace("-", "").replace("_", "").replace(".", "").isalnum() for part in parts
+    ):
+        raise HTTPException(400, "cwd must be a safe path relative to the laptop home directory.")
     name, exe = LANGS[lang]
-    remote = f"mkdir -p ~/venice_run && cd ~/venice_run && cat > {name} && {exe}"
+    staged = f"$HOME/venice_run/{name}"
+    workdir = "$HOME/" + cwd
+    remote = (
+        f"mkdir -p \"$HOME/venice_run\" && cat > \"{staged}\" && "
+        # A bare `test -d` failed the chain with no stdout and no stderr, so a
+        # missing cwd reached the agent as a blank failure it could not diagnose.
+        f"{{ test -d \"{workdir}\" || {{ echo \"cwd not found: ~/{cwd}\" >&2; exit 2; }}; }} && "
+        f"cd \"{workdir}\" && {exe.replace(name, staged)}"
+    )
     r = ssh(remote, timeout=body.timeout, stdin=code if code.endswith("\n") else code + "\n")
     out = (r.stdout or "").strip()
     err = (r.stderr or "").strip()
@@ -88,7 +115,7 @@ def run(body: RunIn):
         "ok": r.returncode == 0,
         "exit": r.returncode,
         "lang": lang,
-        "cwd": "~/venice_run",
+        "cwd": f"~/{cwd}",
         "output": text[-24000:],
         "stdout": (r.stdout or "")[-20000:],
         "stderr": (r.stderr or "")[-8000:],

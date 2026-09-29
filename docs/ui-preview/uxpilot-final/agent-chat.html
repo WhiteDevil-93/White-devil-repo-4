@@ -1,0 +1,153 @@
+<!-- screen_requirements:
+- Deep Space AI palette: #0B0E14 (bg), #151921 (surface), #7C3AED (accent), #C084FC (light accent).
+- Stark Grid layout: Technical, command-line influenced chat interface.
+- Font: Plus Jakarta Sans.
+- Header: Minimal with agent name "Venice" and technical versioning.
+- Chat Area: Minimalist message bubbles or plain text blocks with grid separation.
+- Input: Floating input bar with blur and high-contrast borders.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Chat - Venice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'space-bg': '#0B0E14',
+                        'space-surface': '#151921',
+                        'space-accent': '#7C3AED',
+                        'space-glow': '#C084FC',
+                        'space-border': '#1F2937',
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B0E14;
+            color: #FFFFFF;
+            -webkit-font-smoothing: antialiased;
+        }
+        .stark-grid {
+            background-image: 
+                linear-gradient(to right, rgba(31, 41, 55, 0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(31, 41, 55, 0.2) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .chat-container::-webkit-scrollbar { display: none; }
+        .input-glow:focus-within {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+            border-color: rgba(124, 58, 237, 0.5);
+        }
+    </style>
+</head>
+<body class="max-w-[375px] mx-auto h-[812px] flex flex-col relative overflow-hidden">
+    <!-- Stark Grid Background -->
+    <div class="fixed inset-0 stark-grid pointer-events-none opacity-40"></div>
+
+    <!-- Header -->
+    <header id="header" class="relative z-20 h-20 bg-space-bg/80 backdrop-blur-md border-b border-space-border flex items-center justify-between px-6">
+        <div class="flex flex-col">
+            <h1 class="text-lg font-bold tracking-tight">Venice</h1>
+            <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-space-accent shadow-[0_0_8px_rgba(124,58,237,1)]"></span>
+                <span class="text-[10px] font-mono uppercase tracking-widest text-white/40">GLM-5.2 • Active</span>
+            </div>
+        </div>
+        <button class="w-10 h-10 border border-space-border flex items-center justify-center rounded-sm hover:bg-space-surface transition-colors">
+            <i class="fa-solid fa-sliders text-xs text-white/60"></i>
+        </button>
+    </header>
+
+    <!-- Chat Area -->
+    <main class="flex-1 overflow-y-auto chat-container p-6 space-y-8 relative z-10">
+        <!-- System Message -->
+        <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 text-[10px] font-mono text-space-glow uppercase tracking-widest">
+                <i class="fa-solid fa-microchip"></i>
+                <span>System Initialization</span>
+            </div>
+            <div class="p-4 bg-space-surface border border-space-border font-mono text-[11px] leading-relaxed text-white/60">
+                Connection established with Venice Core.<br/>
+                Latency: 24ms<br/>
+                Memory allocation optimized for task synthesis.
+            </div>
+        </div>
+
+        <!-- User Message -->
+        <div class="flex flex-col gap-3 items-end">
+            <div class="max-w-[85%] p-4 bg-space-accent text-white text-sm font-medium rounded-sm shadow-lg shadow-space-accent/20">
+                Synthesize a structural analysis of the current market trends in neural computing.
+            </div>
+            <span class="text-[9px] font-mono text-white/20 uppercase">User • 14:02</span>
+        </div>
+
+        <!-- AI Message (Typing/Response) -->
+        <div class="flex flex-col gap-3">
+            <div class="max-w-[90%] p-5 bg-space-bg border border-space-border text-sm leading-relaxed text-white/90 relative overflow-hidden group">
+                <!-- Subtle glow effect behind text -->
+                <div class="absolute -top-10 -left-10 w-32 h-32 bg-space-accent/5 blur-3xl"></div>
+                
+                <p class="mb-4">Analysis complete. I've identified three primary vectors in neural market shift:</p>
+                <ul class="space-y-3 font-mono text-[12px] text-white/70">
+                    <li class="flex gap-2">
+                        <span class="text-space-accent">01.</span>
+                        <span>Decentralized Node Scaling</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-space-accent">02.</span>
+                        <span>Asynchronous Logic Gates</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-space-accent">03.</span>
+                        <span>Thermal Entropy Management</span>
+                    </li>
+                </ul>
+            </div>
+            <span class="text-[9px] font-mono text-white/20 uppercase">Venice • 14:03</span>
+        </div>
+    </main>
+
+    <!-- Composer -->
+    <div id="composer" class="relative z-20 px-6 py-4 bg-gradient-to-t from-space-bg via-space-bg to-transparent">
+        <div class="flex items-center gap-3 p-3 bg-space-surface border border-space-border input-glow transition-all rounded-sm">
+            <button class="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white">
+                <i class="fa-solid fa-paperclip text-sm"></i>
+            </button>
+            <input type="text" placeholder="Command Venice..." class="flex-1 bg-transparent border-none outline-none text-sm placeholder-white/20 font-medium">
+            <button class="w-8 h-8 flex items-center justify-center bg-space-accent text-white rounded-sm hover:bg-space-glow transition-all shadow-lg shadow-space-accent/20">
+                <i class="fa-solid fa-arrow-up text-xs"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav id="footer" class="relative w-full h-[72px] bg-space-bg border-t border-space-border grid grid-cols-3 z-30">
+        <a href="AgentChat__mobile.html" class="flex flex-col items-center justify-center gap-1 group relative">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] bg-space-accent shadow-[0_0_10px_rgba(124,58,237,1)]"></div>
+            <i class="fa-solid fa-bolt text-lg text-space-accent"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tighter text-white">Agent</span>
+        </a>
+        <a href="ForgeHub__mobile.html" class="flex flex-col items-center justify-center gap-1 group">
+            <i class="fa-solid fa-layer-group text-lg text-white/40 group-hover:text-space-accent transition-colors"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tighter text-white/40 group-hover:text-white transition-colors">Hub</span>
+        </a>
+        <a href="YouProfile__mobile.html" class="flex flex-col items-center justify-center gap-1 group">
+            <i class="fa-solid fa-user text-lg text-white/40 group-hover:text-space-accent transition-colors"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tighter text-white/40 group-hover:text-white transition-colors">You</span>
+        </a>
+    </nav>
+</body>
+</html>

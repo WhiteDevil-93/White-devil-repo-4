@@ -1,22 +1,30 @@
 package com.whitedevil
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.text.InputType
 import android.util.Base64
 import android.view.Gravity
@@ -24,45 +32,67 @@ import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.WindowInsets
-import android.webkit.CookieManager
-import android.webkit.HttpAuthHandler
-import android.webkit.URLUtil
-import android.webkit.ValueCallback
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.ScrollView
-import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.FragmentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import com.whitedevil.ui.app.AttachmentUi
+import com.whitedevil.ui.app.HubScreenUi
+import com.whitedevil.ui.app.SettingsFormState
+import com.whitedevil.ui.app.WhiteDevilApp
+import com.whitedevil.relay.RelayHttp
+import com.whitedevil.relay.RelayHttpException
+import com.whitedevil.ui.chat.ChatUiMessage
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.AgentEvent
+import com.whitedevil.agent.Attachments
+import com.whitedevil.agent.ChatMessage
+import com.whitedevil.agent.MessageContent
 import com.whitedevil.agent.ToolBox
 import com.whitedevil.agent.VeniceClient
+import com.whitedevil.agent.stripBlobs
+import com.whitedevil.agent.textContent
+import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.concurrent.thread
 
-class MainActivity : Activity() {
+class MainActivity : FragmentActivity() {
 
-    enum class Tab { AGENT, FORGE_HUB, TERMINAL, SETTINGS }
+    enum class Tab { AGENT, FORGE_HUB, YOU }
+
+    enum class YouSub { HOME, TERMINAL, SETTINGS, FILES }
 
     private data class Screen(val id: String, val title: String, val icon: String, val url: String)
 
@@ -70,64 +100,195 @@ class MainActivity : Activity() {
     private val main = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(Dispatchers.Main + Job())
 
-    private lateinit var root: LinearLayout
-    private lateinit var tabContentContainer: FrameLayout
-    private lateinit var bottomNavBar: LinearLayout
-    private lateinit var bottomNavRow: LinearLayout
+    internal var uiTab by mutableStateOf(Tab.AGENT)
+    internal var uiYouSub by mutableStateOf(YouSub.HOME)
+    internal var showOnboarding by mutableStateOf(false)
+    /** False until biometric (or fallback) unlocks the session when biometric unlock is enabled. */
+    internal var appUnlocked by mutableStateOf(false)
+    private var lastBackgroundAt = 0L
 
-    // Containers for the 4 tabs
-    private lateinit var agentContainer: LinearLayout
-    private lateinit var forgeHubContainer: FrameLayout
-    private lateinit var terminalContainer: FrameLayout
-    private lateinit var settingsContainer: ScrollView
+    /** Device-bound auth status for Settings. Holds no token and no key material. */
+    internal var deviceAuthState by mutableStateOf(com.whitedevil.security.DeviceAuth.State())
+    internal var deviceAuthBusy by mutableStateOf(false)
+    internal var deviceAuthMessage by mutableStateOf("")
 
-    // Forge Hub UI state (isolated)
-    private lateinit var hubLoadBar: View
-    private lateinit var hubBanner: TextView
-    private lateinit var hubScreenChips: LinearLayout
-    private lateinit var hubScreenChipsScroll: HorizontalScrollView
-    private lateinit var hubContent: FrameLayout
-    private val hubWebViews = HashMap<String, WebView>()
+    internal var agentInputText by mutableStateOf("")
+    internal val pendingAttachmentsUi = mutableStateListOf<AttachmentUi>()
+    internal var agentShowProgress by mutableStateOf(false)
+    internal var agentComposerEnabled by mutableStateOf(true)
+    internal var connectionSummary by mutableStateOf("Tap Test connections on You home or in Settings.")
+    internal var hubBannerText by mutableStateOf("")
+    internal var hubBannerVisible by mutableStateOf(false)
+    internal var agentStatusSubtitle by mutableStateOf("On-device agent")
+    internal val hubScreensUi = mutableStateListOf<HubScreenUi>()
+    internal var hubCurrentScreenIdState by mutableStateOf<String?>(null)
+    internal var hubConnectionLabel by mutableStateOf("Checking…")
+    internal var hubLoadProgress by mutableFloatStateOf(-1f)
+    internal var terminalPasteOpen by mutableStateOf(false)
+    internal var terminalPasteText by mutableStateOf("")
+    internal var hubScreenJson by mutableStateOf("")
+    internal var hubScreenLoading by mutableStateOf(false)
+    internal var hubScreenError by mutableStateOf<String?>(null)
+    internal var hubBlockedByUpdate by mutableStateOf(false)
+    internal var hubForceUpdateVersion by mutableIntStateOf(0)
+    internal var hubForceUpdateApkUrl: String? = null
+    internal val terminalLog = mutableStateListOf<String>()
+    internal var terminalRunning by mutableStateOf(false)
+
+    private lateinit var snackbarAnchor: View
+
+    // Forge Hub (native Compose — relay JSON APIs)
     private var hubScreens: List<Screen> = emptyList()
     private var currentHubScreenId: String? = null
-    private var hubBlockedByUpdate = false
     private var hubWebRev = 0
-    private val authTries = HashMap<String, Int>()
-
-    // Terminal tab state (isolated)
-    private var terminalWebView: WebView? = null
-    private lateinit var terminalLoadBar: View
-    private lateinit var terminalPasteSheet: LinearLayout
-    private lateinit var terminalPasteInput: EditText
 
     // Agent tab state
-    private lateinit var agentMessagesLayout: LinearLayout
-    private lateinit var agentScrollView: ScrollView
-    private lateinit var agentInput: EditText
-    private lateinit var agentSendBtn: TextView
-    private lateinit var agentModelSpinner: Spinner
-    private lateinit var agentProgress: ProgressBar
+    internal val chatMessages = mutableStateListOf<ChatUiMessage>()
+    internal var chatScrollTrigger by mutableIntStateOf(0)
+    internal var agentThinking by mutableStateOf(false)
+    private var nextChatId = 1L
+    private val agentModels = listOf(
+        "zai-org-glm-5-2",
+        "zai-org-glm-5",
+        "venice-uncensored",
+        "venice-uncensored-1-2",
+        "qwen3-vl-235b-a22b",
+        "mistral-31-24b",
+        "kimi-k2-6",
+        "claude-opus-4-8",
+    )
+    internal var agentSelectedModel by mutableStateOf(SettingsManager.DEFAULT_MODEL)
     private var currentAgentJob: Job? = null
 
-    // Current navigation state
-    private var activeTab: Tab = Tab.AGENT
-    private var fileCallback: ValueCallback<Array<Uri>>? = null
-    private var fullscreenView: View? = null
+    // Agent attachments (photos, videos, audio, documents)
+    private data class PendingAttachment(
+        val uri: Uri,
+        val mime: String,
+        val name: String,
+        val size: Long,
+        val kind: Attachments.Kind,
+    )
+    private val pendingAttachments = mutableListOf<PendingAttachment>()
+    private var pendingCameraUri: Uri? = null
+    private var pendingPermissionAction: (() -> Unit)? = null
+
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
+            if (grants.values.all { it }) {
+                pendingPermissionAction?.invoke()
+            } else {
+                Toast.makeText(this, "Permission denied — the file picker still works without it", Toast.LENGTH_LONG).show()
+            }
+            pendingPermissionAction = null
+        }
+
+    private val pickImagesLauncher =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+            uris.forEach { addContentAttachment(it) }
+            renderAttachmentStrip()
+        }
+
+    private val pickVideosLauncher =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+            uris.forEach { addContentAttachment(it) }
+            renderAttachmentStrip()
+        }
+
+    private val pickFilesLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+            uris.forEach { addContentAttachment(it) }
+            renderAttachmentStrip()
+        }
+
+    private val pickPhoneFolderLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            if (uri != null) persistPhoneFolder(uri)
+        }
+
+    private val pickPhoneMediaLauncher =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+            uris.forEach { addContentAttachment(it) }
+            syncPendingAttachmentsUi()
+            if (uris.isNotEmpty()) {
+                selectTab(Tab.AGENT)
+                Toast.makeText(this, "Added ${uris.size} item(s) to Agent", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    private val takePictureLauncher =
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+            if (ok) pendingCameraUri?.let { addContentAttachment(it) }
+            pendingCameraUri = null
+            renderAttachmentStrip()
+        }
+
+    private val captureVideoLauncher =
+        registerForActivityResult(ActivityResultContracts.CaptureVideo()) { ok ->
+            if (ok) pendingCameraUri?.let { addContentAttachment(it) }
+            pendingCameraUri = null
+            renderAttachmentStrip()
+        }
+
+    private var webFileCallback: android.webkit.ValueCallback<Array<Uri>>? = null
+    private val webFileChooserLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val uris = result.data?.clipData?.let { c -> Array(c.itemCount) { c.getItemAt(it).uri } }
+                ?: android.webkit.WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data)
+            webFileCallback?.onReceiveValue(if (result.resultCode == RESULT_OK) uris else null)
+            webFileCallback = null
+        }
+
+    /** Used by HubRelayWebBody (LTX planner image picker). */
+    fun openWebFileChooser(
+        cb: android.webkit.ValueCallback<Array<Uri>>?,
+        params: android.webkit.WebChromeClient.FileChooserParams?,
+    ) {
+        webFileCallback?.onReceiveValue(null)
+        webFileCallback = cb
+        try {
+            val intent = params?.createIntent()?.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                ?: Intent(Intent.ACTION_GET_CONTENT).apply {
+                    type = "image/*"
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                }
+            webFileChooserLauncher.launch(intent)
+        } catch (_: Exception) {
+            webFileCallback = null
+            cb?.onReceiveValue(null)
+        }
+    }
+
+    // Current navigation state (mirrors uiTab for legacy call sites)
+    private val activeTab: Tab get() = uiTab
+    private val youSubScreen: YouSub get() = uiYouSub
     private var apkDownloadId = -1L
 
     private val relayBase get() = prefs.getString(SettingsManager.KEY_RELAY_URL, SettingsManager.DEFAULT_RELAY_URL)!!.trimEnd('/')
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        buildUi()
-
-        val initTab = when (intent?.data?.getQueryParameter("tab")) {
-            "forge", "hub" -> Tab.FORGE_HUB
-            "terminal", "term" -> Tab.TERMINAL
-            "settings" -> Tab.SETTINGS
-            else -> Tab.AGENT
+        // Resolve lock state before first Compose frame to avoid a content flash.
+        if (!prefs.getBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, false) ||
+            !com.whitedevil.security.BiometricAuth.available(this)
+        ) {
+            appUnlocked = true
         }
-        selectTab(initTab)
+        buildUi()
+        refreshDeviceAuthState()
+
+        when (intent?.data?.getQueryParameter("tab")) {
+            "forge", "hub" -> selectTab(Tab.FORGE_HUB)
+            "terminal", "term" -> {
+                selectTab(Tab.YOU)
+                showYouSub(YouSub.TERMINAL)
+            }
+            "settings" -> {
+                selectTab(Tab.YOU)
+                showYouSub(YouSub.SETTINGS)
+            }
+            else -> selectTab(Tab.AGENT)
+        }
+        maybeShowOnboarding()
 
         if (prefs.getString(SettingsManager.KEY_RELAY_PASS, "").isNullOrEmpty()) {
             // First run hint or open settings
@@ -135,15 +296,25 @@ class MainActivity : Activity() {
             loadHubManifest()
         }
 
+        handleSharedIntent(intent)
+        updateAgentSetupState()
+        evaluateAppLock(forcePrompt = true)
+
         registerReceiver(downloadDone, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), RECEIVER_EXPORTED)
     }
 
     override fun onResume() {
         super.onResume()
-        if (activeTab == Tab.FORGE_HUB && !hubBlockedByUpdate) {
-            val wv = hubWebViews[currentHubScreenId]
-            wv?.reload()
+        updateAgentSetupState()
+        evaluateAppLock(forcePrompt = false)
+        if (activeTab == Tab.FORGE_HUB && !hubBlockedByUpdate && currentHubScreenId != null && appUnlocked) {
+            refreshHubNativeScreen()
         }
+    }
+
+    override fun onPause() {
+        lastBackgroundAt = System.currentTimeMillis()
+        super.onPause()
     }
 
     override fun onDestroy() {
@@ -153,15 +324,23 @@ class MainActivity : Activity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         when (intent.data?.getQueryParameter("tab")) {
             "agent" -> selectTab(Tab.AGENT)
             "forge", "hub" -> {
                 selectTab(Tab.FORGE_HUB)
                 intent.data?.getQueryParameter("screen")?.let { showHubScreen(it) }
             }
-            "terminal", "term" -> selectTab(Tab.TERMINAL)
-            "settings" -> selectTab(Tab.SETTINGS)
+            "terminal", "term" -> {
+                selectTab(Tab.YOU)
+                showYouSub(YouSub.TERMINAL)
+            }
+            "settings" -> {
+                selectTab(Tab.YOU)
+                showYouSub(YouSub.SETTINGS)
+            }
         }
+        handleSharedIntent(intent)
     }
 
     // =========================================================================
@@ -171,252 +350,271 @@ class MainActivity : Activity() {
     private fun buildUi() {
         @Suppress("DEPRECATION")
         window.setDecorFitsSystemWindows(false)
-        root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(BG)
-        }
-
-        tabContentContainer = FrameLayout(this)
-
-        // 1. Build Agent UI
-        agentContainer = buildAgentTab()
-        tabContentContainer.addView(agentContainer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-
-        // 2. Build Forge Hub UI
-        forgeHubContainer = buildForgeHubTab()
-        tabContentContainer.addView(forgeHubContainer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-
-        // 3. Build Terminal UI
-        terminalContainer = buildTerminalTab()
-        tabContentContainer.addView(terminalContainer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-
-        // 4. Build Settings UI
-        settingsContainer = buildSettingsTab()
-        tabContentContainer.addView(settingsContainer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-
-        // Bottom Navigation Bar with dark glass style
-        bottomNavRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(8), dp(10), dp(8), dp(8))
-        }
-
-        bottomNavBar = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = createGlassDrawable(BAR_GLASS, border = LINE)
-            addView(bottomNavRow, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-        }
-
-        root.addView(tabContentContainer, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
-        root.addView(bottomNavBar, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-
-        root.setOnApplyWindowInsetsListener { v, insets ->
-            val bars = insets.getInsets(WindowInsets.Type.systemBars())
-            val ime = insets.getInsets(WindowInsets.Type.ime())
-            val typing = ime.bottom > bars.bottom
-            v.setPadding(bars.left, bars.top, bars.right, if (typing) ime.bottom else 0)
-            bottomNavBar.visibility = if (typing) View.GONE else View.VISIBLE
-            bottomNavBar.setPadding(0, 0, 0, bars.bottom)
-            WindowInsets.CONSUMED
-        }
-
-        setContentView(root)
-        renderBottomNav()
+        @Suppress("DEPRECATION")
+        window.statusBarColor = Color.BLACK
+        @Suppress("DEPRECATION")
+        window.navigationBarColor = Color.BLACK
+        agentSelectedModel = prefs.getString(SettingsManager.KEY_VENICE_MODEL, SettingsManager.DEFAULT_MODEL)
+            ?: SettingsManager.DEFAULT_MODEL
+        snackbarAnchor = window.decorView
+        setContent { WhiteDevilApp(this@MainActivity) }
+        initAgentWelcomeMessages()
     }
 
-    private fun renderBottomNav() {
-        bottomNavRow.removeAllViews()
-        bottomNavRow.addView(navTabItem(R.drawable.ic_venice, "Agent", activeTab == Tab.AGENT) { selectTab(Tab.AGENT) })
-        bottomNavRow.addView(navTabItem(R.drawable.ic_home, "Forge Hub", activeTab == Tab.FORGE_HUB) { selectTab(Tab.FORGE_HUB) })
-        bottomNavRow.addView(navTabItem(R.drawable.ic_terminal, "Terminal", activeTab == Tab.TERMINAL) { selectTab(Tab.TERMINAL) })
-        bottomNavRow.addView(navTabItem(R.drawable.ic_settings, "Settings", activeTab == Tab.SETTINGS) { selectTab(Tab.SETTINGS) })
+    private fun maybeShowOnboarding() {
+        showOnboarding = !prefs.getBoolean(SettingsManager.KEY_ONBOARDING_COMPLETE, false)
     }
 
-    private fun navTabItem(icon: Int, label: String, active: Boolean, onClick: () -> Unit) = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        gravity = Gravity.CENTER_HORIZONTAL
-        layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
-        val tint = if (active) ACCENT else MUTED
-
-        val pill = FrameLayout(context).apply {
-            background = GradientDrawable().apply {
-                cornerRadius = dp(16).toFloat()
-                setColor(if (active) PILL else Color.TRANSPARENT)
-            }
-            addView(ImageView(context).apply {
-                setImageResource(icon)
-                imageTintList = ColorStateList.valueOf(tint)
-            }, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
-        }
-
-        addView(pill, LinearLayout.LayoutParams(dp(56), dp(32)))
-        addView(TextView(context).apply {
-            text = label
-            textSize = 11f
-            gravity = Gravity.CENTER
-            setTextColor(if (active) STRONG else MUTED)
-            typeface = if (active) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
-            maxLines = 1
-            setPadding(0, dp(4), 0, 0)
-        }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
-
-        isClickable = true
-        background = RippleDrawable(ColorStateList.valueOf(PILL), null, null)
-        setOnClickListener { onClick() }
+    internal fun completeOnboarding() {
+        prefs.edit().putBoolean(SettingsManager.KEY_ONBOARDING_COMPLETE, true).apply()
+        showOnboarding = false
     }
 
-    private fun selectTab(tab: Tab) {
-        activeTab = tab
-        agentContainer.visibility = if (tab == Tab.AGENT) View.VISIBLE else View.GONE
-        forgeHubContainer.visibility = if (tab == Tab.FORGE_HUB) View.VISIBLE else View.GONE
-        terminalContainer.visibility = if (tab == Tab.TERMINAL) View.VISIBLE else View.GONE
-        settingsContainer.visibility = if (tab == Tab.SETTINGS) View.VISIBLE else View.GONE
-
-        if (tab == Tab.TERMINAL && terminalWebView == null) {
-            setupTerminalWebView()
+    internal fun selectTab(tab: Tab) {
+        uiTab = tab
+        if (tab == Tab.YOU) {
+            showYouSub(YouSub.HOME)
+            refreshYouHomeSummary()
         }
         if (tab == Tab.FORGE_HUB && hubScreens.isEmpty()) {
             loadHubManifest()
         }
-        renderBottomNav()
+    }
+
+    internal fun showYouSub(sub: YouSub) {
+        uiYouSub = sub
+        if (sub == YouSub.HOME) refreshYouHomeSummary()
+    }
+
+    private fun initAgentWelcomeMessages() {
+        if (chatMessages.isNotEmpty()) return
+        val restoredHistory = loadAgentHistory()
+        if (restoredHistory.isEmpty()) {
+            agentStatusSubtitle = "On-device agent"
+        } else {
+            agentStatusSubtitle = "${restoredHistory.size} messages restored"
+            renderHistoryBubbles(restoredHistory)
+        }
+    }
+
+    internal fun readSettingsFormFromPrefs(): SettingsFormState = SettingsFormState(
+        veniceKey = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "").orEmpty(),
+        systemPrompt = prefs.getString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT).orEmpty(),
+        webSearch = prefs.getBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, false),
+        relayUrl = prefs.getString(SettingsManager.KEY_RELAY_URL, SettingsManager.DEFAULT_RELAY_URL).orEmpty(),
+        relayUser = prefs.getString(SettingsManager.KEY_RELAY_USER, SettingsManager.DEFAULT_RELAY_USER).orEmpty(),
+        relayPass = prefs.getString(SettingsManager.KEY_RELAY_PASS, "").orEmpty(),
+        laptopUser = prefs.getString(SettingsManager.KEY_LAPTOP_USER, SettingsManager.DEFAULT_LAPTOP_USER).orEmpty(),
+        laptopPass = prefs.getString(SettingsManager.KEY_LAPTOP_PASS, "").orEmpty(),
+        biometricUnlock = prefs.getBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, false),
+        deviceName = prefs.getString(SettingsManager.KEY_DEVICE_AUTH_NAME, "").orEmpty()
+            .ifBlank { com.whitedevil.security.DeviceAuth.defaultDeviceName() },
+    )
+
+    internal fun saveSettingsFromCompose(form: SettingsFormState) {
+        val wantBio = form.biometricUnlock
+        if (wantBio && !com.whitedevil.security.BiometricAuth.available(this)) {
+            UiFeedback.snackbar(snackbarAnchor, com.whitedevil.security.BiometricAuth.statusLabel(this))
+        }
+        val enableBio = wantBio && com.whitedevil.security.BiometricAuth.available(this)
+        if (enableBio && !prefs.getBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, false)) {
+            // Confirm enrollment with a live prompt before turning the lock on.
+            com.whitedevil.security.BiometricAuth.prompt(
+                this,
+                title = "Enable biometric unlock",
+                subtitle = "Confirm fingerprint / face / PIN to protect WhiteDevil",
+                onSuccess = {
+                    prefs.edit()
+                        .putString(SettingsManager.KEY_VENICE_API_KEY, form.veniceKey.trim())
+                        .putString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, form.systemPrompt.trim())
+                        .putBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, form.webSearch)
+                        .putString(SettingsManager.KEY_RELAY_URL, form.relayUrl.trim().trimEnd('/'))
+                        .putString(SettingsManager.KEY_RELAY_USER, form.relayUser.trim())
+                        .putString(SettingsManager.KEY_RELAY_PASS, form.relayPass)
+                        .putString(SettingsManager.KEY_LAPTOP_USER, form.laptopUser.trim())
+                        .putString(SettingsManager.KEY_LAPTOP_PASS, form.laptopPass)
+                        .putString(SettingsManager.KEY_DEVICE_AUTH_NAME, form.deviceName.trim().take(80))
+                        .putBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, true)
+                        .apply()
+                    appUnlocked = true
+                    updateAgentSetupState()
+                    offerPasswordsToSystemManager(form)
+                    UiFeedback.snackbar(snackbarAnchor, "Biometric unlock enabled")
+                    loadHubManifest()
+                },
+                onError = { UiFeedback.snackbar(snackbarAnchor, it) },
+                onCancel = { UiFeedback.snackbar(snackbarAnchor, "Biometric unlock not enabled") },
+            )
+            return
+        }
+        prefs.edit()
+            .putString(SettingsManager.KEY_VENICE_API_KEY, form.veniceKey.trim())
+            .putString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, form.systemPrompt.trim())
+            .putBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, form.webSearch)
+            .putString(SettingsManager.KEY_RELAY_URL, form.relayUrl.trim().trimEnd('/'))
+            .putString(SettingsManager.KEY_RELAY_USER, form.relayUser.trim())
+            .putString(SettingsManager.KEY_RELAY_PASS, form.relayPass)
+            .putString(SettingsManager.KEY_LAPTOP_USER, form.laptopUser.trim())
+            .putString(SettingsManager.KEY_LAPTOP_PASS, form.laptopPass)
+            .putString(SettingsManager.KEY_DEVICE_AUTH_NAME, form.deviceName.trim().take(80))
+            .putBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, enableBio)
+            .apply()
+        if (!enableBio) appUnlocked = true
+        updateAgentSetupState()
+        offerPasswordsToSystemManager(form)
+        UiFeedback.snackbar(snackbarAnchor, "Settings saved")
+        loadHubManifest()
+    }
+
+    private fun offerPasswordsToSystemManager(form: SettingsFormState) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val n = com.whitedevil.security.PasswordManagerBridge.offerAll(
+                activity = this@MainActivity,
+                relayUrl = form.relayUrl.trim().trimEnd('/'),
+                relayUser = form.relayUser.trim(),
+                relayPass = form.relayPass,
+                laptopUser = form.laptopUser.trim(),
+                laptopPass = form.laptopPass,
+            )
+            if (n > 0) {
+                UiFeedback.snackbar(snackbarAnchor, "Offered $n password(s) to Google / Samsung Pass")
+            }
+        }
+    }
+
+    internal fun openTerminalPasteSheetPublic() {
+        terminalPasteOpen = true
+        terminalPasteText = ""
+    }
+
+    internal fun removePendingAttachmentAt(index: Int) {
+        if (index in pendingAttachments.indices) {
+            pendingAttachments.removeAt(index)
+            syncPendingAttachmentsUi()
+        }
+    }
+
+    internal fun dismissHubBanner() {
+        hubBannerVisible = false
+    }
+
+    internal fun agentHasConversation(): Boolean =
+        chatMessages.any {
+            it.role == ROLE_USER || it.role == ROLE_VENICE || it.role == ROLE_TOOL_CALL ||
+                it.role == ROLE_TOOL_OUTPUT || it.role == ROLE_ERROR
+        }
+
+    internal fun onHubBannerClick() {
+        hubBannerApkUrl?.let { downloadApk(it) }
+            ?: run {
+                if (hubBannerText.contains("update", ignoreCase = true)) {
+                    UiFeedback.snackbar(snackbarAnchor, "Update link unavailable — open Forge Hub settings or retry sync")
+                }
+            }
+    }
+
+    private fun syncPendingAttachmentsUi() {
+        pendingAttachmentsUi.clear()
+        pendingAttachmentsUi.addAll(
+            pendingAttachments.map { AttachmentUi(it.uri, it.mime, it.name, it.size, it.kind) },
+        )
+    }
+
+    private fun syncHubScreensUi() {
+        hubScreensUi.clear()
+        hubScreensUi.addAll(hubScreens.map { HubScreenUi(it.id, it.title) })
+        hubCurrentScreenIdState = currentHubScreenId
+    }
+
+    private fun refreshYouHomeSummary() {
+        scope.launch {
+            val snap = withContext(Dispatchers.IO) {
+                ConnectionHealth.evaluate(
+                    veniceKey = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim().orEmpty(),
+                    relayUrl = prefs.getString(SettingsManager.KEY_RELAY_URL, SettingsManager.DEFAULT_RELAY_URL).orEmpty(),
+                    relayUser = prefs.getString(SettingsManager.KEY_RELAY_USER, SettingsManager.DEFAULT_RELAY_USER).orEmpty(),
+                    relayPass = prefs.getString(SettingsManager.KEY_RELAY_PASS, "").orEmpty(),
+                    laptopUser = prefs.getString(SettingsManager.KEY_LAPTOP_USER, SettingsManager.DEFAULT_LAPTOP_USER).orEmpty(),
+                    laptopPass = prefs.getString(SettingsManager.KEY_LAPTOP_PASS, "").orEmpty(),
+                )
+            }
+            connectionSummary = snap.multiline()
+        }
+    }
+
+    internal fun runQuickConnectionTest(updateYouHome: Boolean = false, form: SettingsFormState? = null) {
+        connectionSummary = "Testing…"
+        scope.launch {
+            val snap = withContext(Dispatchers.IO) {
+                val f = form ?: readSettingsFormFromPrefs()
+                ConnectionHealth.evaluate(
+                    veniceKey = f.veniceKey.trim(),
+                    relayUrl = f.relayUrl.trim(),
+                    relayUser = f.relayUser.trim(),
+                    relayPass = f.relayPass,
+                    laptopUser = f.laptopUser.trim(),
+                    laptopPass = f.laptopPass,
+                )
+            }
+            val text = snap.multiline()
+            connectionSummary = text
+            if (updateYouHome) connectionSummary = text
+        }
     }
 
     // =========================================================================
     // Tab 1: Native Venice Agent Tab
     // =========================================================================
 
-    private fun buildAgentTab(): LinearLayout {
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(BG)
-            setPadding(dp(12), dp(40), dp(12), dp(8))
-        }
+    // buildAgentTab removed (Compose UI)
 
-        // Header bar with Title, Model Spinner, and Reset button
-        val header = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(4), dp(4), dp(4), dp(10))
-        }
 
-        val title = TextView(this).apply {
-            text = "Venice Agent"
-            textSize = 18f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(STRONG)
-        }
+    internal fun veniceKeyConfigured(): Boolean =
+        !prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim().isNullOrEmpty()
 
-        val models = listOf(
-            "zai-org-glm-5-2",
-            "zai-org-glm-5",
-            "venice-uncensored",
-            "venice-uncensored-1-2",
-            "kimi-k2-6",
-            "claude-opus-4-8"
-        )
-        agentModelSpinner = Spinner(this).apply {
-            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, models)
-            val savedModel = prefs.getString(SettingsManager.KEY_VENICE_MODEL, SettingsManager.DEFAULT_MODEL)
-            val idx = models.indexOf(savedModel).coerceAtLeast(0)
-            setSelection(idx)
-            background = createGlassDrawable(CARD_BG, dp(8), LINE)
-        }
-
-        val resetBtn = TextView(this).apply {
-            text = "Clear"
-            textSize = 13f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(ACCENT)
-            setPadding(dp(12), dp(6), dp(12), dp(6))
-            background = createGlassDrawable(PILL, dp(14), LINE)
-            isClickable = true
-            setOnClickListener { resetAgentChat() }
-        }
-
-        val promptBtn = TextView(this).apply {
-            text = "Prompt"
-            textSize = 13f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(STRONG)
-            setPadding(dp(12), dp(6), dp(12), dp(6))
-            background = createGlassDrawable(CARD_BG, dp(14), LINE)
-            isClickable = true
-            setOnClickListener { showSystemPromptDialog() }
-        }
-
-        header.addView(title, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        header.addView(agentModelSpinner, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(6) })
-        header.addView(promptBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(6) })
-        header.addView(resetBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
-
-        layout.addView(header)
-
-        // Progress indicator
-        agentProgress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
-            isIndeterminate = true
-            visibility = View.GONE
-        }
-        layout.addView(agentProgress, LinearLayout.LayoutParams(MATCH_PARENT, dp(4)))
-
-        // Scrollable Chat Messages
-        agentScrollView = ScrollView(this).apply {
-            isFillViewport = true
-            overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
-        }
-        agentMessagesLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, dp(4), 0, dp(8))
-        }
-        agentScrollView.addView(agentMessagesLayout, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-        layout.addView(agentScrollView, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
-
-        // Initial welcome message
-        addMessageBubble(
-            "Agent Ready",
-            "Venice Agent is running natively on device. It has access to local workspace files and can control Forge Hub, check renders, and run laptop tasks via your relay.",
-            ROLE_VENICE
-        )
-
-        // Bottom Input Row
-        val inputBar = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(4), dp(8), dp(4), dp(4))
-            background = createGlassDrawable(BAR_GLASS, dp(24), LINE)
-        }
-
-        agentInput = EditText(this).apply {
-            hint = "Ask Venice or give a task…"
-            setHintTextColor(MUTED)
-            setTextColor(STRONG)
-            textSize = 14f
-            background = null
-            setPadding(dp(16), dp(10), dp(12), dp(10))
-            maxLines = 4
-        }
-
-        agentSendBtn = TextView(this).apply {
-            text = "Send"
-            textSize = 14f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.parseColor("#FF111111"))
-            setPadding(dp(18), dp(10), dp(18), dp(10))
-            background = GradientDrawable().apply {
-                cornerRadius = dp(20).toFloat()
-                setColor(ACCENT)
-            }
-            isClickable = true
-            setOnClickListener { sendAgentMessage() }
-        }
-
-        inputBar.addView(agentInput, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        inputBar.addView(agentSendBtn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(4) })
-        layout.addView(inputBar)
-
-        return layout
+    private fun updateAgentSetupState() {
+        // Compose Agent screen reads veniceKeyConfigured() directly.
     }
 
-    private fun showSystemPromptDialog() {
+    internal fun showVeniceKeySheet() {
+        val current = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "") ?: ""
+        UiSheets.showSecretFieldSheet(
+            this,
+            title = "Venice API key",
+            hint = "Paste your Venice API key",
+            initial = current,
+        ) { key ->
+            prefs.edit().putString(SettingsManager.KEY_VENICE_API_KEY, key).apply()
+            updateAgentSetupState()
+            UiFeedback.snackbar(snackbarAnchor, "Venice API key saved")
+        }
+    }
+
+    internal fun confirmClearAgentChat() {
+        AlertDialog.Builder(this)
+            .setTitle("Clear chat?")
+            .setMessage("This removes the on-screen history and saved conversation file.")
+            .setPositiveButton("Clear") { _, _ -> resetAgentChat() }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    internal fun showModelPicker() {
+        val labels = agentModels.map { UiPolish.modelLabel(it) }.toTypedArray()
+        // Prefer a real AlertDialog when the bottom sheet theme is invisible / behind Compose.
+        AlertDialog.Builder(this)
+            .setTitle("Venice model")
+            .setItems(labels) { _, which ->
+                if (which !in agentModels.indices) return@setItems
+                agentSelectedModel = agentModels[which]
+                prefs.edit().putString(SettingsManager.KEY_VENICE_MODEL, agentSelectedModel).apply()
+                Toast.makeText(this, "Model: ${UiPolish.modelLabel(agentSelectedModel)}", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    internal fun showSystemPromptDialog() {
         val currentPrompt = prefs.getString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
             ?: SettingsManager.DEFAULT_SYSTEM_PROMPT
 
@@ -453,25 +651,86 @@ class MainActivity : Activity() {
 
     private fun resetAgentChat() {
         currentAgentJob?.cancel()
-        agentProgress.visibility = View.GONE
-        agentMessagesLayout.removeAllViews()
+        agentShowProgress = false
+        runCatching { agentHistoryFile().delete() }
+        chatMessages.clear()
+        agentStatusSubtitle = "On-device agent"
         addMessageBubble("Agent Reset", "Chat context cleared. Ready for next task.", ROLE_VENICE)
     }
 
-    private fun sendAgentMessage() {
-        val text = agentInput.text.toString().trim()
-        if (text.isEmpty()) return
+    private fun agentHistoryFile() = File(filesDir, "agent_history.json")
+
+    private val historyJson = Json { ignoreUnknownKeys = true }
+
+    /** Persists the conversation (image blobs stripped) so it survives app restarts. */
+    private fun persistAgentHistory(messages: List<ChatMessage>) {
+        runCatching {
+            val lean = messages
+                .filter { it.role in setOf("user", "assistant", "tool") }
+                .takeLast(Agent.MAX_HISTORY_MESSAGES)
+                .map { it.copy(content = stripBlobs(it.content)) }
+            agentHistoryFile().writeText(
+                historyJson.encodeToString(ListSerializer(ChatMessage.serializer()), lean),
+            )
+        }
+    }
+
+    private fun loadAgentHistory(): List<ChatMessage> {
+        return runCatching {
+            val file = agentHistoryFile()
+            if (!file.isFile) return emptyList()
+            historyJson.decodeFromString(ListSerializer(ChatMessage.serializer()), file.readText())
+                .filter { it.role in setOf("user", "assistant", "tool") }
+                .takeLast(Agent.MAX_HISTORY_MESSAGES)
+        }.getOrDefault(emptyList())
+    }
+
+    /** Rebuilds chat bubbles from a restored conversation. */
+    private fun renderHistoryBubbles(history: List<ChatMessage>) {
+        for (msg in history) {
+            when (msg.role) {
+                "user" -> addMessageBubble("You", msg.textContent(), ROLE_USER)
+                "assistant" -> {
+                    val calls = msg.toolCalls
+                    if (calls.isNullOrEmpty()) {
+                        addMessageBubble("Venice", msg.textContent(), ROLE_VENICE)
+                    } else {
+                        calls.forEach { call ->
+                            addMessageBubble("Tool Call: ${call.function.name}", call.function.arguments, ROLE_TOOL_CALL)
+                        }
+                    }
+                }
+                "tool" -> addMessageBubble("Output: ${msg.name ?: "tool"}", msg.textContent(), ROLE_TOOL_OUTPUT)
+            }
+        }
+    }
+
+    internal fun sendAgentMessage() {
+        val text = agentInputText.trim()
+        if (text.isEmpty() && pendingAttachments.isEmpty()) return
         val apiKey = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim() ?: ""
         if (apiKey.isEmpty()) {
-            Toast.makeText(this, "Venice API key not set! Please configure it in Settings tab.", Toast.LENGTH_LONG).show()
-            selectTab(Tab.SETTINGS)
+            updateAgentSetupState()
+            UiFeedback.snackbar(snackbarAnchor, "Add a Venice API key to send messages", "Add key") { showVeniceKeySheet() }
             return
         }
 
-        agentInput.setText("")
-        val selectedModel = agentModelSpinner.selectedItem?.toString() ?: SettingsManager.DEFAULT_MODEL
-        val sysPrompt = prefs.getString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
+        agentInputText = ""
+        val attachmentSnapshot = pendingAttachments.toList()
+        pendingAttachments.clear()
+        syncPendingAttachmentsUi()
+        val selectedModel = agentSelectedModel
+        val savedPrompt = prefs.getString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
             ?: SettingsManager.DEFAULT_SYSTEM_PROMPT
+        val sysPrompt = buildString {
+            append(savedPrompt.trim())
+            if (!savedPrompt.contains("hub_overview") || !savedPrompt.contains("hub_request") ||
+                !savedPrompt.contains("run_laptop_command")
+            ) {
+                append("\n\n")
+                append(SettingsManager.AGENT_INTEGRATION_PROMPT)
+            }
+        }
         val webSearch = prefs.getBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, false)
 
         val workspaceDir = File(filesDir, "workspace")
@@ -485,12 +744,27 @@ class MainActivity : Activity() {
             relayPass = relayPass,
         )
 
-        agentProgress.visibility = View.VISIBLE
-        agentSendBtn.isEnabled = false
+        agentShowProgress = true
+        agentThinking = true
+        setAgentComposerEnabled(false)
 
         val currentClient = VeniceClient(apiKey = apiKey)
         currentAgentJob = scope.launch {
+            var finishedAgent: Agent? = null
             try {
+                // Heavy lifting (image downscale, file copies) off the main thread.
+                val (fullText, imageDataUrls) = withContext(Dispatchers.IO) {
+                    buildMessageContent(text, attachmentSnapshot)
+                }
+                if (fullText.isBlank() && imageDataUrls.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        agentThinking = false
+                        agentShowProgress = false
+                        setAgentComposerEnabled(true)
+                        Toast.makeText(this@MainActivity, "Nothing to send", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
                 val agent = Agent(
                     client = currentClient,
                     model = selectedModel,
@@ -512,190 +786,512 @@ class MainActivity : Activity() {
 
                 withContext(Dispatchers.IO) {
                     currentClient.use {
-                        agent.send(text)
+                        agent.restore(loadAgentHistory())
+                        finishedAgent = agent
+                        agent.send(fullText, imageDataUrls)
                     }
                 }
             } catch (e: Exception) {
                 addMessageBubble("Error", e.message ?: "Unknown error running Venice agent", ROLE_ERROR)
             } finally {
-                agentProgress.visibility = View.GONE
-                agentSendBtn.isEnabled = true
+                finishedAgent?.let { persistAgentHistory(it.snapshot()) }
+                agentShowProgress = false
+                agentThinking = false
+                setAgentComposerEnabled(true)
             }
         }
     }
 
-    private fun addMessageBubble(sender: String, message: String, role: Int) {
-        val bubble = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            val bg = when (role) {
-                ROLE_USER -> createGlassDrawable(Color.parseColor("#334C3D28"), dp(16), ACCENT)
-                ROLE_VENICE -> createGlassDrawable(CARD_BG, dp(16), LINE)
-                ROLE_TOOL_CALL -> createGlassDrawable(Color.parseColor("#331F2E3D"), dp(12), Color.parseColor("#FF5C8BB5"))
-                ROLE_TOOL_OUTPUT -> createGlassDrawable(Color.parseColor("#291D1D24"), dp(12), LINE)
-                else -> createGlassDrawable(Color.parseColor("#44331111"), dp(12), Color.parseColor("#FFCC5555"))
-            }
-            background = bg
-            setPadding(dp(14), dp(10), dp(14), dp(10))
-        }
+    internal fun toggleToolMessage(id: Long) {
+        val idx = chatMessages.indexOfFirst { it.id == id }
+        if (idx < 0) return
+        val cur = chatMessages[idx]
+        chatMessages[idx] = cur.copy(toolExpanded = !cur.toolExpanded)
+    }
 
-        val senderView = TextView(this).apply {
-            this.text = sender
-            textSize = 11f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(
-                when (role) {
-                    ROLE_USER -> ACCENT
-                    ROLE_VENICE -> STRONG
-                    ROLE_TOOL_CALL -> Color.parseColor("#FF82B6E8")
-                    ROLE_TOOL_OUTPUT -> MUTED
-                    else -> Color.parseColor("#FFFF6B6B")
+    private fun setAgentComposerEnabled(enabled: Boolean) {
+        agentComposerEnabled = enabled
+    }
+
+    // =========================================================================
+    // Device integration: attachments, clipboard, share receive, permissions
+    // =========================================================================
+
+    internal fun showAttachSheet() {
+        val items = arrayOf("Take photo", "Record video", "Choose images", "Choose video", "Choose file")
+        UiSheets.showListSheet(this, "Attach to message", items) { which ->
+            when (which) {
+                0 -> withCapturePermission(video = false) { launchCamera(photo = true) }
+                1 -> withCapturePermission(video = true) { launchCamera(photo = false) }
+                2 -> pickImagesLauncher.launch("image/*")
+                3 -> pickVideosLauncher.launch("video/*")
+                4 -> pickFilesLauncher.launch(arrayOf("*/*"))
+            }
+        }
+    }
+
+    private fun withCapturePermission(video: Boolean, action: () -> Unit) {
+        val need = mutableListOf(android.Manifest.permission.CAMERA)
+        if (video) need += android.Manifest.permission.RECORD_AUDIO
+        val missing = need.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }.toTypedArray()
+        if (missing.isEmpty()) {
+            action()
+        } else {
+            pendingPermissionAction = action
+            permissionLauncher.launch(missing)
+        }
+    }
+
+    private fun launchCamera(photo: Boolean) {
+        val ext = if (photo) "jpg" else "mp4"
+        val dir = File(cacheDir, "capture").apply { mkdirs() }
+        val file = File(dir, "capture_${System.currentTimeMillis()}.$ext")
+        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+        pendingCameraUri = uri
+        if (photo) takePictureLauncher.launch(uri) else captureVideoLauncher.launch(uri)
+    }
+
+    private fun addContentAttachment(uri: Uri) {
+        try {
+            val mime = contentResolver.getType(uri) ?: "application/octet-stream"
+            val kind = Attachments.kindOf(mime)
+            var name: String? = null
+            var size = -1L
+            contentResolver.query(uri, null, null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    val nameIdx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    val sizeIdx = c.getColumnIndex(OpenableColumns.SIZE)
+                    if (nameIdx >= 0) name = c.getString(nameIdx)
+                    if (sizeIdx >= 0) size = c.getLong(sizeIdx)
                 }
+            }
+            if (kind == Attachments.Kind.IMAGE &&
+                pendingAttachments.count { it.kind == Attachments.Kind.IMAGE } >= Attachments.MAX_IMAGES_PER_MESSAGE
+            ) {
+                Toast.makeText(this, "Max ${Attachments.MAX_IMAGES_PER_MESSAGE} images per message", Toast.LENGTH_SHORT).show()
+                return
+            }
+            pendingAttachments += PendingAttachment(
+                uri = uri,
+                mime = mime,
+                name = Attachments.safeFileName(name, "attachment.${Attachments.extensionFor(mime)}"),
+                size = size,
+                kind = kind,
             )
-            setPadding(0, 0, 0, dp(4))
+            Toast.makeText(this, "Attached $name", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Couldn't attach file: ${e.message}", Toast.LENGTH_LONG).show()
         }
+    }
 
-        val contentView = TextView(this).apply {
-            this.text = message
-            textSize = 13.5f
-            setTextColor(if (role == ROLE_TOOL_OUTPUT) MUTED else FG)
-            setTextIsSelectable(true)
-            if (role == ROLE_TOOL_CALL || role == ROLE_TOOL_OUTPUT) {
-                typeface = Typeface.MONOSPACE
-                textSize = 11.5f
+    private fun renderAttachmentStrip() = syncPendingAttachmentsUi()
+
+    /** Builds the outgoing message: images become multimodal data URLs, other files land in the workspace. */
+    private fun buildMessageContent(baseText: String, attachments: List<PendingAttachment>): Pair<String, List<String>> {
+        if (attachments.isEmpty()) return baseText to emptyList()
+        val dataUrls = mutableListOf<String>()
+        val notes = mutableListOf<String>()
+        val uploadsDir = File(filesDir, "workspace/uploads").apply { mkdirs() }
+        for (attachment in attachments) {
+            try {
+                if (attachment.kind == Attachments.Kind.IMAGE && dataUrls.size < Attachments.MAX_IMAGES_PER_MESSAGE) {
+                    val bytes = loadScaledJpeg(attachment.uri)
+                    if (bytes == null) {
+                        notes += "[Image ${attachment.name} could not be read, skipped]"
+                    } else if (bytes.size > Attachments.MAX_IMAGE_BASE64_BYTES) {
+                        notes += "[Image ${attachment.name} too large, skipped]"
+                    } else {
+                        dataUrls += "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                        val dest = uniqueFile(uploadsDir, attachment.name.substringBeforeLast('.') + ".jpg")
+                        dest.writeBytes(bytes)
+                        notes += "[Image saved to workspace uploads/${dest.name}]"
+                    }
+                } else if (attachment.kind == Attachments.Kind.IMAGE) {
+                    notes += "[Image ${attachment.name} skipped: max ${Attachments.MAX_IMAGES_PER_MESSAGE} images per message]"
+                } else {
+                    val dest = copyToUploads(attachment, uploadsDir)
+                    if (dest != null) {
+                        notes += Attachments.workspaceNote("uploads/${dest.name}", attachment.mime, dest.length())
+                    } else {
+                        notes += "[File ${attachment.name} too large (>200 MB), skipped]"
+                    }
+                }
+            } catch (e: Exception) {
+                notes += "[Attachment ${attachment.name} failed: ${e.message}]"
             }
         }
+        val fullText = (listOf(baseText.trim()).filter { it.isNotEmpty() } + notes).joinToString("\n")
+        return fullText to dataUrls
+    }
 
-        bubble.addView(senderView)
-        bubble.addView(contentView)
+    private fun uniqueFile(dir: File, name: String): File {
+        var candidate = File(dir, Attachments.safeFileName(name, "file.bin"))
+        var n = 1
+        val stem = candidate.nameWithoutExtension
+        val ext = candidate.extension.let { if (it.isEmpty()) "" else ".$it" }
+        while (candidate.exists()) {
+            candidate = File(dir, "$stem-$n$ext")
+            n++
+        }
+        return candidate
+    }
 
-        val params = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-            topMargin = dp(6)
-            bottomMargin = dp(6)
-            if (role == ROLE_USER) {
-                leftMargin = dp(32)
-            } else if (role == ROLE_TOOL_CALL || role == ROLE_TOOL_OUTPUT) {
-                leftMargin = dp(16)
-                rightMargin = dp(16)
+    private fun loadScaledJpeg(uri: Uri): ByteArray? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+        val maxSide = maxOf(bounds.outWidth, bounds.outHeight)
+        if (maxSide <= 0) return null
+        var sample = 1
+        while (maxSide / sample > Attachments.MAX_IMAGE_DIMENSION_PX * 2) sample *= 2
+        val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+        val decoded = contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
+            ?: return null
+        val scale = Attachments.MAX_IMAGE_DIMENSION_PX / maxOf(decoded.width, decoded.height).toFloat()
+        val bitmap = if (scale < 1f) {
+            Bitmap.createScaledBitmap(decoded, (decoded.width * scale).toInt(), (decoded.height * scale).toInt(), true)
+                .also { if (it != decoded) decoded.recycle() }
+        } else {
+            decoded
+        }
+        val out = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, Attachments.IMAGE_JPEG_QUALITY, out)
+        bitmap.recycle()
+        return out.toByteArray()
+    }
+
+    private fun copyToUploads(attachment: PendingAttachment, uploadsDir: File): File? {
+        if (attachment.size > Attachments.MAX_FILE_COPY_BYTES) return null
+        val dest = uniqueFile(uploadsDir, attachment.name)
+        var copied = 0L
+        contentResolver.openInputStream(attachment.uri)?.use { input ->
+            dest.outputStream().use { output ->
+                val buf = ByteArray(64 * 1024)
+                while (true) {
+                    val n = input.read(buf)
+                    if (n < 0) break
+                    copied += n
+                    if (copied > Attachments.MAX_FILE_COPY_BYTES) {
+                        dest.delete()
+                        return null
+                    }
+                    output.write(buf, 0, n)
+                }
+            }
+        } ?: return null
+        return dest
+    }
+
+    internal fun copyToClipboard(text: String) {
+        if (text.isBlank()) {
+            Toast.makeText(this, "Nothing to copy", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        cm.setPrimaryClip(ClipData.newPlainText("WhiteDevil", text))
+        Toast.makeText(this, "Copied", Toast.LENGTH_SHORT).show()
+    }
+
+    internal fun pasteFromClipboard() {
+        val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = cm.primaryClip
+        if (clip == null || clip.itemCount == 0) {
+            Toast.makeText(this, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val item = clip.getItemAt(0)
+        val uri = item.uri
+        if (uri != null) {
+            val type = runCatching { contentResolver.getType(uri) }.getOrNull()
+            if (type?.startsWith("image/") == true) {
+                addContentAttachment(uri)
+                renderAttachmentStrip()
+                Toast.makeText(this, "Image pasted as attachment", Toast.LENGTH_SHORT).show()
+                return
             }
         }
+        val text = runCatching { item.coerceToText(this)?.toString() }.getOrNull()
+        if (text.isNullOrEmpty()) {
+            Toast.makeText(this, "Nothing pastable on the clipboard", Toast.LENGTH_SHORT).show()
+            return
+        }
+        agentInputText = agentInputText + text
+    }
 
-        agentMessagesLayout.addView(bubble, params)
-        agentScrollView.post { agentScrollView.fullScroll(View.FOCUS_DOWN) }
+    @Suppress("DEPRECATION")
+    private fun handleSharedIntent(intent: Intent?) {
+        if (intent == null) return
+        when (intent.action) {
+            Intent.ACTION_SEND -> {
+                var added = false
+                intent.getStringExtra(Intent.EXTRA_TEXT)?.takeIf { it.isNotBlank() }?.let { shared ->
+                    agentInputText = if (agentInputText.isEmpty()) shared else "${agentInputText}\n$shared"
+                    added = true
+                }
+                intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.let { uri ->
+                    copySharedToCache(uri)?.let { addContentAttachment(it); added = true }
+                }
+                if (added) {
+                    selectTab(Tab.AGENT)
+                    renderAttachmentStrip()
+                    Toast.makeText(this, "Shared content added to Agent", Toast.LENGTH_SHORT).show()
+                }
+            }
+            Intent.ACTION_SEND_MULTIPLE -> {
+                var added = false
+                intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.forEach { uri ->
+                    copySharedToCache(uri)?.let { addContentAttachment(it); added = true }
+                }
+                if (added) {
+                    selectTab(Tab.AGENT)
+                    renderAttachmentStrip()
+                    Toast.makeText(this, "Shared files added to Agent", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    /** Copies a shared content URI into app storage so it survives the granting app going away. */
+    private fun copySharedToCache(uri: Uri): Uri? {
+        return try {
+            val mime = contentResolver.getType(uri) ?: "application/octet-stream"
+            var name: String? = null
+            contentResolver.query(uri, null, null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    val idx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (idx >= 0) name = c.getString(idx)
+                }
+            }
+            val dir = File(cacheDir, "shared").apply { mkdirs() }
+            val dest = uniqueFile(dir, Attachments.safeFileName(name, "shared.${Attachments.extensionFor(mime)}"))
+            var copied = 0L
+            contentResolver.openInputStream(uri)?.use { input ->
+                dest.outputStream().use { output ->
+                    val buf = ByteArray(64 * 1024)
+                    while (true) {
+                        val n = input.read(buf)
+                        if (n < 0) break
+                        copied += n
+                        if (copied > Attachments.MAX_FILE_COPY_BYTES) {
+                            dest.delete()
+                            return null
+                        }
+                        output.write(buf, 0, n)
+                    }
+                }
+            } ?: return null
+            Uri.fromFile(dest)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun addMessageBubble(sender: String, message: String, role: Int) {
+        chatMessages.add(
+            ChatUiMessage(
+                id = nextChatId++,
+                sender = sender,
+                message = message,
+                role = role,
+                toolExpanded = false,
+            ),
+        )
+        chatScrollTrigger++
     }
 
     // =========================================================================
     // Tab 2: Isolated Forge Hub Component
     // =========================================================================
 
-    private fun buildForgeHubTab(): FrameLayout {
-        val outer = FrameLayout(this).apply {
-            setBackgroundColor(BG)
-        }
+    // buildForgeHubTab removed (Compose UI)
 
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(BG)
-        }
 
-        // Isolated Update / Offline Banner inside Forge Hub only
-        hubBanner = TextView(this).apply {
-            background = GradientDrawable().apply { setColor(STRONG) }
-            setTextColor(Color.parseColor("#FF111111"))
-            typeface = Typeface.DEFAULT_BOLD
-            textSize = 13f
-            setPadding(dp(16), dp(10), dp(16), dp(10))
-            visibility = View.GONE
-        }
-        container.addView(hubBanner, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+    private fun renderHubChips() = syncHubScreensUi()
 
-        // Screen selection chips row (Home, Renders, Colab, Thunder, etc.)
-        hubScreenChips = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(dp(8), dp(40), dp(8), dp(8))
-        }
-        hubScreenChipsScroll = HorizontalScrollView(this).apply {
-            isHorizontalScrollBarEnabled = false
-            overScrollMode = View.OVER_SCROLL_NEVER
-            addView(hubScreenChips)
-        }
-        container.addView(hubScreenChipsScroll, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-
-        // Content area for WebViews
-        hubContent = FrameLayout(this)
-        hubLoadBar = View(this).apply {
-            setBackgroundColor(ACCENT)
-            pivotX = 0f
-            scaleX = 0f
-            alpha = 0f
-        }
-        hubContent.addView(hubLoadBar, FrameLayout.LayoutParams(MATCH_PARENT, dp(2), Gravity.TOP))
-
-        container.addView(hubContent, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
-        outer.addView(container, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        return outer
-    }
-
-    private fun renderHubChips() {
-        hubScreenChips.removeAllViews()
-        val preferred = listOf("home", "renders", "colab", "thunder", "shotwriter", "hypno", "files")
-        val sortedScreens = hubScreens.sortedBy { s ->
-            val idx = preferred.indexOf(s.id)
-            if (idx >= 0) idx else 99
-        }
-
-        for (s in sortedScreens) {
-            val active = s.id == currentHubScreenId
-            val chip = TextView(this).apply {
-                text = s.title
-                textSize = 13f
-                typeface = if (active) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
-                setTextColor(if (active) STRONG else MUTED)
-                background = if (active) {
-                    createGlassDrawable(PILL, dp(16), ACCENT)
-                } else {
-                    createGlassDrawable(CARD_BG, dp(16), LINE)
-                }
-                setPadding(dp(16), dp(8), dp(16), dp(8))
-                isClickable = true
-                setOnClickListener { showHubScreen(s.id) }
-                setOnLongClickListener {
-                    hubWebViews[s.id]?.reload()
-                    Toast.makeText(this@MainActivity, "Reloading ${s.title}", Toast.LENGTH_SHORT).show()
-                    true
-                }
-            }
-            val p = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
-                rightMargin = dp(8)
-            }
-            hubScreenChips.addView(chip, p)
-        }
-    }
-
-    private fun showHubScreen(id: String) {
-        if (hubBlockedByUpdate) return
-        val s = hubScreens.firstOrNull { it.id == id } ?: return
-        if (id == currentHubScreenId && hubWebViews[id]?.visibility == View.VISIBLE) {
-            hubWebViews[id]?.reload()
+    internal fun reloadCurrentHubScreen() {
+        val id = currentHubScreenId
+        if (id.isNullOrEmpty()) {
+            loadHubManifest()
             return
         }
-        currentHubScreenId = id
-        prefs.edit().putString("last_hub_screen", id).apply()
-
-        val wv = hubWebViews.getOrPut(id) {
-            newGenericWebView(s).also {
-                it.loadUrl(absoluteRelayUrl(s.url))
-                hubContent.addView(it, 0)
-            }
-        }
-
-        hubWebViews.values.forEach { if (it !== wv) it.visibility = View.GONE }
-        wv.alpha = 0f
-        wv.visibility = View.VISIBLE
-        wv.animate().alpha(1f).setDuration(160).start()
-        renderHubChips()
+        refreshHubNativeScreen()
+        UiFeedback.snackbar(snackbarAnchor, "Reloading ${hubScreens.firstOrNull { it.id == id }?.title ?: "screen"}")
     }
 
-    private fun loadHubManifest() {
+    private var hubBannerApkUrl: String? = null
+
+    internal fun downloadHubUpdate() {
+        hubForceUpdateApkUrl?.let { downloadApk(it) }
+            ?: hubBannerApkUrl?.let { downloadApk(it) }
+    }
+
+    internal fun refreshHubNativeScreen() {
+        if (hubBlockedByUpdate) return
+        val id = currentHubScreenId ?: return
+        hubScreenLoading = true
+        hubScreenError = null
+        scope.launch {
+            try {
+                val json = withContext(Dispatchers.IO) { fetchHubScreenJson(id) }
+                hubScreenJson = json
+                hubScreenLoading = false
+                updateHubConnectionPill(online = true)
+            } catch (e: Exception) {
+                hubScreenLoading = false
+                hubScreenError = when (e) {
+                    is RelayHttpException -> e.message?.take(500) ?: "HTTP ${e.code}"
+                    else -> e.message ?: "Could not load screen"
+                }
+            }
+        }
+    }
+
+    private fun fetchHubScreenJson(screenId: String): String {
+        val auth = basicAuth("wan")
+        return when (screenId) {
+            "home" -> {
+                val status = RelayHttp.get(relayBase, auth, "/api/status")
+                val colab = runCatching { RelayHttp.get(relayBase, auth, "/api/colab/state") }.getOrDefault("{}")
+                val library = runCatching { RelayHttp.get(relayBase, auth, "/api/media/library") }.getOrDefault("[]")
+                JSONObject().apply {
+                    put("status", JSONObject(status))
+                    put("colab", JSONObject(colab))
+                    put("library", JSONArray(library))
+                }.toString()
+            }
+            "renders", "gallery" -> RelayHttp.get(relayBase, auth, "/api/media/library")
+            "setup" -> RelayHttp.get(relayBase, auth, "/api/setup")
+            "thunder" -> {
+                val state = RelayHttp.get(relayBase, auth, "/api/thunder/state")
+                val library = runCatching { RelayHttp.get(relayBase, auth, "/api/media/library") }.getOrDefault("[]")
+                JSONObject().apply {
+                    put("state", JSONObject(state))
+                    put("library", JSONArray(library))
+                }.toString()
+            }
+            "colab" -> RelayHttp.get(relayBase, auth, "/api/colab/state")
+            "hypno" -> {
+                val overview = RelayHttp.get(relayBase, auth, "/api/laptop/hypno/overview")
+                val jobs = runCatching { RelayHttp.get(relayBase, auth, "/api/laptop/hypno/jobs") }.getOrDefault("[]")
+                JSONObject().apply {
+                    put("overview", JSONObject(overview))
+                    put("jobs", JSONArray(jobs))
+                }.toString()
+            }
+            "ltx", "shotwriter" -> {
+                val setup = runCatching { RelayHttp.get(relayBase, auth, "/api/setup") }.getOrDefault("{}")
+                val jobs = runCatching { RelayHttp.get(relayBase, auth, "/api/gen/jobs") }.getOrDefault("[]")
+                val library = runCatching { RelayHttp.get(relayBase, auth, "/api/media/library") }.getOrDefault("[]")
+                JSONObject().apply {
+                    put("setup", JSONObject(setup))
+                    put("jobs", JSONArray(jobs))
+                    put("library", JSONArray(library))
+                }.toString()
+            }
+            "vast" -> {
+                val queue = RelayHttp.get(relayBase, auth, "/api/thunder/queue")
+                val library = runCatching { RelayHttp.get(relayBase, auth, "/api/media/library") }.getOrDefault("[]")
+                JSONObject().apply {
+                    put("queue", JSONObject(queue))
+                    put("library", JSONArray(library))
+                }.toString()
+            }
+            "files" -> {
+                val ping = runCatching { RelayHttp.get(relayBase, auth, "/api/laptop/ping") }.getOrDefault("{}")
+                val home = runCatching {
+                    RelayHttp.post(
+                        relayBase,
+                        auth,
+                        "/api/laptop/run",
+                        """{"lang":"bash","code":"ls -lah ~ | head -50\n"}""",
+                    )
+                }.getOrDefault("{}")
+                val paths = runCatching {
+                    RelayHttp.post(
+                        relayBase,
+                        auth,
+                        "/api/laptop/run",
+                        """{"lang":"bash","code":"ls -lah ~/venice_run ~/civitai_dl 2>/dev/null | head -40\n"}""",
+                    )
+                }.getOrDefault("{}")
+                JSONObject().apply {
+                    put("ping", JSONObject(ping))
+                    put("home", JSONObject(home))
+                    put("paths", JSONObject(paths))
+                }.toString()
+            }
+            else -> if (screenId.startsWith("bot-")) {
+                val bid = screenId.removePrefix("bot-")
+                val title = hubScreens.firstOrNull { it.id == screenId }?.title ?: bid
+                val botJson = runCatching { RelayHttp.get(relayBase, auth, "/app/bots/$bid/bot.json") }.getOrDefault("{}")
+                JSONObject().apply {
+                    put("id", screenId)
+                    put("title", title)
+                    put("bot", JSONObject(botJson))
+                }.toString()
+            } else {
+                val screen = hubScreens.firstOrNull { it.id == screenId }
+                JSONObject().apply {
+                    put("id", screenId)
+                    put("title", screen?.title ?: screenId)
+                    put("manifest_url", screen?.url ?: "")
+                }.toString()
+            }
+        }
+    }
+
+    internal fun relayBaseUrl(): String = relayBase
+
+    internal fun relayAuthorization(): String = basicAuth("wan")
+
+    internal fun hubRelayPost(path: String, jsonBody: String, refreshAfter: Boolean = true) {
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    RelayHttp.post(relayBase, basicAuth("wan"), path, jsonBody)
+                }
+                if (refreshAfter) refreshHubNativeScreen()
+                UiFeedback.snackbar(snackbarAnchor, "Done")
+            } catch (e: Exception) {
+                UiFeedback.snackbar(snackbarAnchor, e.message?.take(120) ?: "Request failed")
+            }
+        }
+    }
+
+    internal fun hubRelayPostWithResponse(path: String, jsonBody: String, onResult: (String) -> Unit) {
+        scope.launch {
+            val text = try {
+                withContext(Dispatchers.IO) {
+                    RelayHttp.post(relayBase, basicAuth("wan"), path, jsonBody)
+                }
+            } catch (e: Exception) {
+                e.message ?: "Request failed"
+            }
+            main.post { onResult(text) }
+        }
+    }
+
+    private fun updateHubConnectionPill(online: Boolean, detail: String? = null) {
+        hubConnectionLabel = when {
+            online && detail == null -> "Online"
+            detail != null -> detail
+            online -> "Online"
+            else -> "Offline"
+        }
+    }
+
+    internal fun showHubScreen(id: String) {
+        if (hubBlockedByUpdate) return
+        if (hubScreens.none { it.id == id }) return
+        currentHubScreenId = id
+        prefs.edit().putString("last_hub_screen", id).apply()
+        renderHubChips()
+        refreshHubNativeScreen()
+    }
+
+    internal fun loadHubManifest() {
+        if (hubScreens.isEmpty()) hubScreenLoading = true
         prefs.getString("manifest", null)?.let { applyHubManifest(it, fromCache = true) }
         thread {
             try {
@@ -706,20 +1302,24 @@ class MainActivity : Activity() {
                 val code = conn.responseCode
                 if (code == 401) {
                     main.post {
-                        hubBanner.text = "Relay authentication rejected. Check password in Settings."
-                        hubBanner.visibility = View.VISIBLE
+                        hubBannerText = "Relay authentication rejected. Check password in Settings."
+                        hubBannerVisible = true
                     }
                     return@thread
                 }
                 val body = conn.inputStream.bufferedReader().readText()
                 prefs.edit().putString("manifest", body).apply()
-                main.post { applyHubManifest(body, fromCache = false) }
+                main.post {
+                    applyHubManifest(body, fromCache = false)
+                    updateHubConnectionPill(online = true)
+                }
             } catch (e: Exception) {
                 main.post {
+                    updateHubConnectionPill(online = false, detail = "Offline")
                     if (hubScreens.isEmpty()) showHubOffline(e.message)
                     else {
-                        hubBanner.text = "Relay offline - showing cached screens"
-                        hubBanner.visibility = View.VISIBLE
+                        hubBannerText = "Relay offline - showing cached screens"
+                        hubBannerVisible = true
                     }
                 }
             }
@@ -734,58 +1334,29 @@ class MainActivity : Activity() {
         }.filter { it.id != "term" && it.id != "venice" } // term and venice have dedicated native tabs!
 
         val rev = json.optInt("web_rev", json.optInt("apk_version", 0))
-        val changedUrls = next.filter { n -> hubScreens.any { it.id == n.id && it.url != n.url } }.map { it.id }
-        val drop = (hubWebViews.keys - next.map { it.id }.toSet() + changedUrls).toMutableSet()
-        if (!fromCache && hubWebRev != 0 && rev != hubWebRev) drop.addAll(hubWebViews.keys)
-        drop.forEach { id ->
-            hubWebViews.remove(id)?.let { hubContent.removeView(it); it.destroy() }
-        }
+        val revChanged = !fromCache && hubWebRev != 0 && rev != hubWebRev
         if (!fromCache) hubWebRev = rev
         hubScreens = next
+        hubScreenLoading = false
+        if (next.isNotEmpty()) hubScreenError = null
 
         if (!fromCache) checkHubUpdate(json)
 
         val want = currentHubScreenId ?: prefs.getString("last_hub_screen", null)
         if (!hubBlockedByUpdate) {
             showHubScreen(hubScreens.firstOrNull { it.id == want }?.id ?: hubScreens.firstOrNull()?.id ?: "home")
+        } else {
+            renderHubChips()
         }
+        if (revChanged && !hubBlockedByUpdate) refreshHubNativeScreen()
+        updateHubConnectionPill(online = !fromCache || hubScreens.isNotEmpty(), detail = if (fromCache) "Cached" else null)
     }
 
     private fun showHubOffline(msg: String?) {
-        hubContent.removeAllViews()
-        hubContent.addView(hubLoadBar, FrameLayout.LayoutParams(MATCH_PARENT, dp(2), Gravity.TOP))
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(32), dp(32), dp(32), dp(32))
-            addView(TextView(context).apply {
-                text = "Forge Hub Relay Offline"
-                textSize = 20f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(STRONG)
-                gravity = Gravity.CENTER
-            })
-            addView(TextView(context).apply {
-                text = "$relayBase\n${msg ?: "Could not reach relay"}\n\nNote: Venice Agent and local Terminal operate independently and are unaffected."
-                textSize = 13f
-                setTextColor(MUTED)
-                gravity = Gravity.CENTER
-                setPadding(0, dp(10), 0, dp(24))
-            })
-            addView(TextView(context).apply {
-                text = "Retry Connection"
-                textSize = 14f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.parseColor("#FF111111"))
-                setPadding(dp(24), dp(12), dp(24), dp(12))
-                background = GradientDrawable().apply {
-                    setColor(ACCENT)
-                    cornerRadius = dp(24).toFloat()
-                }
-                setOnClickListener { loadHubManifest() }
-            })
-        }
-        hubContent.addView(box, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        updateHubConnectionPill(online = false, detail = "Offline")
+        hubScreenLoading = false
+        hubScreenError =
+            "Forge Hub relay offline\n$relayBase\n${msg ?: "Could not reach relay"}\n\nAgent and Terminal still work on-device."
     }
 
     private fun checkHubUpdate(json: JSONObject) {
@@ -793,538 +1364,77 @@ class MainActivity : Activity() {
         val force = json.optBoolean("force_update", false)
         if (latest <= BuildConfig.VERSION_CODE) {
             hubBlockedByUpdate = false
-            hubBanner.visibility = View.GONE
+            hubBannerVisible = false
             return
         }
         val apk = json.optString("apk_url", "/app/forgehub.apk")
         if (force) {
             hubBlockedByUpdate = true
-            hubWebViews.values.forEach { it.visibility = View.GONE }
-            hubBanner.visibility = View.GONE
-            hubContent.removeAllViews()
-            hubContent.addView(hubLoadBar, FrameLayout.LayoutParams(MATCH_PARENT, dp(2), Gravity.TOP))
-            val box = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER
-                setPadding(dp(32), dp(32), dp(32), dp(32))
-                addView(TextView(context).apply {
-                    text = "Forge Hub Update Required"
-                    textSize = 22f
-                    typeface = Typeface.DEFAULT_BOLD
-                    setTextColor(STRONG)
-                    gravity = Gravity.CENTER
-                })
-                addView(TextView(context).apply {
-                    text = "Forge Hub requires v$latest (current: v${BuildConfig.VERSION_CODE}). Only this Hub tab is restricted until updated. Agent and Terminal remain usable."
-                    textSize = 13f
-                    setTextColor(MUTED)
-                    gravity = Gravity.CENTER
-                    setPadding(0, dp(12), 0, dp(24))
-                })
-                addView(TextView(context).apply {
-                    text = "Download v$latest"
-                    textSize = 14f
-                    typeface = Typeface.DEFAULT_BOLD
-                    setTextColor(Color.parseColor("#FF111111"))
-                    setPadding(dp(28), dp(12), dp(28), dp(12))
-                    background = GradientDrawable().apply {
-                        setColor(ACCENT)
-                        cornerRadius = dp(24).toFloat()
-                    }
-                    setOnClickListener { downloadApk(absoluteRelayUrl(apk)) }
-                })
-                addView(TextView(context).apply {
-                    text = "Dismiss / Ignore this update"
-                    textSize = 12f
-                    setTextColor(MUTED)
-                    setPadding(dp(16), dp(16), dp(16), dp(8))
-                    isClickable = true
-                    setOnClickListener {
-                        hubBlockedByUpdate = false
-                        hubContent.removeAllViews()
-                        hubContent.addView(hubLoadBar, FrameLayout.LayoutParams(MATCH_PARENT, dp(2), Gravity.TOP))
-                        renderHubChips()
-                        showHubScreen(hubScreens.firstOrNull()?.id ?: "home")
-                    }
-                })
-            }
-            hubContent.addView(box, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            hubForceUpdateVersion = latest
+            hubForceUpdateApkUrl = absoluteRelayUrl(apk)
+            hubBannerVisible = false
+            hubScreenLoading = false
             return
         }
         hubBlockedByUpdate = false
-        hubBanner.text = "Forge Hub update v$latest available. Tap to install."
-        hubBanner.visibility = View.VISIBLE
-        hubBanner.setOnClickListener { downloadApk(absoluteRelayUrl(apk)) }
+        hubBannerText = "Forge Hub update v$latest available. Tap to install."
+        hubBannerVisible = true
+        hubBannerApkUrl = absoluteRelayUrl(apk)
     }
 
-    // =========================================================================
-    // Tab 3: Isolated Terminal Component
-    // =========================================================================
-
-    private fun buildTerminalTab(): FrameLayout {
-        val outer = FrameLayout(this).apply {
-            setBackgroundColor(BG)
-        }
-
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(BG)
-        }
-
-        // Top bar with controls: Paste Safety, Top, Bottom, Reload
-        val topBar = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(12), dp(38), dp(12), dp(8))
-            background = createGlassDrawable(BAR_GLASS, border = LINE)
-        }
-
-        val titleCol = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            addView(TextView(context).apply {
-                text = "Relay SSH / WSL"
-                textSize = 11f
-                setTextColor(MUTED)
-            })
-            addView(TextView(context).apply {
-                text = "Terminal"
-                textSize = 17f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(STRONG)
-            })
-        }
-        topBar.addView(titleCol, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-
-        fun termBtn(text: String, onClick: () -> Unit) = TextView(this).apply {
-            this.text = text
-            textSize = 12f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(STRONG)
-            setPadding(dp(12), dp(6), dp(12), dp(6))
-            background = createGlassDrawable(CARD_BG, dp(12), LINE)
-            isClickable = true
-            setOnClickListener { onClick() }
-        }
-
-        topBar.addView(termBtn("Paste") { openTerminalPasteSheet() }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(6) })
-        topBar.addView(termBtn("Top") { scrollTerminal("top") }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(6) })
-        topBar.addView(termBtn("Bottom") { scrollTerminal("bottom") }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dp(6) })
-        topBar.addView(termBtn("Reload") { terminalWebView?.reload() }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
-
-        container.addView(topBar)
-
-        // Webview container
-        val frame = FrameLayout(this)
-        terminalLoadBar = View(this).apply {
-            setBackgroundColor(ACCENT)
-            pivotX = 0f
-            scaleX = 0f
-            alpha = 0f
-        }
-        frame.addView(terminalLoadBar, FrameLayout.LayoutParams(MATCH_PARENT, dp(2), Gravity.TOP))
-
-        // Safe Paste Sheet (Overlay)
-        terminalPasteSheet = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = createGlassDrawable(Color.parseColor("#E6121216"), dp(16), ACCENT)
-            setPadding(dp(16), dp(16), dp(16), dp(16))
-            visibility = View.GONE
-
-            addView(TextView(context).apply {
-                text = "Terminal Paste Safety"
-                textSize = 15f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(STRONG)
-            })
-            addView(TextView(context).apply {
-                text = "Pasting lands here before execution to prevent accidental execution."
-                textSize = 12f
-                setTextColor(MUTED)
-                setPadding(0, dp(4), 0, dp(8))
-            })
-
-            terminalPasteInput = EditText(context).apply {
-                hint = "Review or edit snippet here..."
-                setHintTextColor(MUTED)
-                setTextColor(STRONG)
-                textSize = 13f
-                minLines = 3
-                background = createGlassDrawable(Color.parseColor("#FF0B0B0C"), dp(8), LINE)
-                setPadding(dp(10), dp(10), dp(10), dp(10))
-            }
-            addView(terminalPasteInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-
-            val buttons = LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                setPadding(0, dp(12), 0, 0)
-                addView(TextView(context).apply {
-                    text = "Send to Shell"
-                    textSize = 14f
-                    typeface = Typeface.DEFAULT_BOLD
-                    setTextColor(Color.parseColor("#FF111111"))
-                    background = GradientDrawable().apply { setColor(ACCENT); cornerRadius = dp(16).toFloat() }
-                    setPadding(dp(16), dp(10), dp(16), dp(10))
-                    gravity = Gravity.CENTER
-                    setOnClickListener { sendPasteToTerminal() }
-                }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { rightMargin = dp(8) })
-
-                addView(TextView(context).apply {
-                    text = "Cancel"
-                    textSize = 14f
-                    typeface = Typeface.DEFAULT_BOLD
-                    setTextColor(STRONG)
-                    background = createGlassDrawable(CARD_BG, dp(16), LINE)
-                    setPadding(dp(16), dp(10), dp(16), dp(10))
-                    gravity = Gravity.CENTER
-                    setOnClickListener { terminalPasteSheet.visibility = View.GONE }
-                }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-            }
-            addView(buttons)
-        }
-
-        val sheetParams = FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT, Gravity.BOTTOM).apply {
-            leftMargin = dp(16)
-            rightMargin = dp(16)
-            bottomMargin = dp(16)
-        }
-
-        frame.addView(terminalPasteSheet, sheetParams)
-        container.addView(frame, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
-        outer.addView(container, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        return outer
+    internal fun sendPasteToTerminal() {
+        val text = terminalPasteText.trim()
+        terminalPasteOpen = false
+        if (text.isNotEmpty()) runTerminalCommand(text)
     }
 
-    private fun setupTerminalWebView() {
-        val wv = newGenericWebView(Screen("term", "Terminal", "terminal", "/app/term/"))
-        terminalWebView = wv
-        (terminalContainer.getChildAt(0) as LinearLayout).getChildAt(1).let { frame ->
-            (frame as FrameLayout).addView(wv, 0)
-        }
-        wv.loadUrl(absoluteRelayUrl("/app/term/"))
-    }
-
-    private fun openTerminalPasteSheet() {
-        terminalPasteSheet.visibility = View.VISIBLE
-        terminalPasteInput.setText("")
-        terminalPasteInput.requestFocus()
-    }
-
-    private fun sendPasteToTerminal() {
-        var text = terminalPasteInput.text.toString()
-        if (text.isNotEmpty()) {
-            if (!text.endsWith("\n")) text += "\n"
-            val escaped = JSONObject.quote(text)
-            val js = """
-                (function(){
-                    if (window.ForgeTerm && window.ForgeTerm.install) {
-                        try { window.ForgeTerm.install(window); } catch(e){}
-                    }
-                    if (window.ForgeTermPaste) { window.ForgeTermPaste($escaped); return; }
-                    var f = document.querySelector('iframe');
-                    if (f && f.contentWindow) {
-                        if (window.ForgeTerm && window.ForgeTerm.install) {
-                            try { window.ForgeTerm.install(f.contentWindow); } catch(e){}
-                        }
-                        if (f.contentWindow.ForgeTermPaste) {
-                            f.contentWindow.ForgeTermPaste($escaped);
-                            return;
-                        }
-                    }
-                })();
-            """.trimIndent()
-            terminalWebView?.evaluateJavascript(js, null)
-        }
-        terminalPasteSheet.visibility = View.GONE
-    }
-
-    private fun scrollTerminal(where: String) {
-        val js = """
-            (function(){
-                if (window.ForgeTermScroll) { window.ForgeTermScroll('$where'); return; }
-                var f = document.querySelector('iframe');
-                if (f && f.contentWindow && f.contentWindow.ForgeTermScroll) {
-                    f.contentWindow.ForgeTermScroll('$where');
+    internal fun runTerminalCommand(cmd: String) {
+        val trimmed = cmd.trim()
+        if (trimmed.isEmpty() || terminalRunning) return
+        terminalLog.add("$ $trimmed")
+        terminalRunning = true
+        scope.launch {
+            try {
+                val body = JSONObject().apply {
+                    put("lang", "bash")
+                    put("code", trimmed)
+                }.toString()
+                val resp = withContext(Dispatchers.IO) {
+                    RelayHttp.post(relayBase, basicAuth("wan"), "/api/laptop/run", body)
                 }
-            })();
-        """.trimIndent()
-        terminalWebView?.evaluateJavascript(js, null)
+                val j = JSONObject(resp)
+                val out = j.optString("output").ifBlank { resp }
+                out.lines().forEach { line ->
+                    if (line.isNotBlank()) terminalLog.add(line)
+                }
+                if (!j.optBoolean("ok", true)) {
+                    terminalLog.add("[exit ${j.optInt("exit")}]")
+                }
+            } catch (e: Exception) {
+                terminalLog.add(
+                    when (e) {
+                        is RelayHttpException -> "Error: ${e.message?.take(400) ?: "HTTP ${e.code}"}"
+                        else -> "Error: ${e.message ?: "run failed"}"
+                    },
+                )
+            } finally {
+                terminalRunning = false
+            }
+        }
     }
 
     // =========================================================================
     // Tab 4: Native Settings Component
     // =========================================================================
 
-    private fun buildSettingsTab(): ScrollView {
-        val scroll = ScrollView(this).apply {
-            setBackgroundColor(BG)
-            isFillViewport = true
-        }
+    // buildSettingsTab removed (Compose UI)
 
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(40), dp(20), dp(32))
-        }
-
-        val title = TextView(this).apply {
-            text = "WhiteDevil Settings"
-            textSize = 22f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(STRONG)
-            setPadding(0, 0, 0, dp(4))
-        }
-        val sub = TextView(this).apply {
-            text = "Credentials are encrypted on-device via Android Jetpack Security."
-            textSize = 12f
-            setTextColor(MUTED)
-            setPadding(0, 0, 0, dp(24))
-        }
-        box.addView(title)
-        box.addView(sub)
-
-        fun sectionHeader(txt: String) = TextView(this).apply {
-            text = txt
-            textSize = 14f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(ACCENT)
-            setPadding(0, dp(16), 0, dp(8))
-        }
-
-        fun field(label: String, key: String, def: String = "", secret: Boolean = false): EditText {
-            val lbl = TextView(this).apply {
-                text = label
-                textSize = 12f
-                setTextColor(MUTED)
-                setPadding(0, dp(6), 0, dp(4))
-            }
-            val ed = EditText(this).apply {
-                setText(prefs.getString(key, def))
-                setTextColor(STRONG)
-                textSize = 14f
-                background = createGlassDrawable(CARD_BG, dp(8), LINE)
-                setPadding(dp(12), dp(10), dp(12), dp(10))
-                inputType = if (secret) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
-            }
-            box.addView(lbl)
-            box.addView(ed)
-            return ed
-        }
-
-        box.addView(sectionHeader("Venice AI Agent Config"))
-        val fVeniceKey = field("VENICE_API_KEY", SettingsManager.KEY_VENICE_API_KEY, secret = true)
-        val fPrompt = field("System Prompt", SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
-
-        val webSearchRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(12), 0, dp(12))
-            addView(TextView(context).apply {
-                text = "Enable Venice Web Search"
-                textSize = 13.5f
-                setTextColor(STRONG)
-            }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        }
-        val webSearchSwitch = Switch(this).apply {
-            isChecked = prefs.getBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, false)
-        }
-        webSearchRow.addView(webSearchSwitch)
-        box.addView(webSearchRow)
-
-        box.addView(sectionHeader("Remote Relay & Forge Hub Config"))
-        val fRelayUrl = field("Relay Base URL", SettingsManager.KEY_RELAY_URL, SettingsManager.DEFAULT_RELAY_URL)
-        val fRelayUser = field("Relay User", SettingsManager.KEY_RELAY_USER, SettingsManager.DEFAULT_RELAY_USER)
-        val fRelayPass = field("Relay Password", SettingsManager.KEY_RELAY_PASS, secret = true)
-
-        box.addView(sectionHeader("Laptop SSH Tunnel Config"))
-        val fLaptopUser = field("Laptop User", SettingsManager.KEY_LAPTOP_USER, SettingsManager.DEFAULT_LAPTOP_USER)
-        val fLaptopPass = field("Laptop Password", SettingsManager.KEY_LAPTOP_PASS, secret = true)
-
-        val saveBtn = TextView(this).apply {
-            text = "Save Settings"
-            textSize = 15f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.parseColor("#FF111111"))
-            gravity = Gravity.CENTER
-            setPadding(dp(20), dp(14), dp(20), dp(14))
-            background = GradientDrawable().apply {
-                setColor(ACCENT)
-                cornerRadius = dp(24).toFloat()
-            }
-            isClickable = true
-            setOnClickListener {
-                prefs.edit()
-                    .putString(SettingsManager.KEY_VENICE_API_KEY, fVeniceKey.text.toString().trim())
-                    .putString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, fPrompt.text.toString().trim())
-                    .putBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, webSearchSwitch.isChecked)
-                    .putString(SettingsManager.KEY_RELAY_URL, fRelayUrl.text.toString().trim().trimEnd('/'))
-                    .putString(SettingsManager.KEY_RELAY_USER, fRelayUser.text.toString().trim())
-                    .putString(SettingsManager.KEY_RELAY_PASS, fRelayPass.text.toString())
-                    .putString(SettingsManager.KEY_LAPTOP_USER, fLaptopUser.text.toString().trim())
-                    .putString(SettingsManager.KEY_LAPTOP_PASS, fLaptopPass.text.toString())
-                    .apply()
-
-                Toast.makeText(this@MainActivity, "Settings saved securely.", Toast.LENGTH_SHORT).show()
-
-                // Invalidate hub caches & reload
-                hubWebViews.values.forEach { hubContent.removeView(it); it.destroy() }
-                hubWebViews.clear()
-                authTries.clear()
-                terminalWebView?.reload()
-                loadHubManifest()
-            }
-        }
-
-        val btnParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-            topMargin = dp(24)
-            bottomMargin = dp(16)
-        }
-        box.addView(saveBtn, btnParams)
-
-        scroll.addView(box)
-        return scroll
-    }
-
-    // =========================================================================
-    // Generic WebView Factory for Forge Hub & Terminal
-    // =========================================================================
-
-    private fun newGenericWebView(screen: Screen): WebView = WebView(this).apply {
-        setBackgroundColor(BG)
-        val term = screen.id == "term" || screen.url.contains("/term")
-        settings.javaScriptEnabled = true
-        settings.domStorageEnabled = true
-        settings.cacheMode = WebSettings.LOAD_NO_CACHE
-        settings.mediaPlaybackRequiresUserGesture = false
-        settings.allowFileAccess = false
-        settings.builtInZoomControls = !term
-        settings.displayZoomControls = false
-        settings.loadWithOverviewMode = !term
-        settings.useWideViewPort = !term
-        settings.setSupportZoom(!term)
-        overScrollMode = if (term) View.OVER_SCROLL_ALWAYS else View.OVER_SCROLL_IF_CONTENT_SCROLLS
-        isNestedScrollingEnabled = term
-        if (term) {
-            isLongClickable = false
-            setOnLongClickListener { true }
-        }
-        settings.userAgentString = settings.userAgentString + " WhiteDevil/${BuildConfig.VERSION_CODE}"
-        CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-
-        webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView, req: WebResourceRequest): Boolean {
-                val u = req.url
-                if (u.host == Uri.parse(relayBase).host) return false
-                if (u.scheme == "whitedevil" || u.scheme == "forgehub") {
-                    u.getQueryParameter("screen")?.let { showHubScreen(it) }
-                    return true
-                }
-                runCatching { startActivity(Intent(Intent.ACTION_VIEW, u)) }
-                return true
-            }
-
-            override fun onReceivedHttpAuthRequest(view: WebView, handler: HttpAuthHandler, host: String, realm: String) {
-                val key = if (realm == "laptop") "laptop" else "wan"
-                val n = (authTries[key] ?: 0) + 1
-                authTries[key] = n
-                if (n > 3) {
-                    handler.cancel()
-                    authTries[key] = 0
-                    Toast.makeText(this@MainActivity, "${if (key == "laptop") "Laptop" else "Relay"} login rejected. Check Settings.", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                val u = if (key == "laptop") prefs.getString(SettingsManager.KEY_LAPTOP_USER, SettingsManager.DEFAULT_LAPTOP_USER)!!
-                else prefs.getString(SettingsManager.KEY_RELAY_USER, SettingsManager.DEFAULT_RELAY_USER)!!
-                val p = if (key == "laptop") prefs.getString(SettingsManager.KEY_LAPTOP_PASS, "")!!
-                else prefs.getString(SettingsManager.KEY_RELAY_PASS, "")!!
-                handler.proceed(u, p)
-            }
-
-            override fun onPageFinished(view: WebView, url: String) {
-                authTries.clear()
-                if (url.contains("/term") || url.contains("/laptop/term")) {
-                    view.evaluateJavascript(TERM_PATCH, null)
-                }
-            }
-        }
-
-        webChromeClient = object : WebChromeClient() {
-            override fun onProgressChanged(view: WebView, p: Int) {
-                val bar = if (term) terminalLoadBar else hubLoadBar
-                bar.animate().cancel()
-                if (p < 100) {
-                    bar.alpha = 1f
-                    bar.animate().scaleX(p / 100f).setDuration(150).start()
-                } else {
-                    bar.animate().scaleX(1f).alpha(0f).setDuration(250).withEndAction { bar.scaleX = 0f }.start()
-                }
-            }
-
-            override fun onShowFileChooser(w: WebView, cb: ValueCallback<Array<Uri>>, p: FileChooserParams): Boolean {
-                fileCallback?.onReceiveValue(null)
-                fileCallback = cb
-                return try {
-                    startActivityForResult(p.createIntent().putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true), REQ_FILE)
-                    true
-                } catch (_: Exception) {
-                    fileCallback = null
-                    false
-                }
-            }
-
-            override fun onShowCustomView(view: View, callback: CustomViewCallback) {
-                fullscreenView = view
-                (window.decorView as FrameLayout).addView(view, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-            }
-
-            override fun onHideCustomView() {
-                fullscreenView?.let { (window.decorView as FrameLayout).removeView(it) }
-                fullscreenView = null
-            }
-        }
-
-        setDownloadListener { url, _, disposition, mime, _ ->
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                Toast.makeText(this@MainActivity, "Can't download this link in the app", Toast.LENGTH_SHORT).show()
-                return@setDownloadListener
-            }
-            val name = URLUtil.guessFileName(url, disposition, mime)
-            val realm = if (Uri.parse(url).path?.startsWith("/laptop") == true) "laptop" else "wan"
-            val req = DownloadManager.Request(Uri.parse(url))
-                .addRequestHeader("Authorization", basicAuth(realm))
-                .addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url) ?: "")
-                .setTitle(name)
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "WhiteDevil/$name")
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            (getSystemService(DOWNLOAD_SERVICE) as DownloadManager).enqueue(req)
-            Toast.makeText(this@MainActivity, "Downloading $name", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQ_FILE) {
-            val uris = data?.clipData?.let { c -> Array(c.itemCount) { c.getItemAt(it).uri } }
-                ?: WebChromeClient.FileChooserParams.parseResult(resultCode, data)
-            fileCallback?.onReceiveValue(if (resultCode == RESULT_OK) uris else null)
-            fileCallback = null
-            return
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (fullscreenView != null) {
-            hubWebViews[currentHubScreenId]?.webChromeClient?.onHideCustomView()
-            terminalWebView?.webChromeClient?.onHideCustomView()
+        if (activeTab == Tab.YOU && youSubScreen != YouSub.HOME) {
+            showYouSub(YouSub.HOME)
             return
-        }
-        if (activeTab == Tab.FORGE_HUB) {
-            val wv = hubWebViews[currentHubScreenId]
-            if (wv != null && wv.canGoBack()) {
-                wv.goBack()
-                return
-            }
         }
         if (activeTab != Tab.AGENT) {
             selectTab(Tab.AGENT)
@@ -1382,13 +1492,12 @@ class MainActivity : Activity() {
     }
 
     companion object {
-        const val REQ_FILE = 41
-
         const val ROLE_USER = 1
         const val ROLE_VENICE = 2
         const val ROLE_TOOL_CALL = 3
         const val ROLE_TOOL_OUTPUT = 4
         const val ROLE_ERROR = 5
+        const val ROLE_INFO = 6
 
         val BG = Color.parseColor("#FF0B0B0C")
         val BAR_GLASS = Color.parseColor("#D9121216")
@@ -1400,18 +1509,172 @@ class MainActivity : Activity() {
         val STRONG = Color.parseColor("#FFF4F1EA")
         val PILL = Color.parseColor("#26FFFFFF")
 
-        const val TERM_PATCH = """
-            (function(){
-              if (window.__forgeTermLoader) return;
-              window.__forgeTermLoader = 1;
-              function go(){ if (window.ForgeTerm) { ForgeTerm.install(window); try { var f=document.querySelector('iframe'); if(f&&f.contentWindow) ForgeTerm.install(f.contentWindow); } catch(e) {} } }
-              var s=document.createElement('script');
-              s.src='/app/term/patch.js';
-              s.onload=go;
-              document.documentElement.appendChild(s);
-              setTimeout(go, 400);
-              setTimeout(go, 1200);
-            })();
-        """
     }
+
+    // =========================================================================
+    // Biometric unlock + phone files
+    // =========================================================================
+
+    internal fun biometricEnabled(): Boolean =
+        prefs.getBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, false)
+
+    internal fun biometricStatusLabel(): String =
+        com.whitedevil.security.BiometricAuth.statusLabel(this)
+
+    private fun evaluateAppLock(forcePrompt: Boolean) {
+        if (!biometricEnabled()) {
+            appUnlocked = true
+            return
+        }
+        if (!com.whitedevil.security.BiometricAuth.available(this)) {
+            // Can't lock the user out if hardware disappears — leave unlocked.
+            appUnlocked = true
+            return
+        }
+        val awayMs = if (lastBackgroundAt == 0L) Long.MAX_VALUE else System.currentTimeMillis() - lastBackgroundAt
+        val shouldLock = !appUnlocked || forcePrompt || awayMs > 30_000L
+        if (!shouldLock) return
+        appUnlocked = false
+        promptBiometricUnlock()
+    }
+
+    internal fun promptBiometricUnlock() {
+        com.whitedevil.security.BiometricAuth.prompt(
+            this,
+            onSuccess = { appUnlocked = true },
+            onError = { msg ->
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+            },
+            onCancel = { /* stay locked */ },
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // Device-bound auth (hub/auth.py). Strictly additive: relay basic auth is
+    // still sent on every request, and every failure path here is a message, not
+    // a blocked app.
+    // -------------------------------------------------------------------------
+
+    internal fun refreshDeviceAuthState() {
+        deviceAuthState = com.whitedevil.security.DeviceAuth.state(this)
+    }
+
+    /** Enrol (or re-enrol) this phone, then sign in. Prompts for fingerprint / PIN. */
+    internal fun enrolDeviceAuth(deviceName: String) {
+        if (deviceAuthBusy) return
+        deviceAuthBusy = true
+        deviceAuthMessage = "Enrolling this phone…"
+        scope.launch {
+            val outcome = com.whitedevil.security.DeviceAuth.enrolAndSignIn(
+                activity = this@MainActivity,
+                relayBase = relayBase,
+                basicAuth = basicAuth("wan"),
+                deviceName = deviceName,
+            )
+            deviceAuthBusy = false
+            deviceAuthMessage = outcome.message
+            refreshDeviceAuthState()
+            UiFeedback.snackbar(snackbarAnchor, outcome.message)
+        }
+    }
+
+    /** Refresh the device token if it has expired. No-op while one is still live. */
+    internal fun signInDeviceAuth() {
+        if (deviceAuthBusy) return
+        deviceAuthBusy = true
+        deviceAuthMessage = "Signing in…"
+        scope.launch {
+            val outcome = com.whitedevil.security.DeviceAuth.ensureToken(
+                activity = this@MainActivity,
+                relayBase = relayBase,
+                basicAuth = basicAuth("wan"),
+            )
+            deviceAuthBusy = false
+            deviceAuthMessage = outcome.message
+            refreshDeviceAuthState()
+            UiFeedback.snackbar(snackbarAnchor, outcome.message)
+        }
+    }
+
+    /** Drop the local enrolment and key. The hub-side record is revoked separately. */
+    internal fun forgetDeviceAuth() {
+        com.whitedevil.security.DeviceAuth.forget(this)
+        deviceAuthMessage =
+            "This phone's device key was deleted locally. Revoke it on the hub too if it is still listed."
+        refreshDeviceAuthState()
+        UiFeedback.snackbar(snackbarAnchor, "Device key removed from this phone")
+    }
+
+    internal fun unlockViaSettingsFallback() {
+        // Let the user reach Settings to disable biometrics or fix credentials.
+        appUnlocked = true
+        selectTab(Tab.YOU)
+        showYouSub(YouSub.SETTINGS)
+    }
+
+    internal fun phoneFolderUri(): Uri? {
+        val raw = prefs.getString(SettingsManager.KEY_PHONE_FOLDER_URI, null) ?: return null
+        return runCatching { Uri.parse(raw) }.getOrNull()
+    }
+
+    private fun persistPhoneFolder(uri: Uri) {
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        try {
+            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        } catch (_: SecurityException) {
+            try {
+                contentResolver.takePersistableUriPermission(uri, flags)
+            } catch (e: SecurityException) {
+                Toast.makeText(this, "Couldn't keep folder access: ${e.message}", Toast.LENGTH_LONG).show()
+                return
+            }
+        }
+        prefs.edit().putString(SettingsManager.KEY_PHONE_FOLDER_URI, uri.toString()).apply()
+        Toast.makeText(this, "Folder linked", Toast.LENGTH_SHORT).show()
+        showYouSub(YouSub.FILES)
+    }
+
+    internal fun pickPhoneFolder() {
+        pickPhoneFolderLauncher.launch(null)
+    }
+
+    internal fun pickPhoneFiles() {
+        pickFilesLauncher.launch(arrayOf("*/*"))
+        selectTab(Tab.AGENT)
+    }
+
+    internal fun pickPhoneMedia() {
+        pickPhoneMediaLauncher.launch("image/*")
+    }
+
+    internal fun requestPhoneMediaPermission() {
+        val needed = mutableListOf(
+            android.Manifest.permission.READ_MEDIA_IMAGES,
+            android.Manifest.permission.READ_MEDIA_VIDEO,
+            android.Manifest.permission.READ_MEDIA_AUDIO,
+        )
+        if (Build.VERSION.SDK_INT <= 32) {
+            needed += android.Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        val missing = needed.filter {
+            checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isEmpty()) {
+            Toast.makeText(this, "Media access already granted", Toast.LENGTH_SHORT).show()
+            return
+        }
+        pendingPermissionAction = {
+            Toast.makeText(this, "Media access granted", Toast.LENGTH_SHORT).show()
+        }
+        permissionLauncher.launch(missing.toTypedArray())
+    }
+
+    internal fun attachPhoneUri(uri: Uri) {
+        addContentAttachment(uri)
+        syncPendingAttachmentsUi()
+        selectTab(Tab.AGENT)
+        Toast.makeText(this, "Attached to Agent", Toast.LENGTH_SHORT).show()
+    }
+
+
 }

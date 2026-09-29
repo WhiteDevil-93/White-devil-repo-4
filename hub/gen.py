@@ -44,16 +44,28 @@ class Chain(BaseModel):
 
 def save(job):
     with _lock:
-        (DIR / f"{job['id']}.json").write_text(json.dumps(job))
+        (DIR / f"{job['id']}.json").write_text(json.dumps(job), encoding="utf-8")
+
+
+def read_job(p: Path):
+    """Parsed job file, or None if it is missing/corrupt — never a partial dict."""
+    try:
+        j = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return j if isinstance(j, dict) and j.get("id") else None
 
 
 def load(jid):
     if not re.match(r"^[\w-]+$", jid):
-        raise HTTPException(400)
-    try:
-        return json.loads((DIR / f"{jid}.json").read_text())
-    except FileNotFoundError:
+        raise HTTPException(400, "Bad job id")
+    p = DIR / f"{jid}.json"
+    if not p.is_file():
         raise HTTPException(404, "No such generation job")
+    job = read_job(p)
+    if job is None:
+        raise HTTPException(500, f"Generation job {jid} is unreadable or corrupt on disk.")
+    return job
 
 
 def chain_msg(req, b):
@@ -147,11 +159,19 @@ def call_model(key, model, temperature, system, user, max_tokens):
     except urllib.error.HTTPError as e:
         try:
             msg = json.loads(e.read()).get("error", {}).get("message")
-        except Exception:
+        except Exception:  # noqa: BLE001 - body may be empty or HTML
             msg = None
         if e.code == 401:
             raise KeyRejected("OpenRouter rejected the API key (it's wrong, incomplete or deleted). Paste the full key again under OpenRouter settings.")
-        raise RuntimeError(msg or f"HTTP {e.code}")
+        if e.code == 429:
+            raise RuntimeError(f"OpenRouter rate-limited this key: {msg or 'HTTP 429'}")
+        raise RuntimeError(msg or f"OpenRouter returned HTTP {e.code}")
+    except TimeoutError:
+        raise RuntimeError("OpenRouter did not answer within 300s (request timed out, not refused)")
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"Could not reach OpenRouter: {e.reason}")
+    except ValueError as e:
+        raise RuntimeError(f"OpenRouter returned a non-JSON body: {e}")
     return ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
 
 
@@ -169,7 +189,16 @@ def slug(s):
 
 
 def run(jid, req, key):
-    job = load(jid)
+    try:
+        job = load(jid)
+    except HTTPException as e:
+        # A thread cannot return a status code; record it so the job does not sit at "queued".
+        try:
+            save({"id": jid, "status": "error", "error": f"Could not load the job file: {e.detail}",
+                  "updated": time.time(), "log": [], "chain": {"clips": []}})
+        except OSError:
+            pass
+        return
     try:
         while job["next"] <= job["count"]:
             i = job["next"]
@@ -192,9 +221,10 @@ def run(jid, req, key):
                     raise
                 except Exception as e:
                     last = e
-                    job["log"].append(f"batch {i} attempt {attempt + 1}: {e}")
+                    job.setdefault("log", []).append(f"batch {i} attempt {attempt + 1}: {e}")
                     save(job)
-                    time.sleep(5 * (attempt + 1))
+                    if attempt < 2:
+                        time.sleep(5 * (attempt + 1))
             else:
                 raise RuntimeError(f"Batch {i}: {last}")
             if not job["chain"].get("bible"):
@@ -250,12 +280,20 @@ def get(jid: str):
 
 @router.get("/jobs")
 def recent():
-    jobs = sorted(DIR.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)[:20]
+    def mtime(p):
+        try:
+            return p.stat().st_mtime
+        except OSError:
+            return 0.0
+
     out = []
-    for p in jobs:
-        j = json.loads(p.read_text())
+    for p in sorted(DIR.glob("*.json"), key=mtime, reverse=True)[:20]:
+        j = read_job(p)
+        if j is None:
+            out.append({"id": p.stem, "status": "error", "error": "job file is corrupt", "clips": 0})
+            continue
         out.append({k: j.get(k) for k in ("id", "created", "updated", "status", "idea", "total", "count", "next", "file", "error")}
-                   | {"clips": len(j["chain"]["clips"])})
+                   | {"clips": len(((j.get("chain") or {}).get("clips")) or [])})
     return out
 
 
@@ -284,12 +322,35 @@ def safe_name(name):
     return n
 
 
+class KeyIn(BaseModel):
+    key: str
+
+
+@router.get("/key")
+def key_status():
+    present = KEY.is_file() and KEY.stat().st_size > 12
+    return {"configured": present, "where": str(KEY) if present else None}
+
+
+@router.post("/key")
+def save_key(body: KeyIn):
+    key = (body.key or "").strip()
+    if len(key) < 20 or not key.startswith("sk-"):
+        raise HTTPException(400, "That does not look like an OpenRouter API key.")
+    KEY.write_text(key + "\n", encoding="utf-8")
+    try:
+        KEY.chmod(0o600)
+    except OSError:
+        pass
+    return {"ok": True, "configured": True, "where": str(KEY)}
+
+
 @router.post("/file")
 def put_file(f: File):
     if len(f.text) > 5_000_000:
         raise HTTPException(413, "Too big")
     n = safe_name(f.name)
-    (OUT / n).write_text(f.text)
+    (OUT / n).write_text(f.text, encoding="utf-8")
     return {"url": f"/api/gen/file/{n}"}
 
 
@@ -303,21 +364,31 @@ def get_file(name: str):
 
 def mark_interrupted():
     for p in DIR.glob("*.json"):
-        j = json.loads(p.read_text())
-        if j.get("status") in ("queued", "running"):
+        j = read_job(p)
+        if j and j.get("status") in ("queued", "running"):
             j["status"] = "interrupted"
-            p.write_text(json.dumps(j))
+            try:
+                p.write_text(json.dumps(j), encoding="utf-8")
+            except OSError:
+                pass
 
 
 def resume_interrupted():
     """Hub restarted mid-chain: carry on where it stopped if the key is saved."""
-    mark_interrupted()
-    if not KEY.exists():
-        return
-    for p in DIR.glob("*.json"):
-        j = json.loads(p.read_text())
-        if j.get("status") == "interrupted" and time.time() - j.get("updated", 0) < 6 * 3600:
-            resume(j["id"])
+    try:
+        mark_interrupted()
+        if not KEY.exists():
+            return
+        for p in DIR.glob("*.json"):
+            j = read_job(p)
+            if j and j.get("status") == "interrupted" and time.time() - (j.get("updated") or 0) < 6 * 3600:
+                try:
+                    resume(j["id"])
+                except HTTPException:
+                    continue
+    except OSError:
+        # Startup must never fail because gen_jobs/ is unreadable.
+        pass
 
 
 resume_interrupted()

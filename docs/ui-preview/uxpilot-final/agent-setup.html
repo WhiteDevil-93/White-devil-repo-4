@@ -1,0 +1,146 @@
+<!-- screen_requirements:
+- Deep Space AI palette: #0B0E14 (bg), #151921 (surface), #7C3AED (accent), #C084FC (light accent).
+- Stark Grid layout: Industrial configuration UI, 1px border grid, large imagery.
+- Font: Plus Jakarta Sans.
+- Header: Minimal with "Venice" title.
+- Content: Large high-tech imagery at top, followed by a grid of configuration settings (API, Model, Permissions).
+- Action: Solid high-contrast button for "Connect Venice".
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Setup - Venice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'space-bg': '#0B0E14',
+                        'space-surface': '#151921',
+                        'space-accent': '#7C3AED',
+                        'space-glow': '#C084FC',
+                        'space-border': '#1F2937',
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B0E14;
+            color: #FFFFFF;
+            -webkit-font-smoothing: antialiased;
+        }
+        .stark-grid {
+            background-image: 
+                linear-gradient(to right, rgba(31, 41, 55, 0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(31, 41, 55, 0.2) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .glow-input:focus {
+            border-color: #7C3AED;
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="max-w-[375px] mx-auto h-[812px] flex flex-col relative overflow-hidden">
+    <!-- Stark Grid Background -->
+    <div class="fixed inset-0 stark-grid pointer-events-none opacity-40"></div>
+
+    <!-- Header -->
+    <header id="header" class="relative z-20 h-16 bg-space-bg/80 backdrop-blur-md border-b border-space-border flex items-center px-6">
+        <h1 class="text-sm font-bold uppercase tracking-[0.2em]">Agent Config: Venice</h1>
+    </header>
+
+    <!-- Content -->
+    <main class="flex-1 overflow-y-auto relative z-10">
+        <!-- Hero Visual -->
+        <div class="h-56 w-full relative overflow-hidden border-b border-space-border">
+            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_97e323f467_a5214c75950ce572.png" alt="extreme close-up of a futuristic neural processor, glowing violet circuits, industrial metallic text" />
+            <div class="absolute inset-0 bg-gradient-to-t from-space-bg to-transparent"></div>
+            <div class="absolute bottom-6 left-6">
+                <span class="text-[10px] font-bold text-space-glow uppercase tracking-widest mb-1 block">Step 01</span>
+                <h2 class="text-2xl font-bold tracking-tight">Neural Linkage</h2>
+            </div>
+        </div>
+
+        <div class="p-6 space-y-8">
+            <p class="text-sm text-white/60 leading-relaxed">Integrate your intelligence layer to start forging. Securely connect your preferred LLM architectures via encrypted API protocols.</p>
+
+            <!-- Configuration Grid -->
+            <div class="space-y-px bg-space-border border border-space-border rounded-sm overflow-hidden">
+                <div class="bg-space-surface p-4 flex flex-col gap-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">API Endpoint</label>
+                    <input type="text" placeholder="https://api.white-devil.ai/v1" class="bg-space-bg border border-space-border p-3 text-xs font-mono text-white/80 glow-input">
+                </div>
+                <div class="bg-space-surface p-4 flex flex-col gap-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Secret Token</label>
+                    <div class="relative">
+                        <input type="password" value="••••••••••••••••" class="w-full bg-space-bg border border-space-border p-3 text-xs font-mono text-white/80 glow-input">
+                        <button class="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-space-accent transition-colors">
+                            <i class="fa-solid fa-eye text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-space-surface p-4 flex items-center justify-between group active:bg-space-bg transition-colors">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40">Model Architecture</label>
+                        <p class="text-sm font-semibold">GLM-5.2 (Latest)</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-xs text-white/20"></i>
+                </div>
+            </div>
+
+            <!-- Permission Toggles -->
+            <div class="space-y-4">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest text-white/40">Core Permissions</h3>
+                <div class="space-y-px bg-space-border border border-space-border rounded-sm overflow-hidden">
+                    <div class="bg-space-surface p-4 flex items-center justify-between">
+                        <span class="text-sm font-medium">Memory Persistence</span>
+                        <div class="w-10 h-5 bg-space-accent rounded-full relative flex items-center px-1">
+                            <div class="w-3.5 h-3.5 bg-white rounded-full absolute right-1"></div>
+                        </div>
+                    </div>
+                    <div class="bg-space-surface p-4 flex items-center justify-between">
+                        <span class="text-sm font-medium">Autonomic Deployment</span>
+                        <div class="w-10 h-5 bg-space-border rounded-full relative flex items-center px-1">
+                            <div class="w-3.5 h-3.5 bg-white/20 rounded-full absolute left-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connect Button -->
+            <button class="w-full h-14 bg-white text-space-bg font-bold text-sm tracking-widest uppercase hover:bg-space-glow hover:text-white transition-all shadow-xl active:scale-[0.98]">
+                Initialize Protocol
+            </button>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav id="footer" class="relative w-full h-[72px] bg-space-bg border-t border-space-border grid grid-cols-3 z-30">
+        <a href="AgentChat__mobile.html" class="flex flex-col items-center justify-center gap-1 group relative">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] bg-space-accent shadow-[0_0_10px_rgba(124,58,237,1)]"></div>
+            <i class="fa-solid fa-bolt text-lg text-space-accent"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tighter text-white">Agent</span>
+        </a>
+        <a href="ForgeHub__mobile.html" class="flex flex-col items-center justify-center gap-1 group">
+            <i class="fa-solid fa-layer-group text-lg text-white/40 group-hover:text-space-accent transition-colors"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tighter text-white/40 group-hover:text-white transition-colors">Hub</span>
+        </a>
+        <a href="YouProfile__mobile.html" class="flex flex-col items-center justify-center gap-1 group">
+            <i class="fa-solid fa-user text-lg text-white/40 group-hover:text-space-accent transition-colors"></i>
+            <span class="text-[9px] font-bold uppercase tracking-tighter text-white/40 group-hover:text-white transition-colors">You</span>
+        </a>
+    </nav>
+</body>
+</html>

@@ -16,6 +16,11 @@ repositories {
 val ktorVersion = "2.3.12"
 
 dependencies {
+    // The agent loop, Venice client and wire models now live in the shared core
+    // (com.whitedevil.agent), shared with the Android app. Only the CLI-specific
+    // ToolBox and Main stay here.
+    implementation(project(":shared"))
+
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
@@ -29,7 +34,7 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(17) // matches shared/ and android/app (VERSION_17); no JDK 21 on this machine
 }
 
 tasks.withType<KotlinCompile> {

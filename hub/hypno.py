@@ -33,9 +33,17 @@ def ssh(cmd, timeout=60, stdin=None):
         r = subprocess.run(["ssh", "-o", "ConnectTimeout=8", "-o", "BatchMode=yes", "laptop", cmd],
                            capture_output=True, timeout=timeout, input=stdin.encode() if stdin else None)
     except subprocess.TimeoutExpired:
-        raise HTTPException(504, "The laptop took too long to answer.")
+        raise HTTPException(504, f"The laptop took too long to answer (over {timeout}s).")
+    except FileNotFoundError:
+        raise HTTPException(500, "ssh is not installed on the relay, so the laptop cannot be reached.")
+    except OSError as e:
+        raise HTTPException(500, f"Could not run ssh: {e}")
     if r.returncode == 255:
-        raise HTTPException(503, "Laptop is offline (asleep, or WSL not running).")
+        # 255 is ssh's catch-all: say which failure it actually was.
+        err = decode(r.stderr).strip().splitlines()
+        why = next((l for l in reversed(err) if l.strip()), "")
+        raise HTTPException(503, "Cannot reach the laptop over ssh"
+                            + (f": {why[:200]}" if why else " (asleep, or WSL not running)."))
     r.stdout, r.stderr = decode(r.stdout), decode(r.stderr)
     return r
 
@@ -53,13 +61,15 @@ def hf(args, timeout=90):
 
 def load_jobs():
     try:
-        return json.loads(JOBS.read_text())
-    except (FileNotFoundError, ValueError):
+        js = json.loads(JOBS.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
         return []
+    return [j for j in js if isinstance(j, dict)] if isinstance(js, list) else []
 
 
 def save_jobs(jobs):
-    JOBS.write_text(json.dumps(jobs[-60:], indent=1))
+    JOBS.parent.mkdir(parents=True, exist_ok=True)
+    JOBS.write_text(json.dumps(jobs[-60:], indent=1), encoding="utf-8")
 
 
 OVERVIEW = r"""
@@ -87,15 +97,20 @@ def overview(fresh: bool = False):
         data = json.loads(r.stdout.strip().splitlines()[-1])
     except (ValueError, IndexError):
         raise HTTPException(502, "Could not read HypnoForge folders: " + (r.stderr or r.stdout)[-300:])
-    _, presets = hf(["presets", "--list"])
-    _, kits = hf(["kits", "--list"])
-    _, themes = hf(["themes"])
+    warnings = []
+    rc_p, presets = hf(["presets", "--list"])
+    rc_k, kits = hf(["kits", "--list"])
+    rc_t, themes = hf(["themes"])
+    for rc, out, what in ((rc_p, presets, "presets"), (rc_k, kits, "kits"), (rc_t, themes, "themes")):
+        if rc != 0:
+            warnings.append(f"hf {what} failed (exit {rc}): {out.strip()[-200:] or 'no output'}")
     data["presets"] = list(dict.fromkeys(l.strip() for l in presets.splitlines()
                                          if l.strip().startswith(("Visual - ", "Utility - "))))
     data["kits"] = [l.strip() for l in kits.splitlines() if l.strip().startswith("Kit")]
     data["themes"] = [dict(zip(("id", "name", "hint"), [x.strip() for x in l.split("|", 2)]))
                       for l in themes.splitlines() if l.count("|") >= 2]
     data["styles"], data["assist_modes"] = STYLES, ASSIST_MODES
+    data["warnings"] = warnings
     data["video_base"] = "/laptop/hfvid"
     _cache.update(at=time.time(), data=data)
     return data
@@ -225,14 +240,14 @@ def ingest(i: Ingest):
 @router.get("/jobs")
 def jobs():
     js = load_jobs()
-    running = [j for j in js if j["status"] == "running"]
+    running = [j for j in js if isinstance(j, dict) and j.get("status") == "running" and j.get("id")]
     if running:
         ids = " ".join(shlex.quote(j["id"]) for j in running)
         r = ssh(f"cd ~/.hf_jobs 2>/dev/null && for i in {ids}; do echo \"$i $(grep -ao '__RC=[0-9]*' $i.log | tail -1)\"; done", 30)
         for line in r.stdout.splitlines():
             jid, _, rc = line.partition(" ")
             for j in js:
-                if j["id"] == jid and rc.startswith("__RC="):
+                if isinstance(j, dict) and j.get("id") == jid and rc.startswith("__RC="):
                     j["status"] = "done" if rc == "__RC=0" else "failed"
                     j["finished"] = time.time()
         save_jobs(js)

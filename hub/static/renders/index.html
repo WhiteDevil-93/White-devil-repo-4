@@ -14,7 +14,7 @@
 <div class="row" style="margin:4px 2px 12px">
   <div class="grow"><div class="tiny mut" id="sum">Library</div><h1 style="margin:2px 0 0">Renders</h1></div>
 </div>
-<div class="seg" id="src" style="margin-bottom:10px"><button class="on" data-s="all">All</button><button data-s="colab">Colab · 5B</button><button data-s="thunder">Thunder · 14B</button></div>
+<div class="seg" id="src" style="margin-bottom:10px"><button class="on" data-s="all">All</button><button data-s="vast">Vast · Remix</button><button data-s="thunder">Thunder · 14B</button><button data-s="ltx">LTX 2.5</button></div>
 <input class="search" id="q" placeholder="Search packs and chains" autocomplete="off">
 <div class="chips" id="chips"></div>
 <div id="groups"><div class="thumb skel" style="margin-top:20px"></div></div>
@@ -46,7 +46,7 @@ function render(){
     const label = c => c.idx ? 'Clip ' + c.idx : '';
     return `<section data-g="${esc(g.id)}">
       <div class="ghead"><div class="grow"><div class="t trunc">${esc(g.title)}</div>
-        <div class="tiny mut">${src === 'all' ? (g.source === 'thunder' ? 'Thunder 14B · ' : 'Colab 5B · ') : ''}${g.count} clip${g.count === 1 ? '' : 's'} · updated ${F.ago(g.updated)}</div></div>
+        <div class="tiny mut">${src === 'all' ? ({thunder:'Thunder 14B · ',ltx:'LTX 2.5 · ',vast:'Vast · '}[g.source] || 'Vast · ') : ''}${g.count} clip${g.count === 1 ? '' : 's'} · updated ${F.ago(g.updated)}</div></div>
         <button class="btn sm" data-play>▶ Play</button></div>
       <div class="${full ? 'grid' : 'strip'}">${clips.map(c => F.thumb(c, label(c))).join('')}</div>
       ${g.count > 12 ? `<div style="text-align:center;margin-top:6px"><button class="btn ghost sm" data-more>${full ? 'Show less' : 'Show all ' + g.count}</button></div>` : ''}
@@ -73,7 +73,11 @@ async function load(){
     const total = lib.reduce((a, g) => a + g.count, 0);
     $('sum').textContent = `${total} clips · ${lib.length} collections`;
     render();
-  } catch (e) { F.toast('Load failed: ' + e.message); }
+  } catch (e) {
+    F.toast('Load failed: ' + e.message);
+    $('sum').textContent = 'Unreachable';
+    if (!lib.length) $('groups').innerHTML = `<div class="empty">Could not load the library: ${esc(e.message)}</div>`;
+  }
 }
 F.pull(() => { load.sig = null; return load(); });
 load();

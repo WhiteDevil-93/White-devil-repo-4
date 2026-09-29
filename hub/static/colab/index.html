@@ -57,16 +57,30 @@ async function load(){
   try {
     const s = await F.api('/api/colab/state'), u = s.usage || {};
     const rt = $('rt');
-    if (s.paused){ rt.textContent = 'Stopped'; rt.className = 'pill warn'; }
-    else if (s.recover_running){ rt.textContent = 'Starting…'; rt.className = 'pill warn live'; }
-    else if (s.runner_online || u.active > 0){ rt.textContent = 'Running'; rt.className = 'pill ok live'; }
+    const billing = !!(s.billing || (u.active || 0) > 0 || (s.instance && s.instance.running));
+    const st = s.status || {};
+    if (st.label) {
+      rt.textContent = st.label;
+      rt.className = 'pill ' + (st.kind === 'ok' ? 'ok live' : st.kind === 'warn' ? 'warn live' : 'bad');
+    } else if (s.recover_running){ rt.textContent = 'Starting…'; rt.className = 'pill warn live'; }
+    else if (billing && s.runner_online){ rt.textContent = 'Running'; rt.className = 'pill ok live'; }
+    else if (billing){ rt.textContent = 'BILLING · runner down'; rt.className = 'pill warn live'; }
+    else if (s.paused){ rt.textContent = 'Stopped'; rt.className = 'pill warn'; }
     else { rt.textContent = 'No runtime'; rt.className = 'pill bad'; }
-    $('gpu').textContent = (s.gpu && s.gpu[0] || '').split(',')[0].replace('NVIDIA ', '') || 'Google Colab';
+    const accel = (s.instance && s.instance.accelerator) || '';
+    $('gpu').textContent = (s.gpu && String(s.gpu).split(',')[0].replace('NVIDIA ', '')) || accel || 'Google Colab';
     const hrs = u.balance != null && u.rate_per_hr ? Math.floor(u.balance / u.rate_per_hr) : null;
+    const billTile = billing
+      ? `<div class="tile" style="border-color:#c45c5c"><div class="k">Billing now</div><div class="v" style="color:#e3a9a9">${u.rate_per_hr != null ? u.rate_per_hr : '?'}/h</div><div class="s">${s.runner_online ? 'runner up' : 'VM up · tunnel/runner DOWN — Stop to kill the bill'}</div></div>`
+      : `<div class="tile"><div class="k">Billing</div><div class="v">Off</div><div class="s">no active assignment</div></div>`;
     $('tiles').innerHTML =
-      `<div class="tile"><div class="k">Credits</div><div class="v">${u.balance != null ? Math.round(u.balance) : '—'}</div><div class="s">${u.rate_per_hr ? u.rate_per_hr + ' per hour' : '—'}</div></div>
-       <div class="tile"><div class="k">Time left</div><div class="v">${hrs != null ? hrs + ' h' : '—'}</div><div class="s">at the current rate</div></div>`;
-    $('hb').textContent = s.heartbeat.at ? `Last health check ${F.ago(s.heartbeat.at)}${s.heartbeat.DRIVE ? ' · Drive ' + s.heartbeat.DRIVE : ''}${s.runner_mode ? ' · runner: ' + s.runner_mode : ''}` : '';
+      billTile +
+      `<div class="tile"><div class="k">Credits</div><div class="v">${u.balance != null ? Math.round(u.balance) : '—'}</div><div class="s">${hrs != null ? '~' + hrs + ' h left' : (u.rate_per_hr ? u.rate_per_hr + '/h' : '—')}</div></div>`;
+    const bits = [];
+    if (st.detail) bits.push(st.detail);
+    if (s.instance && s.instance.status) bits.push('VM ' + s.instance.status + (s.instance.endpoint ? ' · ' + s.instance.endpoint : ''));
+    if (s.heartbeat.at) bits.push('hb ' + F.ago(s.heartbeat.at) + (s.runner_mode ? ' · ' + s.runner_mode : ''));
+    $('hb').textContent = bits.join(' · ');
 
     const jobs = s.jobs.filter(j => j.status !== 'done' || Date.now() / 1000 - (groupOf(j.chain_id)?.updated || 0) < 6 * 3600);
     $('jobs').innerHTML = jobs.length ? jobs.map(j => {
@@ -84,7 +98,7 @@ async function load(){
           ${['error', 'cancelled'].includes(j.status) ? `<button class="btn sm" onclick="jobAct('${j.id}','retry')">Retry</button>` : ''}
           ${['queued', 'rendering', 'waiting'].includes(j.status) ? `<button class="btn danger sm" onclick="jobAct('${j.id}','cancel')">Cancel</button>` : ''}
         </div></div>`;
-    }).join('') : `<div class="empty">${s.runner_online ? 'Nothing queued.' : s.runner_mode === 'old' ? 'Rendering on the old runner (no queue view).' : 'Runner offline.'}</div>`;
+    }).join('') : `<div class="empty">${s.runner_online ? 'Nothing queued.' : billing ? 'Runner offline — but the Colab VM is still BILLING. Stop it above, or Start/restart to bring the runner back.' : s.runner_mode === 'old' ? 'Rendering on the old runner (no queue view).' : 'No runtime.'}</div>`;
     $('rlog').textContent = s.recover_log.join('\n');
   } catch (e) { F.toast('Load failed: ' + e.message); }
   try {

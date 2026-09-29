@@ -23,8 +23,21 @@
         .xterm, .xterm-screen, .xterm-helpers, .xterm-helper-textarea, canvas {
           touch-action: pan-y !important;
         }
+        /* When Hub /app/term wraps ttyd: kill the squashed duplicate header/footer. */
+        html.forge-embed #chat-top,
+        html.forge-embed #chat-composer { display: none !important; }
+        html.forge-embed #chat-stage { padding: 0 !important; flex: 1; min-height: 0; }
+        html.forge-embed #chat-thread {
+          border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+          flex: 1; min-height: 0;
+        }
       `;
       (doc.head || doc.documentElement).appendChild(style);
+      try {
+        if (win.parent && win.parent !== win) doc.documentElement.classList.add('forge-embed');
+      } catch (e) {
+        doc.documentElement.classList.add('forge-embed');
+      }
 
       const block = (e) => {
         if (win.__forgeOkPaste) return;
@@ -107,20 +120,33 @@
 
       win.ForgeTermPaste = async (text) => {
         const s = String(text || '');
-        if (!s) return;
+        if (!s) return false;
         win.__forgeOkPaste = true;
         try {
+          // Wait briefly for xterm to appear
+          for (let i = 0; i < 25; i++) {
+            if (win.term && typeof win.term.paste === 'function') break;
+            await new Promise(r => setTimeout(r, 100));
+          }
           if (win.term && typeof win.term.paste === 'function') {
             win.term.paste(s);
-            return;
+            return true;
           }
           const ta = doc.querySelector('.xterm-helper-textarea') || doc.querySelector('textarea');
           if (ta) {
             ta.focus();
-            doc.execCommand('insertText', false, s);
+            // Prefer insertText; fall back to InputEvent
+            let ok = false;
+            try { ok = doc.execCommand('insertText', false, s); } catch (e) {}
+            if (!ok) {
+              ta.value = s;
+              ta.dispatchEvent(new InputEvent('input', {bubbles: true, data: s, inputType: 'insertText'}));
+            }
+            return true;
           }
+          return false;
         } finally {
-          setTimeout(() => { win.__forgeOkPaste = false; }, 300);
+          setTimeout(() => { win.__forgeOkPaste = false; }, 400);
         }
       };
 

@@ -1,62 +1,196 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0a0b0f"><title>Forge Hub</title>
-<link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
-</head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0b0f">
+<title>Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/app/ui/forge.css">
+<script src="/app/ui/forge.js"></script>
+<style>
+/* Home content pane (no sidebar — desktop shell owns the rail) */
+html,body{height:100%;margin:0}
+body.home-pwa{
+  padding:0!important;
+  overflow:hidden;
+  background:#141110!important;
+  font:13.5px/1.4 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+.home-shell{display:flex;flex-direction:column;height:100dvh;min-height:100%;overflow:hidden;color:#f0e9e0}
+.home-topbar{
+  height:52px;flex:none;display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;border-bottom:1px solid rgba(253,242,214,.08);background:rgba(20,17,16,.95)
+}
+.home-topbar h1{margin:0;font-size:14px;font-weight:600;letter-spacing:-.02em;color:#f5efe6}
+.home-content{flex:1;overflow:auto;padding:28px}
+.page-heading{margin-bottom:24px}
+.page-heading h2{margin:0 0 4px;font-size:20px;font-weight:600;letter-spacing:-.02em;color:#f5efe6;text-transform:none}
+.page-heading p{margin:0;font-size:13px;color:#8a8178}
+.stat-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:28px}
+.stat-card{
+  border-radius:18px;border:1px solid rgba(253,242,214,.08);background:#1b1714;padding:20px;
+  box-shadow:1px 1px 16px -2px hsl(0 63% 18% / .12);cursor:default
+}
+.stat-card.clickable{cursor:pointer}
+.stat-card.clickable:hover{border-color:rgba(253,242,214,.16)}
+.stat-card.warn{border-color:rgba(215,180,117,.28)}
+.stat-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.stat-head .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:#65656c;font-weight:500}
+.stat-ico{
+  width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+  background:rgba(155,191,160,.08);color:#9bbfa0;font-size:12px
+}
+.stat-ico.gold{background:rgba(201,184,150,.1);color:#e7dbbf}
+.stat-ico.warn{background:rgba(215,180,117,.1);color:#d7b475}
+.stat-v{font-size:28px;font-weight:600;letter-spacing:-.03em;color:#f5efe6;line-height:1;margin:0 0 6px}
+.stat-v .unit{font-size:15px;font-weight:400;color:#a89e93;margin-left:4px}
+.stat-s{font-size:11.5px;color:#7a7168;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+.stat-s.ok{color:#9bbfa0;font-family:inherit}
+.stat-s.warn{color:#d7b475;font-family:inherit}
+.update-cta{
+  border-radius:20px;border:1px solid rgba(253,242,214,.14);
+  background:linear-gradient(90deg,#221c15,#1b1714);padding:24px;margin-bottom:28px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  box-shadow:1px 1px 16px -2px hsl(0 63% 18% / .15)
+}
+.update-cta .mark{
+  width:48px;height:48px;border-radius:14px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(135deg,#fdf2d6,#c9a35c);color:#3a2e12;font-size:18px
+}
+.update-cta h3{margin:0;font-size:15px;font-weight:600;color:#f5efe6}
+.update-cta .ver{
+  font-size:10.5px;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;color:#e7dbbf;
+  background:rgba(253,242,214,.08);padding:2px 8px;border-radius:999px
+}
+.update-cta p{margin:4px 0 0;font-size:12.5px;color:#8a8178}
+.btn-update{
+  flex:none;display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:12px;
+  font:500 13px Inter,system-ui;color:#1a1410;text-decoration:none;
+  background:linear-gradient(180deg,#fdf2d6,#e7d19f);
+  box-shadow:1px 1px 16px -2px hsl(0 63% 18% / .25)
+}
+.btn-update:hover{filter:brightness(1.05)}
+.clips-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.clips-head h3{margin:0;font-size:13.5px;font-weight:600;color:#f5efe6;letter-spacing:-.01em;text-transform:none}
+.clips-head a{font-size:12px;color:#a89e93;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.clips-head a:hover{color:#e7dbbf}
+.clip-strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}
+.clip-card{min-width:0;cursor:pointer}
+.clip-card .thumb{
+  position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(253,242,214,.08);
+  aspect-ratio:9/16;background:#0f0d0b;margin-bottom:8px
+}
+.clip-card .thumb img{width:100%;height:100%;object-fit:cover;opacity:.9;display:block}
+.clip-card .badge{
+  position:absolute;bottom:8px;right:8px;font-size:10px;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  padding:2px 6px;border-radius:6px;background:rgba(0,0,0,.6);color:#e7dbbf
+}
+.clip-card .new{
+  position:absolute;top:8px;left:8px;display:inline-flex;align-items:center;gap:4px;
+  font-size:9.5px;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;padding:2px 6px;border-radius:6px;
+  background:rgba(155,191,160,.16);color:#9bbfa0;border:1px solid rgba(155,191,160,.25);text-transform:lowercase
+}
+.clip-card .new::before{content:"";width:5px;height:5px;border-radius:50%;background:#9bbfa0}
+.clip-card .name{font-size:11.5px;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;color:#a89e93;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clip-card .ago{font-size:10.5px;color:#65656c;margin:2px 0 0}
+.clip-more{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  border-radius:14px;border:1px solid rgba(253,242,214,.08);aspect-ratio:9/16;background:#0f0d0b;
+  color:#65656c;text-decoration:none;margin-bottom:8px
+}
+.clip-more i{font-size:18px;color:#4a4238;margin-bottom:6px}
+.clip-more .n{font-size:10.5px}
+.now-banner{
+  display:none;align-items:center;gap:14px;margin-bottom:20px;padding:16px 18px;border-radius:16px;
+  background:#1b1714;border:1px solid rgba(253,242,214,.1)
+}
+.now-banner.on{display:flex}
+.now-banner .kicker{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#c9b896}
+#alerts{margin-bottom:16px}
+#alerts:empty{display:none;margin:0}
+#pageErr:empty{display:none}
+.err-banner{margin-bottom:16px;padding:12px 14px;border-radius:12px;background:rgba(217,147,147,.08);border:1px solid rgba(217,147,147,.28);color:#e0aeae;font-size:13px}
+.empty{padding:24px;text-align:center;color:#65656c;font-size:13px;grid-column:1/-1}
+.skel{background:linear-gradient(90deg,rgba(253,242,214,.04),rgba(253,242,214,.08),rgba(253,242,214,.04));background-size:200% 100%;animation:shimmer 1.2s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media (max-width:1100px){
+  .stat-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .clip-strip{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:640px){
+  .home-content{padding:16px}
+  .stat-cards{grid-template-columns:1fr 1fr;gap:10px}
+  .clip-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .update-cta{flex-direction:column;align-items:stretch}
+  .btn-update{justify-content:center}
+}
+</style>
+</head>
+<body class="home-pwa">
 
-<div class="home-lib">
-<div class="home-main">
-<div class="row" style="margin:2px 2px 4px">
-  <div class="grow"><div class="tiny mut phone-only" id="hello">Forge Hub</div>
-    <h1 style="margin:2px 0 0">Welcome back</h1>
-    <p class="lead">Here's what the render farm has been up to.</p></div>
-  <span id="live" class="pill phone-only">…</span>
-</div>
-
-<div id="now" class="now-banner" hidden></div>
-<div id="pageErr"></div>
-<div id="alerts"></div>
-
-<div class="cta">
-  <div class="mark">↻</div>
-  <div class="grow">
-    <div class="row wrap" style="gap:8px;align-items:center">
-      <div class="t">Update available</div>
-      <span class="ver" id="hubVer">Hub</span>
+<div class="home-shell">
+  <header class="home-topbar">
+    <div class="row" style="gap:12px;min-width:0">
+      <h1>Home</h1>
+      <span id="live" class="pill">…</span>
     </div>
-    <div class="small mut" id="hubWhere" style="margin-top:4px">Publishes this UI to the relay. Open Terminal, Send, wait for Done, then reload.</div>
-  </div>
-  <div class="row wrap">
-    <a class="btn primary" href="/app/term/?update=1">Update Hub</a>
-  </div>
-</div>
+    <div class="row" style="gap:8px;color:#7a7168;font-size:11.5px">
+      <i class="fa-regular fa-clock" style="font-size:11px"></i>
+      <span id="clock">—</span>
+    </div>
+  </header>
 
-<div class="tiles" id="tiles">
-  <div class="tile skel" style="height:96px"></div><div class="tile skel" style="height:96px"></div>
-  <div class="tile skel" style="height:96px"></div><div class="tile skel" style="height:96px"></div>
-</div>
+  <main class="home-content">
+    <div class="page-heading">
+      <h2 id="hello">Welcome back</h2>
+      <p>Here's what the render farm has been up to.</p>
+    </div>
 
-<div id="nextWrap" style="display:none"><h2>Up next</h2><div class="card tight" id="next"></div></div>
+    <div id="pageErr"></div>
+    <div id="alerts"></div>
+    <div id="now" class="now-banner"></div>
 
-<div class="clips-head"><h2 class="grow">Latest clips</h2><a class="small" href="/app/gallery/">Open Gallery →</a></div>
-<div class="clip-rail" id="latest">
-  <div class="thumb skel" style="aspect-ratio:1;width:148px;flex:none"></div>
-  <div class="thumb skel" style="aspect-ratio:1;width:148px;flex:none"></div>
-</div>
-</div>
+    <div id="stat-cards" class="stat-cards">
+      <div class="stat-card skel" style="height:118px"></div>
+      <div class="stat-card skel" style="height:118px"></div>
+      <div class="stat-card skel" style="height:118px"></div>
+      <div class="stat-card skel" style="height:118px"></div>
+    </div>
 
-<aside class="home-insp phone-insp" id="insp">
-  <h3 id="inspName">No clip selected</h3>
-  <div class="tiny mut" id="inspAgo">Pick a clip from the library.</div>
-  <div class="meta">
-    <div><div class="k">Duration</div><div class="v" id="inspDur">—</div></div>
-    <div><div class="k">Size</div><div class="v" id="inspMb">—</div></div>
-    <div><div class="k">Category</div><div class="v" id="inspGroup">Relay</div></div>
-    <div><div class="k">Queue</div><div class="v" id="inspQ">—</div></div>
-  </div>
-  <a class="btn primary" href="/app/term/?update=1" style="width:100%;margin-top:8px">Update Hub</a>
-  <a class="btn ghost" href="/app/gallery/" style="width:100%;margin-top:8px">Open Gallery</a>
-</aside>
+    <div class="update-cta" id="update-hub-cta">
+      <div class="row" style="gap:16px;min-width:0">
+        <div class="mark"><i class="fa-solid fa-rotate"></i></div>
+        <div class="grow" style="min-width:0">
+          <div class="row wrap" style="gap:8px;align-items:center">
+            <h3>Update available</h3>
+            <span class="ver" id="hubVer">Hub</span>
+          </div>
+          <p id="hubWhere">Publishes this UI to the relay. Open Terminal, Send, wait for Done, then reload.</p>
+        </div>
+      </div>
+      <a class="btn-update" id="btn-update-hub" href="/app/term/?update=1"><i class="fa-solid fa-download"></i>Update Hub</a>
+    </div>
+
+    <div id="nextWrap" style="display:none;margin-bottom:28px">
+      <div class="clips-head"><h3>Up next</h3></div>
+      <div class="card tight" id="next"></div>
+    </div>
+
+    <div id="latest-clips-section">
+      <div class="clips-head">
+        <h3>Latest clips</h3>
+        <a href="/app/gallery/">Open Gallery <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></a>
+      </div>
+      <div id="latest" class="clip-strip">
+        <div class="clip-card"><div class="thumb skel"></div></div>
+        <div class="clip-card"><div class="thumb skel"></div></div>
+      </div>
+    </div>
+  </main>
 </div>
 
 <script>
@@ -68,6 +202,11 @@ const jobTitle = j => groupTitle(j.chain_id) || (j.name || 'Job').replace(/[_-]+
 function greet(){
   const h = new Date().getHours();
   $('hello').textContent = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+}
+function tickClock(){
+  const el = $('clock');
+  if (!el) return;
+  el.textContent = new Date().toLocaleString(undefined, {weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
 }
 
 function prettyAgo(t){
@@ -102,10 +241,9 @@ function mmss(sec){
 function nowBanner(s){
   const job = (s.jobs || []).find(j => j.status === 'rendering');
   const el = $('now');
-  if (!job) { el.hidden = true; el.classList.remove('on'); el.innerHTML = ''; return; }
+  if (!job) { el.classList.remove('on'); el.innerHTML = ''; return; }
   const p = job.progress || {}, pct = p.total ? Math.round(100 * p.done / p.total) : 0;
   const left = job.avg_seconds && p.total ? job.avg_seconds * (p.total - p.done) : null;
-  el.hidden = false;
   el.classList.add('on');
   el.innerHTML = `<div class="grow">
       <div class="kicker">Now rendering</div>
@@ -118,17 +256,12 @@ function nowBanner(s){
 function livePill(s){
   const live = $('live');
   const job = (s.jobs || []).find(j => j.status === 'rendering');
-  if (job){ live.textContent = 'Rendering'; live.className = 'pill ok live phone-only'; }
-  else if (s.paused){ live.textContent = 'Stopped'; live.className = 'pill warn phone-only'; }
-  else if (s.runner_online){ live.textContent = 'Idle'; live.className = 'pill phone-only'; }
-  else { live.textContent = 'Offline'; live.className = 'pill bad phone-only'; }
-}
-
-function tile(k, v, sub, icon, extra){
-  return `<div class="tile${extra && extra.warn ? ' warn' : ''}"${extra && extra.href ? ` onclick="location.href='${extra.href}'"` : ''}>
-    <div class="k">${esc(k)}<span class="mark">${icon || ''}</span></div>
-    <div class="v">${v}</div>
-    <div class="s">${sub}</div></div>`;
+  const billing = !!(s.billing || (s.usage && s.usage.active > 0) || (s.instance && s.instance.running));
+  if (job){ live.textContent = 'Rendering'; live.className = 'pill ok live'; }
+  else if (s.runner_online){ live.textContent = 'Idle'; live.className = 'pill ok'; }
+  else if (billing){ live.textContent = 'BILLING'; live.className = 'pill warn live'; }
+  else if (s.paused){ live.textContent = 'Stopped'; live.className = 'pill warn'; }
+  else { live.textContent = 'Offline'; live.className = 'pill bad'; }
 }
 
 function tiles(s, st){
@@ -138,30 +271,57 @@ function tiles(s, st){
   const queued = jobs.filter(j => ['queued', 'waiting'].includes(j.status)).length;
   const failed = jobs.filter(j => j.status === 'error').length;
   const qn = rendering + queued;
-  let qSub = !s.runner_online ? 'runner offline' : s.paused ? 'runtime paused' : rendering ? 'rendering now' : queued ? 'waiting' : 'idle';
+  const billing = !!(s.billing || (s.usage && s.usage.active > 0) || (s.instance && s.instance.running));
+  let qSub = rendering ? 'rendering now' : queued ? 'waiting' : s.runner_online ? 'idle' : billing ? 'BILLING · runner down' : s.paused ? 'stopped' : 'no runtime';
   if (failed) qSub = failed + ' failed';
-  const qWarn = !s.runner_online || failed > 0 || s.paused;
+  const qWarn = !s.runner_online || failed > 0 || billing;
 
   const allClips = lib.flatMap(g => g.clips);
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const today = allClips.filter(c => c.mtime * 1000 >= start.getTime()).length;
 
-  let storeV = '—', storeS = 'storage unknown';
+  let storeV = '—', storeS = 'storage unknown', storeUnit = '';
   if (lap.used_gb != null) {
-    storeV = Math.round(lap.used_gb) + ' GB';
+    storeV = String(Math.round(lap.used_gb));
+    storeUnit = 'GB';
     storeS = lap.total_gb != null ? 'of ' + Math.round(lap.total_gb) + ' GB local volume' : 'on laptop';
   } else if (lap.free_gb != null) {
-    storeV = Math.round(lap.free_gb) + ' GB';
+    storeV = String(Math.round(lap.free_gb));
+    storeUnit = 'GB';
     storeS = 'free on laptop';
   } else if (!lap.online) {
     storeS = 'laptop offline';
   }
 
-  $('tiles').innerHTML =
-    tile('Newest clip', ageLabel(st.newest_age_min), esc(st.newest ? shortClip(st.newest) : 'no clips yet'), '◷', {href: '/app/renders/'}) +
-    tile('Clip count', st.clips != null ? String(st.clips) : '—', today ? '+' + today + ' today' : 'on relay', '▣', {href: '/app/renders/'}) +
-    tile('Render queue', String(qn), esc(qSub), '▦', {warn: qWarn, href: '/app/colab/'}) +
-    tile('Storage used', storeV, esc(storeS), '▤');
+  const newestAge = ageLabel(st.newest_age_min);
+  const newestParts = newestAge.match(/^(\d+)\s+(min ago)$/) || newestAge.match(/^(.+)$/);
+  let newestMain = newestAge, newestUnit = '';
+  if (/^\d+ min ago$/.test(newestAge)) {
+    newestMain = newestAge.split(' ')[0];
+    newestUnit = 'min ago';
+  }
+
+  $('stat-cards').innerHTML = `
+    <a class="stat-card clickable" href="/app/renders/" style="text-decoration:none;color:inherit">
+      <div class="stat-head"><span class="k">Newest Clip</span><div class="stat-ico"><i class="fa-regular fa-clock"></i></div></div>
+      <p class="stat-v">${esc(newestMain)}${newestUnit ? `<span class="unit">${esc(newestUnit)}</span>` : ''}</p>
+      <p class="stat-s">${esc(st.newest ? shortClip(st.newest) : 'no clips yet')}</p>
+    </a>
+    <a class="stat-card clickable" href="/app/renders/" style="text-decoration:none;color:inherit">
+      <div class="stat-head"><span class="k">Clip Count</span><div class="stat-ico gold"><i class="fa-solid fa-film"></i></div></div>
+      <p class="stat-v">${st.clips != null ? esc(String(st.clips)) : '—'}</p>
+      <p class="stat-s ${today ? 'ok' : ''}">${today ? '<i class="fa-solid fa-arrow-up" style="font-size:9px;margin-right:4px"></i>+' + today + ' today' : 'on relay'}</p>
+    </a>
+    <a class="stat-card clickable${qWarn ? ' warn' : ''}" href="/app/colab/" style="text-decoration:none;color:inherit">
+      <div class="stat-head"><span class="k">Render Queue</span><div class="stat-ico warn"><i class="fa-solid fa-layer-group"></i></div></div>
+      <p class="stat-v">${esc(String(qn))}<span class="unit">jobs</span></p>
+      <p class="stat-s ${qWarn ? 'warn' : ''}">${esc(qSub)}</p>
+    </a>
+    <div class="stat-card">
+      <div class="stat-head"><span class="k">Storage Used</span><div class="stat-ico"><i class="fa-solid fa-hard-drive"></i></div></div>
+      <p class="stat-v">${esc(storeV)}${storeUnit ? `<span class="unit">${esc(storeUnit)}</span>` : ''}</p>
+      <p class="stat-s">${esc(storeS)}</p>
+    </div>`;
 }
 
 function upNext(s){
@@ -177,26 +337,15 @@ function upNext(s){
 
 function alerts(st, s){
   const rows = [];
-  if (s && s.paused) rows.push('Rendering is paused' + (s.paused !== true ? ' · ' + s.paused : '') + '. Auto-restart is off until you start it.');
+  if (s && (s.billing || (s.usage && s.usage.active > 0)) && !s.runner_online)
+    rows.push('Colab is BILLING' + (s.usage && s.usage.rate_per_hr != null ? ' at ' + s.usage.rate_per_hr + '/h' : '') + ' but the runner is down. Stop the runtime to stop charges, or Start to use it.');
+  else if (s && s.paused) rows.push('Rendering is paused' + (s.paused !== true ? ' · ' + s.paused : '') + '. Auto-restart is off until you start it.');
   if (s && s.recover_running) rows.push('Spinning up a G4… clips start flowing about 5 minutes after the runtime is up.');
   if (st.alerts && st.alerts.length) rows.push(...st.alerts);
-  $('alerts').innerHTML = rows.length ? `<div class="card" style="margin-top:0;margin-bottom:14px;border-color:rgba(217,147,147,.35)">
+  $('alerts').innerHTML = rows.length ? `<div class="card" style="margin-top:0;margin-bottom:0;border-color:rgba(217,147,147,.35)">
     <div class="row"><span class="pill ${s && s.paused ? 'warn' : 'bad'}">${s && s.paused ? 'Stopped' : 'Alert'}</span><span class="grow"></span>
       ${s && s.paused ? '<button class="btn sm gold" onclick="startRt()">Start runtime</button>' : ''}</div>
     <div class="small" style="margin-top:8px">${rows.map(esc).join('<br>')}</div></div>` : '';
-}
-
-function fillInsp(c, s){
-  if (!c) return;
-  $('inspName').textContent = shortClip(c.name);
-  $('inspAgo').textContent = prettyAgo(c.mtime) + (c.group ? ' · ' + c.group : '');
-  $('inspDur').textContent = mmss(c.seconds) || '—';
-  $('inspMb').textContent = c.mb != null ? c.mb + ' MB' : '—';
-  $('inspGroup').textContent = c.group || 'Relay';
-  const jobs = (s && s.jobs) || [];
-  const qn = jobs.filter(j => ['rendering','queued','waiting'].includes(j.status)).length;
-  $('inspQ').textContent = qn ? qn + ' jobs' : 'idle';
-  document.querySelectorAll('.clip-card .thumb').forEach(t => t.classList.toggle('on', t.dataset.clip === c.name));
 }
 
 function clipCard(c){
@@ -204,34 +353,37 @@ function clipCard(c){
   return `<div class="clip-card" data-clip="${esc(c.name)}">
     <div class="thumb" data-clip="${esc(c.name)}">
       <img loading="lazy" src="${F.thumbUrl(c.name)}" onload="this.classList.add('ld')" onerror="this.classList.add('ld');this.style.opacity='.25'" alt="">
-      ${dur ? `<span class="badge">${esc(dur)}</span>` : ''}${F.isNew(c) ? '<span class="new">NEW</span>' : ''}
+      ${dur ? `<span class="badge">${esc(dur)}</span>` : ''}${F.isNew(c) ? '<span class="new">new</span>' : ''}
     </div>
-    <div class="name trunc">${esc(shortClip(c.name))}</div>
-    <div class="ago">${esc(prettyAgo(c.mtime))}</div>
+    <p class="name">${esc(shortClip(c.name))}</p>
+    <p class="ago">${esc(prettyAgo(c.mtime))}</p>
   </div>`;
 }
 
-function strip(s){
+function strip(){
   const all = lib.flatMap(g => g.clips.map(c => Object.assign({group: g.title}, c))).sort((a, b) => b.mtime - a.mtime);
-  latest = all.slice(0, 12);
+  latest = all.slice(0, 5);
   if (!all.length) {
     $('latest').innerHTML = '<div class="empty">No clips yet</div>';
     return;
   }
   const more = all.length - latest.length;
   $('latest').innerHTML = latest.map(clipCard).join('') + (more > 0
-    ? `<a class="clip-more" href="/app/gallery/"><span class="ph">▭</span><div class="n">${more} more</div><div>Open Gallery</div></a>`
+    ? `<a class="clip-card" href="/app/gallery/" style="text-decoration:none">
+        <div class="clip-more"><i class="fa-solid fa-images"></i><div class="n">${more} more</div></div>
+        <p class="name" style="color:#65656c">Open Gallery</p>
+        <p class="ago">&nbsp;</p>
+      </a>`
     : '');
-  fillInsp(all[0], s);
 }
 $('latest').addEventListener('click', e => {
+  const a = e.target.closest('a[href]');
+  if (a) return;
   const n = e.target.closest('[data-clip]')?.dataset.clip; if (!n) return;
   e.preventDefault();
   const all = lib.flatMap(g => g.clips.map(c => Object.assign({group: g.title}, c))).sort((a, b) => b.mtime - a.mtime);
   latest = all;
-  const c = all.find(x => x.name === n);
-  fillInsp(c, window._forgeColab);
-  F.viewer(all, all.findIndex(x => x.name === n), x => x.group + (x.idx ? ' · clip ' + x.idx : ''));
+  F.viewer(all, all.findIndex(c => c.name === n), c => c.group + (c.idx ? ' · clip ' + c.idx : ''));
 });
 
 async function startRt(){
@@ -245,16 +397,17 @@ function showErr(msg){
 
 async function load(){
   greet();
+  tickClock();
   const [s, st, l, man] = await Promise.allSettled([
     F.api('/api/colab/state'), F.api('/api/status'), F.api('/api/media/library'), F.api('/api/manifest')
   ]);
   if (man.status === 'fulfilled' && man.value.web_rev != null) $('hubVer').textContent = 'v' + man.value.web_rev;
-  if (l.status === 'fulfilled') { lib = l.value; strip(s.status === 'fulfilled' ? s.value : null); }
+  if (l.status === 'fulfilled') { lib = l.value; strip(); }
   else $('latest').innerHTML = '<div class="empty">Could not load clips.</div>';
-  if (s.status === 'fulfilled') { window._forgeColab = s.value; nowBanner(s.value); upNext(s.value); livePill(s.value); }
+  if (s.status === 'fulfilled') { nowBanner(s.value); upNext(s.value); livePill(s.value); }
   if (s.status === 'fulfilled' && st.status === 'fulfilled') tiles(s.value, st.value);
   else if (st.status === 'fulfilled') tiles({jobs: [], runner_online: false}, st.value);
-  else $('tiles').innerHTML = '<div class="empty" style="grid-column:1/-1">Could not load farm status.</div>';
+  else $('stat-cards').innerHTML = '<div class="empty">Could not load farm status.</div>';
   if (st.status === 'fulfilled') alerts(st.value, s.status === 'fulfilled' ? s.value : null);
   const bad = [s, st, l].filter(x => x.status === 'rejected');
   if (bad.length === 3) showErr('Relay unreachable. Check your connection and reload.');
@@ -264,6 +417,8 @@ async function load(){
 F.pull(load);
 load();
 setInterval(() => { if (F.isVisible()) load(); }, 30000);
+setInterval(tickClock, 30000);
 F.onVisible && F.onVisible(load);
 </script>
-</body></html>
+</body>
+</html>

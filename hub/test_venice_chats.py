@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -45,7 +46,9 @@ def test_chats_roundtrip(tmp_path, monkeypatch):
     assert saved["activeId"] == "c1"
     assert saved["chats"][0]["messages"][1]["content"] == "pong"
     assert dest.is_file()
-    assert oct(dest.stat().st_mode)[-3:] == "600"
+    if os.name != "nt":
+        # chmod is a no-op on Windows dev machines; the mode holds on the Linux relay.
+        assert oct(dest.stat().st_mode)[-3:] == "600"
     again = client.get("/api/venice/chats").json()
     assert again["chats"][0]["title"] == "ping"
     st = client.get("/api/venice/status").json()

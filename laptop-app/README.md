@@ -1,3 +1,14 @@
+> **DEPRECATED: replaced by the native desktop app in [`desktop/`](../desktop/) (Kotlin / Compose Desktop, ships as an MSI).**
+>
+> This Electron app is left in place as a fallback. New work goes to `desktop/`.
+> **Do not delete this folder yet.** The desktop app has not been run on Windows and does not yet do
+> everything this app does. The operator decides when `laptop-app/` is removed, after checking the
+> desktop app on the real laptop.
+>
+> - What moved, what this app still does that `desktop/` does not, and how to switch over:
+>   [`docs/DESKTOP_MIGRATION.md`](../docs/DESKTOP_MIGRATION.md)
+> - How the desktop MSI is built: [`docs/DESKTOP_PACKAGING.md`](../docs/DESKTOP_PACKAGING.md)
+
 # Forge Hub laptop app
 
 Native desktop window for Forge Hub (Venice Agent, Shell, renders, Setup). This is the laptop app — not a browser tab, and not the Android APK.

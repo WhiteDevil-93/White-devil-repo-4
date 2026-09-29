@@ -1,0 +1,106 @@
+[
+  {
+    "id": "mylo",
+    "name": "mylo1337 I2V NSFW v2",
+    "kind": "nsfw",
+    "source": "civitai",
+    "vid": "2774472",
+    "file": "ltx_mylo1337_i2v_nsfw_v2.safetensors"
+  },
+  {
+    "id": "sexgod",
+    "name": "SexGod Nudity v2",
+    "kind": "nsfw",
+    "source": "civitai",
+    "vid": "2778606",
+    "file": "ltx_sexgod_nudity_v2_LTXNUDES.safetensors"
+  },
+  {
+    "id": "beanflk",
+    "name": "BEANFLK V1",
+    "kind": "nsfw",
+    "source": "civitai",
+    "vid": "3192441",
+    "file": "ltx_BEANFLK_V1.safetensors"
+  },
+  {
+    "id": "sexthrust",
+    "name": "SexThrust I2V",
+    "kind": "nsfw",
+    "source": "civitai",
+    "vid": "2674954",
+    "file": "LTX2-i2v-SexThrust.safetensors"
+  },
+  {
+    "id": "cgs23",
+    "name": "CGS23",
+    "kind": "nsfw",
+    "source": "civitai",
+    "vid": "2987819",
+    "file": "CGS23.safetensors"
+  },
+  {
+    "id": "defined-muscle",
+    "name": "Defined Muscle",
+    "kind": "nsfw",
+    "source": "civitai",
+    "vid": "3132867",
+    "file": "Defined_Muscle.safetensors"
+  },
+  {
+    "id": "cumsplash",
+    "name": "Cumsplash LTX2",
+    "kind": "nsfw",
+    "source": "civitai",
+    "vid": "2657002",
+    "file": "cumsplash_LTX2_v1.safetensors"
+  },
+  {
+    "id": "plora-sulfter",
+    "name": "plora sulfter I2V",
+    "kind": "nsfw",
+    "source": "civitai",
+    "vid": "3086880",
+    "file": "plora_sulfter_i2v-step00008500.comfy.safetensors"
+  },
+  {
+    "id": "solo-male",
+    "name": "Solo Male LTX2",
+    "kind": "nsfw",
+    "source": "civitai",
+    "vid": "2609597",
+    "file": "solo-male-ltx2-4000.safetensors"
+  },
+  {
+    "id": "coachbate-preview",
+    "name": "CoachBate Penis LTX-2.5 preview",
+    "kind": "nsfw",
+    "source": "civitai",
+    "vid": "3220391",
+    "file": "ltx-2.5_penis_coachbate_preview1.safetensors"
+  },
+  {
+    "id": "sulphur",
+    "name": "Gay Sex Sulphur 10eros",
+    "kind": "nsfw",
+    "source": "hf",
+    "url": "https://huggingface.co/Muapi/gay-sex-sulphur-10eros/resolve/main/gay-sex-sulphur-10eros.safetensors",
+    "file": "ltx_gay-sex-sulphur-10eros.safetensors"
+  },
+  {
+    "id": "penile-praxis",
+    "name": "Penile Praxis V4",
+    "kind": "nsfw",
+    "source": "hf",
+    "url": "https://huggingface.co/lynaNSFW/LTX2.3_penile_praxis/resolve/main/Penile_Praxis_V4.safetensors",
+    "file": "ltx_Penile_Praxis_V4.safetensors"
+  },
+  {
+    "id": "bwc-coachbate",
+    "name": "BWC CoachBate LTXV",
+    "kind": "nsfw",
+    "source": "hf",
+    "url": "https://huggingface.co/UnifiedHorusRA/028220/resolve/main/PENIS_LoRA_by_CoachBate/LTXV/ltx-2-19b-bwc-lora-35000.safetensors",
+    "file": "ltx-2-19b-bwc-lora-35000.safetensors"
+  }
+]

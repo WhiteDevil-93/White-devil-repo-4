@@ -3,71 +3,269 @@
 <meta name="theme-color" content="#0b0b0c"><title>Setup</title>
 <link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
 <style>
-.lora{padding:12px 0;border-top:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
-.lora:first-child{border-top:0;padding-top:2px}
-.lora b{display:block;font-size:14px}
-.kind{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.bubble{padding:10px 13px;border-radius:14px;margin-top:10px;font-size:14px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.bubble.me{background:var(--accsoft);margin-left:18%}.bubble.bot{background:rgba(0,0,0,.24);margin-right:12%}
+.plan .kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.plan .kv div{padding:8px 10px;border-radius:12px;background:rgba(0,0,0,.22);min-width:0}
+.plan .kv b{display:block;font-size:14px;overflow-wrap:anywhere}.plan .kv span{font-size:11px;color:var(--mut)}
+.plan ol{margin:10px 0 0 18px;padding:0;font-size:13.5px;line-height:1.6}
+.note{margin-top:8px;padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.note.warn{background:rgba(234,179,8,.12);color:#f5d67a}.note.bad{background:rgba(239,68,68,.14);color:#fca5a5}
+.run{padding:14px 0;border-top:1px solid var(--line)}.run:first-child{border-top:0;padding-top:4px}
+pre.log{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.3);font:11.5px/1.45 ui-monospace,monospace;
+  color:#d9d3c4;max-height:220px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.opt{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:14px}.opt input{width:18px;height:18px;accent-color:var(--acc)}
+textarea.input{min-height:74px;resize:vertical;font:inherit}
 </style>
 </head><body>
 
 <div class="row" style="margin:4px 2px 12px">
-  <div class="grow"><div class="tiny mut">LTX 2.5 pack</div><h1 style="margin:2px 0 0">Setup</h1></div>
+  <div class="grow"><div class="tiny mut">Install a setup on a GPU</div><h1 style="margin:2px 0 0">Setup</h1></div>
   <span id="st" class="pill">…</span>
 </div>
 
 <div class="card">
-  <div class="small mut">All <b>11</b> official Lightricks LTX 2.5 LoRAs live here. Saving writes the whole list so LTX loads every file — not just the one Civitai LoRA.</div>
-  <div class="row wrap" style="margin-top:14px">
-    <button class="btn primary grow" id="save">Save all 11 to Setup</button>
-    <a class="btn grow" href="/app/term/?setupdl=1">Download on laptop</a>
-  </div>
-  <div class="tiny mut" id="hint" style="margin-top:10px"></div>
+  <div style="font-weight:700">Tell it what you want</div>
+  <div class="small mut" style="margin-top:4px">For example "put the 14B remix on a new L40, image-to-video only", "cheapest 48 GB card on vast" or "add the missing models to my current instance, keep comfy".</div>
+  <div id="chat"></div>
+  <textarea class="input" id="say" placeholder="What should it set up, and where?" style="margin-top:12px"></textarea>
+  <button class="btn primary" style="width:100%;margin-top:10px" id="askbtn" onclick="ask()">Plan it</button>
 </div>
 
-<h2>LoRAs · <span id="n">11</span></h2>
-<div class="card" id="list"><div class="skel" style="height:80px"></div></div>
+<div id="plan"></div>
+
+<h2>Or pick it yourself</h2>
+<div class="card">
+  <label class="field"><span>Where</span><select class="input" id="tgt" onchange="formChanged()"></select></label>
+  <div id="newbox" hidden>
+    <div class="two">
+      <label class="field"><span>GPU</span><select class="input" id="gpu" onchange="gpuChanged()"></select></label>
+      <label class="field"><span>vCPUs</span><select class="input" id="cpu"></select></label>
+    </div>
+    <label class="field"><span>Disk (GB, 0 = sized for you)</span><input class="input" id="disk" type="number" value="0" min="0" step="10"></label>
+  </div>
+  <div id="vastbox" hidden>
+    <label class="field"><span>Vast machine (cheapest first)</span><select class="input" id="offer"></select></label>
+    <label class="field"><span>Disk (GB, 0 = sized for you)</span><input class="input" id="vdisk" type="number" value="0" min="0" step="10"></label>
+  </div>
+  <label class="field"><span>Setup</span><select class="input" id="rcp" onchange="renderOpts()"></select></label>
+  <div class="small mut" id="rsum" style="margin:6px 2px 0"></div>
+  <div id="opts"></div>
+  <label class="opt" id="usebox"><input type="checkbox" id="use"> Move the 14B renders to this machine when it's done</label>
+  <button class="btn primary" style="width:100%;margin-top:14px" onclick="review()">Review plan</button>
+</div>
+
+
+<h2>LTX LoRA pack on relay</h2>
+<div class="card">
+  <div class="small mut">Lightricks IC/control + NSFW content LoRAs. Saving wires the list LTX reads. GPU installs still pull them during Setup above.</div>
+  <div id="lorapack" style="margin-top:10px"><div class="skel" style="height:60px"></div></div>
+  <div class="row wrap" style="margin-top:12px">
+    <button class="btn primary grow" type="button" id="lorasave">Save LoRA pack</button>
+    <a class="btn grow" href="/app/term/?setupdl=1">Download on laptop</a>
+  </div>
+  <div class="tiny mut" id="lorahint" style="margin-top:8px"></div>
+</div>
+
+<h2>Runs</h2>
+<div class="card" id="runs"><div class="skel" style="height:50px"></div></div>
 
 <script>
 const {$, esc} = F;
-let S = null;
+let C = null, current = null, chatLog = [];
+const money = v => typeof v === 'number' ? `$${v.toFixed(2)}/h` : '—';
+const PILL = {planned: 'warn live', creating: 'warn live', waiting: 'warn live', uploading: 'warn live', installing: 'warn live',
+              done: 'ok', failed: 'bad', cancelled: ''};
+const WORD = {planned: 'Starting', creating: 'Creating', waiting: 'Starting up', uploading: 'Uploading', installing: 'Installing',
+              done: 'Done', failed: 'Failed', cancelled: 'Cancelled'};
 
-function pill(){
-  if (!S) return;
-  const n = S.enabled, t = S.count;
-  $('st').textContent = S.saved ? (n + ' / ' + t + ' on LTX') : 'Not saved';
-  $('st').className = 'pill ' + (S.saved && n === t ? 'ok' : S.saved ? 'warn' : 'bad');
-  $('n').textContent = t;
-  $('hint').textContent = S.saved
-    ? 'Saved on the relay. LTX 2.5 reads this list. Weights download to ' + S.dest
-    : 'Nothing is on LTX 2.5 yet. Save all 11.';
-}
-
-function draw(){
-  $('list').innerHTML = (S.loras || []).map(r => `
-    <label class="lora">
-      <input type="checkbox" data-id="${esc(r.id)}" ${r.enabled ? 'checked' : ''}>
-      <div class="grow">
-        <span class="kind">${esc(r.kind)} · ${esc(r.target)}</span>
-        <b>${esc(r.name)}</b>
-        <div class="tiny mut trunc">${esc(r.filename)}</div>
-      </div>
-    </label>`).join('') || '<div class="empty">Catalog missing.</div>';
-  pill();
-}
-
-async function load(){
-  try { S = await F.api('/api/setup'); draw(); }
-  catch (e) { $('list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; $('st').textContent = 'Error'; $('st').className = 'pill bad'; }
-}
-
-$('save').onclick = async () => {
-  const enabled = [...document.querySelectorAll('#list input[type=checkbox]')].filter(x => x.checked).map(x => x.dataset.id);
+async function loadCatalog(){
   try {
-    S = await F.post('/api/setup', {enabled: enabled.length ? enabled : null});
-    draw(); F.toast('Saved all ' + S.enabled + ' LoRAs to Setup. LTX 2.5 uses this list.');
+    C = await F.api('/api/setup/catalog');
+    $('st').textContent = 'Ready';
+    $('st').className = 'pill ok';
+  } catch (e) {
+    F.toast(e.message);
+    $('st').textContent = 'Catalog error';
+    $('st').className = 'pill bad';
+    // Still show recipes if partial? Can't — need C. Leave form empty.
+    return;
+  }
+  const t = $('tgt');
+  t.innerHTML = C.existing.map(i => `<option value="thunder:${esc(i.id)}">Thunder ${esc(i.gpu)} x${i.num_gpus} (current${i.renders_here ? ', 14B renders here' : ''}) · ${money(i.price)}</option>`).join('')
+    + `<option value="new">New Thunder instance…</option>`
+    + (C.vast.existing || []).map(i => `<option value="vast:${esc(i.id)}">Vast ${esc(i.gpu)} x${i.num_gpus} (${esc(i.status)}, ${esc(i.location || '')}) · ${money(i.price)}</option>`).join('')
+    + `<option value="vastnew" ${(C.vast.offers || []).length ? '' : 'disabled'}>New Vast machine…${C.vast.error ? ' (unavailable)' : ''}</option>`
+    + `<option value="colab">Colab G4 (96 GB)</option>`;
+  $('offer').innerHTML = (C.vast.offers || []).map(o => `<option value="${esc(o.id)}">${esc(o.gpu)} · ${o.vram_gb} GB · ${money(o.price)} · ${esc(o.location || '')} · ${o.reliability}%</option>`).join('');
+  $('gpu').innerHTML = C.new.map((g, k) => `<option value="${k}" ${g.available ? '' : 'disabled'}>${esc(g.name)} x${g.num_gpus} · ${g.vram_gb} GB · ${money(g.price)}${g.available ? '' : ' · sold out'}</option>`).join('');
+  const l40 = C.new.findIndex(g => g.gpu_type === 'l40' && g.num_gpus === 1 && g.available);
+  if (l40 >= 0) $('gpu').value = l40;
+  $('rcp').innerHTML = C.recipes.map(r => `<option value="${esc(r.id)}">${esc(r.title)}</option>`).join('');
+  gpuChanged(); renderOpts(); formChanged();
+  if (C.thunder_error) F.toast('Thunder: ' + C.thunder_error);
+}
+function gpuChanged(){
+  const g = C.new[$('gpu').value]; if (!g) return;
+  $('cpu').innerHTML = (g.cpu_options || [8]).map(c => `<option ${c === 8 ? 'selected' : ''}>${c}</option>`).join('');
+}
+function formChanged(){
+  const v = $('tgt').value;
+  $('newbox').hidden = v !== 'new';
+  $('vastbox').hidden = v !== 'vastnew';
+  $('usebox').hidden = v === 'colab' || v.startsWith('vast');
+}
+function renderOpts(){
+  const r = C.recipes.find(x => x.id === $('rcp').value); if (!r) return;
+  $('rsum').textContent = r.summary;
+  $('opts').innerHTML = r.options.map(o => o.type === 'bool'
+    ? `<label class="opt"><input type="checkbox" data-k="${o.key}" ${o.default ? 'checked' : ''}> ${esc(o.label)}</label>`
+    : `<label class="field"><span>${esc(o.label)}</span><select class="input" data-k="${o.key}">${o.choices.map(c =>
+        `<option value="${esc(c[0])}" ${c[0] === o.default ? 'selected' : ''}>${esc(c[1])}</option>`).join('')}</select></label>`).join('');
+}
+function formPlan(){
+  const v = $('tgt').value, options = {};
+  document.querySelectorAll('#opts [data-k]').forEach(el => options[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value);
+  let target;
+  if (v === 'new') { const g = C.new[$('gpu').value]; target = {kind: 'thunder_new', gpu_type: g.gpu_type, num_gpus: g.num_gpus, cpu_cores: +$('cpu').value, disk_gb: +$('disk').value || 0}; }
+  else if (v === 'colab') target = {kind: 'colab'};
+  else if (v === 'vastnew') { const o = C.vast.offers.find(x => x.id === $('offer').value) || {}; target = {kind: 'vast_new', offer_id: $('offer').value, disk_gb: +$('vdisk').value || 0, gpu: o.gpu, price: o.price}; }
+  else if (v.startsWith('vast:')) target = {kind: 'vast', id: v.split(':')[1]};
+  else target = {kind: 'thunder', id: v.split(':')[1]};
+  return {recipe: $('rcp').value, target, options, use_for_renders: $('use').checked && target.kind.startsWith('thunder')};
+}
+async function review(){
+  if (!C) return F.toast('The setup catalog did not load — reload the page first.');
+  $('plan').innerHTML = '<div class="card"><div class="skel" style="height:90px"></div></div>';
+  try { showPlan(await F.post('/api/setup/preview', formPlan())); }
+  catch (e) { $('plan').innerHTML = ''; F.toast(e.message); }
+}
+
+function bubble(role, text){ $('chat').insertAdjacentHTML('beforeend', `<div class="bubble ${role === 'user' ? 'me' : 'bot'}">${esc(text)}</div>`); }
+async function ask(){
+  const text = $('say').value.trim(); if (!text) return;
+  bubble('user', text); $('say').value = '';
+  const b = $('askbtn'); b.disabled = true; b.textContent = 'Thinking…';
+  try {
+    const r = await F.post('/api/setup/chat', {text, history: chatLog});
+    chatLog.push({role: 'user', text}, {role: 'assistant', text: r.reply});
+    if (r.reply) bubble('bot', r.reply);
+    if (r.preview) showPlan(r.preview);
+  } catch (e) { bubble('bot', e.message); }
+  b.disabled = false; b.textContent = 'Plan it';
+}
+
+function showPlan(p){
+  current = p;
+  const i = p.info, opts = Object.entries(i.options).map(([k, v]) => `${k}=${v === true ? 'yes' : v === false ? 'no' : v}`).join(' · ');
+  $('plan').innerHTML = `<div class="card plan">
+    <div class="row"><div class="grow"><div class="tiny mut">Plan</div><div style="font-weight:700">${esc(i.recipe)}</div></div>
+      <span class="pill ${p.ok ? 'ok' : 'bad'}">${p.ok ? 'Ready' : 'Blocked'}</span></div>
+    <div class="small" style="margin-top:8px">${esc(i.target)}</div>
+    <div class="kv">
+      <div><b>${money(i.price)}</b><span>${i.price == null ? 'Colab credits' : 'while it exists'}</span></div>
+      <div><b>${i.disk_need_gb} GB</b><span>${i.free_gb != null ? i.free_gb + ' GB free' : 'disk needed'}</span></div>
+      <div><b>~${i.minutes} min</b><span>${i.vram_gb ? i.vram_gb + ' GB VRAM' : 'install'}</span></div>
+    </div>
+    <div class="tiny mut" style="margin-top:8px">${esc(opts)}${p.plan.use_for_renders ? ' · 14B renders move here' : ''}</div>
+    <ol>${p.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+    ${p.blocking.map(s => `<div class="note bad">${esc(s)}</div>`).join('')}
+    ${p.needs_secret ? `<div class="row" style="margin-top:8px;gap:8px"><input class="input grow" id="sec" type="password" autocomplete="off" placeholder="hf_…">
+      <button class="btn sm" onclick="saveSecret('${p.needs_secret}')">Save</button></div>` : ''}
+    ${p.warnings.map(s => `<div class="note warn">${esc(s)}</div>`).join('')}
+    <div class="row wrap" style="margin-top:14px">
+      <button class="btn primary grow" id="go" ${p.ok ? '' : 'disabled'} onclick="confirmRun()">Confirm and run</button>
+      <button class="btn grow" onclick="toForm()">Change it</button>
+      <button class="btn grow" onclick="$('plan').innerHTML='';current=null">Cancel</button>
+    </div></div>`;
+  $('plan').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+async function saveSecret(name){
+  const v = $('sec').value.trim(); if (!v) return;
+  try {
+    const r = await F.post('/api/setup/secret', {name, value: v});
+    F.toast(r.ok ? 'Saved on the relay.' : r.why === 'gated' ? 'Saved, but it still can\'t read LTX-2.5: accept the licence with that account.' : 'Saved, but Hugging Face rejected it.');
+    showPlan(await F.post('/api/setup/preview', current.plan));
+  } catch (e) { F.toast(e.message); }
+}
+function toForm(){
+  const p = current?.plan; if (!p) return;
+  const t = p.target;
+  $('tgt').value = {thunder: 'thunder:' + t.id, vast: 'vast:' + t.id, vast_new: 'vastnew', colab: 'colab'}[t.kind] || 'new';
+  if (t.kind === 'vast_new') {
+    if (![...$('offer').options].some(o => o.value === t.offer_id)) $('offer').insertAdjacentHTML('afterbegin', `<option value="${esc(t.offer_id)}">${esc(current.info.target)}</option>`);
+    $('offer').value = t.offer_id; $('vdisk').value = t.disk_gb;
+  }
+  if (t.kind === 'thunder_new') {
+    const k = C.new.findIndex(g => g.gpu_type === t.gpu_type && g.num_gpus === t.num_gpus);
+    if (k >= 0) { $('gpu').value = k; gpuChanged(); }
+    $('cpu').value = t.cpu_cores; $('disk').value = t.disk_gb;
+  }
+  $('rcp').value = p.recipe; renderOpts();
+  document.querySelectorAll('#opts [data-k]').forEach(el => {
+    const v = current.info.options[el.dataset.k];
+    if (el.type === 'checkbox') el.checked = !!v; else if (v != null) el.value = v;
+  });
+  $('use').checked = !!p.use_for_renders; formChanged();
+  $('tgt').scrollIntoView({behavior: 'smooth', block: 'center'});
+}
+async function confirmRun(){
+  if (!current) return;
+  $('go').disabled = true;
+  try { await F.post('/api/setup/runs', current.plan); F.toast('Started. You get a notification when it finishes.'); $('plan').innerHTML = ''; current = null; loadRuns(); }
+  catch (e) { F.toast(e.message); $('go').disabled = false; }
+}
+
+let timer;
+async function loadRuns(){
+  let runs;
+  try { runs = await F.api('/api/setup/runs'); } catch (e) { $('runs').innerHTML = `<div class="small mut">${esc(e.message)}</div>`; return; }
+  const live = runs.filter(r => PILL[r.status]?.includes('live'));
+  $('st').className = 'pill ' + (live.length ? 'warn live' : 'ok');
+  $('st').textContent = live.length ? `${live.length} running` : 'Idle';
+  $('runs').innerHTML = runs.length ? runs.map(r => `<div class="run">
+      <div class="row"><div class="grow"><div style="font-weight:700">${esc(r.info.recipe)}</div>
+        <div class="small mut">${esc(r.info.target)} · ${F.ago(r.created)}</div></div>
+        <span class="pill ${PILL[r.status] || ''}">${WORD[r.status] || esc(r.status)}</span></div>
+      ${r.status === 'done' && r.plan.target.kind === 'colab' ? `<a class="btn sm primary" style="margin-top:8px" href="https://comfy.84-12-112-249.sslip.io/" target="_blank" rel="noopener">Open ComfyUI</a>` : ''}
+      <div class="small" style="margin-top:6px;overflow-wrap:anywhere">${esc(r.step || '')}${r.launched && live.includes(r) ? ` · ${F.dur(Date.now() / 1000 - r.launched)} in` : ''}</div>
+      ${r.log_tail ? `<details ${live.includes(r) ? 'open' : ''}><summary class="small mut" style="margin-top:6px">Log</summary><pre class="log">${esc(r.log_tail)}</pre></details>` : ''}
+      ${live.includes(r) ? `<button class="btn sm" style="margin-top:10px" onclick="cancelRun('${r.id}')">Stop</button>` : ''}
+    </div>`).join('') : '<div class="small mut">Nothing set up yet.</div>';
+  document.querySelectorAll('pre.log').forEach(p => p.scrollTop = p.scrollHeight);
+  clearTimeout(timer); timer = setTimeout(loadRuns, live.length ? 8000 : 60000);
+}
+async function cancelRun(id){
+  if (!confirm('Stop this setup part-way?')) return;
+  try { await F.post(`/api/setup/runs/${id}/cancel`); F.toast('Stopping.'); setTimeout(loadRuns, 1500); } catch (e) { F.toast(e.message); }
+}
+
+$('say').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ask(); });
+
+let LoraS = null;
+async function loadLoraPack(){
+  try {
+    LoraS = await F.api('/api/setup');
+    const rows = LoraS.loras || [];
+    $('lorapack').innerHTML = rows.map(r => `<label class="opt"><input type="checkbox" data-lid="${esc(r.id)}" ${(r.enabled || !LoraS.saved)?'checked':''}> <span><b>${esc(r.name)}</b> <span class="tiny mut">${esc(r.pack||r.kind)} · ${esc(r.filename||'')}</span></span></label>`).join('')
+      || '<div class="small mut">No LoRA catalog.</div>';
+    $('lorahint').textContent = LoraS.saved
+      ? `${LoraS.enabled}/${LoraS.count} saved (${LoraS.lightricks||0} Lightricks + ${LoraS.nsfw||0} NSFW) → ${LoraS.dest}`
+      : 'Not saved yet — Save writes the full pack.';
+  } catch (e) {
+    $('lorapack').innerHTML = `<div class="small mut">${esc(e.message)}</div>`;
+  }
+}
+$('lorasave').onclick = async () => {
+  const enabled = [...document.querySelectorAll('#lorapack [data-lid]')].filter(x => x.checked).map(x => x.dataset.lid);
+  try {
+    LoraS = await F.post('/api/setup', {enabled: enabled.length ? enabled : null});
+    await loadLoraPack();
+    F.toast('Saved ' + LoraS.enabled + ' LoRAs');
   } catch (e) { F.toast(e.message); }
 };
 
-load();
+F.pull?.(() => { loadCatalog(); loadRuns(); loadLoraPack(); });
+loadCatalog(); loadRuns(); loadLoraPack();
 </script>
 </body></html>
