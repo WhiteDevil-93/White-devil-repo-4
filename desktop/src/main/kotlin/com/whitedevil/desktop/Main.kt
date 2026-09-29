@@ -63,6 +63,12 @@ fun main() = application {
                             // on every switch would discard the session and any
                             // long-running command in it.
                             Screen.Terminal -> TerminalScreen()
+                            Screen.Renders -> RendersScreen(settings)
+                            Screen.Gallery -> GalleryScreen(settings)
+                            Screen.Colab -> ColabScreen(settings)
+                            Screen.Thunder -> ThunderScreen(settings)
+                            Screen.Vast -> VastScreen(settings)
+                            Screen.Setup -> SetupScreen(settings)
                             Screen.Settings -> SettingsScreen(
                                 initial = settings,
                                 onSave = { settings = it; screen = Screen.Agent },
@@ -79,6 +85,12 @@ fun main() = application {
 private enum class Screen(val label: String) {
     Agent("Agent"),
     Terminal("Shell"),
+    Renders("Renders"),
+    Gallery("Gallery"),
+    Colab("Colab"),
+    Thunder("Thunder"),
+    Vast("Vast"),
+    Setup("Setup"),
     Settings("Settings"),
 }
 

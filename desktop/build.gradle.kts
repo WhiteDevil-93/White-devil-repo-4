@@ -19,7 +19,14 @@ dependencies {
     // interactive programs (and the shell prompt itself) misbehave. This is what
     // lets the Shell tab drop ttyd and the paste-queue bridge entirely.
     implementation("org.jetbrains.pty4j:pty4j:0.12.13")
+
+    // Ktor client + kotlinx-serialization arrive transitively via :shared (api).
+    testImplementation(kotlin("test"))
+    testImplementation("io.ktor:ktor-client-mock:2.3.12")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 }
+
+tasks.test { useJUnitPlatform() }
 
 compose.desktop {
     application {
