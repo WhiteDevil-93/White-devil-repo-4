@@ -31,8 +31,10 @@ object RelayHttp {
             conn.outputStream.use { it.write(body.toByteArray()) }
         }
         val code = conn.responseCode
-        val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-        val text = stream?.bufferedReader()?.readText().orEmpty()
+        // Closing the stream is what returns the socket to the pool; leaving it open
+        // leaks a descriptor per request in a polling client.
+        val text = (if (code in 200..299) conn.inputStream else conn.errorStream)
+            ?.use { it.bufferedReader().readText() }.orEmpty()
         if (code !in 200..299) {
             throw RelayHttpException(code, text.ifBlank { "HTTP $code" })
         }

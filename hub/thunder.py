@@ -4,6 +4,7 @@ The token lives only on the relay in ~/.thunder_token. Thunder has no start/stop
 created, modified, snapshotted and deleted.
 """
 import json as jsonlib
+import logging
 import re
 import subprocess
 import time
@@ -15,6 +16,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+log = logging.getLogger("forge-hub.thunder")
 router = APIRouter(prefix="/api/thunder")
 BASE = "https://api.thundercompute.com:8443"
 TOKEN = Path.home() / ".thunder_token"
@@ -65,6 +67,20 @@ def cached(path, ttl=3600):
 TARGET = Path.home() / ".thunder_target"
 
 
+def restart_tunnel(timeout=20):
+    """(ok, why) - never claim the tunnel moved when systemctl did not actually restart it."""
+    try:
+        r = subprocess.run(["sudo", "-n", "systemctl", "restart", "wan-thunder-tunnel"],
+                           capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return False, f"systemctl restart did not finish within {timeout}s"
+    except OSError as e:
+        return False, f"could not run systemctl: {e}"
+    if r.returncode != 0:
+        return False, (r.stderr or r.stdout or "").strip()[:200] or f"systemctl exit {r.returncode}"
+    return True, ""
+
+
 def follow_instance(instances):
     """Point the ComfyUI tunnel at the running instance if its address changed (same key only)."""
     up = [i for i in instances if str(i.get("status", "")).upper() == "RUNNING" and i.get("ip") and i.get("port")]
@@ -77,7 +93,9 @@ def follow_instance(instances):
         have = ""
     if want != have:
         TARGET.write_text(want + "\n")
-        subprocess.run(["sudo", "-n", "systemctl", "restart", "wan-thunder-tunnel"], timeout=20)
+        ok, why = restart_tunnel(20)
+        if not ok:
+            log.warning("thunder tunnel target moved to %s but the restart failed: %s", want, why)
 
 
 @router.get("/state")
@@ -182,12 +200,21 @@ def comfy_online():
     try:
         with urllib.request.urlopen("http://127.0.0.1:18188/queue", timeout=5) as r:
             q = jsonlib.loads(r.read())
+    except TimeoutError:
+        return {"online": False, "why": "ComfyUI did not answer within 5s (busy or wedged, not stopped)"}
+    except urllib.error.HTTPError as e:
+        return {"online": False, "why": f"ComfyUI answered HTTP {e.code}"}
+    except (urllib.error.URLError, OSError) as e:
+        return {"online": False, "why": f"ComfyUI is not reachable: {getattr(e, 'reason', e)}"}
+    except ValueError as e:
+        return {"online": False, "why": f"ComfyUI sent a non-JSON queue: {e}"}
+    try:
         prefixes = [v["inputs"].get("filename_prefix", "") for it in q.get("queue_running", [])
                     for v in it[2].values() if v.get("class_type", "").startswith("Save")]
-        return {"online": True, "running": len(q.get("queue_running", [])), "pending": len(q.get("queue_pending", [])),
-                "running_prefix": prefixes[0] if prefixes else ""}
-    except Exception:
-        return {"online": False}
+    except (AttributeError, IndexError, KeyError, TypeError):
+        prefixes = []
+    return {"online": True, "running": len(q.get("queue_running", [])), "pending": len(q.get("queue_pending", [])),
+            "running_prefix": prefixes[0] if prefixes else ""}
 
 
 @router.get("/queue")
@@ -195,6 +222,9 @@ def queue14():
     try:
         jobs = wanbot14("GET", "/jobs")
         jobs = jobs.get("jobs", jobs) if isinstance(jobs, dict) else jobs
+        if not isinstance(jobs, list):
+            raise HTTPException(502, "The 14B runner sent an unexpected job list.")
+        jobs = [j for j in jobs if isinstance(j, dict)]
         up = True
     except HTTPException:
         jobs, up = [], False
@@ -234,6 +264,9 @@ def submit14(s: Submit):
     if s.first:
         jobs = wanbot14("GET", "/jobs")
         jobs = jobs.get("jobs", jobs) if isinstance(jobs, dict) else jobs
+        if not isinstance(jobs, list):
+            raise HTTPException(502, "The 14B runner sent an unexpected job list.")
+        jobs = [j for j in jobs if isinstance(j, dict) and j.get("id")]
         ahead = [j["id"] for j in sorted(jobs, key=lambda j: j.get("created") or "") if j.get("status") == "queued"]
         for jid in ahead:
             wanbot14("POST", f"/jobs/{jid}/cancel")
@@ -247,9 +280,20 @@ def submit14(s: Submit):
     except (urllib.error.URLError, TimeoutError, OSError):
         raise HTTPException(503, "The 14B runner on the relay isn't running.")
     finally:
+        stuck = []
         for jid in ahead:
-            wanbot14("POST", f"/jobs/{jid}/retry")
-    return {"ok": True, "id": job.get("id"), "clips": len(spec["clips"]), "requeued": len(ahead)}
+            try:
+                wanbot14("POST", f"/jobs/{jid}/retry")
+            except HTTPException as e:
+                stuck.append(f"{jid}: {e.detail}")
+    res = {"ok": True, "id": job.get("id") if isinstance(job, dict) else None,
+           "clips": len(spec["clips"]), "requeued": len(ahead) - len(stuck)}
+    if stuck:
+        # The submit itself succeeded; say plainly which jobs are still cancelled.
+        res["ok"] = False
+        res["warning"] = ("Your job was queued, but these jobs it jumped ahead of could not be put back "
+                          "and are still cancelled: " + "; ".join(stuck)[:400])
+    return res
 
 
 @router.post("/queue/{jid}/{action}")

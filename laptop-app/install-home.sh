@@ -8,7 +8,7 @@ SRC="$(cd "$(dirname "$0")" && pwd)"
 DEST="${FORGE_HOME:-$HOME/laptop-app}"
 BIN_DIR="${HOME}/.local/bin"
 
-for f in package.json main.cjs preload.cjs config.cjs settings.html icon.png run.sh; do
+for f in package.json main.cjs preload.cjs config.cjs settings.html signin.html shell.html icon.png run.sh; do
   if [[ ! -f "$SRC/$f" ]]; then
     echo "Run this from the laptop-app folder inside the git clone, not from ~." >&2
     echo "  git clone https://github.com/WhiteDevil-93/White-devil-repo-4.git" >&2
@@ -20,6 +20,14 @@ done
 mkdir -p "$DEST"
 src_real="$(realpath "$SRC")"
 dest_real="$(realpath "$DEST")"
+# Both branches below wipe everything in $DEST that is not node_modules/dist.
+# FORGE_HOME=$HOME (or /) would take the user's files with it.
+case "$dest_real" in
+  "$HOME"|/|"")
+    echo "Refusing to install into '$dest_real' - point FORGE_HOME at its own folder." >&2
+    exit 1
+    ;;
+esac
 if [[ "$src_real" != "$dest_real" ]]; then
   if command -v rsync >/dev/null 2>&1; then
     rsync -a --delete --exclude node_modules --exclude dist --exclude '.npm' "$SRC/" "$DEST/"
@@ -37,6 +45,7 @@ cat > "$BIN_DIR/forge-hub" <<EOF
 exec "$DEST/run.sh" "\$@"
 EOF
 chmod +x "$BIN_DIR/forge-hub"
+ln -sfn "$BIN_DIR/forge-hub" "$BIN_DIR/whitedevil"
 
 echo "Installed to $DEST"
 if [[ ! -d "$DEST/node_modules/electron" ]]; then
@@ -44,7 +53,7 @@ if [[ ! -d "$DEST/node_modules/electron" ]]; then
   (cd "$DEST" && npm install)
 fi
 
-if ! command -v forge-hub >/dev/null 2>&1; then
+if ! command -v forge-hub >/dev/null 2>&1 && ! command -v whitedevil >/dev/null 2>&1; then
   case ":$PATH:" in
     *":$BIN_DIR:"*) ;;
     *)
@@ -57,8 +66,9 @@ fi
 
 echo
 echo "Start the window:"
-echo "  forge-hub"
+echo "  whitedevil"
+echo "  forge-hub   # alias"
 echo "or:"
 echo "  cd ~/laptop-app && npm start"
 echo
-echo "First run opens the relay Hub. Ctrl+, stores passwords. WSL needs a GUI (WSLg)."
+echo "First run opens Agent. Hub is a domain tab. Ctrl+, stores passwords. WSL needs WSLg."

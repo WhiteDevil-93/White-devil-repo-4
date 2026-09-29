@@ -31,6 +31,9 @@ code.ssh{display:block;margin-top:10px;padding:10px 12px;border-radius:12px;back
   </div>
 </div>
 
+<h2>Video review</h2>
+<div class="card" id="review"></div>
+
 <h2>Queue</h2>
 <div class="card" id="q14"><div class="skel" style="height:60px"></div></div>
 
@@ -212,7 +215,8 @@ const JST = {rendering: ['Rendering', 'ok live'], queued: ['Queued', ''], waitin
 let lib = [];
 async function load14(){
   let q;
-  try { q = await F.api('/api/thunder/queue'); } catch (e) { $('q14s').textContent = e.message; return; }
+  try { q = await F.api('/api/thunder/queue'); }
+  catch (e) { $('q14s').textContent = e.message; $('q14').innerHTML = `<div class="empty">Could not load the queue: ${esc(e.message)}</div>`; return; }
   try { lib = await F.api('/api/media/library'); } catch (e) {}
   const c = q.comfy || {};
   $('q14s').textContent = !q.runner ? '14B runner is not running on the relay.'
@@ -284,9 +288,10 @@ async function send14(){
   finally { b.disabled = false; }
 }
 
-F.pull(() => Promise.all([load(), load14()]));
+const rev = F.mountVideoReview($('review'), { source: 'thunder', title: 'Video review' });
+F.pull(() => Promise.all([load(), load14(), rev.refresh()]));
 load(); load14();
-setInterval(() => { if (F.isVisible() && !document.querySelector('.viewer')) { load(); load14(); } }, 30000);
-F.onVisible && F.onVisible(() => { load(); load14(); });
+setInterval(() => { if (F.isVisible() && !document.querySelector('.viewer')) { load(); load14(); rev.refresh(); } }, 30000);
+F.onVisible && F.onVisible(() => { load(); load14(); rev.refresh(); });
 </script>
 </body></html>

@@ -1,11 +1,16 @@
-# White-Devil-Repo-4: Autonomous Venice Agent & Forge Hub
+# WhiteDevil — an agentic app
 
-Unified multi-component platform containing:
-1. **Autonomous Venice Agent (`venice-agent/`)**: Kotlin/JVM autonomous tool-calling CLI agent with native tools for file management, shell execution, Wan2.2 rendering pipeline control, and remote WSL laptop SSH execution.
-2. **Forge Hub Backend (`hub/`)**: FastAPI-based management hub serving dynamic screens, Wan2.2 Colab/ThunderCompute runners, HypnoForge bridge, and OpenAI-compatible Venice proxy.
-3. **WhiteDevil Android App (`android/`)**: Independent native application (`com.whitedevil`) with modern dark glass design, 4-tab native bottom navigation (Agent, Forge Hub, Terminal, Settings), native Venice Agent coroutines/chat interface, isolated WebView Forge Hub container, safe terminal shell wrapper, and EncryptedSharedPreferences.
-4. **Laptop app (`laptop-app/`)**: Electron desktop window for the same Forge Hub on the WSL/Windows PC.
-5. **Tools (`tools/`)**: Civitai LoRA downloader (`civitai_red_dl.py`) and Wan2.2 prompt pack ingest utilities.
+WhiteDevil is an agentic app. The agent is the product; everything else is surfaces and tools it drives.
+
+You give it a goal. It plans, uses real tools, checks results, recovers when it fails, and keeps going until the job is done — with little help from you, inside limits you set. It knows when it's finished and when it's stuck and needs you.
+
+Components:
+
+1. **The Agent** — `hub/static/venice/` (the dedicated Agent screen) driven by `hub/venice.py` (tool definitions, Venice proxy, chat persistence) and `hub/agentic/` (background goal runner, permissions, memory, schedules). A `venice-agent/` Kotlin CLI runs the same loop headless.
+2. **Forge Hub (`hub/`)** — FastAPI relay + web screens (renders, Colab, Thunder, LTX, Gallery, Setup, Shell, laptop): the machine's studio surfaces and the tools the agent can drive. Forge Hub is one part of the app, not the app.
+3. **WhiteDevil Android App (`android/`)** — native phone surface (`com.whitedevil`): Agent, Forge Hub, Terminal, Settings; chat state syncs with the hub.
+4. **Laptop app (`laptop-app/`)** — native Electron desktop window onto the same hub and agent.
+5. **Tools (`tools/`)** — Civitai LoRA downloader and Wan2.2 prompt pack ingest utilities.
 
 ---
 
@@ -83,6 +88,7 @@ FastAPI server providing endpoints for the Android app and web interface:
 - **Colab GPU & Wan2.2 runner state**: `/api/colab/*`
 - **Venice chat proxy, agent tools, and thread persistence**: `/api/venice/*` (`/tools`, `/tool`, `/chat`)
 - **Remote laptop execution**: `/api/laptop/*`
+- **Agentic runtime**: `/api/agentic/*` — background goal jobs, sub-agent pools (parallel researcher/coder/reviewer children), persistent memory store (preferences/notes/projects injected into every chat turn), schedules with a hub-side timer (no external cron), watchers (e.g. "when a new render appears, run X"), per-tool permissions with a shared risky-action blocklist, an enforced `daily_tool_budget`, and an audit log of every gated action.
 - **Laptop Venice tab** (`/app/venice/`): same Agent loop as the Android app (You / Venice / Tool Call / Output), including `run_laptop_command` in `~/venice_run` and `run_in_terminal` which types into the live Shell (ttyd).
 
 ### Running Forge Hub
@@ -138,13 +144,6 @@ npm start
 ```
 
 Later launches: `cd ~/laptop-app && npm start`, or `forge-hub` after install. Settings (`Ctrl+,`) store the hub URL and relay/laptop passwords in the OS user-data folder. See `laptop-app/README.md`. Windows installer: `npm run dist:win`.
-
----
-
-## Security Note
-
-- **`civitai_red_dl.py`**: Downloads Civitai LoRA files to the WSL laptop (`~/civitai_dl/<id>_<base>/`). Pass multiple `--id` values to pull Wan 2.2 + LTX-2 + LTX-2.5, not a single LTX 2.5 file.
-- **`wan_ingest.py`**: Validates, merges, and queues prompt packs for the Wan2.2 video pipeline.
 
 ---
 

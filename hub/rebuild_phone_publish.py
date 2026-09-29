@@ -52,12 +52,18 @@ if ! ssh -o BatchMode=yes -o ConnectTimeout=12 wan-relay "echo ok" >/dev/null 2>
   exit 1
 fi
 
-ssh -o BatchMode=yes wan-relay 'mkdir -p ~/hub/static/term && tar -C ~ -xzf - && (systemctl --user restart forge-hub || sudo -n systemctl restart forge-hub || true)' <"$TMP/hub.tgz"
+ssh -o BatchMode=yes wan-relay 'mkdir -p ~/hub/static/term && tar -C ~ -xzf - && (
+  mkdir -p ~/wan/www/app
+  rsync -a --delete --exclude forgehub.apk ~/hub/static/ ~/wan/www/app/ 2>/dev/null || cp -a ~/hub/static/. ~/wan/www/app/
+  [[ -f ~/hub/static/forgehub.apk ]] && cp -f ~/hub/static/forgehub.apk ~/wan/www/app/forgehub.apk
+  cp -f ~/hub/screens.json ~/wan/www/app/screens.json 2>/dev/null || true
+  systemctl --user restart forge-hub || sudo -n systemctl restart forge-hub || true
+)' <"$TMP/hub.tgz"
 
 # Keep the phone endpoint /app/term/phone_publish.sh up to date on the relay
 cat "$0" | ssh -o BatchMode=yes wan-relay 'cat > ~/hub/static/term/phone_publish.sh && chmod +x ~/hub/static/term/phone_publish.sh' 2>/dev/null || true
 
-echo "Done! Forge Hub updated on the relay."
+echo "Done! Forge Hub updated on the relay (hub + live /app)."
 echo "Reload the laptop app (Forge Hub desktop tab) or pull-to-refresh on the phone."
 echo "Manifest web_rev should match hub/screens.json after reload."
 """

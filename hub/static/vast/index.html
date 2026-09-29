@@ -14,4 +14,13 @@
     <a class="btn grow" href="/app/term/">Open Shell</a>
   </div>
 </div>
+
+<h2>Video review</h2>
+<div class="card" id="review"></div>
+
+<script>
+const rev = F.mountVideoReview(F.$('review'), { source: 'vast', title: 'Video review' });
+F.pull(() => rev.refresh());
+F.onVisible && F.onVisible(() => rev.refresh());
+</script>
 </body></html>

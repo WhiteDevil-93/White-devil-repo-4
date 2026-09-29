@@ -100,6 +100,7 @@ fun HubRendersBody(json: String, host: MainActivity) {
     var query by remember { mutableStateOf("") }
     var kind by remember { mutableStateOf("all") }
     var source by remember { mutableStateOf("all") }
+    var playing by remember { mutableStateOf<Pair<List<HubClipRef>, Int>?>(null) }
     val relay = host.relayBasePublic()
     val auth = host.relayAuthPublic()
     val filtered = remember(arr, query, kind, source) {
@@ -108,6 +109,9 @@ fun HubRendersBody(json: String, host: MainActivity) {
                 (source == "all" || g.optString("source", "colab") == source) &&
                 (query.isBlank() || g.optString("title").contains(query, ignoreCase = true))
         }
+    }
+    playing?.let { (clips, start) ->
+        HubClipViewer(relay, auth, clips, start) { playing = null }
     }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
@@ -123,15 +127,21 @@ fun HubRendersBody(json: String, host: MainActivity) {
                 },
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("all" to "All", "colab" to "Colab", "thunder" to "Thunder").forEach { (id, label) ->
+                listOf("all" to "All", "vast" to "Vast", "thunder" to "Thunder", "ltx" to "LTX").forEach { (id, label) ->
                     HubPill(label, ok = source == id, onClick = { source = id })
                 }
             }
         }
         items(filtered) { g ->
             val clips = g.optJSONArray("clips") ?: JSONArray()
+            val title = g.optString("title")
+            val refs = (0 until clips.length()).map { i ->
+                val c = clips.getJSONObject(i)
+                val idx = c.optInt("idx").takeIf { it > 0 }
+                HubClipRef(c.optString("name"), title + (idx?.let { " · clip $it" } ?: ""))
+            }
             HubCard {
-                Text(g.optString("title"), fontWeight = FontWeight.SemiBold)
+                Text(title, fontWeight = FontWeight.SemiBold)
                 Text(
                     "${g.optInt("count")} clips · ${formatAgo(g.optDouble("updated"))}",
                     style = MaterialTheme.typography.labelMedium,
@@ -144,12 +154,13 @@ fun HubRendersBody(json: String, host: MainActivity) {
                         .padding(top = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    (0 until minOf(clips.length(), 16)).map { clips.getJSONObject(it) }.forEach { c ->
+                    refs.take(16).forEachIndexed { i, ref ->
                         HubRelayThumb(
                             relay,
                             auth,
-                            c.optString("name"),
-                            c.optInt("idx").takeIf { it > 0 }?.let { "Clip $it" },
+                            ref.name,
+                            ref.title.substringAfter(" · ").takeIf { it != ref.title },
+                            onClick = { playing = refs to i },
                         )
                     }
                 }
@@ -163,24 +174,33 @@ fun HubGalleryBody(json: String, host: MainActivity) {
     val arr = parseLibrary(json) ?: return
     val relay = host.relayBasePublic()
     val auth = host.relayAuthPublic()
+    var playing by remember { mutableStateOf<Pair<List<HubClipRef>, Int>?>(null) }
     val latest = remember(arr) {
         arr.flatMap { g ->
             val clips = g.optJSONArray("clips") ?: JSONArray()
+            val title = g.optString("title")
             (0 until clips.length()).map { i ->
-                clips.getJSONObject(i) to g.optString("title")
+                val clip = clips.getJSONObject(i)
+                val idx = clip.optInt("idx").takeIf { it > 0 }
+                HubClipRef(clip.optString("name"), title + (idx?.let { " · $it" } ?: "")) to clip.optDouble("mtime")
             }
-        }.sortedByDescending { it.first.optDouble("mtime") }.take(48)
+        }.sortedByDescending { it.second }.take(48).map { it.first }
+    }
+    playing?.let { (clips, start) ->
+        HubClipViewer(relay, auth, clips, start) { playing = null }
     }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { HubSectionTitle("Gallery", "${latest.size} recent clips") }
+        item { HubSectionTitle("Gallery", "${latest.size} recent clips · tap to play") }
         items(latest.chunked(3)) { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                row.forEach { (clip, group) ->
+                row.forEach { clip ->
+                    val idx = latest.indexOf(clip)
                     HubRelayThumb(
                         relay,
                         auth,
-                        clip.optString("name"),
-                        group + clip.optInt("idx").takeIf { it > 0 }?.let { " · $it" }.orEmpty(),
+                        clip.name,
+                        clip.title,
+                        onClick = { playing = latest to idx },
                     )
                 }
             }
@@ -235,11 +255,16 @@ fun HubSetupBody(json: String, host: MainActivity) {
 }
 
 @Composable
-fun HubThunderBody(json: String) {
+fun HubThunderBody(json: String, host: MainActivity) {
     val root = runCatching { JSONObject(json) }.getOrNull() ?: return
-    val inst = root.optJSONArray("instances") ?: JSONArray()
-    val snaps = root.optJSONArray("snapshots") ?: JSONArray()
+    val state = root.optJSONObject("state") ?: root
+    val inst = state.optJSONArray("instances") ?: JSONArray()
+    val snaps = state.optJSONArray("snapshots") ?: JSONArray()
+    val library = root.optJSONArray("library")?.toString()
+    val relay = host.relayBasePublic()
+    val auth = host.relayAuthPublic()
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        item { HubVideoReviewSection(relay, auth, library, "thunder") }
         item { HubSectionTitle("Thunder Compute", "${inst.length()} instances") }
         if (inst.length() == 0) {
             item { HubCard { Text("No instances", color = WdPalette.textSecondary) } }
@@ -452,7 +477,11 @@ fun HubLtxBody(json: String, host: MainActivity) {
     val root = runCatching { JSONObject(json) }.getOrNull() ?: return
     val setup = root.optJSONObject("setup")
     val jobs = root.optJSONArray("jobs") ?: JSONArray()
+    val library = root.optJSONArray("library")?.toString()
+    val relay = host.relayBasePublic()
+    val auth = host.relayAuthPublic()
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        item { HubVideoReviewSection(relay, auth, library, "ltx") }
         item {
             HubCard {
                 HubSectionTitle("LTX 2.5", "LoRAs from Setup")
@@ -492,9 +521,14 @@ fun HubLtxBody(json: String, host: MainActivity) {
 @Composable
 fun HubVastBody(json: String, host: MainActivity) {
     val root = runCatching { JSONObject(json) }.getOrNull() ?: return
-    val jobs = root.optJSONArray("jobs") ?: JSONArray()
-    val comfy = root.optJSONObject("comfy")
+    val queue = root.optJSONObject("queue") ?: root
+    val jobs = queue.optJSONArray("jobs") ?: JSONArray()
+    val comfy = queue.optJSONObject("comfy")
+    val library = root.optJSONArray("library")?.toString()
+    val relay = host.relayBasePublic()
+    val auth = host.relayAuthPublic()
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        item { HubVideoReviewSection(relay, auth, library, "vast") }
         item {
             HubCard {
                 HubSectionTitle("Vast.ai · Remix v3", "ComfyUI box")
@@ -511,7 +545,7 @@ fun HubVastBody(json: String, host: MainActivity) {
         item {
             HubCard {
                 HubSectionTitle("14B runner", null)
-                HubStatRow("Runner up", if (root.optBoolean("runner")) "yes" else "no")
+                HubStatRow("Runner up", if (queue.optBoolean("runner")) "yes" else "no")
                 comfy?.let {
                     HubStatRow("Comfy online", if (it.optBoolean("online")) "yes" else "no")
                     HubStatRow("Queue", "${it.optInt("pending")} pending")

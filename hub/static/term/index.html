@@ -9,24 +9,28 @@
 <style>
 html,body{height:100%;height:100dvh;margin:0;padding:0;overflow:hidden;background:#0b0b0c}
 .shell{display:flex;flex-direction:column;height:100%;min-height:0}
-.bar{flex:none;display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);
-  background:#121214}
-.bar .grow{min-width:0}
+.bar{flex:none;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);
+  background:#121214;z-index:2}
+.bar .grow{min-width:0;flex:1 1 auto}
 .bar h1{font-size:15px;margin:0;font-weight:600}
-.frame{position:relative;flex:1;min-height:0;background:#000}
-iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0b0b0c}
+.bar .btn.primary{background:var(--acc,#cdb88f);color:#0b0b0c;border-color:transparent}
+.frame{position:relative;flex:1 1 auto;min-height:0;background:#000;overflow:hidden}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0b0b0c;display:block}
 .sheet{position:absolute;left:10px;right:10px;bottom:10px;z-index:4;padding:12px;display:none}
 .sheet.on{display:block}
 .sheet textarea{min-height:88px}
 .offline{position:absolute;inset:0;display:none;place-items:center;padding:28px;text-align:center;z-index:3}
 .offline.on{display:grid}
 #loraIdsWrap:not([hidden]){display:block;margin:8px 0 10px}
+#bridge{font-size:11px;color:#8a8478;margin-left:8px}
+#bridge.ok{color:#6a9a6a}#bridge.bad{color:#c45c4a}
 </style>
 </head>
 <body>
 <div class="shell">
   <div class="bar">
-    <div class="grow"><div class="tiny mut">Laptop</div><h1>Terminal</h1></div>
+    <div class="grow"><div class="tiny mut">Laptop</div><h1>Terminal <span id="bridge">bridge…</span></h1></div>
+    <button class="btn sm primary" id="newSession" title="Wipe tmux scrollback and start a clean bash">New session</button>
     <button class="btn sm" id="paste">Paste</button>
     <button class="btn sm" id="updateHub">Update Hub</button>
     <button class="btn sm" id="lora">Civitai LoRAs</button>
@@ -61,23 +65,107 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0b0
 const $ = id => document.getElementById(id);
 const frame = $('tty');
 function win() { try { return frame.contentWindow; } catch { return null; } }
+function setBridge(text, kind) {
+  const el = $('bridge');
+  el.textContent = text;
+  el.className = kind || '';
+}
 
 function patch() {
   const w = win();
-  if (!w || !window.ForgeTerm) return;
-  try { window.ForgeTerm.install(w); } catch (e) {}
+  if (!w || !window.ForgeTerm) return false;
+  try { return !!window.ForgeTerm.install(w); } catch (e) { return false; }
 }
+
+async function pasteText(text) {
+  let s = String(text || '');
+  if (s && !s.endsWith('\n')) s += '\n';
+  if (!s) return false;
+  patch();
+  const w = win();
+  if (w && typeof w.ForgeTermPaste === 'function') {
+    // ForgeTermPaste is async (term/patch.js). Without the await this returned a
+    // truthy Promise for every paste, so a failed paste looked like a success.
+    try {
+      if (await w.ForgeTermPaste(s)) return true;
+    } catch (e) {}
+  }
+  window.__forgePendingPaste = s;
+  return false;
+}
+
+async function pasteTextReliable(text, waitMs) {
+  const budget = Math.max(800, Number(waitMs) || 5000);
+  const started = Date.now();
+  if (await pasteText(text)) return true;
+  while (Date.now() - started < budget) {
+    await new Promise(r => setTimeout(r, 200));
+    patch();
+    const pending = window.__forgePendingPaste || text;
+    if (await pasteText(pending)) {
+      window.__forgePendingPaste = null;
+      return true;
+    }
+  }
+  return false;
+}
+
+window.ForgeTermReceive = (text) => pasteText(text);
+window.ForgeTermReceiveAsync = (text) => pasteTextReliable(text, 5000);
+
+window.addEventListener('message', async ev => {
+  const d = ev.data;
+  if (d === 'forge:shown') {
+    patch();
+    return;
+  }
+  if (!(d && d.type === 'forge:term-paste' && d.text)) return;
+  const ok = await pasteTextReliable(d.text, 5000);
+  try {
+    if (ev.source && ev.source !== window) {
+      ev.source.postMessage({type: 'forge:term-paste-result', id: d.id || null, ok}, '*');
+    }
+  } catch (e) {}
+});
+
 frame.addEventListener('load', () => {
   $('offline').classList.remove('on');
   patch();
   setTimeout(patch, 400);
-  setTimeout(patch, 1200);
+  setTimeout(() => {
+    patch();
+    if (window.__forgePendingPaste) {
+      const queued = window.__forgePendingPaste;
+      window.__forgePendingPaste = null;
+      pasteText(queued).then(ok => { if (!ok) window.__forgePendingPaste = queued; });
+    }
+  }, 1200);
 });
 frame.addEventListener('error', () => $('offline').classList.add('on'));
 
 $('retry').onclick = () => { frame.src = '/laptop/term/?t=' + Date.now(); };
 $('top').onclick = () => { const w = win(); w && w.ForgeTermScroll && w.ForgeTermScroll('top'); };
 $('bot').onclick = () => { const w = win(); w && w.ForgeTermScroll && w.ForgeTermScroll('bottom'); };
+
+$('newSession').onclick = async () => {
+  const b = $('newSession');
+  if (b.disabled) return;
+  if (!confirm('Start a new shell session? Current tmux scrollback will be wiped.')) return;
+  b.disabled = true;
+  const label = b.textContent;
+  b.textContent = 'Resetting…';
+  try {
+    const r = await fetch('/laptop/shell/reset', { method: 'POST', credentials: 'same-origin', cache: 'no-store' });
+    if (!r.ok) throw new Error('reset ' + r.status);
+    frame.src = '/laptop/term/?t=' + Date.now();
+    setBridge('new session', 'ok');
+  } catch (e) {
+    alert('Could not reset session: ' + (e && e.message ? e.message : e));
+  } finally {
+    b.disabled = false;
+    b.textContent = label;
+  }
+};
 
 $('paste').onclick = () => {
   $('sheet').classList.add('on');
@@ -87,26 +175,55 @@ $('paste').onclick = () => {
   $('clip').focus();
 };
 $('cancel').onclick = () => { $('sheet').classList.remove('on'); $('loraIdsWrap').hidden = true; };
-function pasteText(text) {
-  let s = String(text || '');
-  if (s && !s.endsWith('\n')) s += '\n';
-  if (!s) return false;
-  patch();
-  const w = win();
-  if (w && w.ForgeTermPaste) { w.ForgeTermPaste(s); return true; }
-  return false;
-}
-window.ForgeTermReceive = pasteText;
-window.addEventListener('message', ev => {
-  const d = ev.data;
-  if (d && d.type === 'forge:term-paste' && d.text) pasteText(d.text);
-});
-$('send').onclick = () => {
+$('send').onclick = async () => {
   const text = $('clip').value;
   $('sheet').classList.remove('on');
   $('loraIdsWrap').hidden = true;
-  pasteText(text);
+  const ok = await pasteTextReliable(text, 5000);
+  if (!ok) alert('Terminal not ready — is the laptop online? Tap Retry, wait for the prompt, then Send again.');
 };
+
+/* ---- Hub paste queue poller (Venice → /api/term/paste → here → ttyd) ---- */
+let pollBusy = false;
+async function pollBridgeOnce(waitSec) {
+  if (pollBusy) return;
+  pollBusy = true;
+  try {
+    const r = await fetch('/api/term/poll?wait=' + encodeURIComponent(waitSec || 0), {
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
+    if (!r.ok) {
+      setBridge('bridge err ' + r.status, 'bad');
+      return;
+    }
+    const j = await r.json();
+    setBridge('bridge on', 'ok');
+    if (j && !j.empty && j.text) {
+      const ok = await pasteTextReliable(j.text, 6000);
+      if (!ok) {
+        // put back visually for manual send
+        $('sheet').classList.add('on');
+        $('clip').value = j.text;
+        setBridge('paste failed — use Send', 'bad');
+      } else {
+        setBridge('pasted', 'ok');
+      }
+    }
+  } catch (e) {
+    setBridge('bridge offline', 'bad');
+  } finally {
+    pollBusy = false;
+  }
+}
+
+async function bridgeLoop() {
+  patch();
+  await pollBridgeOnce(0);
+  setTimeout(bridgeLoop, 400);
+}
+bridgeLoop();
+setInterval(() => { patch(); }, 1500);
 
 function extraLoraFlags() {
   const raw = ($('loraIds').value || '').trim();

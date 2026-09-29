@@ -2,28 +2,142 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0c"><title>Gallery</title>
 <link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
+<style>
+  .gal-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:4px 2px 14px;flex-wrap:wrap}
+  .gal-head h1{margin:2px 0 0;font-size:22px;letter-spacing:-.03em}
+  .gal-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .gal-tools button,.gal-tools a.btn{
+    appearance:none;border:1px solid rgba(253,242,214,.12);background:rgba(253,242,214,.04);
+    color:#dcd4c8;border-radius:999px;padding:8px 12px;font:600 12px inherit;cursor:pointer;text-decoration:none
+  }
+  .gal-tools button:hover,.gal-tools a.btn:hover{border-color:rgba(217,191,140,.45);color:#fdf2d6}
+  .gal-sec{margin:18px 2px 8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a8178;font-weight:700}
+  .strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+</style>
 </head><body>
-<div class="row" style="margin:4px 2px 12px">
-  <div class="grow"><div class="tiny mut" id="sum">Clips</div><h1 style="margin:2px 0 0">Gallery</h1></div>
+<div class="gal-head">
+  <div>
+    <div class="tiny mut" id="sum">Clips</div>
+    <h1>Gallery</h1>
+  </div>
+  <div class="gal-tools">
+    <button type="button" id="btn-refresh">Refresh</button>
+    <a class="btn" href="/app/desktop/#renders">Renders</a>
+    <a class="btn" href="/app/desktop/#ltx">LTX</a>
+  </div>
 </div>
-<div class="strip" id="strip"><div class="thumb skel"></div><div class="thumb skel"></div></div>
+<div class="gal-sec" id="relay-label">Relay · recent</div>
+<div class="strip" id="strip"><div class="thumb skel"></div><div class="thumb skel"></div><div class="thumb skel"></div><div class="thumb skel"></div></div>
+<div class="gal-sec" id="laptop-label" hidden>Laptop · local</div>
+<div class="strip" id="laptop-strip" hidden></div>
 <div id="empty" class="empty" hidden>No clips on the relay yet.</div>
 <script>
 const {$, esc} = F;
 let latest = [];
-async function load(){
-  try {
-    const lib = await F.api('/api/media/library');
-    latest = lib.flatMap(g => g.clips.map(c => Object.assign({group: g.title}, c))).sort((a,b) => b.mtime - a.mtime).slice(0, 40);
-    $('sum').textContent = latest.length + ' recent';
-    $('strip').innerHTML = latest.length ? latest.map(c => F.thumb(c, c.idx ? 'Clip ' + c.idx : '')).join('') : '';
-    $('empty').hidden = !!latest.length;
-  } catch (e) { $('sum').textContent = 'Unreachable'; F.toast(e.message); }
+let laptopClips = [];
+
+function flattenRelay(lib) {
+  const out = [];
+  for (const g of (Array.isArray(lib) ? lib : [])) {
+    for (const c of (g.clips || [])) {
+      if (c && c.name) out.push(Object.assign({group: g.title || g.source || ''}, c));
+    }
+  }
+  return out.sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
 }
+
+async function loadRelay() {
+  const lib = await F.api('/api/media/library');
+  latest = flattenRelay(lib).slice(0, 60);
+  $('sum').textContent = latest.length + ' recent on relay';
+  $('relay-label').textContent = 'Relay · ' + latest.length + ' recent';
+  $('strip').innerHTML = latest.length
+    ? latest.map(c => F.thumb(c, c.group ? String(c.group).slice(0, 28) : (c.idx ? 'Clip ' + c.idx : ''))).join('')
+    : '';
+  $('empty').hidden = !!latest.length || !!laptopClips.length;
+}
+
+async function loadLaptop() {
+  const strip = $('laptop-strip');
+  const label = $('laptop-label');
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 5000);
+    const r = await fetch('/laptop/gallery/', {credentials: 'include', cache: 'no-store', signal: ctl.signal});
+    clearTimeout(t);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    const groups = Array.isArray(data) ? data : (data.groups || data.library || []);
+    const flat = [];
+    for (const g of groups) {
+      for (const c of (g.clips || [])) {
+        if (!c) continue;
+        flat.push({
+          name: c.id || c.name || c.cid,
+          title: c.title || c.name || '',
+          group: g.title || g.name || 'Laptop',
+          mtime: c.mtime || 0,
+          thumb: c.thumb || (c.id ? '/laptop/gallery/thumb/' + encodeURIComponent(c.id) : ''),
+          url: c.url || (c.id ? '/laptop/gallery/file/' + encodeURIComponent(c.id) : ''),
+        });
+      }
+    }
+    flat.sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+    laptopClips = flat.slice(0, 40);
+    if (!laptopClips.length) {
+      label.hidden = true;
+      strip.hidden = true;
+      return;
+    }
+    label.hidden = false;
+    strip.hidden = false;
+    label.textContent = 'Laptop · ' + laptopClips.length + ' local';
+    strip.innerHTML = laptopClips.map(c => `
+      <div class="thumb" data-laptop="${esc(c.name)}" data-url="${esc(c.url || '')}">
+        <img loading="lazy" src="${esc(c.thumb || '')}" onload="this.classList.add('ld')" onerror="this.classList.add('ld');this.style.opacity='.25'" alt="">
+        <span class="badge">${esc((c.group || '').slice(0, 24))}</span>
+      </div>`).join('');
+    $('empty').hidden = true;
+  } catch (e) {
+    label.hidden = true;
+    strip.hidden = true;
+  }
+}
+
+async function load() {
+  try {
+    await loadRelay();
+  } catch (e) {
+    $('sum').textContent = 'Unreachable';
+    if (!latest.length) $('strip').innerHTML = `<div class="empty">Could not load the relay library: ${esc(e.message || String(e))}</div>`;
+    F.toast(e.message || String(e));
+  }
+  loadLaptop();
+}
+
 $('strip').addEventListener('click', e => {
   const n = e.target.closest('.thumb')?.dataset.clip; if (!n) return;
   F.viewer(latest, latest.findIndex(c => c.name === n), c => c.group + (c.idx ? ' · clip ' + c.idx : ''));
 });
+$('laptop-strip').addEventListener('click', e => {
+  const el = e.target.closest('.thumb');
+  if (!el) return;
+  const url = el.dataset.url;
+  if (!url) return;
+  const i = laptopClips.findIndex(c => c.name === el.dataset.laptop);
+  // Reuse viewer with clipUrl override via temporary objects that use /clips-like paths
+  const mapped = laptopClips.map(c => ({name: c.url.replace(/^\/clips\//, '') || c.name, _laptopUrl: c.url, group: c.group}));
+  // Custom mini viewer for laptop URLs
+  const v = document.createElement('div');
+  v.className = 'viewer';
+  v.innerHTML = `<button class="x" type="button">✕</button><video controls autoplay playsinline src="${esc(url)}"></video>`;
+  document.body.appendChild(v);
+  const close = () => v.remove();
+  v.querySelector('.x').onclick = close;
+  v.addEventListener('click', ev => { if (ev.target === v) close(); });
+  void i; void mapped;
+});
+$('btn-refresh').onclick = () => load();
 F.pull(load); load();
 setInterval(() => { if (F.isVisible()) load(); }, 30000);
 F.onVisible && F.onVisible(load);

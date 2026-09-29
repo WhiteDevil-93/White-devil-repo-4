@@ -135,7 +135,13 @@ private fun AgentChatHeader(
     ) {
         Column(Modifier.weight(1f)) {
             Text("Venice", style = MaterialTheme.typography.titleLarge)
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 2.dp)
+                    .clickable { host.showModelPicker() }
+                    .semantics { contentDescription = "Change agent model" },
+            ) {
                 Box(
                     Modifier
                         .size(6.dp)
@@ -147,6 +153,11 @@ private fun AgentChatHeader(
                     style = MaterialTheme.typography.labelLarge,
                     color = WdPalette.textMetadata,
                     modifier = Modifier.padding(start = 6.dp),
+                )
+                Text(
+                    " ⌄",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = WdPalette.textMetadata,
                 )
             }
         }
@@ -160,6 +171,10 @@ private fun AgentChatHeader(
                 Icon(Icons.Outlined.Tune, null, tint = WdPalette.textSecondary, modifier = Modifier.size(18.dp))
             }
             DropdownMenu(expanded = overflowOpen, onDismissRequest = onDismissOverflow) {
+                DropdownMenuItem(text = { Text("Change model") }, onClick = {
+                    onDismissOverflow()
+                    host.showModelPicker()
+                })
                 DropdownMenuItem(text = { Text("Paste from clipboard") }, onClick = {
                     onDismissOverflow()
                     host.pasteFromClipboard()

@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Forge Hub settings</title>
+<title>WhiteDevil settings</title>
 <style>
-:root{--bg:#141110;--fg:#f0e9e0;--mut:#a89e93;--dim:#7a7168;--strong:#f5efe6;--acc:#c9b896;
-  --line:rgba(253,242,214,.10);--glass:rgba(253,242,214,.04);--ok:#9bbfa0;--bad:#d99393}
+:root{--bg:#000000;--fg:#f0e9e0;--mut:#a89e93;--dim:#7a7168;--strong:#f5efe6;--acc:#D9BF8C;
+  --line:rgba(255,255,255,.08);--glass:rgba(255,255,255,.04);--ok:#9bbfa0;--bad:#d99393}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--fg);
   font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -14,22 +14,22 @@ body{padding:22px 22px 28px}
 h1{font-size:20px;font-weight:650;letter-spacing:-.03em;margin:0 0 6px}
 .lead{color:var(--mut);font-size:13px;margin:0 0 18px}
 label{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:14px 0 6px}
-input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#1b1714;color:var(--fg);font:14px inherit}
-input:focus{outline:none;border-color:rgba(205,184,143,.45)}
+input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#12131a;color:var(--fg);font:14px inherit}
+input:focus{outline:none;border-color:rgba(217,191,140,.55)}
 .row{display:flex;gap:10px}
 .row>*{flex:1}
 .btns{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
 button{appearance:none;border:1px solid var(--line);background:var(--glass);color:var(--fg);border-radius:999px;
   padding:10px 16px;font:600 13px inherit;cursor:pointer}
-button.primary{background:var(--strong);color:#111;border-color:transparent}
+button.primary{background:var(--acc);color:#111;border-color:transparent}
 #msg{margin-top:14px;font-size:13px;color:var(--mut);min-height:1.4em}
 #msg.ok{color:var(--ok)}#msg.bad{color:var(--bad)}
 .hint{font-size:12px;color:var(--dim);margin-top:4px}
 </style>
 </head>
 <body>
-  <h1>Laptop app</h1>
-  <p class="lead">This window is Forge Hub on your machine. Point it at the relay, or at a local hub while you develop.</p>
+  <h1>WhiteDevil</h1>
+  <p class="lead">Native Agent app. Forge Hub is a domain on the same relay — point at the public site, or a local hub while developing.</p>
 
   <label for="hubUrl">Hub URL</label>
   <input id="hubUrl" spellcheck="false" placeholder="https://84-12-112-249.sslip.io/app/desktop/">
@@ -59,9 +59,18 @@ button.primary{background:var(--strong);color:#111;border-color:transparent}
   </div>
   <div class="hint">Used only for /laptop/term/ and /laptop/files/ on the relay.</div>
 
+  <label for="veniceKey">Venice API key</label>
+  <input id="veniceKey" type="password" autocomplete="off" spellcheck="false" placeholder="VENICE_…">
+  <div class="hint">Pushed to the relay for the Agent on Save.</div>
+
+  <label for="openRouterKey">OpenRouter API key</label>
+  <input id="openRouterKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-or-v1-…">
+  <div class="hint">LTX writers / review on the relay.</div>
+
   <div class="btns">
     <button class="primary" id="save">Save and open</button>
     <button id="test">Test connection</button>
+    <button id="fillKeys">Import local keys</button>
   </div>
   <div id="msg"></div>
 <script>
@@ -74,6 +83,8 @@ function readForm() {
     relayPass: $('relayPass').value,
     laptopUser: $('laptopUser').value,
     laptopPass: $('laptopPass').value,
+    veniceKey: $('veniceKey').value,
+    openRouterKey: $('openRouterKey').value,
   };
 }
 function show(text, kind) {
@@ -86,16 +97,27 @@ api.getSettings().then(s => {
   $('relayPass').value = s.relayPass || '';
   $('laptopUser').value = s.laptopUser || '';
   $('laptopPass').value = s.laptopPass || '';
+  $('veniceKey').value = s.veniceKey || '';
+  $('openRouterKey').value = s.openRouterKey || '';
 });
 $('test').onclick = async () => {
   show('Checking…');
   const r = await api.testHub(readForm());
   show(r.message, r.ok ? 'ok' : 'bad');
 };
+$('fillKeys').onclick = async () => {
+  if (!api.importLocalKeys) return;
+  const r = await api.importLocalKeys();
+  if (!r.ok) { show(r.message || 'No keys', 'bad'); return; }
+  if (r.veniceKey) $('veniceKey').value = r.veniceKey;
+  if (r.openRouterKey) $('openRouterKey').value = r.openRouterKey;
+  show(r.message || 'Keys loaded', 'ok');
+};
 $('save').onclick = async () => {
   await api.saveSettings(readForm());
-  show('Saved. Opening Forge Hub…', 'ok');
-  await api.openHub();
+  show('Saved. Opening Agent…', 'ok');
+  if (api.openAgent) await api.openAgent();
+  else await api.openHub();
 };
 </script>
 </body>

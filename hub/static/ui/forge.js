@@ -74,7 +74,15 @@
   };
   F.clipUrl = name => '/clips/' + encodeURIComponent(name);
   F.thumbUrl = name => '/api/media/thumb/' + encodeURIComponent(name);
+  F.contactUrl = name => '/api/media/contact/' + encodeURIComponent(name);
   F.isNew = c => Date.now() / 1000 - c.mtime < 3600;
+  F.clipSource = (name, groupSource) => {
+    const n = String(name || '').toLowerCase();
+    if (n.endsWith('_14b.mp4') || n.startsWith('thunder_')) return 'thunder';
+    if (n.startsWith('ltx_') || n.startsWith('ltx-') || n.includes('ltx_chain')) return 'ltx';
+    if (groupSource === 'thunder' || groupSource === 'ltx' || groupSource === 'vast') return groupSource;
+    return 'vast';
+  };
 
   F.thumb = (c, label) => `<div class="thumb" data-clip="${F.esc(c.name)}">
       <img loading="lazy" src="${F.thumbUrl(c.name)}" onload="this.classList.add('ld')" onerror="this.classList.add('ld');this.style.opacity='.25'" alt="">
@@ -155,5 +163,96 @@
     };
     addEventListener('popstate', onPop);
     show(i);
+  };
+
+  /**
+   * Mount a Video review panel (contact sheet + recent clips) filtered by pipeline.
+   * opts: { source: 'ltx'|'thunder'|'vast', limit?: number, title?: string }
+   */
+  F.mountVideoReview = (root, opts) => {
+    if (!root) return { refresh: () => {} };
+    const source = (opts && opts.source) || 'ltx';
+    const limit = (opts && opts.limit) || 8;
+    const title = (opts && opts.title) || 'Video review';
+    const labels = { ltx: 'LTX 2.5', thunder: 'Thunder 14B', vast: 'Vast / Colab Remix' };
+    root.innerHTML = `
+      <div class="row" style="margin:0 0 10px">
+        <div class="grow"><div class="tiny mut">${F.esc(labels[source] || source)}</div>
+          <div style="font-weight:700;font-size:16px">${F.esc(title)}</div></div>
+        <button type="button" class="btn sm" data-rev-refresh>Refresh</button>
+      </div>
+      <div class="small mut" data-rev-cap style="margin:0 2px 10px">Loading contact sheets…</div>
+      <div data-rev-hero class="skel" style="height:140px;border-radius:14px;margin-bottom:12px"></div>
+      <div class="strip" data-rev-strip></div>`;
+    let clips = [];
+
+    const isFinal = name => !/_c\d+\.mp4$/i.test(name);
+
+    async function load() {
+      const cap = root.querySelector('[data-rev-cap]');
+      const hero = root.querySelector('[data-rev-hero]');
+      const strip = root.querySelector('[data-rev-strip]');
+      try {
+        const lib = await F.api('/api/media/library');
+        const all = [];
+        for (const g of (Array.isArray(lib) ? lib : [])) {
+          for (const c of (g.clips || [])) {
+            if (!c || !c.name) continue;
+            const src = c.source || F.clipSource(c.name, g.source);
+            if (src !== source) continue;
+            all.push(Object.assign({}, c, { title: g.title || '', groupSource: g.source || src }));
+          }
+        }
+        all.sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+        const finals = all.filter(c => isFinal(c.name));
+        clips = (finals.length ? finals : all).slice(0, limit);
+        if (!clips.length) {
+          if (cap) cap.textContent = 'No ' + (labels[source] || source) + ' renders yet.';
+          if (hero) hero.innerHTML = '<div class="empty" style="padding:28px 12px">Nothing to review.</div>';
+          if (strip) strip.innerHTML = '';
+          return;
+        }
+        const latest = clips[0];
+        if (cap) {
+          cap.textContent = `${clips.length} recent · latest ${F.ago(latest.mtime)} · ${latest.name}`;
+        }
+        if (hero) {
+          hero.className = '';
+          hero.style.cssText = '';
+          hero.innerHTML = `<div class="rev-hero" data-clip="${F.esc(latest.name)}" style="position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:rgba(0,0,0,.35);cursor:pointer">
+            <img loading="lazy" src="${F.contactUrl(latest.name)}" alt="contact sheet"
+              style="display:block;width:100%;aspect-ratio:16/9;object-fit:cover"
+              onerror="this.style.opacity=.2">
+            <div style="position:absolute;left:10px;bottom:10px;right:10px;display:flex;gap:8px;align-items:flex-end">
+              <span class="pill ok">Latest</span>
+              <span class="tiny" style="color:#f0e9e0;text-shadow:0 1px 4px #000;font-weight:600" class="trunc">${F.esc(latest.title || latest.name)}</span>
+              <span class="btn sm" style="margin-left:auto">▶ Play</span>
+            </div>
+          </div>`;
+        }
+        if (strip) {
+          strip.innerHTML = clips.map((c, i) =>
+            `<div class="thumb" data-i="${i}" data-clip="${F.esc(c.name)}">
+              <img loading="lazy" src="${F.thumbUrl(c.name)}" onload="this.classList.add('ld')" onerror="this.classList.add('ld');this.style.opacity='.25'" alt="">
+              <span class="badge">${i === 0 ? 'Latest' : (c.idx ? 'Clip ' + c.idx : F.ago(c.mtime))}</span>
+            </div>`).join('');
+        }
+      } catch (e) {
+        if (cap) cap.textContent = e.message || String(e);
+        if (hero) hero.innerHTML = '<div class="empty">' + F.esc(e.message || String(e)) + '</div>';
+      }
+    }
+
+    root.addEventListener('click', e => {
+      if (e.target.closest('[data-rev-refresh]')) { load(); return; }
+      const thumb = e.target.closest('[data-clip]');
+      if (!thumb || !clips.length) return;
+      const name = thumb.dataset.clip;
+      const i = Math.max(0, clips.findIndex(c => c.name === name));
+      F.viewer(clips, i, c => (c.title ? c.title + ' · ' : '') + c.name);
+    });
+
+    load();
+    return { refresh: load };
   };
 })();

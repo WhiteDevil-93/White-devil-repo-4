@@ -1,8 +1,8 @@
 {
-  "name": "forge-hub-laptop",
-  "productName": "Forge Hub",
-  "version": "1.0.0",
-  "description": "Native laptop app for Forge Hub — Venice Agent, Shell, renders, and the relay.",
+  "name": "whitedevil-agent",
+  "productName": "WhiteDevil",
+  "version": "1.1.4",
+  "description": "WhiteDevil Agent desktop app \u2014 Forge Hub is a domain; Shell/gallery/studio stay on the web surface.",
   "main": "main.cjs",
   "author": "WhiteDevil",
   "license": "UNLICENSED",
@@ -11,7 +11,7 @@
     "start": "electron .",
     "test": "node --test test/config.test.cjs",
     "dist": "electron-builder",
-    "dist:win": "electron-builder --win nsis",
+    "dist:win": "electron-builder --win",
     "dist:linux": "electron-builder --linux AppImage"
   },
   "devDependencies": {
@@ -19,13 +19,15 @@
     "electron-builder": "^26.0.12"
   },
   "build": {
-    "appId": "com.whitedevil.forgehub",
-    "productName": "Forge Hub",
+    "appId": "com.whitedevil.agent",
+    "productName": "WhiteDevil",
     "files": [
       "main.cjs",
       "preload.cjs",
       "config.cjs",
+      "shell.html",
       "settings.html",
+      "signin.html",
       "icon.png",
       "icon.svg"
     ],
@@ -33,17 +35,36 @@
       "output": "dist"
     },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "category": "Utility",
       "icon": "icon.png"
     },
     "win": {
-      "target": ["nsis"],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "icon.png"
+    },
+    "portable": {
+      "artifactName": "WhiteDevil.exe"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "WhiteDevil-Setup-${version}.exe"
     }
   }
 }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Terminal
@@ -45,6 +46,7 @@ fun YouHomeScreen(
     veniceReady: Boolean,
     onTerminal: () -> Unit,
     onSettings: () -> Unit,
+    onPhoneFiles: () -> Unit,
     onTestConnections: () -> Unit,
     onAddVeniceKey: () -> Unit,
 ) {
@@ -113,6 +115,8 @@ fun YouHomeScreen(
             }
             WdHairline()
             ProfileRow(Icons.Outlined.Settings, "General Settings", "UI, Language, Regions", onSettings)
+            WdHairline(Modifier.padding(start = 16.dp))
+            ProfileRow(Icons.Outlined.Folder, "Phone files", "Browse & attach from this device", onPhoneFiles)
             WdHairline(Modifier.padding(start = 16.dp))
             ProfileRow(Icons.Outlined.Terminal, "System Console", "Log analysis & CLI", onTerminal)
             WdHairline(Modifier.padding(start = 16.dp))

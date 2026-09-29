@@ -1,21 +1,98 @@
 {
-  "apk_version": 8,
+  "apk_version": 19,
   "apk_url": "/app/forgehub.apk",
   "force_update": true,
-  "web_rev": 15,
+  "web_rev": 38,
   "screens": [
-    {"id": "home", "title": "Home", "icon": "home", "url": "/app/home/"},
-    {"id": "renders", "title": "Renders", "icon": "movie", "url": "/app/renders/"},
-    {"id": "gallery", "title": "Gallery", "icon": "gallery", "url": "/app/gallery/"},
-    {"id": "hypno", "title": "HypnoForge", "icon": "hypno", "url": "/app/hypno/"},
-    {"id": "term", "title": "Shell", "icon": "terminal", "url": "/app/term/", "group": "Laptop"},
-    {"id": "colab", "title": "Colab", "icon": "cloud", "url": "/app/colab/"},
-    {"id": "ltx", "title": "LTX", "icon": "ltx", "url": "/app/ltx/"},
-    {"id": "thunder", "title": "Thunder", "icon": "bolt", "url": "/app/thunder/"},
-    {"id": "vast", "title": "Vast", "icon": "vast", "url": "/app/vast/"},
-    {"id": "setup", "title": "Setup", "icon": "setup", "url": "/app/setup/"},
-    {"id": "venice", "title": "Venice", "icon": "venice", "url": "/app/venice/"},
-    {"id": "files", "title": "Files", "icon": "folder", "url": "/laptop/files/"},
-    {"id": "shotwriter", "title": "Shotwriter", "icon": "pen", "url": "/shotwriter/index.html", "group": "Prompt creator"}
+    {
+      "id": "agent",
+      "title": "Agent",
+      "icon": "venice",
+      "url": "/app/venice/"
+    },
+    {
+      "id": "home",
+      "title": "Hub Home",
+      "icon": "home",
+      "url": "/app/home/",
+      "group": "Forge Hub"
+    },
+    {
+      "id": "renders",
+      "title": "Renders",
+      "icon": "movie",
+      "url": "/app/renders/",
+      "group": "Forge Hub"
+    },
+    {
+      "id": "gallery",
+      "title": "Gallery",
+      "icon": "gallery",
+      "url": "/app/gallery/",
+      "group": "Forge Hub"
+    },
+    {
+      "id": "hypno",
+      "title": "HypnoForge",
+      "icon": "hypno",
+      "url": "/app/hypno/",
+      "group": "Forge Hub"
+    },
+    {
+      "id": "colab",
+      "title": "Colab",
+      "icon": "cloud",
+      "url": "/app/colab/",
+      "group": "Forge Hub"
+    },
+    {
+      "id": "ltx",
+      "title": "LTX",
+      "icon": "ltx",
+      "url": "/app/ltx/",
+      "group": "Forge Hub"
+    },
+    {
+      "id": "thunder",
+      "title": "Thunder",
+      "icon": "bolt",
+      "url": "/app/thunder/",
+      "group": "Forge Hub"
+    },
+    {
+      "id": "vast",
+      "title": "Vast",
+      "icon": "vast",
+      "url": "/app/vast/",
+      "group": "Forge Hub"
+    },
+    {
+      "id": "setup",
+      "title": "Setup",
+      "icon": "setup",
+      "url": "/app/setup/",
+      "group": "Forge Hub"
+    },
+    {
+      "id": "term",
+      "title": "Shell",
+      "icon": "terminal",
+      "url": "/app/term/",
+      "group": "Laptop"
+    },
+    {
+      "id": "files",
+      "title": "Files",
+      "icon": "folder",
+      "url": "/laptop/files/",
+      "group": "Laptop"
+    },
+    {
+      "id": "shotwriter",
+      "title": "Shotwriter",
+      "icon": "pen",
+      "url": "/shotwriter/index.html",
+      "group": "Prompt creator"
+    }
   ]
 }

@@ -62,11 +62,21 @@ def die(msg):
 
 
 def load_packs():
+    # A missing/garbled catalog used to surface as a bare traceback, and a merge
+    # against an empty dict would happily renumber packs from scratch.
+    if not JSONL.is_file():
+        die(f"pack file not found: {JSONL} (set WAN_GC if the chain lives elsewhere)")
     packs = {}
-    for line in JSONL.read_text(encoding="utf-8").splitlines():
-        if line.strip():
+    for n, line in enumerate(JSONL.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
             d = json.loads(line)
             packs[int(d["index"])] = d
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
+            die(f"{JSONL}:{n}: unreadable pack line ({e})")
+    if not packs:
+        die(f"{JSONL} exists but contains no packs - refusing to treat that as a valid catalog")
     return packs
 
 
@@ -141,6 +151,12 @@ def normalize(raw, src):
 def cmd_add(args, files=None):
     packs = load_packs()
     files = files if files is not None else args.files
+    if not files:
+        die("no input files")
+    # --index applies to one file only; silently dropping it used to write the
+    # pack to an index the user never asked for.
+    if getattr(args, "index", None) and len(files) > 1:
+        die(f"--index {args.index} needs exactly one input file ({len(files)} given)")
     added = []
     for f in files:
         for raw in parse_file(f, args.title):
@@ -167,16 +183,36 @@ def cmd_add(args, files=None):
 
 
 def cmd_scan(args):
-    files = sorted(str(p) for d in (INCOMING, DOWNLOADS) for p in d.glob("pack_*.jsonl"))
+    # A glob over a directory that does not exist yields nothing, which used to
+    # print the same "nothing to ingest" as a genuinely empty inbox. Say which
+    # directory was searched, and fail loudly when none of them exist.
+    files = []
+    missing = []
+    for d in (INCOMING, DOWNLOADS):
+        if not d.is_dir():
+            missing.append(str(d))
+            continue
+        found = sorted(str(p) for p in d.glob("pack_*.jsonl"))
+        print(f"scan {d}: {len(found)} pack_*.jsonl file(s)")
+        files.extend(found)
+    for d in missing:
+        print(f"scan {d}: directory does not exist", file=sys.stderr)
+    if len(missing) == len((INCOMING, DOWNLOADS)):
+        die("no scan directory exists - set WAN_GC / fix the Downloads path")
+    files = sorted(files)
     if not files:
-        print(f"nothing to ingest in {INCOMING} or {DOWNLOADS}")
+        print("nothing to ingest")
         return []
     args.index = None
     added = cmd_add(args, files)
     if not args.dry_run:
-        (INCOMING / "done").mkdir(parents=True, exist_ok=True)
+        done = INCOMING / "done"
+        done.mkdir(parents=True, exist_ok=True)
         for f in files:
-            shutil.move(f, INCOMING / "done" / Path(f).name)
+            target = done / Path(f).name
+            if target.exists():  # never silently overwrite an earlier ingest
+                target = done / f"{Path(f).stem}_{dt.datetime.now():%Y%m%d_%H%M%S}{Path(f).suffix}"
+            shutil.move(f, target)
     return added
 
 

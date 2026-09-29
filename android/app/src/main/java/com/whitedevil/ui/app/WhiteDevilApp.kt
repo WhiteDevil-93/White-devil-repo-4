@@ -17,8 +17,10 @@ import com.whitedevil.R
 import com.whitedevil.ui.agent.AgentScreen
 import com.whitedevil.ui.components.WdBottomBar
 import com.whitedevil.ui.components.WdTabItem
+import com.whitedevil.ui.files.PhoneFilesScreen
 import com.whitedevil.ui.hub.ForgeHubScreen
 import com.whitedevil.ui.onboarding.OnboardingScreen
+import com.whitedevil.ui.security.BiometricLockScreen
 import com.whitedevil.ui.settings.SettingsScreen
 import com.whitedevil.ui.terminal.TerminalScreen
 import com.whitedevil.ui.theme.WhiteDevilTheme
@@ -35,6 +37,14 @@ fun WhiteDevilApp(host: MainActivity) {
     WhiteDevilTheme {
         if (host.showOnboardingPublic()) {
             OnboardingScreen(onFinished = { host.completeOnboardingPublic() })
+            return@WhiteDevilTheme
+        }
+        if (!host.appUnlockedPublic()) {
+            BiometricLockScreen(
+                statusLine = host.biometricStatusPublic(),
+                onUnlock = { host.promptBiometricUnlockPublic() },
+                onUsePassword = { host.unlockViaSettingsFallbackPublic() },
+            )
             return@WhiteDevilTheme
         }
         var settingsForm by remember { mutableStateOf(host.readSettingsForm()) }
@@ -73,6 +83,7 @@ fun WhiteDevilApp(host: MainActivity) {
                                 settingsForm = host.readSettingsForm()
                                 host.showYouSub(MainActivity.YouSub.SETTINGS)
                             },
+                            onPhoneFiles = { host.showYouSub(MainActivity.YouSub.FILES) },
                             onTestConnections = { host.runQuickConnectionTest(updateYouHome = true) },
                             onAddVeniceKey = { host.showVeniceKeySheet() },
                         )
@@ -83,6 +94,7 @@ fun WhiteDevilApp(host: MainActivity) {
                             form = settingsForm,
                             onFormChange = { settingsForm = it },
                         )
+                        MainActivity.YouSub.FILES -> PhoneFilesScreen(host)
                     }
                 }
             }

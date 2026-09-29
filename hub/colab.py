@@ -54,6 +54,69 @@ def usage():
             "active": int(act[1]) if act else None, "checked": _usage["at"]}
 
 
+_session = {"at": 0, "data": None}
+
+
+def session_info():
+    """Live Colab VM from CLI / sessions.json — independent of wanbot tunnel."""
+    if time.time() - _session["at"] < 30 and _session["data"] is not None:
+        return _session["data"]
+    info = {"name": None, "endpoint": None, "accelerator": None, "status": None, "running": False, "raw": ""}
+    try:
+        out = subprocess.run([COLAB, "status"], capture_output=True, text=True, timeout=45).stdout or ""
+        info["raw"] = out[-500:]
+        # [colab] gpu-… | Hardware: G4 | … | Status: IDLE
+        m = re.search(r"\[colab\]\s+(\S+)\s*\|\s*Hardware:\s*([^|]+)\|.*?Status:\s*(\S+)", out)
+        if m:
+            info.update(endpoint=m.group(1).strip(), accelerator=m.group(2).strip(), status=m.group(3).strip())
+            info["running"] = True
+        elif re.search(r"No (?:active )?session|no session", out, re.I):
+            info["status"] = "none"
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+        info["raw"] = str(e)[:200]
+    try:
+        sj = Path.home() / ".config/colab-cli/sessions.json"
+        if sj.is_file():
+            d = json.loads(sj.read_text())
+            c = d.get("colab") or next(iter(d.values()), {}) or {}
+            info["name"] = c.get("name") or "colab"
+            info["endpoint"] = info["endpoint"] or c.get("endpoint")
+            info["accelerator"] = info["accelerator"] or c.get("accelerator")
+            if c.get("endpoint") and not info["status"]:
+                info["status"] = "unknown"
+                info["running"] = True
+    except Exception:
+        pass
+    _session.update(at=time.time(), data=info)
+    return info
+
+
+def billing_active(u=None, sess=None):
+    u = u or usage()
+    sess = sess if sess is not None else session_info()
+    return bool((u.get("active") or 0) > 0 or sess.get("running"))
+
+
+def status_summary(runner_online: bool, paused, u, sess):
+    """Human status that never hides a billing VM behind 'Stopped'/'Offline'."""
+    billing = billing_active(u, sess)
+    rate = u.get("rate_per_hr")
+    rate_s = f"${rate:.2f}/h" if isinstance(rate, (int, float)) else "credits/h"
+    if billing and runner_online:
+        return {"label": "Running", "kind": "ok", "billing": True,
+                "detail": f"G4 billing {rate_s} · wanbot up"}
+    if billing and not runner_online:
+        return {"label": f"BILLING · runner down", "kind": "warn", "billing": True,
+                "detail": f"Colab VM is up and charging {rate_s}, but the render tunnel/wanbot is down. Stop the runtime to stop the bill, or Start/restart to bring the runner back."}
+    if paused:
+        return {"label": "Stopped", "kind": "warn", "billing": False,
+                "detail": f"Marked stopped {paused}. Confirm Active assignments is 0 in usage if you still see charges."}
+    if sess.get("status") == "none" or not billing:
+        return {"label": "No runtime", "kind": "bad", "billing": False,
+                "detail": "No Colab assignment. Press Start / restart to spin a G4."}
+    return {"label": "Unknown", "kind": "warn", "billing": billing, "detail": sess.get("raw") or ""}
+
+
 def hb_status():
     out = {}
     try:
@@ -73,10 +136,24 @@ def tail(path, n):
         return []
 
 
+def _recover_running():
+    # pgrep does not exist on Windows dev machines — treat as "not running" there.
+    try:
+        return subprocess.run(["pgrep", "-f", "colab_recover.sh"], capture_output=True).returncode == 0
+    except (FileNotFoundError, OSError):
+        return False
+
+
 @router.get("/state")
 def state():
     health = runner("GET", "/health")
     jobs = runner("GET", "/jobs") if health else None
+    comfy_up = False
+    try:
+        r = requests.get("http://127.0.0.1:18288/", timeout=3)
+        comfy_up = r.status_code < 500
+    except requests.RequestException:
+        comfy_up = False
     view = []
     for j in jobs or []:
         cl = j.get("clips") or []
@@ -87,15 +164,41 @@ def state():
                      "current": cur["index"] if cur else None,
                      "avg_seconds": round(sum(c["seconds"] for c in done) / len(done)) if done else None,
                      "error": j.get("error")})
+    u = usage()
+    sess = session_info()
+    paused = (WAN / "paused").read_text().strip() if (WAN / "paused").exists() else None
+    billing = billing_active(u, sess)
+    # If Google is charging us, never leave the Comfy tunnel parked on paused_comfy.
+    if billing and (WAN / "paused_comfy").exists():
+        (WAN / "paused_comfy").unlink(missing_ok=True)
+        subprocess.run(["sudo", "systemctl", "restart", "wan-colab-comfy-tunnel.service"], capture_output=True)
+    # Stale ~/wan/paused must not win over a live bill in the UI.
+    if billing and paused:
+        paused_for_ui = paused  # still expose that auto-restart was flipped off
+    else:
+        paused_for_ui = paused
+    summ = status_summary(bool(health), None if billing else paused, u, sess)
+    if billing and not health:
+        if comfy_up:
+            summ = {"label": "BILLING · LTX up", "kind": "warn", "billing": True,
+                    "detail": f"Colab VM charging (~${(u.get('rate_per_hr') or 0):.2f}/h). Comfy/LTX tunnel is up; wanbot pack runner is down."}
+        else:
+            summ = {"label": "BILLING · runner down", "kind": "warn", "billing": True,
+                    "detail": f"Colab VM is charging (~${(u.get('rate_per_hr') or 0):.2f}/h)" + (f" (app marked stop at {paused_for_ui})" if paused_for_ui else "") + ". Hit Stop to kill the bill, or Start/restart to bring services back."}
+    gpu = (health or {}).get("gpu") or (f"NVIDIA {sess['accelerator']}" if sess.get("accelerator") else None)
     return {
         "runner_mode": (WAN / "runner_mode").read_text().strip() if (WAN / "runner_mode").exists() else None,
         "runner_online": bool(health),
-        "paused": (WAN / "paused").read_text().strip() if (WAN / "paused").exists() else None,
-        "gpu": (health or {}).get("gpu"),
+        "comfy_online": comfy_up,
+        "paused": paused_for_ui if billing else paused,
+        "billing": summ["billing"],
+        "instance": sess,
+        "status": summ,
+        "gpu": gpu,
         "jobs": view,
         "heartbeat": hb_status(),
-        "usage": usage(),
-        "recover_running": subprocess.run(["pgrep", "-f", "colab_recover.sh"], capture_output=True).returncode == 0,
+        "usage": u,
+        "recover_running": _recover_running(),
         "recover_log": tail(WAN / "recover.log", 12),
         "resume_packs": (WAN / "resume_packs").read_text().split() if (WAN / "resume_packs").exists() else [],
     }
@@ -174,8 +277,11 @@ def recover():
     if subprocess.run(["pgrep", "-f", "colab_recover.sh"], capture_output=True).returncode == 0:
         return {"ok": True, "already_running": True}
     (WAN / "paused").unlink(missing_ok=True)
+    (WAN / "paused_comfy").unlink(missing_ok=True)
     subprocess.Popen(["bash", str(WAN / "colab_recover.sh")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                      start_new_session=True)
+    # Bring Comfy tunnel back if systemd unit exists.
+    subprocess.run(["sudo", "systemctl", "restart", "wan-colab-comfy-tunnel.service"], capture_output=True)
     return {"ok": True}
 
 
@@ -183,7 +289,18 @@ def recover():
 def stop_runtime():
     r = subprocess.run(["bash", "-c", f"exec 9>/tmp/colab.lock; flock -w 300 9 && {COLAB} stop -s colab"],
                        capture_output=True, text=True, timeout=400)
-    if r.returncode == 0:
-        (WAN / "paused").write_text(time.strftime("%Y-%m-%d %H:%M") + "\n")
     _usage["at"] = 0
-    return {"ok": r.returncode == 0, "output": (r.stdout + r.stderr)[-400:]}
+    _session["at"] = 0
+    u = usage()
+    sess = session_info()
+    still = billing_active(u, sess)
+    if r.returncode == 0 and not still:
+        stamp = time.strftime("%Y-%m-%d %H:%M") + "\n"
+        (WAN / "paused").write_text(stamp)
+        (WAN / "paused_comfy").write_text(stamp)
+        return {"ok": True, "billing": False, "output": (r.stdout + r.stderr)[-400:]}
+    # Stop claimed success but assignment still active — do NOT pretend we stopped.
+    msg = (r.stdout + r.stderr)[-400:]
+    if still:
+        msg = (msg + "\nWARNING: Colab still shows an active assignment — you are still being billed. Try Stop again or stop from colab.research.google.com.").strip()
+    return {"ok": False, "billing": still, "usage": u, "instance": sess, "output": msg}
