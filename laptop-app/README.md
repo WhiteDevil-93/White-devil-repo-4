@@ -1,4 +1,17 @@
-# WhiteDevil desktop app
+> **DEPRECATED: replaced by the native desktop app in [`desktop/`](../desktop/) (Kotlin / Compose Desktop, ships as an MSI).**
+>
+> This Electron app is left in place, unchanged, as a fallback. New work goes to `desktop/`.
+> **Do not delete this folder yet.** The desktop app has not been run on Windows, several of
+> its screens are still landing, and it does not yet do everything this app does. The operator
+> decides when `laptop-app/` is removed, after checking the desktop app on the real laptop.
+>
+> - What moved, what this app still does that `desktop/` does not, and how to switch over:
+>   [`docs/DESKTOP_MIGRATION.md`](../docs/DESKTOP_MIGRATION.md)
+> - How the desktop MSI is built: [`docs/DESKTOP_PACKAGING.md`](../docs/DESKTOP_PACKAGING.md)
+>
+> The rest of this file describes the Electron app and has not been updated.
+
+# WhiteDevil desktop app (Electron, deprecated)
 
 Native **WhiteDevil Agent** `.exe` (Electron). **Forge Hub is a domain** inside the app — not the product name.
 
