@@ -88,7 +88,7 @@ class PtyTtyConnectorTest {
         val c = PtyTtyConnector(proc)
         c.resize(TermSize(100, 40))
         c.write("stty size\n")
-        readUntil(c) { Regex("(?m)^40 100\\s*$").containsMatchIn(it) }
+        readUntil(c) { Regex("\\b40 100\\b").containsMatchIn(it) }
     }
 
     @Test

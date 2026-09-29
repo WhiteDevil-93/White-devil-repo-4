@@ -42,6 +42,9 @@ fun main() = application {
     val windowState = rememberWindowState(size = DpSize(1280.dp, 860.dp))
     // Lives at the window level so switching tabs does not kill the shell.
     val shell = remember { ShellSession() }
+    // Also window-level: holds the pending enrolment and the in-memory device token
+    // across visits to Settings.
+    val deviceAuth = remember { DeviceAuthService(ProcessHelloBackend()) }
 
     Window(
         onCloseRequest = {
@@ -76,7 +79,9 @@ fun main() = application {
                             Screen.Setup -> SetupScreen(settings)
                             Screen.Settings -> SettingsScreen(
                                 initial = settings,
+                                deviceAuth = deviceAuth,
                                 onSave = { settings = it; screen = Screen.Agent },
+                                onDeviceChanged = { settings = it },
                                 onBack = { screen = Screen.Agent },
                             )
                         }
