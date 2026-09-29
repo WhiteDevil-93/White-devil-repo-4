@@ -21,6 +21,15 @@ fun SettingsScreen(initial: Settings, onSave: (Settings) -> Unit, onBack: () -> 
     var webSearch by remember { mutableStateOf(initial.enableWebSearch) }
     var status by remember { mutableStateOf<String?>(null) }
 
+    // Enrolment writes deviceId/deviceName straight to disk (it must not go through onSave, which
+    // navigates away), so the app-level `initial` can be older than the file. Read the file too, and
+    // carry these two fields through Save so a later Save cannot blank an enrolment.
+    val onDisk = remember { Settings.load() }
+    var deviceId by remember { mutableStateOf(initial.deviceId.ifBlank { onDisk.deviceId }) }
+    var deviceName by remember { mutableStateOf(initial.deviceName.ifBlank { onDisk.deviceName }) }
+    // Leaving mid-enrolment would cancel it after the Hello key was replaced but before the hub heard about it.
+    var deviceBusy by remember { mutableStateOf(false) }
+
     Column(Modifier.fillMaxSize()) {
         Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
             Row(
@@ -29,7 +38,7 @@ fun SettingsScreen(initial: Settings, onSave: (Settings) -> Unit, onBack: () -> 
             ) {
                 Text("Settings", style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = onBack) { Text("Back") }
+                TextButton(onClick = onBack, enabled = !deviceBusy) { Text("Back") }
             }
         }
 
@@ -69,17 +78,30 @@ fun SettingsScreen(initial: Settings, onSave: (Settings) -> Unit, onBack: () -> 
 
             HorizontalDivider()
 
+            DeviceKeySection(
+                hubUrl = hubUrl,
+                relayUser = relayUser.trim(),
+                relayPass = relayPass,
+                deviceId = deviceId,
+                deviceName = deviceName,
+                persistBase = initial.copy(deviceId = deviceId, deviceName = deviceName),
+                onDeviceChanged = { id, name -> deviceId = id; deviceName = name },
+                onBusyChanged = { deviceBusy = it },
+            )
+
+            HorizontalDivider()
+
             Text("Stored in ${Settings.dir}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
-                "Secrets are held in plaintext here, as the Electron app did. The device key in the Windows TPM " +
-                    "(Settings → device enrolment, once wired) removes the need to store the relay password at all.",
+                "Secrets are held in plaintext here, as the Electron app did. Enrolling the device key above (Windows TPM) is a first step " +
+                    "towards not storing the relay password at all; until the hub stops requiring it, the password is still needed and still sent.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             status?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
 
-            Button(onClick = {
+            Button(enabled = !deviceBusy, onClick = {
                 val next = initial.copy(
                     hubUrl = hubUrl.trim().trimEnd('/'),
                     relayUser = relayUser.trim(),
@@ -87,6 +109,8 @@ fun SettingsScreen(initial: Settings, onSave: (Settings) -> Unit, onBack: () -> 
                     veniceApiKey = veniceKey.trim(),
                     model = model.trim().ifBlank { initial.model },
                     enableWebSearch = webSearch,
+                    deviceId = deviceId,
+                    deviceName = deviceName,
                 )
                 Settings.save(next)
                     .onSuccess { status = null; onSave(next) }
