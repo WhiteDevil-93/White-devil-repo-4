@@ -73,3 +73,22 @@ fun MainActivity.hubRelayPostWithResponsePublic(path: String, jsonBody: String, 
     hubRelayPostWithResponse(path, jsonBody, onResult)
 
 fun MainActivity.removePendingAttachment(index: Int) = removePendingAttachmentAt(index)
+
+fun MainActivity.appUnlockedPublic(): Boolean = appUnlocked
+fun MainActivity.biometricStatusPublic(): String = biometricStatusLabel()
+fun MainActivity.promptBiometricUnlockPublic() = promptBiometricUnlock()
+fun MainActivity.unlockViaSettingsFallbackPublic() = unlockViaSettingsFallback()
+fun MainActivity.phoneFolderUriPublic(): android.net.Uri? = phoneFolderUri()
+fun MainActivity.pickPhoneFolderPublic() = pickPhoneFolder()
+fun MainActivity.pickPhoneFilesPublic() = pickPhoneFiles()
+fun MainActivity.pickPhoneMediaPublic() = pickPhoneMedia()
+fun MainActivity.requestPhoneMediaPermissionPublic() = requestPhoneMediaPermission()
+fun MainActivity.attachPhoneUriPublic(uri: android.net.Uri) = attachPhoneUri(uri)
+
+// Device-bound auth (hub/auth.py). Additive to relay basic auth, never a replacement.
+fun MainActivity.deviceAuthStatePublic(): com.whitedevil.security.DeviceAuth.State = deviceAuthState
+fun MainActivity.deviceAuthBusyPublic(): Boolean = deviceAuthBusy
+fun MainActivity.deviceAuthMessagePublic(): String = deviceAuthMessage
+fun MainActivity.enrolDeviceAuthPublic(name: String) = enrolDeviceAuth(name)
+fun MainActivity.signInDeviceAuthPublic() = signInDeviceAuth()
+fun MainActivity.forgetDeviceAuthPublic() = forgetDeviceAuth()

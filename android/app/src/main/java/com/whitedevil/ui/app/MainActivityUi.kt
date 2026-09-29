@@ -24,4 +24,7 @@ data class SettingsFormState(
     val relayPass: String = "",
     val laptopUser: String = "",
     val laptopPass: String = "",
+    val biometricUnlock: Boolean = false,
+    /** Name this phone enrols under with the hub's device-bound auth. */
+    val deviceName: String = "",
 )

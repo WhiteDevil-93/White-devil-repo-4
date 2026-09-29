@@ -44,7 +44,7 @@ import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableFloatStateOf
@@ -88,11 +88,11 @@ import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.concurrent.thread
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     enum class Tab { AGENT, FORGE_HUB, YOU }
 
-    enum class YouSub { HOME, TERMINAL, SETTINGS }
+    enum class YouSub { HOME, TERMINAL, SETTINGS, FILES }
 
     private data class Screen(val id: String, val title: String, val icon: String, val url: String)
 
@@ -103,6 +103,15 @@ class MainActivity : ComponentActivity() {
     internal var uiTab by mutableStateOf(Tab.AGENT)
     internal var uiYouSub by mutableStateOf(YouSub.HOME)
     internal var showOnboarding by mutableStateOf(false)
+    /** False until biometric (or fallback) unlocks the session when biometric unlock is enabled. */
+    internal var appUnlocked by mutableStateOf(false)
+    private var lastBackgroundAt = 0L
+
+    /** Device-bound auth status for Settings. Holds no token and no key material. */
+    internal var deviceAuthState by mutableStateOf(com.whitedevil.security.DeviceAuth.State())
+    internal var deviceAuthBusy by mutableStateOf(false)
+    internal var deviceAuthMessage by mutableStateOf("")
+
     internal var agentInputText by mutableStateOf("")
     internal val pendingAttachmentsUi = mutableStateListOf<AttachmentUi>()
     internal var agentShowProgress by mutableStateOf(false)
@@ -143,6 +152,8 @@ class MainActivity : ComponentActivity() {
         "zai-org-glm-5",
         "venice-uncensored",
         "venice-uncensored-1-2",
+        "qwen3-vl-235b-a22b",
+        "mistral-31-24b",
         "kimi-k2-6",
         "claude-opus-4-8",
     )
@@ -189,6 +200,21 @@ class MainActivity : ComponentActivity() {
             renderAttachmentStrip()
         }
 
+    private val pickPhoneFolderLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            if (uri != null) persistPhoneFolder(uri)
+        }
+
+    private val pickPhoneMediaLauncher =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+            uris.forEach { addContentAttachment(it) }
+            syncPendingAttachmentsUi()
+            if (uris.isNotEmpty()) {
+                selectTab(Tab.AGENT)
+                Toast.makeText(this, "Added ${uris.size} item(s) to Agent", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     private val takePictureLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
             if (ok) pendingCameraUri?.let { addContentAttachment(it) }
@@ -203,6 +229,35 @@ class MainActivity : ComponentActivity() {
             renderAttachmentStrip()
         }
 
+    private var webFileCallback: android.webkit.ValueCallback<Array<Uri>>? = null
+    private val webFileChooserLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val uris = result.data?.clipData?.let { c -> Array(c.itemCount) { c.getItemAt(it).uri } }
+                ?: android.webkit.WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data)
+            webFileCallback?.onReceiveValue(if (result.resultCode == RESULT_OK) uris else null)
+            webFileCallback = null
+        }
+
+    /** Used by HubRelayWebBody (LTX planner image picker). */
+    fun openWebFileChooser(
+        cb: android.webkit.ValueCallback<Array<Uri>>?,
+        params: android.webkit.WebChromeClient.FileChooserParams?,
+    ) {
+        webFileCallback?.onReceiveValue(null)
+        webFileCallback = cb
+        try {
+            val intent = params?.createIntent()?.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                ?: Intent(Intent.ACTION_GET_CONTENT).apply {
+                    type = "image/*"
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                }
+            webFileChooserLauncher.launch(intent)
+        } catch (_: Exception) {
+            webFileCallback = null
+            cb?.onReceiveValue(null)
+        }
+    }
+
     // Current navigation state (mirrors uiTab for legacy call sites)
     private val activeTab: Tab get() = uiTab
     private val youSubScreen: YouSub get() = uiYouSub
@@ -212,7 +267,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Resolve lock state before first Compose frame to avoid a content flash.
+        if (!prefs.getBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, false) ||
+            !com.whitedevil.security.BiometricAuth.available(this)
+        ) {
+            appUnlocked = true
+        }
         buildUi()
+        refreshDeviceAuthState()
 
         when (intent?.data?.getQueryParameter("tab")) {
             "forge", "hub" -> selectTab(Tab.FORGE_HUB)
@@ -236,6 +298,7 @@ class MainActivity : ComponentActivity() {
 
         handleSharedIntent(intent)
         updateAgentSetupState()
+        evaluateAppLock(forcePrompt = true)
 
         registerReceiver(downloadDone, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), RECEIVER_EXPORTED)
     }
@@ -243,9 +306,15 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         updateAgentSetupState()
-        if (activeTab == Tab.FORGE_HUB && !hubBlockedByUpdate && currentHubScreenId != null) {
+        evaluateAppLock(forcePrompt = false)
+        if (activeTab == Tab.FORGE_HUB && !hubBlockedByUpdate && currentHubScreenId != null && appUnlocked) {
             refreshHubNativeScreen()
         }
+    }
+
+    override fun onPause() {
+        lastBackgroundAt = System.currentTimeMillis()
+        super.onPause()
     }
 
     override fun onDestroy() {
@@ -337,9 +406,47 @@ class MainActivity : ComponentActivity() {
         relayPass = prefs.getString(SettingsManager.KEY_RELAY_PASS, "").orEmpty(),
         laptopUser = prefs.getString(SettingsManager.KEY_LAPTOP_USER, SettingsManager.DEFAULT_LAPTOP_USER).orEmpty(),
         laptopPass = prefs.getString(SettingsManager.KEY_LAPTOP_PASS, "").orEmpty(),
+        biometricUnlock = prefs.getBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, false),
+        deviceName = prefs.getString(SettingsManager.KEY_DEVICE_AUTH_NAME, "").orEmpty()
+            .ifBlank { com.whitedevil.security.DeviceAuth.defaultDeviceName() },
     )
 
     internal fun saveSettingsFromCompose(form: SettingsFormState) {
+        val wantBio = form.biometricUnlock
+        if (wantBio && !com.whitedevil.security.BiometricAuth.available(this)) {
+            UiFeedback.snackbar(snackbarAnchor, com.whitedevil.security.BiometricAuth.statusLabel(this))
+        }
+        val enableBio = wantBio && com.whitedevil.security.BiometricAuth.available(this)
+        if (enableBio && !prefs.getBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, false)) {
+            // Confirm enrollment with a live prompt before turning the lock on.
+            com.whitedevil.security.BiometricAuth.prompt(
+                this,
+                title = "Enable biometric unlock",
+                subtitle = "Confirm fingerprint / face / PIN to protect WhiteDevil",
+                onSuccess = {
+                    prefs.edit()
+                        .putString(SettingsManager.KEY_VENICE_API_KEY, form.veniceKey.trim())
+                        .putString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, form.systemPrompt.trim())
+                        .putBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, form.webSearch)
+                        .putString(SettingsManager.KEY_RELAY_URL, form.relayUrl.trim().trimEnd('/'))
+                        .putString(SettingsManager.KEY_RELAY_USER, form.relayUser.trim())
+                        .putString(SettingsManager.KEY_RELAY_PASS, form.relayPass)
+                        .putString(SettingsManager.KEY_LAPTOP_USER, form.laptopUser.trim())
+                        .putString(SettingsManager.KEY_LAPTOP_PASS, form.laptopPass)
+                        .putString(SettingsManager.KEY_DEVICE_AUTH_NAME, form.deviceName.trim().take(80))
+                        .putBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, true)
+                        .apply()
+                    appUnlocked = true
+                    updateAgentSetupState()
+                    offerPasswordsToSystemManager(form)
+                    UiFeedback.snackbar(snackbarAnchor, "Biometric unlock enabled")
+                    loadHubManifest()
+                },
+                onError = { UiFeedback.snackbar(snackbarAnchor, it) },
+                onCancel = { UiFeedback.snackbar(snackbarAnchor, "Biometric unlock not enabled") },
+            )
+            return
+        }
         prefs.edit()
             .putString(SettingsManager.KEY_VENICE_API_KEY, form.veniceKey.trim())
             .putString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, form.systemPrompt.trim())
@@ -349,10 +456,30 @@ class MainActivity : ComponentActivity() {
             .putString(SettingsManager.KEY_RELAY_PASS, form.relayPass)
             .putString(SettingsManager.KEY_LAPTOP_USER, form.laptopUser.trim())
             .putString(SettingsManager.KEY_LAPTOP_PASS, form.laptopPass)
+            .putString(SettingsManager.KEY_DEVICE_AUTH_NAME, form.deviceName.trim().take(80))
+            .putBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, enableBio)
             .apply()
+        if (!enableBio) appUnlocked = true
         updateAgentSetupState()
+        offerPasswordsToSystemManager(form)
         UiFeedback.snackbar(snackbarAnchor, "Settings saved")
         loadHubManifest()
+    }
+
+    private fun offerPasswordsToSystemManager(form: SettingsFormState) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val n = com.whitedevil.security.PasswordManagerBridge.offerAll(
+                activity = this@MainActivity,
+                relayUrl = form.relayUrl.trim().trimEnd('/'),
+                relayUser = form.relayUser.trim(),
+                relayPass = form.relayPass,
+                laptopUser = form.laptopUser.trim(),
+                laptopPass = form.laptopPass,
+            )
+            if (n > 0) {
+                UiFeedback.snackbar(snackbarAnchor, "Offered $n password(s) to Google / Samsung Pass")
+            }
+        }
     }
 
     internal fun openTerminalPasteSheetPublic() {
@@ -474,10 +601,17 @@ class MainActivity : ComponentActivity() {
 
     internal fun showModelPicker() {
         val labels = agentModels.map { UiPolish.modelLabel(it) }.toTypedArray()
-        UiSheets.showListSheet(this, "Venice model", labels) { which ->
+        // Prefer a real AlertDialog when the bottom sheet theme is invisible / behind Compose.
+        AlertDialog.Builder(this)
+            .setTitle("Venice model")
+            .setItems(labels) { _, which ->
+                if (which !in agentModels.indices) return@setItems
                 agentSelectedModel = agentModels[which]
                 prefs.edit().putString(SettingsManager.KEY_VENICE_MODEL, agentSelectedModel).apply()
-        }
+                Toast.makeText(this, "Model: ${UiPolish.modelLabel(agentSelectedModel)}", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     internal fun showSystemPromptDialog() {
@@ -590,7 +724,9 @@ class MainActivity : ComponentActivity() {
             ?: SettingsManager.DEFAULT_SYSTEM_PROMPT
         val sysPrompt = buildString {
             append(savedPrompt.trim())
-            if (!savedPrompt.contains("review_latest_render") || !savedPrompt.contains("run_laptop_command")) {
+            if (!savedPrompt.contains("hub_overview") || !savedPrompt.contains("hub_request") ||
+                !savedPrompt.contains("run_laptop_command")
+            ) {
                 append("\n\n")
                 append(SettingsManager.AGENT_INTEGRATION_PROMPT)
             }
@@ -1026,7 +1162,14 @@ class MainActivity : ComponentActivity() {
             }
             "renders", "gallery" -> RelayHttp.get(relayBase, auth, "/api/media/library")
             "setup" -> RelayHttp.get(relayBase, auth, "/api/setup")
-            "thunder" -> RelayHttp.get(relayBase, auth, "/api/thunder/state")
+            "thunder" -> {
+                val state = RelayHttp.get(relayBase, auth, "/api/thunder/state")
+                val library = runCatching { RelayHttp.get(relayBase, auth, "/api/media/library") }.getOrDefault("[]")
+                JSONObject().apply {
+                    put("state", JSONObject(state))
+                    put("library", JSONArray(library))
+                }.toString()
+            }
             "colab" -> RelayHttp.get(relayBase, auth, "/api/colab/state")
             "hypno" -> {
                 val overview = RelayHttp.get(relayBase, auth, "/api/laptop/hypno/overview")
@@ -1039,12 +1182,21 @@ class MainActivity : ComponentActivity() {
             "ltx", "shotwriter" -> {
                 val setup = runCatching { RelayHttp.get(relayBase, auth, "/api/setup") }.getOrDefault("{}")
                 val jobs = runCatching { RelayHttp.get(relayBase, auth, "/api/gen/jobs") }.getOrDefault("[]")
+                val library = runCatching { RelayHttp.get(relayBase, auth, "/api/media/library") }.getOrDefault("[]")
                 JSONObject().apply {
                     put("setup", JSONObject(setup))
                     put("jobs", JSONArray(jobs))
+                    put("library", JSONArray(library))
                 }.toString()
             }
-            "vast" -> RelayHttp.get(relayBase, auth, "/api/thunder/queue")
+            "vast" -> {
+                val queue = RelayHttp.get(relayBase, auth, "/api/thunder/queue")
+                val library = runCatching { RelayHttp.get(relayBase, auth, "/api/media/library") }.getOrDefault("[]")
+                JSONObject().apply {
+                    put("queue", JSONObject(queue))
+                    put("library", JSONArray(library))
+                }.toString()
+            }
             "files" -> {
                 val ping = runCatching { RelayHttp.get(relayBase, auth, "/api/laptop/ping") }.getOrDefault("{}")
                 val home = runCatching {
@@ -1358,4 +1510,171 @@ class MainActivity : ComponentActivity() {
         val PILL = Color.parseColor("#26FFFFFF")
 
     }
+
+    // =========================================================================
+    // Biometric unlock + phone files
+    // =========================================================================
+
+    internal fun biometricEnabled(): Boolean =
+        prefs.getBoolean(SettingsManager.KEY_BIOMETRIC_UNLOCK, false)
+
+    internal fun biometricStatusLabel(): String =
+        com.whitedevil.security.BiometricAuth.statusLabel(this)
+
+    private fun evaluateAppLock(forcePrompt: Boolean) {
+        if (!biometricEnabled()) {
+            appUnlocked = true
+            return
+        }
+        if (!com.whitedevil.security.BiometricAuth.available(this)) {
+            // Can't lock the user out if hardware disappears — leave unlocked.
+            appUnlocked = true
+            return
+        }
+        val awayMs = if (lastBackgroundAt == 0L) Long.MAX_VALUE else System.currentTimeMillis() - lastBackgroundAt
+        val shouldLock = !appUnlocked || forcePrompt || awayMs > 30_000L
+        if (!shouldLock) return
+        appUnlocked = false
+        promptBiometricUnlock()
+    }
+
+    internal fun promptBiometricUnlock() {
+        com.whitedevil.security.BiometricAuth.prompt(
+            this,
+            onSuccess = { appUnlocked = true },
+            onError = { msg ->
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+            },
+            onCancel = { /* stay locked */ },
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // Device-bound auth (hub/auth.py). Strictly additive: relay basic auth is
+    // still sent on every request, and every failure path here is a message, not
+    // a blocked app.
+    // -------------------------------------------------------------------------
+
+    internal fun refreshDeviceAuthState() {
+        deviceAuthState = com.whitedevil.security.DeviceAuth.state(this)
+    }
+
+    /** Enrol (or re-enrol) this phone, then sign in. Prompts for fingerprint / PIN. */
+    internal fun enrolDeviceAuth(deviceName: String) {
+        if (deviceAuthBusy) return
+        deviceAuthBusy = true
+        deviceAuthMessage = "Enrolling this phone…"
+        scope.launch {
+            val outcome = com.whitedevil.security.DeviceAuth.enrolAndSignIn(
+                activity = this@MainActivity,
+                relayBase = relayBase,
+                basicAuth = basicAuth("wan"),
+                deviceName = deviceName,
+            )
+            deviceAuthBusy = false
+            deviceAuthMessage = outcome.message
+            refreshDeviceAuthState()
+            UiFeedback.snackbar(snackbarAnchor, outcome.message)
+        }
+    }
+
+    /** Refresh the device token if it has expired. No-op while one is still live. */
+    internal fun signInDeviceAuth() {
+        if (deviceAuthBusy) return
+        deviceAuthBusy = true
+        deviceAuthMessage = "Signing in…"
+        scope.launch {
+            val outcome = com.whitedevil.security.DeviceAuth.ensureToken(
+                activity = this@MainActivity,
+                relayBase = relayBase,
+                basicAuth = basicAuth("wan"),
+            )
+            deviceAuthBusy = false
+            deviceAuthMessage = outcome.message
+            refreshDeviceAuthState()
+            UiFeedback.snackbar(snackbarAnchor, outcome.message)
+        }
+    }
+
+    /** Drop the local enrolment and key. The hub-side record is revoked separately. */
+    internal fun forgetDeviceAuth() {
+        com.whitedevil.security.DeviceAuth.forget(this)
+        deviceAuthMessage =
+            "This phone's device key was deleted locally. Revoke it on the hub too if it is still listed."
+        refreshDeviceAuthState()
+        UiFeedback.snackbar(snackbarAnchor, "Device key removed from this phone")
+    }
+
+    internal fun unlockViaSettingsFallback() {
+        // Let the user reach Settings to disable biometrics or fix credentials.
+        appUnlocked = true
+        selectTab(Tab.YOU)
+        showYouSub(YouSub.SETTINGS)
+    }
+
+    internal fun phoneFolderUri(): Uri? {
+        val raw = prefs.getString(SettingsManager.KEY_PHONE_FOLDER_URI, null) ?: return null
+        return runCatching { Uri.parse(raw) }.getOrNull()
+    }
+
+    private fun persistPhoneFolder(uri: Uri) {
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        try {
+            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        } catch (_: SecurityException) {
+            try {
+                contentResolver.takePersistableUriPermission(uri, flags)
+            } catch (e: SecurityException) {
+                Toast.makeText(this, "Couldn't keep folder access: ${e.message}", Toast.LENGTH_LONG).show()
+                return
+            }
+        }
+        prefs.edit().putString(SettingsManager.KEY_PHONE_FOLDER_URI, uri.toString()).apply()
+        Toast.makeText(this, "Folder linked", Toast.LENGTH_SHORT).show()
+        showYouSub(YouSub.FILES)
+    }
+
+    internal fun pickPhoneFolder() {
+        pickPhoneFolderLauncher.launch(null)
+    }
+
+    internal fun pickPhoneFiles() {
+        pickFilesLauncher.launch(arrayOf("*/*"))
+        selectTab(Tab.AGENT)
+    }
+
+    internal fun pickPhoneMedia() {
+        pickPhoneMediaLauncher.launch("image/*")
+    }
+
+    internal fun requestPhoneMediaPermission() {
+        val needed = mutableListOf(
+            android.Manifest.permission.READ_MEDIA_IMAGES,
+            android.Manifest.permission.READ_MEDIA_VIDEO,
+            android.Manifest.permission.READ_MEDIA_AUDIO,
+        )
+        if (Build.VERSION.SDK_INT <= 32) {
+            needed += android.Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        val missing = needed.filter {
+            checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isEmpty()) {
+            Toast.makeText(this, "Media access already granted", Toast.LENGTH_SHORT).show()
+            return
+        }
+        pendingPermissionAction = {
+            Toast.makeText(this, "Media access granted", Toast.LENGTH_SHORT).show()
+        }
+        permissionLauncher.launch(missing.toTypedArray())
+    }
+
+    internal fun attachPhoneUri(uri: Uri) {
+        addContentAttachment(uri)
+        syncPendingAttachmentsUi()
+        selectTab(Tab.AGENT)
+        Toast.makeText(this, "Attached to Agent", Toast.LENGTH_SHORT).show()
+    }
+
+
 }

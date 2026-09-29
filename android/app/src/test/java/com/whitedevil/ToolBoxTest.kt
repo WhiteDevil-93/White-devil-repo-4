@@ -1,5 +1,6 @@
 package com.whitedevil
 
+import com.whitedevil.agent.Agent
 import com.whitedevil.agent.ToolBox
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -32,6 +33,7 @@ class ToolBoxTest {
         assertTrue(names.contains("delete_file"))
         assertTrue(names.contains("get_render_status"))
         assertTrue(names.contains("review_latest_render"))
+        assertTrue(names.contains("render_assess_adjust_cycle"))
         assertTrue(names.contains("list_prompt_packs"))
         assertTrue(names.contains("run_laptop_command"))
         assertTrue(names.contains("download_civitai_lora"))
@@ -162,4 +164,21 @@ class ToolBoxTest {
         val escapeRes = box.execute("read_file", """{"path": "../secret.txt"}""")
         assertTrue(escapeRes.contains("Error") || escapeRes.contains("escapes"))
     }
+
+
+
+
+
+    @Test
+    fun testParseSlashCommands() {
+        assertTrue(Agent.parseSlash("hello") == null)
+        assertTrue(Agent.parseSlash("/review") is Agent.SlashAction.Review)
+        val c = Agent.parseSlash("/cycle status") as Agent.SlashAction.Cycle
+        assertEquals("status", c.action)
+        val c2 = Agent.parseSlash("/cycle start src=abc12345") as Agent.SlashAction.Cycle
+        assertEquals("start", c2.action)
+        assertEquals("abc12345", c2.src)
+        assertTrue(Agent.parseSlash("/help") is Agent.SlashAction.Help)
+    }
+
 }
