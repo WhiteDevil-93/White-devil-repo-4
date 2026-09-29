@@ -12,7 +12,11 @@
     body.messages = (body.messages || []).map(m => m.role === 'user' && typeof m.content === 'string' ? {...m, content: plain(m.content)} : m);
     const r = await base(input, {...init, body: JSON.stringify(body)});
     if (!r.ok) return r;
-    const j = await r.json();
+    // r.json() on a non-JSON 2xx body throws AND consumes the body, so the caller would see a
+    // SyntaxError instead of the reply. Read as text and hand the original back if it is not JSON.
+    const text = await r.text();
+    let j;
+    try { j = JSON.parse(text); } catch { return new Response(text, {status: r.status, statusText: r.statusText, headers: {'Content-Type': r.headers.get('Content-Type') || 'text/plain'}}); }
     for (const c of j.choices || []) if (c.message && typeof c.message.content === 'string') c.message.content = plain(c.message.content);
     return new Response(JSON.stringify(j), {status: r.status, statusText: r.statusText, headers: {'Content-Type': 'application/json'}});
   };

@@ -834,7 +834,9 @@ async function pollJobs(){
   const active = [...tracked.values()].filter(j => !ENDED.includes(j.status));
   if(!active.length){ clearInterval(pollTimer); pollTimer = null; return; }
   await Promise.all(active.map(async j => {
-    try{ tracked.set(j.id, await rFetch(`/jobs/${j.id}?log=1`)); }catch(e){}
+    // A swallowed poll error leaves the card frozen on a stale status forever; show the loss of contact.
+    try{ tracked.set(j.id, Object.assign(await rFetch(`/jobs/${j.id}?log=1`), { stale: null })); }
+    catch(e){ tracked.set(j.id, Object.assign({}, j, { stale: e.message === 'Failed to fetch' ? 'lost contact with the runner (URL wrong, runner stopped, or tunnel changed) — retrying' : 'poll failed: ' + e.message })); }
   }));
   renderJobs();
 }
@@ -847,13 +849,14 @@ function renderJobs(){
   [...tracked.values()].reverse().forEach(j => {
     const p = j.progress || {};
     const fin = j.final_url || (j.chain_id && finals[j.chain_id]);
-    const last = j.log && j.log.length ? j.log[j.log.length - 1].replace(/^\S+\s/, '') : '';
+    const last = j.log && j.log.length ? String(j.log[j.log.length - 1]).replace(/^\S+\s/, '') : '';
     const el = document.createElement('article');
     el.className = 'variant';
     el.innerHTML = `
       <h3><span>${esc(j.name || j.id)}</span><span class="wc">${esc(j.model || '')}</span></h3>
       <p class="state"><b>${esc(j.status)}</b> · ${p.done || 0}/${p.total || 0} clips${j.part ? ` · part ${j.part.index}/${j.part.of}` : ''} · ${esc(j.id)}</p>
       ${last ? `<p class="state">${esc(last)}</p>` : ''}
+      ${j.stale ? `<p class="state" style="color:var(--bad)">${esc(j.stale)}</p>` : ''}
       ${j.error ? `<pre class="neg">${esc(j.error)}</pre>` : ''}
       <div class="actions">
         ${fin ? `<a class="btnlink" href="${esc(rBase() + fin + '?token=' + encodeURIComponent($('rToken').value.trim()))}" target="_blank" rel="noopener">Open video</a>` : ''}
@@ -874,9 +877,10 @@ async function checkRunner(){
   const st = $('rStatus');
   st.textContent = 'Checking…';
   try{
-    const h = await rFetch('/health');
-    $('rModels').innerHTML = h.models.map(m => `<option value="${esc(m)}">`).join('');
-    st.textContent = `Connected · ${h.gpu && h.gpu.length ? h.gpu.join(' | ') : 'no GPU info'} · models: ${h.models.join(', ')} (default ${h.default_model})` + (h.loaded_model ? ` · loaded: ${h.loaded_model}` : '') + ` · queued: ${h.queued}`;
+    const h = (await rFetch('/health')) || {};
+    const models = Array.isArray(h.models) ? h.models : [];
+    $('rModels').innerHTML = models.map(m => `<option value="${esc(m)}">`).join('');
+    st.textContent = `Connected · ${h.gpu && h.gpu.length ? h.gpu.join(' | ') : 'no GPU info'} · models: ${models.length ? models.join(', ') : 'none reported'} (default ${h.default_model ?? 'unknown'})` + (h.loaded_model ? ` · loaded: ${h.loaded_model}` : '') + ` · queued: ${h.queued ?? '?'}`;
   }catch(e){
     st.textContent = e.message === 'Failed to fetch' ? 'Could not reach the runner (URL wrong, runner stopped, or tunnel changed).' : e.message;
   }
@@ -913,8 +917,16 @@ async function callModel(system, user, maxTokens){
       messages: [{role: 'system', content: system}, {role: 'user', content: user}]
     })
   });
-  const data = await res.json();
-  if(!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+  // A gateway/tunnel in front of OpenRouter can answer with HTML or an empty body; parsing that
+  // first would report "Unexpected token '<'" and hide the real 401/402/429.
+  let data = null;
+  try{ data = await res.json(); }catch(e){}
+  if(!res.ok || data?.error){
+    const hint = res.status === 401 ? ' — check the API key under OpenRouter settings'
+      : res.status === 402 ? ' — the OpenRouter account is out of credits'
+      : res.status === 429 ? ' — rate limited (common on :free); wait, or drop :free from the model slug' : '';
+    throw new Error((data?.error?.message || `HTTP ${res.status}`) + hint);
+  }
   return data?.choices?.[0]?.message?.content || '';
 }
 
