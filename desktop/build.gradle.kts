@@ -20,6 +20,14 @@ dependencies {
     // lets the Shell tab drop ttyd and the paste-queue bridge entirely.
     implementation("org.jetbrains.pty4j:pty4j:0.12.13")
 
+    // The terminal emulator itself: the widget IntelliJ's terminal is built on.
+    // Without one the pty's escape sequences arrive as literal "ESC[0;33m" and any
+    // full-screen program is unusable. Pinned to 3.66, not the newest: 3.74+ are
+    // compiled with Kotlin 2.4, which this project's 2.0.21 compiler cannot read.
+    // Both are published only on the JetBrains repo listed in settings.gradle.kts.
+    implementation("org.jetbrains.jediterm:jediterm-core:3.66")
+    implementation("org.jetbrains.jediterm:jediterm-ui:3.66")
+
     // Ktor client + kotlinx-serialization arrive transitively via :shared (api).
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-client-mock:2.3.12")

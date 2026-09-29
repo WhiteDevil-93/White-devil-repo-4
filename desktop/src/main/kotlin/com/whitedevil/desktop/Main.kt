@@ -40,9 +40,15 @@ import androidx.compose.ui.window.rememberWindowState
  */
 fun main() = application {
     val windowState = rememberWindowState(size = DpSize(1280.dp, 860.dp))
+    // Lives at the window level so switching tabs does not kill the shell.
+    val shell = remember { ShellSession() }
 
     Window(
-        onCloseRequest = ::exitApplication,
+        onCloseRequest = {
+            // Kill the WSL child before the JVM goes, or wsl.exe is left orphaned.
+            shell.stop()
+            exitApplication()
+        },
         state = windowState,
         title = "WhiteDevil",
     ) {
@@ -59,10 +65,9 @@ fun main() = application {
                                 settings = settings,
                                 onOpenSettings = { screen = Screen.Settings },
                             )
-                            // Kept alive across tab switches: restarting the shell
-                            // on every switch would discard the session and any
-                            // long-running command in it.
-                            Screen.Terminal -> TerminalScreen()
+                            // The session outlives this branch of the `when`, so a
+                            // tab switch keeps the running shell and whatever is in it.
+                            Screen.Terminal -> TerminalScreen(shell)
                             Screen.Renders -> RendersScreen(settings)
                             Screen.Gallery -> GalleryScreen(settings)
                             Screen.Colab -> ColabScreen(settings)
