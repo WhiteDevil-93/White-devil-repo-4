@@ -12,6 +12,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import java.io.File
 import java.net.HttpURLConnection
@@ -104,10 +105,35 @@ class ToolBox(
             ToolDefinition(
                 function = ToolFunctionSpec(
                     name = "review_latest_render",
-                    description = "Fetch the newest completed Forge Hub render and its actual preview image so you can visually review it. You MUST use this whenever the user asks to review, inspect, critique, describe, or check the latest/newest/recent render; do not ask the user to attach it.",
+                    description = "Fetch the newest Forge Hub render contact sheet for visual review. Prefer when the user typed /review or explicitly asked to review a render; not ambient default work.",
                     parameters = buildJsonObject {
                         put("type", "object")
                         putJsonObject("properties") {}
+                    },
+                ),
+            ),
+        )
+        add(
+            ToolDefinition(
+                function = ToolFunctionSpec(
+                    name = "render_assess_adjust_cycle",
+                    description = "Start, status, or stop the LTX render→assess→adjust QA cycle. Prefer when the user typed /cycle or explicitly asked for a QA cycle; not ambient default work.",
+                    parameters = buildJsonObject {
+                        put("type", "object")
+                        putJsonObject("properties") {
+                            putJsonObject("action") {
+                                put("type", "string")
+                                put("description", "One of: start, status, stop. Defaults to status.")
+                            }
+                            putJsonObject("src") {
+                                put("type", "string")
+                                put("description", "Optional LTX job id to continue from.")
+                            }
+                            putJsonObject("rounds") {
+                                put("type", "integer")
+                                put("description", "Optional max rounds for start (1-10). Defaults to 5.")
+                            }
+                        }
                     },
                 ),
             ),
@@ -172,7 +198,76 @@ class ToolBox(
                 ),
             ),
         )
-    }
+        add(
+            ToolDefinition(
+                function = ToolFunctionSpec(
+                    name = "hub_overview",
+                    description = "Sitrep for the Forge Hub domain (status, laptop, Colab, Thunder, LTX, media, term, agentic). Use when the goal involves Hub/studio ops.",
+                    parameters = buildJsonObject {
+                        put("type", "object")
+                        putJsonObject("properties") {}
+                    },
+                ),
+            ),
+        )
+        add(
+            ToolDefinition(
+                function = ToolFunctionSpec(
+                    name = "hub_request",
+                    description = "Call ANY Forge Hub API under /api/* (GET/POST/PUT/DELETE). Use when the goal needs Forge Hub (one domain of this app): status, manifest, media, colab, thunder, ltx, gen, setup, term, laptop, agentic, vast, hypno. Pass JSON body as a string for POST/PUT.",
+                    parameters = buildJsonObject {
+                        put("type", "object")
+                        putJsonObject("properties") {
+                            putJsonObject("method") {
+                                put("type", "string")
+                                put("description", "HTTP method: GET, POST, PUT, or DELETE. Defaults to GET.")
+                            }
+                            putJsonObject("path") {
+                                put("type", "string")
+                                put("description", "Path beginning with /api/ — e.g. /api/ltx/jobs or /api/thunder/state")
+                            }
+                            putJsonObject("body") {
+                                put("type", "string")
+                                put("description", "Optional JSON object string for POST/PUT body.")
+                            }
+                        }
+                        put("required", buildJsonArray { add(JsonPrimitive("path")) })
+                    },
+                ),
+            ),
+        )
+    
+        add(
+            ToolDefinition(
+                function = ToolFunctionSpec(
+                    name = "queue_gpu_render",
+                    description = "Queue a render on a GPU cloud (colab, thunder, ltx, gen, vast). Prefer this over raw hub_request for starting renders.",
+                    parameters = buildJsonObject {
+                        put("type", "object")
+                        putJsonObject("properties") {
+                            putJsonObject("cloud") {
+                                put("type", "string")
+                                put("description", "One of: colab, thunder, ltx, gen, vast.")
+                            }
+                            putJsonObject("packs") {
+                                put("type", "string")
+                                put("description", "Colab only: comma-separated pack numbers.")
+                            }
+                            putJsonObject("prompt") {
+                                put("type", "string")
+                                put("description", "LTX only: clip prompt.")
+                            }
+                            putJsonObject("body_json") {
+                                put("type", "string")
+                                put("description", "JSON object string for thunder/ltx/gen/vast payloads.")
+                            }
+                        }
+                        put("required", buildJsonArray { add(JsonPrimitive("cloud")) })
+                    },
+                ),
+            ),
+        )
+}
 
     fun execute(name: String, argumentsJson: String): String =
         executeDetailed(name, argumentsJson).text
@@ -186,9 +281,13 @@ class ToolBox(
                 "delete_file" -> ToolExecution(deleteFile(argumentsJson))
                 "get_render_status" -> ToolExecution(getRenderStatus())
                 "review_latest_render" -> reviewLatestRender()
+                "render_assess_adjust_cycle" -> ToolExecution(renderAssessAdjustCycle(argumentsJson))
                 "list_prompt_packs" -> ToolExecution(listPromptPacks())
                 "run_laptop_command" -> ToolExecution(runLaptopCommand(argumentsJson))
                 "download_civitai_lora" -> ToolExecution(downloadCivitaiLora(argumentsJson))
+                "hub_overview" -> ToolExecution(hubOverview())
+                "hub_request" -> ToolExecution(hubRequest(argumentsJson))
+                "queue_gpu_render" -> ToolExecution(queueGpuRender(argumentsJson))
                 else -> ToolExecution("Error: unknown tool '$name'.")
             }
             result
@@ -247,7 +346,12 @@ class ToolBox(
 
     // ---------- Remote Forge Hub & Relay Tool Handlers ----------
 
-    private fun relayHttp(path: String, method: String = "GET", postBody: String? = null): String {
+    private fun relayHttp(
+        path: String,
+        method: String = "GET",
+        postBody: String? = null,
+        readTimeoutMs: Int = 30000,
+    ): String {
         val cleanBase = relayBaseUrl.trimEnd('/')
         if (cleanBase.isBlank()) {
             return "Error: Relay Base URL is not configured. Check settings."
@@ -256,7 +360,7 @@ class ToolBox(
         val conn = url.openConnection() as HttpURLConnection
         conn.requestMethod = method
         conn.connectTimeout = 15000
-        conn.readTimeout = 30000
+        conn.readTimeout = readTimeoutMs
         if (relayPass.isNotBlank()) {
             val auth = "Basic " + Base64.getEncoder().encodeToString("$relayUser:$relayPass".toByteArray())
             conn.setRequestProperty("Authorization", auth)
@@ -267,8 +371,10 @@ class ToolBox(
             conn.outputStream.use { it.write(postBody.toByteArray()) }
         }
         val code = conn.responseCode
-        val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-        val body = stream?.bufferedReader()?.readText().orEmpty()
+        // The response stream has to be closed, or every poll leaks a descriptor and
+        // the connection never goes back to the keep-alive pool.
+        val body = (if (code in 200..299) conn.inputStream else conn.errorStream)
+            ?.use { it.bufferedReader().readText() }.orEmpty()
         return if (code in 200..299) body else "Error: HTTP $code${if (body.isBlank()) "" else ": $body"}"
     }
 
@@ -285,7 +391,7 @@ class ToolBox(
         }
         val code = conn.responseCode
         if (code !in 200..299) {
-            val detail = conn.errorStream?.bufferedReader()?.readText().orEmpty()
+            val detail = conn.errorStream?.use { it.bufferedReader().readText() }.orEmpty()
             error("HTTP $code fetching render preview${if (detail.isBlank()) "" else ": $detail"}")
         }
         val contentType = conn.contentType?.substringBefore(';') ?: "image/jpeg"
@@ -334,9 +440,31 @@ class ToolBox(
             appendLine("name: ${latest.name}")
             if (latest.groupTitle.isNotBlank()) appendLine("group: ${latest.groupTitle}")
             if (latest.source.isNotBlank()) appendLine("source: ${latest.source}")
-            append("A four-frame contact sheet from the actual render is attached to this tool result (or a single preview frame when contact sheets are unavailable). Review visible composition, consistency, motion progression across frames, and artifacts. Do not claim to have assessed audio.")
+            append("A dense contact sheet (12–24 frames in a grid, sampled across the clip) from the actual render is attached to this tool result (or a single preview frame when contact sheets are unavailable). Walk the frames in order: note motion progression, morphs, flicker, and consistency. Do not claim to have assessed audio.")
         }
         return ToolExecution(text, listOf(dataUrl))
+    }
+
+
+    private fun renderAssessAdjustCycle(argumentsJson: String): String {
+        val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
+        val action = args.stringOrNull("action")?.trim()?.lowercase().orEmpty().ifBlank { "status" }
+        return try {
+            when (action) {
+                "status" -> relayHttp("/api/ltx/cycle/status")
+                "stop" -> relayHttp("/api/ltx/cycle/stop", method = "POST", postBody = "{}")
+                "start" -> {
+                    val payload = buildJsonObject {
+                        put("rounds", args["rounds"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 5)
+                        args.stringOrNull("src")?.takeIf { it.isNotBlank() }?.let { put("src", it) }
+                    }
+                    relayHttp("/api/ltx/cycle/start", method = "POST", postBody = payload.toString())
+                }
+                else -> "Error: action must be start, status, or stop (got '$action')."
+            }
+        } catch (e: Exception) {
+            "Error controlling render cycle: ${e.message}"
+        }
     }
 
     private fun listPromptPacks(): String {
@@ -366,15 +494,20 @@ class ToolBox(
         }
     }
 
+    /** POSIX single-quoting for a value that is interpolated into a remote shell command. */
+    private fun shellQuote(value: String): String = "'" + value.replace("'", "'\\''") + "'"
+
     private fun downloadCivitaiLora(argumentsJson: String): String {
         return try {
             val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
             val id = args.stringOrNull("model_id") ?: return "Error: 'model_id' argument is required."
             val slug = args.stringOrNull("slug") ?: ""
+            // These values come from the model and are pasted into a bash command on
+            // the laptop; unquoted, a space or a ';' in either one runs as a command.
             val cmd = buildString {
                 append("python3 tools/civitai_red_dl.py")
-                id.split(Regex("[\\s,;]+")).filter { it.isNotBlank() }.forEach { append(" --id $it") }
-                if (slug.isNotBlank()) append(" --slug $slug")
+                id.split(Regex("[\\s,;]+")).filter { it.isNotBlank() }.forEach { append(" --id " + shellQuote(it)) }
+                if (slug.isNotBlank()) append(" --slug " + shellQuote(slug))
             }
             val payload = buildJsonObject {
                 put("lang", "bash")
@@ -384,6 +517,109 @@ class ToolBox(
             relayHttp("/api/laptop/run", method = "POST", postBody = payload)
         } catch (e: Exception) {
             "Error invoking Civitai downloader: ${e.message}"
+        }
+    }
+
+
+    private fun queueGpuRender(argumentsJson: String): String {
+        return try {
+            val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
+            val cloud = args.stringOrNull("cloud")?.trim()?.lowercase().orEmpty()
+            if (cloud.isEmpty()) return "Error: 'cloud' is required (colab|thunder|ltx|gen|vast)."
+            val bodyJson = args.stringOrNull("body_json")?.trim().orEmpty()
+            val packs = args.stringOrNull("packs")?.trim().orEmpty()
+            val prompt = args.stringOrNull("prompt")?.trim().orEmpty()
+            when (cloud) {
+                "colab" -> {
+                    val packList = packs.split(Regex("[\\s,;]+")).mapNotNull { it.toIntOrNull() }
+                    if (packList.isEmpty()) return "Error: colab needs packs (e.g. 1,2)."
+                    val payload = buildJsonObject {
+                        putJsonArray("packs") { packList.forEach { add(JsonPrimitive(it)) } }
+                    }.toString()
+                    relayHttp("/api/colab/queue", method = "POST", postBody = payload)
+                }
+                "thunder" -> {
+                    if (bodyJson.isEmpty()) return "Error: thunder needs body_json with spec."
+                    relayHttp("/api/thunder/queue", method = "POST", postBody = bodyJson)
+                }
+                "ltx" -> {
+                    val p = if (prompt.isNotEmpty()) prompt else {
+                        runCatching {
+                            json.parseToJsonElement(bodyJson).jsonObjectOrEmpty().stringOrNull("prompt")
+                        }.getOrNull().orEmpty()
+                    }
+                    if (p.length < 10) return "Error: ltx needs a prompt (10+ chars)."
+                    // Form-urlencoded via hub_request shape — use JSON fields the FastAPI Form accepts poorly;
+                    // post as multipart-ish query body through a small JSON wrapper endpoint isn't available,
+                    // so use hub_request with path and let relay accept form: build urlencoded.
+                    val form = buildString {
+                        append("prompt=").append(java.net.URLEncoder.encode(p, "UTF-8"))
+                        append("&frames=49&size=landscape")
+                    }
+                    relayHttp("/api/ltx/render", method = "POST", postBody = form, readTimeoutMs = 120_000)
+                }
+                "gen" -> {
+                    if (bodyJson.isEmpty()) return "Error: gen needs body_json."
+                    relayHttp("/api/gen/chain", method = "POST", postBody = bodyJson)
+                }
+                "vast" -> {
+                    val path = runCatching {
+                        json.parseToJsonElement(bodyJson).jsonObjectOrEmpty().stringOrNull("path")
+                    }.getOrNull() ?: "/api/vast/state"
+                    if (bodyJson.isEmpty() || path == "/api/vast/state") {
+                        relayHttp("/api/vast/state")
+                    } else {
+                        relayHttp(path, method = "POST", postBody = bodyJson)
+                    }
+                }
+                else -> "Error: cloud must be colab|thunder|ltx|gen|vast."
+            }.take(24000)
+        } catch (e: Exception) {
+            "Error: queue_gpu_render failed: ${e.message}"
+        }
+    }
+
+    private fun hubOverview(): String {
+        val paths = listOf(
+            "/api/status",
+            "/api/laptop/ping",
+            "/api/colab/state",
+            "/api/thunder/state",
+            "/api/thunder/queue",
+            "/api/vast/state",
+            "/api/ltx/status",
+            "/api/ltx/jobs",
+            "/api/ltx/cycle/status",
+            "/api/gen/jobs",
+            "/api/media/library",
+            "/api/setup",
+            "/api/term/status",
+            "/api/agentic/status",
+            "/api/manifest",
+        )
+        return buildString {
+            for (path in paths) {
+                appendLine("=== $path ===")
+                appendLine(runCatching { relayHttp(path) }.getOrElse { "Error: ${it.message}" }.take(4000))
+                appendLine()
+            }
+        }.take(24000)
+    }
+
+    private fun hubRequest(argumentsJson: String): String {
+        return try {
+            val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
+            val path = args.stringOrNull("path")?.trim().orEmpty()
+            if (!path.startsWith("/api/")) return "Error: path must start with /api/"
+            if (".." in path) return "Error: invalid path"
+            val method = (args.stringOrNull("method") ?: "GET").trim().uppercase().ifBlank { "GET" }
+            if (method !in setOf("GET", "POST", "PUT", "DELETE", "PATCH")) {
+                return "Error: unsupported method $method"
+            }
+            val body = args.stringOrNull("body")?.trim()?.takeIf { it.isNotEmpty() }
+            relayHttp(path, method = method, postBody = body, readTimeoutMs = 120_000).take(24000)
+        } catch (e: Exception) {
+            "Error: hub_request failed: ${e.message}"
         }
     }
 

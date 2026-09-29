@@ -1,5 +1,7 @@
 package com.whitedevil.agent
 
+import java.util.Locale
+
 /** Pure helpers for the attachment pipeline. Android-free on purpose so unit tests can cover them. */
 object Attachments {
 
@@ -41,12 +43,15 @@ object Attachments {
     }
 
     fun formatSize(bytes: Long): String {
+        // Locale.ROOT, not the default: String.format follows the machine locale,
+        // so on en_ZA (this machine) "%.1f" produced "2,0 KB". That string goes
+        // into the tool result the model reads, so it must not vary by machine.
         if (bytes < 1024) return "$bytes B"
         val kb = bytes / 1024.0
-        if (kb < 1024) return "${"%.1f".format(kb)} KB"
+        if (kb < 1024) return "${String.format(Locale.ROOT, "%.1f", kb)} KB"
         val mb = kb / 1024.0
-        if (mb < 1024) return "${"%.1f".format(mb)} MB"
-        return "${"%.2f".format(mb / 1024.0)} GB"
+        if (mb < 1024) return "${String.format(Locale.ROOT, "%.1f", mb)} MB"
+        return "${String.format(Locale.ROOT, "%.2f", mb / 1024.0)} GB"
     }
 
     /** Sanitizes a display name into a safe file name, preserving an extension when present. */

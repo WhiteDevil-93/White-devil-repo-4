@@ -1,72 +1,70 @@
 package com.whitedevil.veniceagent
 
+import com.whitedevil.agent.ToolDefinition
+import com.whitedevil.agent.ToolFunctionSpec
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
-import java.util.Base64
 import java.util.concurrent.TimeUnit
 
 /**
- * Unified ToolBox for the Venice Agent:
- * 1. Sandboxed filesystem tools (`read_file`, `write_file`, `list_directory`)
- * 2. Shell execution (`run_shell_command`)
- * 3. Forge Hub & Wan2.2 Pipeline tools:
- *    - `get_render_status`: Query active Wan2.2 5B/14B GPU rendering jobs and heartbeat status
- *    - `list_prompt_packs`: List available prompt chains and render completion counts
- *    - `run_laptop_command`: Execute a command or script on the user's WSL laptop via the relay bridge
- *    - `download_civitai_lora`: Invoke the Civitai mirror downloader on the laptop
+ * CLI ToolBox.
+ *
+ * Everything except `run_shell_command` is delegated to [com.whitedevil.agent.ToolBox]
+ * in :shared — the CLI used to carry its own copy of the relay/filesystem handlers and
+ * it had already drifted (no blank-base-url guard, a shorter `hub_overview` path list,
+ * no `cwd`/`timeout_seconds` on `run_laptop_command`).
+ *
+ * `run_shell_command` stays here: it runs a process on the machine hosting the agent,
+ * which is only meaningful for the CLI, and :shared (an Android library dependency)
+ * deliberately does not offer it.
+ *
+ * The exposed set is deliberately narrower than :shared's. Tools left out:
+ *  - `delete_file` — never offered by the CLI; adding it would hand the model a new
+ *    destructive verb it did not previously have.
+ *  - `review_latest_render` / `render_assess_adjust_cycle` — image-returning /
+ *    UI-driven tools with no CLI surface (this loop returns text only).
+ *  - `queue_gpu_render` — not previously offered by the CLI.
+ * Widening the set is a behaviour change; do it deliberately, not by accident.
  */
 class ToolBox(
     private val workspaceDir: File,
     private val allowShell: Boolean,
-    private val relayBaseUrl: String = System.getenv("RELAY_BASE_URL") ?: "https://84-12-112-249.sslip.io",
-    private val relayUser: String = System.getenv("RELAY_USER") ?: "anon3",
-    private val relayPass: String = System.getenv("RELAY_PASS") ?: "",
+    relayBaseUrl: String = System.getenv("RELAY_BASE_URL") ?: "https://84-12-112-249.sslip.io",
+    relayUser: String = System.getenv("RELAY_USER") ?: "anon3",
+    relayPass: String = System.getenv("RELAY_PASS") ?: "",
 ) {
-    private val json = Json { ignoreUnknownKeys = true }
-
-    init {
-        workspaceDir.mkdirs()
+    private companion object {
+        /** Shared tools the CLI exposes, matching the set it exposed before consolidation. */
+        val SHARED_TOOLS = setOf(
+            "read_file",
+            "write_file",
+            "list_directory",
+            "get_render_status",
+            "list_prompt_packs",
+            "run_laptop_command",
+            "download_civitai_lora",
+            "hub_overview",
+            "hub_request",
+        )
     }
 
+    private val json = Json { ignoreUnknownKeys = true }
+
+    private val shared = com.whitedevil.agent.ToolBox(
+        workspaceDir = workspaceDir,
+        relayBaseUrl = relayBaseUrl,
+        relayUser = relayUser,
+        relayPass = relayPass,
+    )
+
     val definitions: List<ToolDefinition> = buildList {
-        // Workspace filesystem tools
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "read_file",
-                    description = "Read the contents of a text file inside the agent workspace.",
-                    parameters = objectSchema("path" to "Path to the file, relative to the workspace root."),
-                ),
-            ),
-        )
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "write_file",
-                    description = "Create or overwrite a text file inside the agent workspace.",
-                    parameters = objectSchema(
-                        "path" to "Path to the file, relative to the workspace root.",
-                        "content" to "Full text content to write to the file.",
-                    ),
-                ),
-            ),
-        )
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "list_directory",
-                    description = "List files and subdirectories inside a directory in the agent workspace.",
-                    parameters = objectSchema("path" to "Directory path, relative to the workspace root. Use \".\" for the root."),
-                ),
-            ),
-        )
+        addAll(shared.definitions.filter { it.function.name in SHARED_TOOLS })
         if (allowShell) {
             add(
                 ToolDefinition(
@@ -78,69 +76,14 @@ class ToolBox(
                 ),
             )
         }
-
-        // Forge Hub & Pipeline tools
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "get_render_status",
-                    description = "Query active Wan2.2 rendering jobs, Colab GPU status, credit usage, and laptop connection state from Forge Hub.",
-                    parameters = buildJsonObject {
-                        put("type", "object")
-                        putJsonObject("properties") {}
-                    },
-                ),
-            ),
-        )
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "list_prompt_packs",
-                    description = "List prompt packs in the Wan2.2 generation catalog and their render completion status.",
-                    parameters = buildJsonObject {
-                        put("type", "object")
-                        putJsonObject("properties") {}
-                    },
-                ),
-            ),
-        )
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "run_laptop_command",
-                    description = "Execute a bash or python command on the user's WSL laptop via the relay SSH bridge in ~/venice_run.",
-                    parameters = objectSchema(
-                        "code" to "The shell command or python script code to execute.",
-                        "lang" to "Execution language: 'bash' or 'python'. Defaults to 'bash'.",
-                    ),
-                ),
-            ),
-        )
-        add(
-            ToolDefinition(
-                function = ToolFunctionSpec(
-                    name = "download_civitai_lora",
-                    description = "Download LoRA files from Civitai onto the laptop ~/civitai_dl folder. Pass one id or several (comma-separated). Pulls every LoRA file on every version (Wan 2.2, LTX-2, LTX-2.5), not a single LTX 2.5 file.",
-                    parameters = objectSchema(
-                        "model_id" to "Civitai model ID or version ID.",
-                        "slug" to "Optional model slug name for file naming.",
-                    ),
-                ),
-            ),
-        )
     }
 
     fun execute(name: String, argumentsJson: String): String {
         return try {
             when (name) {
-                "read_file" -> readFile(argumentsJson)
-                "write_file" -> writeFile(argumentsJson)
-                "list_directory" -> listDirectory(argumentsJson)
-                "run_shell_command" -> if (allowShell) runShellCommand(argumentsJson) else "Error: shell execution is disabled."
-                "get_render_status" -> getRenderStatus()
-                "list_prompt_packs" -> listPromptPacks()
-                "run_laptop_command" -> runLaptopCommand(argumentsJson)
-                "download_civitai_lora" -> downloadCivitaiLora(argumentsJson)
+                "run_shell_command" ->
+                    if (allowShell) runShellCommand(argumentsJson) else "Error: shell execution is disabled."
+                in SHARED_TOOLS -> shared.execute(name, argumentsJson)
                 else -> "Error: unknown tool '$name'."
             }
         } catch (e: Exception) {
@@ -148,48 +91,10 @@ class ToolBox(
         }
     }
 
-    private fun resolveWithinWorkspace(relativePath: String): File {
-        val target = File(workspaceDir, relativePath).canonicalFile
-        val root = workspaceDir.canonicalFile
-        require(target.path == root.path || target.path.startsWith(root.path + File.separator)) {
-            "path '$relativePath' escapes the workspace directory"
-        }
-        return target
-    }
-
-    private fun readFile(argumentsJson: String): String {
-        val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
-        val path = args.stringOrNull("path") ?: return "Error: 'path' argument is required."
-        val file = resolveWithinWorkspace(path)
-        if (!file.exists() || !file.isFile) return "Error: file not found: $path"
-        return file.readText()
-    }
-
-    private fun writeFile(argumentsJson: String): String {
-        val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
-        val path = args.stringOrNull("path") ?: return "Error: 'path' argument is required."
-        val content = args.stringOrNull("content") ?: ""
-        val file = resolveWithinWorkspace(path)
-        file.parentFile?.mkdirs()
-        file.writeText(content)
-        return "Wrote ${content.length} characters to $path"
-    }
-
-    private fun listDirectory(argumentsJson: String): String {
-        val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
-        val path = args.stringOrNull("path") ?: "."
-        val dir = resolveWithinWorkspace(path)
-        if (!dir.exists() || !dir.isDirectory) return "Error: directory not found: $path"
-        return dir.listFiles()
-            ?.sortedBy { it.name }
-            ?.joinToString("\n") { if (it.isDirectory) "${it.name}/" else it.name }
-            ?.ifBlank { "(empty directory)" }
-            ?: "(empty directory)"
-    }
-
     private fun runShellCommand(argumentsJson: String): String {
-        val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
-        val command = args.stringOrNull("command") ?: return "Error: 'command' argument is required."
+        val args = json.parseToJsonElement(argumentsJson) as? JsonObject ?: JsonObject(emptyMap())
+        val command = (args["command"] as? JsonPrimitive)?.content
+            ?: return "Error: 'command' argument is required."
         val process = ProcessBuilder("sh", "-c", command)
             .directory(workspaceDir)
             .redirectErrorStream(true)
@@ -203,83 +108,6 @@ class ToolBox(
         return "exit code: ${process.exitValue()}\n$output".take(8000)
     }
 
-    // ---------- Forge Hub & Relay Tool Handlers ----------
-
-    private fun relayHttp(path: String, method: String = "GET", postBody: String? = null): String {
-        val url = java.net.URI("${relayBaseUrl.trimEnd('/')}$path").toURL()
-        val conn = url.openConnection() as HttpURLConnection
-        conn.requestMethod = method
-        conn.connectTimeout = 15000
-        conn.readTimeout = 30000
-        if (relayPass.isNotBlank()) {
-            val auth = "Basic " + Base64.getEncoder().encodeToString("$relayUser:$relayPass".toByteArray())
-            conn.setRequestProperty("Authorization", auth)
-        }
-        if (postBody != null) {
-            conn.doOutput = true
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.outputStream.use { it.write(postBody.toByteArray()) }
-        }
-        val code = conn.responseCode
-        val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-        return stream?.bufferedReader()?.readText() ?: "HTTP $code"
-    }
-
-    private fun getRenderStatus(): String {
-        return try {
-            val status = relayHttp("/api/status")
-            val colab = relayHttp("/api/colab/state")
-            "Forge Hub Status:\n$status\n\nColab Pipeline State:\n$colab"
-        } catch (e: Exception) {
-            "Error querying render status: ${e.message}"
-        }
-    }
-
-    private fun listPromptPacks(): String {
-        return try {
-            relayHttp("/api/colab/packs")
-        } catch (e: Exception) {
-            "Error fetching prompt packs: ${e.message}"
-        }
-    }
-
-    private fun runLaptopCommand(argumentsJson: String): String {
-        return try {
-            val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
-            val code = args.stringOrNull("code") ?: return "Error: 'code' argument is required."
-            val lang = args.stringOrNull("lang") ?: "bash"
-            val payload = buildJsonObject {
-                put("lang", lang)
-                put("code", code)
-                put("timeout", 90)
-            }.toString()
-            relayHttp("/api/laptop/run", method = "POST", postBody = payload)
-        } catch (e: Exception) {
-            "Error running laptop command: ${e.message}"
-        }
-    }
-
-    private fun downloadCivitaiLora(argumentsJson: String): String {
-        return try {
-            val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
-            val id = args.stringOrNull("model_id") ?: return "Error: 'model_id' argument is required."
-            val slug = args.stringOrNull("slug") ?: ""
-            val cmd = buildString {
-                append("python3 tools/civitai_red_dl.py")
-                id.split(Regex("[\\s,;]+")).filter { it.isNotBlank() }.forEach { append(" --id $it") }
-                if (slug.isNotBlank()) append(" --slug $slug")
-            }
-            val payload = buildJsonObject {
-                put("lang", "bash")
-                put("code", cmd)
-                put("timeout", 180)
-            }.toString()
-            relayHttp("/api/laptop/run", method = "POST", postBody = payload)
-        } catch (e: Exception) {
-            "Error invoking Civitai downloader: ${e.message}"
-        }
-    }
-
     private fun objectSchema(vararg params: Pair<String, String>): JsonObject = buildJsonObject {
         put("type", "object")
         putJsonObject("properties") {
@@ -290,14 +118,6 @@ class ToolBox(
                 }
             }
         }
-        put("required", buildJsonArray {
-            params.forEach { (name, _) -> add(kotlinx.serialization.json.JsonPrimitive(name)) }
-        })
+        put("required", buildJsonArray { params.forEach { (name, _) -> add(JsonPrimitive(name)) } })
     }
 }
-
-private fun kotlinx.serialization.json.JsonElement.jsonObjectOrEmpty(): JsonObject =
-    this as? JsonObject ?: JsonObject(emptyMap())
-
-private fun JsonObject.stringOrNull(key: String): String? =
-    (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.content

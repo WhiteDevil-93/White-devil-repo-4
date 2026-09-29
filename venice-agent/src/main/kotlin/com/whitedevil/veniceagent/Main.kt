@@ -1,5 +1,6 @@
 package com.whitedevil.veniceagent
 
+import com.whitedevil.agent.VeniceClient
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
@@ -7,16 +8,9 @@ private const val DEFAULT_MODEL = "zai-org-glm-5-2"
 private const val DEFAULT_BASE_URL = "https://api.venice.ai/api/v1"
 
 private val SYSTEM_PROMPT = """
-You are an autonomous AI engineering agent connected to Forge Hub and Wan2.2 video generation pipelines.
-You have tools to:
-1. Read, write, and inspect files in the local workspace directory (`read_file`, `write_file`, `list_directory`).
-2. Run sandboxed shell commands (`run_shell_command`).
-3. Query Forge Hub live render status, GPU compute usage, and job queue (`get_render_status`).
-4. Inspect prompt chains and pack completion status (`list_prompt_packs`).
-5. Execute commands on the connected WSL laptop over SSH (`run_laptop_command`).
-6. Trigger LoRA downloads directly on the laptop via Civitai (`download_civitai_lora`).
-
-Use tools proactively to inspect state, diagnose issues, or execute rendering and pipeline workflows. Be concise and direct in your answers.
+You are WhiteDevil — an agentic engineering assistant. Take a goal, plan briefly, use tools, observe results, recover from failures, and finish or say you are stuck.
+Tools: read_file, write_file, list_directory, run_shell_command (if enabled), get_render_status, list_prompt_packs, run_laptop_command, download_civitai_lora.
+Prefer acting over listing commands. Ask before destructive actions. Be concise and direct.
 """.trim()
 
 fun main(args: Array<String>) = runBlocking {
@@ -57,7 +51,9 @@ fun main(args: Array<String>) = runBlocking {
         if (args.isNotEmpty()) {
             val task = args.joinToString(" ")
             println("> $task")
-            println(agent.send(task))
+            // An exception here used to escape main and print a stack trace
+            // instead of a usable error; the agent retry is already exhausted.
+            println(runCatching { agent.send(task) }.getOrElse { "Error: ${it.message}" })
             return@runBlocking
         }
 
@@ -70,7 +66,8 @@ fun main(args: Array<String>) = runBlocking {
                 break
             }
             if (trimmed.isEmpty()) continue
-            val reply = agent.send(trimmed)
+            // One failed turn must not end the session and lose the conversation.
+            val reply = runCatching { agent.send(trimmed) }.getOrElse { "Error: ${it.message}" }
             println("\n$reply")
         }
     }
