@@ -6,11 +6,10 @@
   never been built), not `wd-hello.exe`, not a TPM. Everything below comes from reading
   code, plus Gradle checks on Linux described in
   [`DESKTOP_PACKAGING.md`](DESKTOP_PACKAGING.md#7-what-was-verified-and-what-was-not).
-- **The desktop app is mid-flight.** It is being finished by several people in parallel.
-  Statements marked "at base" describe branch `cursor/full-device-integration-1b6f`
-  at commit `db49f77` (plus the packaging change). **Verify anything marked "landing in
-  the same series" on the merged branch.** Do not trust a status here over what you see
-  on screen.
+- **Everything below is code that compiles and passes unit tests, not code that has been
+  seen working.** The screens listed as "code merged" in section 2 exist on
+  `cursor/full-device-integration-1b6f` (compile + unit tests on Linux only). Do not trust
+  a status here over what you see on screen.
 - **`laptop-app/` is not deleted and this page does not delete it.** The operator decides
   when, after the checks in section 5.
 - Statements I could not check are marked *(uncertain)*.
@@ -34,19 +33,19 @@ unaffected. The desktop app is a client of the hub, not a replacement.
 ## 2. Desktop screens: native yet, or not
 
 The desktop navigation (`Screen` enum in `desktop/src/main/kotlin/com/whitedevil/desktop/Main.kt`)
-has nine entries. "Placeholder" means the file at base only draws the text
-"<name>: not built yet".
+has nine entries. Status column: "code merged" = implemented, compiles and has unit
+tests, never run on Windows or against the live hub.
 
 | Desktop screen | Electron equivalent | State at base commit | What to do |
 |---|---|---|---|
 | Agent | Agent domain (`/app/venice/`) | Code exists (`AgentScreen.kt`: chat, tool events, Stop, Clear). Being extended in parallel. At base a new `Agent` object appears to be built for every message, so I could not see memory across messages, and the transcript is in memory only. *(uncertain: read, not run)* | Landing in the same series; verify on the merged branch |
-| Shell (`Terminal`) | Hub, Shell (`/app/term/`) | Basic pty4j-to-`wsl.exe` plumbing exists, but the screen appends raw output to a text box: no escape-sequence handling as far as I can read, so full-screen programs will not render properly. Replacement with JediTerm is **in progress**. | Do not rely on it until the JediTerm change is merged and you have tried `vim` and `top` in it |
-| Renders | Hub, Renders | Placeholder | Landing in the same series; verify on the merged branch |
-| Gallery | Gallery domain (`/app/gallery/`) | Placeholder | Landing in the same series; verify on the merged branch |
-| Colab | Hub, Colab | Placeholder | Landing in the same series; verify on the merged branch |
-| Thunder | Hub, Thunder (Electron reached it only through the Hub iframe) | Placeholder | Landing in the same series; verify on the merged branch |
-| Vast | Hub, Vast (same) | Placeholder | Landing in the same series; verify on the merged branch |
-| Setup | Hub, Setup | Placeholder | Landing in the same series; verify on the merged branch |
+| Shell (`Terminal`) | Hub, Shell (`/app/term/`) | Code merged: JediTerm emulation via `SwingPanel`, ConPTY (winpty fallback), resize wired to the pty, session kept across tab switches, child killed on app exit. Exercised on Linux under Xvfb with a fake `wsl.exe` only. | Run the Windows terminal checklist in the JediTerm commit report / section 6 before relying on it: `vim`, `top`, resize, and no orphan `wsl.exe` after closing |
+| Renders | Hub, Renders | Code merged: grouped list from `/api/media/library`; errors shown, never as an empty list. The hub returns no render *status* field, so none is shown. | Try against the real hub |
+| Gallery | Gallery domain (`/app/gallery/`) | Code merged: lazy bounded thumbnail cache, preview, contact sheet on button press. | Try against the real hub with a large library |
+| Colab | Hub, Colab | Code merged: read-only status/usage/session first (30s poll); Stop and Start need a typed confirmation. | Try against the live session read-only first. Do not press Stop/Start until you have |
+| Thunder | Hub, Thunder (Electron reached it only through the Hub iframe) | Code merged: queue/instances/snapshots; every spend or destructive action behind a confirmation; submit honours `ok:false`. Field names for instances/pricing come from the web page, not the hub source. | Try against the real hub |
+| Vast | Hub, Vast (same) | Code merged: instances and offers; rent/start/stop/delete behind confirmations. | Try against the real hub |
+| Setup | Hub, Setup | Code merged: `enabled=0` shown as "not yet saved"; save behind a confirmation. | Try against the real hub |
 | Settings | "You" pane and the Settings window | Code exists, a subset of Electron's (section 4) | Device enrolment UI is expected from the DeviceAuth work, not present at base |
 
 **Hub screens with no native counterpart, and none announced.** The hub's
@@ -160,10 +159,11 @@ matters to you; anything you cannot tick is a reason to keep Electron.
 - [ ] Agent: a conversation works, a hub tool call works (for example the render
       status), Stop works, and you have decided whether the memory-across-messages
       question in section 2 matters to you.
-- [ ] Shell: opens WSL, and **`vim` and `top` are usable** (only true once the JediTerm
-      change is merged).
-- [ ] Each screen you use daily (Renders, Gallery, Colab, Thunder, Vast, Setup) is real
-      on the merged branch, not the "not built yet" placeholder.
+- [ ] Shell: header reads `wsl · connected · ConPTY`, and **`vim` and `top` are usable**,
+      resize keeps `stty size` correct, and closing the app leaves no `wsl.exe`.
+- [ ] Each screen you use daily (Renders, Gallery, Colab, Thunder, Vast, Setup) actually
+      loads real data from the hub. They compile and pass unit tests; none has been run
+      against the live hub.
 - [ ] For every screen with no native version (Hub Home, HypnoForge, LTX, Files,
       Shotwriter), you have a plan: browser, or keep Electron. See "The one trap".
 - [ ] Keys: you know that rotating a key on the laptop no longer updates the relay
@@ -214,8 +214,8 @@ The same applies to any browser you use for the screens with no native version.
 
 - No part of this has been run on Windows. That covers the desktop app, the packaged
   app, `wd-hello.exe`, WSL from the app, and the MSI (never built).
-- The screens in section 2 marked "landing in the same series" may or may not be done
-  when you read this. The table is a snapshot of the base commit.
+- The section 2 table reflects the merged branch at the time of writing: all nine screens
+  have code, none has been run on Windows or against the live hub.
 - I did not compare the Agent's tool set with the relay Agent's tool set in detail.
   `:shared` `ToolBox` (used by desktop, shared with Android) and `hub/venice.py`
   (used by the Electron Agent) are separate implementations.
