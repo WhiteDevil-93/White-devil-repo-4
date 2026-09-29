@@ -14,6 +14,7 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +59,13 @@ fun main() = application {
         var settings by remember { mutableStateOf(Settings.load()) }
         var screen by remember { mutableStateOf(Screen.Agent) }
 
+        // Rebuilt when the hub or credentials change; the old one drops its caches
+        // and connection. Window-level so tab switches keep what was loaded.
+        val media = remember(settings.hubUrl, settings.relayUser, settings.relayPass) {
+            MediaRepository.create(settings, ::decodeBitmap)
+        }
+        DisposableEffect(media) { onDispose { media.close() } }
+
         MaterialTheme(colorScheme = WhiteDevilColors) {
             Surface(color = MaterialTheme.colorScheme.background) {
                 Row(Modifier.fillMaxSize()) {
@@ -71,8 +79,8 @@ fun main() = application {
                             // The session outlives this branch of the `when`, so a
                             // tab switch keeps the running shell and whatever is in it.
                             Screen.Terminal -> TerminalScreen(shell)
-                            Screen.Renders -> RendersScreen(settings)
-                            Screen.Gallery -> GalleryScreen(settings)
+                            Screen.Renders -> RendersScreen(media)
+                            Screen.Gallery -> GalleryScreen(media)
                             Screen.Colab -> ColabScreen(settings)
                             Screen.Thunder -> ThunderScreen(settings)
                             Screen.Vast -> VastScreen(settings)

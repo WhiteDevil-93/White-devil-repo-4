@@ -38,7 +38,7 @@ class HubAuthClientTest {
     }
 
     @Test
-    fun `enrol posts json with basic auth and parses the reply`() = runBlocking {
+    fun `enrol posts json with basic auth and parses the reply`() = runBlocking<Unit> {
         val engine = MockEngine { respond("""{"id":"abc123","name":"laptop","created":1700000000.5}""", HttpStatusCode.OK, jsonHeaders) }
         val r = client(engine).enrol("laptop", "-----BEGIN PUBLIC KEY-----\nAAA\n-----END PUBLIC KEY-----\n")
         assertEquals("abc123", r.id)
@@ -51,7 +51,7 @@ class HubAuthClientTest {
     }
 
     @Test
-    fun `names with quotes newlines backslashes and unicode survive the wire`() = runBlocking {
+    fun `names with quotes newlines backslashes and unicode survive the wire`() = runBlocking<Unit> {
         val engine = MockEngine { respond("""{"id":"i","name":"n"}""", HttpStatusCode.OK, jsonHeaders) }
         val name = "Ana's \"desk\"\n\\ é中😀"
         val pem = "-----BEGIN PUBLIC KEY-----\nAAA\n-----END PUBLIC KEY-----\n"
@@ -62,7 +62,7 @@ class HubAuthClientTest {
     }
 
     @Test
-    fun `an enrolment code is sent trimmed when given`() = runBlocking {
+    fun `an enrolment code is sent trimmed when given`() = runBlocking<Unit> {
         val engine = MockEngine { respond("""{"id":"i","name":"n"}""", HttpStatusCode.OK, jsonHeaders) }
         client(engine).enrol("n", "pem", "  code-123 ")
         val sent = Json.parseToJsonElement(engine.requestHistory.single().bodyText()).jsonObject
@@ -70,14 +70,14 @@ class HubAuthClientTest {
     }
 
     @Test
-    fun `a blank enrolment code is omitted`() = runBlocking {
+    fun `a blank enrolment code is omitted`() = runBlocking<Unit> {
         val engine = MockEngine { respond("""{"id":"i","name":"n"}""", HttpStatusCode.OK, jsonHeaders) }
         client(engine).enrol("n", "pem", "   ")
         assertFalse(Json.parseToJsonElement(engine.requestHistory.single().bodyText()).jsonObject.containsKey("enrol_code"))
     }
 
     @Test
-    fun `challenge and token bodies use the hub's field names`() = runBlocking {
+    fun `challenge and token bodies use the hub's field names`() = runBlocking<Unit> {
         val engine = MockEngine { req ->
             if (req.url.encodedPath.endsWith("/challenge")) respond("""{"nonce":"N","expires_in":120}""", HttpStatusCode.OK, jsonHeaders)
             else respond("""{"token":"T","expires_in":43200,"device_id":"dev"}""", HttpStatusCode.OK, jsonHeaders)
@@ -93,14 +93,14 @@ class HubAuthClientTest {
     }
 
     @Test
-    fun `no basic auth header when there is no relay password`() = runBlocking {
+    fun `no basic auth header when there is no relay password`() = runBlocking<Unit> {
         val engine = MockEngine { respond("""{"nonce":"N","expires_in":1}""", HttpStatusCode.OK, jsonHeaders) }
         client(engine, pass = "").challenge("dev")
         assertNull(engine.requestHistory.single().headers[HttpHeaders.Authorization])
     }
 
     @Test
-    fun `whoami sends the bearer token and not basic auth`() = runBlocking {
+    fun `whoami sends the bearer token and not basic auth`() = runBlocking<Unit> {
         val engine = MockEngine { respond("""{"authenticated":true,"device_id":"dev","name":"laptop"}""", HttpStatusCode.OK, jsonHeaders) }
         val who = client(engine).whoami("TOKEN")
         assertTrue(who.authenticated)
@@ -108,7 +108,7 @@ class HubAuthClientTest {
     }
 
     @Test
-    fun `whoami parses the unauthenticated reply`() = runBlocking {
+    fun `whoami parses the unauthenticated reply`() = runBlocking<Unit> {
         val engine = MockEngine { respond("""{"authenticated":false,"devices_enrolled":2}""", HttpStatusCode.OK, jsonHeaders) }
         val who = client(engine).whoami("x")
         assertFalse(who.authenticated)
@@ -177,7 +177,7 @@ class HubAuthClientTest {
     }
 
     @Test
-    fun `a network failure is Unreachable and never mentions the password`() = runBlocking {
+    fun `a network failure is Unreachable and never mentions the password`() = runBlocking<Unit> {
         val engine = MockEngine { throw IOException("connection refused") }
         val e = runCatching { client(engine, pass = "s3cret").challenge("dev") }.exceptionOrNull()
         assertTrue(e is HubAuthException)
@@ -186,7 +186,7 @@ class HubAuthClientTest {
     }
 
     @Test
-    fun `a 200 with an unreadable body is a server error not a crash`() = runBlocking {
+    fun `a 200 with an unreadable body is a server error not a crash`() = runBlocking<Unit> {
         val engine = MockEngine { respond("<html>welcome</html>", HttpStatusCode.OK, jsonHeaders) }
         val e = runCatching { client(engine).challenge("dev") }.exceptionOrNull()
         assertTrue(e is HubAuthException)

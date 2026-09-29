@@ -23,7 +23,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import java.io.IOException
-import java.util.Base64
 
 // ---- wire types for hub/auth.py -------------------------------------------------
 
@@ -128,9 +127,7 @@ class HubAuthClient(
     engine: HttpClientEngine? = null,
 ) : AutoCloseable {
     private val base = hubUrl.trim().trimEnd('/')
-    private val basicAuth: String? = relayPass.takeIf { it.isNotBlank() }?.let {
-        "Basic " + Base64.getEncoder().encodeToString("$relayUser:$it".toByteArray(Charsets.UTF_8))
-    }
+    private val basicAuth: String? = relayBasicAuthHeader(relayUser, relayPass)
 
     private val http: HttpClient = run {
         val configure: io.ktor.client.HttpClientConfig<*>.() -> Unit = {

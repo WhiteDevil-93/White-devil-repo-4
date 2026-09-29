@@ -85,7 +85,7 @@ class DeviceAuthServiceTest {
     // ---- enrol -----------------------------------------------------------------
 
     @Test
-    fun `enrol probes, creates the key, registers it and reports the id`() = runBlocking {
+    fun `enrol probes, creates the key, registers it and reports the id`() = runBlocking<Unit> {
         val hello = FakeHello()
         val e = engine(enrolOk)
         val r = DeviceAuthService(hello).enrol(hubClient(e), "laptop", null, replaceExisting = false)
@@ -97,7 +97,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `an existing key is not replaced without confirmation`() = runBlocking {
+    fun `an existing key is not replaced without confirmation`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(true, keyExists = true, detail = "")))
         val e = engine(enrolOk)
         val svc = DeviceAuthService(hello)
@@ -113,7 +113,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `hello unavailable stops before any prompt or hub call`() = runBlocking {
+    fun `hello unavailable stops before any prompt or hub call`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(false, false, "Add a PIN in Windows Settings.")))
         val e = engine(enrolOk)
         val r = DeviceAuthService(hello).enrol(hubClient(e), "laptop", null, false)
@@ -125,7 +125,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `a missing helper stops before any prompt or hub call`() = runBlocking {
+    fun `a missing helper stops before any prompt or hub call`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.failure(HelloException("wd-hello.exe was not found.")))
         val e = engine(enrolOk)
         val r = DeviceAuthService(hello).enrol(hubClient(e), "laptop", null, false)
@@ -136,7 +136,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `a cancelled prompt enrols nothing`() = runBlocking {
+    fun `a cancelled prompt enrols nothing`() = runBlocking<Unit> {
         val hello = FakeHello(create = Result.failure(HelloException("you cancelled the Windows Hello prompt")))
         val e = engine(enrolOk)
         val r = DeviceAuthService(hello).enrol(hubClient(e), "laptop", null, false)
@@ -146,7 +146,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `a hub that predates device auth is reported and the app carries on`() = runBlocking {
+    fun `a hub that predates device auth is reported and the app carries on`() = runBlocking<Unit> {
         val hello = FakeHello()
         val e = engine("/devices" to { HttpStatusCode.NotFound to """{"detail":"Not Found"}""" })
         val r = DeviceAuthService(hello).enrol(hubClient(e), "laptop", null, false)
@@ -157,7 +157,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `retrying after a hub failure reuses the key instead of prompting again`() = runBlocking {
+    fun `retrying after a hub failure reuses the key instead of prompting again`() = runBlocking<Unit> {
         val hello = FakeHello()
         var hubUp = false
         val e = engine("/devices" to { if (hubUp) HttpStatusCode.OK to ok else HttpStatusCode.BadGateway to "" })
@@ -174,7 +174,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `a required enrolment code is explained and the key is kept for the retry`() = runBlocking {
+    fun `a required enrolment code is explained and the key is kept for the retry`() = runBlocking<Unit> {
         val hello = FakeHello()
         var code: String? = null
         val e = MockEngine { req ->
@@ -194,7 +194,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `a blank or oversized name is refused before anything runs`() = runBlocking {
+    fun `a blank or oversized name is refused before anything runs`() = runBlocking<Unit> {
         val hello = FakeHello()
         val svc = DeviceAuthService(hello)
         assertFalse(svc.enrol(hubClient(engine(enrolOk)), "  ", null, false).ok)
@@ -205,7 +205,7 @@ class DeviceAuthServiceTest {
     // ---- sign in ---------------------------------------------------------------
 
     @Test
-    fun `sign in signs the hub's nonce, caches the token and never echoes secrets`() = runBlocking {
+    fun `sign in signs the hub's nonce, caches the token and never echoes secrets`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(true, true, "")))
         val svc = DeviceAuthService(hello)
         val r = svc.signIn(hubClient(engine(challengeOk, tokenOk)), "dev1")
@@ -219,7 +219,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `a cancelled sign never reaches the token endpoint and asks for a fresh challenge next time`() = runBlocking {
+    fun `a cancelled sign never reaches the token endpoint and asks for a fresh challenge next time`() = runBlocking<Unit> {
         val hello = FakeHello(
             status = Result.success(HelloStatus(true, true, "")),
             sign = { Result.failure(HelloException("you cancelled the Windows Hello prompt")) },
@@ -235,7 +235,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `each attempt requests its own challenge - a nonce is never reused`() = runBlocking {
+    fun `each attempt requests its own challenge - a nonce is never reused`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(true, true, "")))
         var n = 0
         val e = engine("/challenge" to { HttpStatusCode.OK to """{"nonce":"N${++n}","expires_in":120}""" }, tokenOk)
@@ -246,7 +246,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `a rejected signature is explained and nothing is cached`() = runBlocking {
+    fun `a rejected signature is explained and nothing is cached`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(true, true, "")))
         val e = engine(challengeOk, "/token" to { HttpStatusCode.Unauthorized to """{"detail":"Signature does not match this device's enrolled key."}""" })
         val svc = DeviceAuthService(hello)
@@ -257,7 +257,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `a revoked device is reported as such`() = runBlocking {
+    fun `a revoked device is reported as such`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(true, true, "")))
         val e = engine("/challenge" to { HttpStatusCode.NotFound to """{"detail":"Unknown device. Enrol it first."}""" })
         val r = DeviceAuthService(hello).signIn(hubClient(e), "dev1")
@@ -266,7 +266,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `no local key stops before touching the hub`() = runBlocking {
+    fun `no local key stops before touching the hub`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(true, keyExists = false, detail = "")))
         val e = engine(challengeOk, tokenOk)
         val r = DeviceAuthService(hello).signIn(hubClient(e), "dev1")
@@ -276,7 +276,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `rate limiting surfaces the wait`() = runBlocking {
+    fun `rate limiting surfaces the wait`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(true, true, "")))
         val e = MockEngine { respond("""{"detail":"Too many requests"}""", HttpStatusCode.TooManyRequests, io.ktor.http.headersOf(io.ktor.http.HttpHeaders.ContentType to listOf("application/json"), io.ktor.http.HttpHeaders.RetryAfter to listOf("30"))) }
         val r = DeviceAuthService(hello).signIn(hubClient(e), "dev1")
@@ -284,7 +284,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `a second action while one is running is refused, not queued behind a prompt`() = runBlocking {
+    fun `a second action while one is running is refused, not queued behind a prompt`() = runBlocking<Unit> {
         val gate = CountDownLatch(1)
         val entered = CompletableDeferred<Unit>()
         val hello = FakeHello(
@@ -304,14 +304,14 @@ class DeviceAuthServiceTest {
     // ---- verify / forget -----------------------------------------------------------
 
     @Test
-    fun `verify without a token asks to sign in first`() = runBlocking {
+    fun `verify without a token asks to sign in first`() = runBlocking<Unit> {
         val r = DeviceAuthService(FakeHello()).verify(hubClient(engine()), "dev1")
         assertFalse(r.ok)
         assertTrue(r.message.contains("sign in"))
     }
 
     @Test
-    fun `verify treats a bearer rejection at the proxy as expected, not broken`() = runBlocking {
+    fun `verify treats a bearer rejection at the proxy as expected, not broken`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(true, true, "")))
         val svc = DeviceAuthService(hello)
         svc.signIn(hubClient(engine(challengeOk, tokenOk)), "dev1")
@@ -322,7 +322,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `verify confirms when the hub recognises the token`() = runBlocking {
+    fun `verify confirms when the hub recognises the token`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(true, true, "")))
         val svc = DeviceAuthService(hello)
         svc.signIn(hubClient(engine(challengeOk, tokenOk)), "dev1")
@@ -331,7 +331,7 @@ class DeviceAuthServiceTest {
     }
 
     @Test
-    fun `forgetting drops the token and any half-finished enrolment`() = runBlocking {
+    fun `forgetting drops the token and any half-finished enrolment`() = runBlocking<Unit> {
         val hello = FakeHello(status = Result.success(HelloStatus(true, true, "")))
         val svc = DeviceAuthService(hello)
         svc.signIn(hubClient(engine(challengeOk, tokenOk)), "dev1")
