@@ -27,18 +27,23 @@ import os
 import secrets
 import threading
 import time
-from collections import deque
 from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
+from ratelimit import Throttle
+
 router = APIRouter(prefix="/api/auth")
 
 DATA = Path.home() / "hub" / "auth_data"
 DEVICES = DATA / "devices.json"
-_LOCK = threading.Lock()
+# Re-entrant, because every read-modify-write of devices.json / tokens.json holds it
+# across the write. With a plain Lock those had to release between the read and the
+# write, which lost concurrent enrolments and let a slow /token write resurrect a
+# device that /revoke had just removed.
+_LOCK = threading.RLock()
 
 # A challenge is short-lived and single-use: it only has to survive one round
 # trip. Held in memory, so a hub restart invalidates outstanding challenges and
@@ -47,7 +52,11 @@ CHALLENGE_TTL_S = 120
 TOKEN_TTL_S = 12 * 3600
 ENROL_CODE_TTL_S = 15 * 60
 
-_challenges: dict[str, tuple[str, float]] = {}   # device_id -> (nonce, expires)
+# "device_id|client ip" -> (nonce, expires). Keyed by the address that asked, not the
+# device alone: with one slot per device, anyone who knew a device id could replace the
+# phone's nonce between its /challenge and its /token, making the phone's own signature
+# fail -- and, with failures now locking the (device, IP) pair, get the phone locked out.
+_challenges: dict[str, tuple[str, float]] = {}
 _tokens: dict[str, tuple[str, float]] = {}       # token_hash -> (device_id, expires)
 
 # Rate limiting. /challenge and /token were unbounded: anyone past Caddy could
@@ -55,6 +64,11 @@ _tokens: dict[str, tuple[str, float]] = {}       # token_hash -> (device_id, exp
 # independent buckets per request, because they stop different things -- the
 # per-device bucket stops one stolen id being hammered, the per-IP bucket stops
 # one host cycling through every enrolled id.
+#
+# The per-device buckets are keyed (device, client IP), NOT device alone. Keyed on
+# the device alone, anyone who knew a device id could spend its whole allowance
+# from their own address and lock the real device out of /challenge and /token
+# (probe: an attacker flooding from 203.0.113.66 got the phone at 198.51.100.1 a 429).
 #
 # bucket -> (limit, window_seconds)
 RATE_LIMITS: dict[str, tuple[int, int]] = {
@@ -64,12 +78,23 @@ RATE_LIMITS: dict[str, tuple[int, int]] = {
     "token_ip": (30, 60),
     "enrol_code_ip": (10, 60),
 }
-_rate: dict[str, deque] = {}
+# Call-rate limits above only slow a guesser down. Lockouts count FAILURES:
+# (max_fails, window_s, lock_s).
+LOCK_DEVICE_IP = (5, 600, 900)     # bad signatures for one device from one IP
+LOCK_CODE_IP = (5, 600, 900)       # wrong enrolment codes from one IP
+LOCK_CODE_GLOBAL = (5, 600, 300)   # wrong codes from ANYWHERE: also voids every live code
+LOCK_BASIC_IP = (20, 600, 900)     # wrong relay passwords from one IP (basic_or_token only)
+
+# late-bound so tests can move the clock by patching _now
+_throttle = Throttle(lambda: _now())
 
 # Enrolment codes: short-lived, single-use. Getting past Caddy is no longer
-# enough to add a device -- you also need a code that someone already inside
-# issued in the last quarter hour.
-_enrol_codes: dict[str, float] = {}              # code_hash -> expires
+# enough to add a device -- you also need a code that someone already trusted
+# issued in the last quarter hour. They are one file per code (see the
+# "Enrolment codes" section below) so the operator's CLI, a separate process,
+# can mint one that the running hub will honour.
+_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"   # no 0/O/1/I: read off a phone, typed on another
+_CODE_LEN = 10                                        # ~50 bits; guessing is also locked out
 
 # Which DATA directory the in-memory caches were last loaded from. Tests
 # monkeypatch DATA to a per-test tmp_path, so keying the load on the path
@@ -141,7 +166,9 @@ def _save_config(patch: dict[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Atomic persistence -- the tmp-file + os.replace-under-a-lock pattern from
 # hub/agentic/store.py:150, so a crash mid-write can never leave a truncated
-# file where a valid one used to be.
+# file where a valid one used to be. State files are owner-only (0600): they hold
+# hashes, not credentials, but there is no reason for other local users to read
+# who is enrolled.
 # ---------------------------------------------------------------------------
 
 def _atomic_write_json(path: Path, payload: Any) -> None:
@@ -149,6 +176,10 @@ def _atomic_write_json(path: Path, payload: Any) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     with _LOCK:
         tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        try:
+            os.chmod(tmp, 0o600)
+        except OSError:  # pragma: no cover - Windows ignores POSIX modes
+            pass
         os.replace(tmp, path)
 
 
@@ -156,12 +187,8 @@ def _tokens_path() -> Path:
     return DATA / "tokens.json"
 
 
-def _codes_path() -> Path:
-    return DATA / "enrol_codes.json"
-
-
 def _load_state() -> None:
-    """Rehydrate tokens and enrolment codes from disk, once per DATA dir.
+    """Rehydrate tokens from disk, once per DATA dir.
 
     Tokens used to live only in a module-level dict, so every hub restart --
     including an unattended `systemctl restart forge-hub` after a deploy --
@@ -188,41 +215,22 @@ def _load_state() -> None:
             except (TypeError, ValueError):
                 continue
 
-    try:
-        raw = json.loads(_codes_path().read_text(encoding="utf-8"))
-    except (FileNotFoundError, ValueError, OSError):
-        raw = {}
-    if isinstance(raw, dict):
-        for key, value in raw.items():
-            try:
-                if float(value) > now:
-                    _enrol_codes[str(key)] = float(value)
-            except (TypeError, ValueError):
-                continue
-
 
 def _save_tokens() -> None:
+    # Snapshot and write under ONE hold of the lock: with the write outside it, two
+    # threads could each snapshot and then land their files in the wrong order,
+    # dropping the newer token from disk.
     with _LOCK:
         now = _now()
         for th, (_did, exp) in list(_tokens.items()):
             if exp <= now:
                 _tokens.pop(th, None)
         payload = {th: [did, exp] for th, (did, exp) in _tokens.items()}
-    _atomic_write_json(_tokens_path(), payload)
-
-
-def _save_codes() -> None:
-    with _LOCK:
-        now = _now()
-        for ch, exp in list(_enrol_codes.items()):
-            if exp <= now:
-                _enrol_codes.pop(ch, None)
-        payload = dict(_enrol_codes)
-    _atomic_write_json(_codes_path(), payload)
+        _atomic_write_json(_tokens_path(), payload)
 
 
 # ---------------------------------------------------------------------------
-# Rate limiting
+# Rate limiting and lockouts (state and eviction live in hub/ratelimit.py)
 # ---------------------------------------------------------------------------
 
 def _client_ip(request: Optional[Request]) -> str:
@@ -230,43 +238,138 @@ def _client_ip(request: Optional[Request]) -> str:
 
     uvicorn binds 127.0.0.1, so request.client.host is always the proxy itself
     and useless as a bucket key. The real address is whatever Caddy put in
-    X-Forwarded-For; taking the first hop is safe here precisely because
-    nothing but Caddy can reach the socket.
+    X-Forwarded-For. The LAST entry is the one the proxy itself appended; anything
+    before it was supplied by the client, so taking the first (as this used to)
+    let a caller dodge every per-IP bucket by prefixing a made-up address. Stock
+    Caddy replaces the header outright, so there is only one entry either way.
+
+    This still assumes nothing but Caddy can reach the socket: from a directly
+    reachable port the whole header is attacker-controlled.
     """
     if request is None:
         return "unknown"
     xff = request.headers.get("x-forwarded-for", "")
     if xff:
-        first = xff.split(",")[0].strip()
-        if first:
-            return first
+        last = xff.split(",")[-1].strip()
+        if last:
+            return last
     return request.client.host if request.client else "unknown"
+
+
+def _too_many(wait: int, what: str) -> HTTPException:
+    return HTTPException(
+        429,
+        f"Too many {what}; retry in {wait} seconds.",
+        headers={"Retry-After": str(wait)},
+    )
 
 
 def _rate_check(bucket: str, subject: str) -> None:
     """Raise 429 if `subject` has spent its allowance in `bucket`."""
     limit, window = RATE_LIMITS[bucket]
-    key = bucket + ":" + subject
-    now = _now()
-    with _LOCK:
-        hits = _rate.setdefault(key, deque())
-        while hits and hits[0] <= now - window:
-            hits.popleft()
-        if len(hits) >= limit:
-            retry_after = max(1, int(hits[0] + window - now) + 1)
-            raise HTTPException(
-                429,
-                f"Too many requests: {limit} per {window}s for this {bucket.rsplit('_', 1)[1]}. "
-                f"Try again in {retry_after}s.",
-                headers={"Retry-After": str(retry_after)},
-            )
-        hits.append(now)
+    wait = _throttle.hit(bucket + ":" + subject, limit, window)
+    if wait:
+        raise HTTPException(
+            429,
+            f"Too many requests: {limit} per {window}s for this {bucket.rsplit('_', 1)[1]}. "
+            f"Try again in {wait}s.",
+            headers={"Retry-After": str(wait)},
+        )
+
+
+def _check_locked(*keys: str) -> None:
+    wait = max((_throttle.locked_for(k) for k in keys), default=0)
+    if wait:
+        raise _too_many(wait, "failed attempts")
+
+
+def _fail(key: str, cfg: tuple[int, int, int]) -> bool:
+    return _throttle.fail(key, *cfg)
 
 
 def reset_rate_limits() -> None:
     """Escape hatch for the operator (and for tests) -- see the migration doc."""
-    with _LOCK:
-        _rate.clear()
+    _throttle.clear()
+
+
+# ---------------------------------------------------------------------------
+# Enrolment codes -- one file per code, named by the hash of the code.
+#
+# Minting is create; spending is unlink, which the OS lets exactly one caller
+# win, so two racing enrolments cannot both spend the same code, and the CLI
+# (a separate process) and the running hub share the directory with no other
+# coordination. The lookup deliberately matches hashes against the directory
+# listing instead of building a path from the request's `enrol_code`, so
+# request data never reaches a filesystem call.
+# ---------------------------------------------------------------------------
+
+def _codes_dir() -> Path:
+    return DATA / "enrol_codes"
+
+
+def _normalise_code(code: str) -> str:
+    return "".join(c for c in code.upper() if c.isalnum())
+
+
+def _hash_code(raw: str) -> str:
+    return hashlib.sha256(_normalise_code(raw).encode("utf-8")).hexdigest()
+
+
+def mint_enrol_code(minted_by: str = "cli", ttl_s: int = ENROL_CODE_TTL_S) -> str:
+    """Create a single-use enrolment code valid for ttl_s. Returns it as XXXXX-XXXXX."""
+    raw = "".join(secrets.choice(_CODE_ALPHABET) for _ in range(_CODE_LEN))
+    now = _now()
+    _prune_codes()
+    _atomic_write_json(
+        _codes_dir() / (_hash_code(raw) + ".json"),
+        {"created": now, "expires": now + ttl_s, "by": minted_by},
+    )
+    return f"{raw[:5]}-{raw[5:]}"
+
+
+def _prune_codes() -> None:
+    d = _codes_dir()
+    if not d.is_dir():
+        return
+    now = _now()
+    for p in d.glob("*.json"):
+        try:
+            if float(json.loads(p.read_text(encoding="utf-8")).get("expires", 0)) <= now:
+                p.unlink(missing_ok=True)
+        except (ValueError, OSError, TypeError, AttributeError):
+            p.unlink(missing_ok=True)
+
+
+def _void_all_codes() -> None:
+    d = _codes_dir()
+    if d.is_dir():
+        for p in d.glob("*.json"):
+            p.unlink(missing_ok=True)
+
+
+def _code_state(raw: str) -> tuple[str, Optional[Path]]:
+    """('live' | 'expired' | 'unknown', the code's file)."""
+    want = _hash_code(raw)
+    d = _codes_dir()
+    if not d.is_dir():
+        return "unknown", None
+    for p in d.glob("*.json"):
+        if hmac.compare_digest(p.stem, want):
+            try:
+                expires = float(json.loads(p.read_text(encoding="utf-8")).get("expires", 0))
+            except (FileNotFoundError, ValueError, OSError, TypeError, AttributeError):
+                return "unknown", None
+            return ("live" if expires > _now() else "expired"), p
+    return "unknown", None
+
+
+def _spend_code(path: Path) -> bool:
+    """True for exactly one caller: unlink either removes the file or it does not."""
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        return False
+    return True
 
 
 def _ensure() -> None:
@@ -284,11 +387,7 @@ def _read() -> dict[str, Any]:
 
 
 def _write(payload: dict[str, Any]) -> None:
-    DATA.mkdir(parents=True, exist_ok=True)
-    tmp = DEVICES.with_suffix(".json.tmp")
-    with _LOCK:
-        tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-        os.replace(tmp, DEVICES)
+    _atomic_write_json(DEVICES, payload)
 
 
 def list_devices() -> list[dict[str, Any]]:
@@ -391,7 +490,7 @@ def _deny(detail: str, offer_basic: bool) -> HTTPException:
     return HTTPException(401, detail, headers=headers)
 
 
-def _decide(authorization: str) -> dict[str, Any]:
+def _decide(authorization: str, ip: Optional[str] = None) -> dict[str, Any]:
     """The single acceptance decision, shared by forward_auth and require_admin.
 
     Three modes, so the switch from "Caddy checks a shared password" to "FastAPI
@@ -406,7 +505,10 @@ def _decide(authorization: str) -> dict[str, Any]:
       basic_or_token  a device token, OR a Basic header the hub verifies itself
                     against HUB_BASIC_AUTH_USER/PASSWORD. The mode to run in
                     while Caddy's basic_auth is gone but the desktop app and
-                    browser still have no device token.
+                    browser still have no device token. Caddy's bcrypt check no
+                    longer sits in front here, so wrong passwords are locked
+                    out per client IP (LOCK_BASIC_IP); a valid device token is
+                    never affected by that lock.
       strict        a device token, nothing else.
 
     Raises HTTPException on refusal; returns a description of who got in.
@@ -447,7 +549,11 @@ def _decide(authorization: str) -> dict[str, Any]:
                 "credential. Set HUB_BASIC_AUTH_USER and HUB_BASIC_AUTH_PASSWORD, "
                 "or drop back to forward_auth_mode=permissive.",
             )
+        if ip:
+            _check_locked(f"basic:{ip}")
         if not _check_basic(authorization):
+            if ip:
+                _fail(f"basic:{ip}", LOCK_BASIC_IP)
             raise _deny("Bad relay username or password.", True)
         return {"ok": True, "method": "basic", "mode": mode}
 
@@ -465,7 +571,7 @@ def _decide(authorization: str) -> dict[str, Any]:
     )
 
 
-def require_admin(authorization: str = Header(default="")) -> dict[str, Any]:
+def require_admin(request: Request, authorization: str = Header(default="")) -> dict[str, Any]:
     """Guard for the endpoints that can change who gets in.
 
     /api/auth/* has to sit OUTSIDE Caddy's forward_auth -- a device cannot
@@ -476,17 +582,17 @@ def require_admin(authorization: str = Header(default="")) -> dict[str, Any]:
     """
     if config().get("forward_auth_mode", "permissive") == "permissive":
         return {"ok": True, "method": "edge", "mode": "permissive"}
-    return _decide(authorization)
+    return _decide(authorization, _client_ip(request))
 
 
 @router.get("/forward")
-def forward_auth(response: Response, authorization: str = Header(default="")):
+def forward_auth(request: Request, response: Response, authorization: str = Header(default="")):
     """Caddy's `forward_auth` target. 2xx lets the request through, 401 stops it.
 
     Success echoes the device back in headers so Caddy can `copy_headers` them
     upstream and the hub can log which device did what.
     """
-    verdict = _decide(authorization)
+    verdict = _decide(authorization, _client_ip(request))
     if verdict.get("device_id"):
         response.headers["X-Device-Id"] = str(verdict["device_id"])
         response.headers["X-Device-Name"] = str(verdict.get("name") or "")
@@ -494,53 +600,66 @@ def forward_auth(response: Response, authorization: str = Header(default="")):
     return verdict
 
 
-def _hash_code(raw: str) -> str:
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+def _mint_guard(request: Request, authorization: str = Header(default="")) -> str:
+    """Who may mint an enrolment code.
+
+    Once ANY device is enrolled, only a device token can. The relay password never
+    can: it is exactly the credential a code exists to distinguish from, so a leaked
+    password that could also mint its own code would defeat the gate outright
+    (probe: with the gate on, a password-holder minted a code and enrolled a device
+    in `permissive` and `basic_or_token`).
+
+    With zero devices enrolled there is no device credential to ask for, so this
+    falls back to `require_admin` (whatever guards the hub). The operator's
+    alternative is the CLI on the VM: `python -m auth mint-code`.
+    """
+    if list_devices():
+        raw = authorization[len("Bearer "):] if authorization.startswith("Bearer ") else ""
+        device_id = resolve_token(raw)
+        if not device_id:
+            raise _deny(
+                "Minting an enrolment code needs a device token, not the relay password. "
+                "On the VM: python -m auth mint-code",
+                False,
+            )
+        return device_id
+    require_admin(request, authorization)
+    return "bootstrap"
 
 
 @router.post("/enrol-code")
-def issue_enrol_code(request: Request, _admin: dict = Depends(require_admin)):
-    """Mint a short-lived, single-use enrolment code.
-
-    Whoever holds the relay password can reach this, which is the point: the
-    password alone no longer enrols a device, because a code is only valid for
-    ENROL_CODE_TTL_S and dies the moment it is spent. An attacker with a leaked
-    password would have to both issue and spend one inside that window, and the
-    result is a device in GET /api/auth/devices that the operator did not add.
-    """
+def issue_enrol_code(request: Request, who: str = Depends(_mint_guard)):
+    """Mint a short-lived, single-use enrolment code (see _mint_guard for who may)."""
     _rate_check("enrol_code_ip", _client_ip(request))
-    _ensure()
-    _load_state()
-    raw = secrets.token_urlsafe(9)
-    with _LOCK:
-        _enrol_codes[_hash_code(raw)] = _now() + ENROL_CODE_TTL_S
-    _save_codes()
-    return {"code": raw, "expires_in": ENROL_CODE_TTL_S}
+    return {"code": mint_enrol_code(minted_by=who), "expires_in": ENROL_CODE_TTL_S}
 
 
-def _consume_enrol_code(raw: Optional[str]) -> None:
-    """Spend a code, or raise. A no-op while the gate is off.
+def _require_live_code(raw: Optional[str], ip: str) -> Path:
+    """The file of a live enrolment code, or raise. Nothing is spent here.
 
-    The entry is popped *before* it is checked for expiry, so an expired code
-    cannot be retried and two concurrent enrolments cannot spend the same one.
+    Wrong codes are counted: LOCK_CODE_IP locks the guesser out, and
+    LOCK_CODE_GLOBAL -- guessing spread over many addresses to dodge that -- voids
+    every live code and pauses enrolment. A missing code is not a guess and does
+    not count.
     """
-    if not config().get("require_enrol_code"):
-        return
-    _load_state()
+    _check_locked(f"code:{ip}", "code:*")
     if not raw:
         raise HTTPException(
             403,
-            "An enrolment code is required. Issue one from an already-trusted "
-            "session: POST /api/auth/enrol-code",
+            "An enrolment code is required. Get one from an already-trusted "
+            "session (POST /api/auth/enrol-code with a device token) or, on the VM, "
+            "`python -m auth mint-code`.",
         )
-    ch = _hash_code(raw)
-    with _LOCK:
-        expires = _enrol_codes.pop(ch, None)
-    _save_codes()
-    if expires is None:
-        raise HTTPException(403, "That enrolment code is unknown or has already been used.")
-    if _now() > expires:
+    state, path = _code_state(raw)
+    if state == "live" and path is not None:
+        return path
+    if state == "expired" and path is not None:
+        _spend_code(path)
         raise HTTPException(403, "That enrolment code has expired; issue a new one.")
+    _fail(f"code:{ip}", LOCK_CODE_IP)
+    if _fail("code:*", LOCK_CODE_GLOBAL):
+        _void_all_codes()  # someone is guessing from several addresses: burn every live code
+    raise HTTPException(403, "That enrolment code is unknown or has already been used.")
 
 
 class EnrolIn(BaseModel):
@@ -552,25 +671,32 @@ class EnrolIn(BaseModel):
 
 
 @router.post("/devices")
-def enrol(body: EnrolIn):
-    """Register a device's public key. Guarded by whatever already fronts the hub."""
-    _load_public_key(body.public_key_pem)  # validate before storing
-    _consume_enrol_code(body.enrol_code)
-    _ensure()
-    data = _read()
-    devices = data.get("devices", [])
-    if any(d.get("public_key_pem") == body.public_key_pem for d in devices):
-        raise HTTPException(409, "That public key is already enrolled.")
-    device = {
-        "id": secrets.token_hex(8),
-        "name": body.name.strip(),
-        "public_key_pem": body.public_key_pem,
-        "created": _now(),
-        "last_seen": None,
-    }
-    devices.append(device)
-    data["devices"] = devices
-    _write(data)
+def enrol(body: EnrolIn, request: Request):
+    """Register a device's public key. Guarded by whatever already fronts the hub,
+    plus a single-use code once `require_enrol_code` is on."""
+    gate = bool(config().get("require_enrol_code"))
+    code_file = _require_live_code(body.enrol_code, _client_ip(request)) if gate else None
+    # Everything that can refuse for a reason that is not the code's fault happens
+    # BEFORE the code is spent: an unparsable or already-enrolled key must not burn it.
+    _load_public_key(body.public_key_pem)
+    with _LOCK:
+        _ensure()
+        data = _read()
+        devices = data.get("devices", [])
+        if any(d.get("public_key_pem") == body.public_key_pem for d in devices):
+            raise HTTPException(409, "That public key is already enrolled.")
+        if code_file is not None and not _spend_code(code_file):  # lost a race for the same code
+            raise HTTPException(403, "That enrolment code is unknown or has already been used.")
+        device = {
+            "id": secrets.token_hex(8),
+            "name": body.name.strip(),
+            "public_key_pem": body.public_key_pem,
+            "created": _now(),
+            "last_seen": None,
+        }
+        devices.append(device)
+        data["devices"] = devices
+        _write(data)
     return {"id": device["id"], "name": device["name"], "created": device["created"]}
 
 
@@ -582,16 +708,18 @@ def get_devices():
 @router.delete("/devices/{device_id}")
 def revoke(device_id: str, _admin: dict = Depends(require_admin)):
     """Revoke one device without touching the others — the point of the exercise."""
-    data = _read()
-    devices = data.get("devices", [])
-    kept = [d for d in devices if d.get("id") != device_id]
-    if len(kept) == len(devices):
-        raise HTTPException(404, f"No enrolled device with id {device_id}.")
-    data["devices"] = kept
-    _write(data)
+    with _LOCK:
+        data = _read()
+        devices = data.get("devices", [])
+        kept = [d for d in devices if d.get("id") != device_id]
+        if len(kept) == len(devices):
+            raise HTTPException(404, f"No enrolled device with id {device_id}.")
+        data["devices"] = kept
+        _write(data)
     _load_state()
     with _LOCK:
-        _challenges.pop(device_id, None)
+        for k in [k for k in _challenges if k.startswith(device_id + "|")]:
+            _challenges.pop(k, None)
         for th, (did, _exp) in list(_tokens.items()):
             if did == device_id:
                 _tokens.pop(th, None)
@@ -609,14 +737,20 @@ class ChallengeIn(BaseModel):
 def challenge(body: ChallengeIn, request: Request):
     # Counted before the lookup, so probing for valid device ids is bounded
     # too -- otherwise the 404/200 split is a free enumeration oracle.
-    _rate_check("challenge_ip", _client_ip(request))
-    _rate_check("challenge_device", body.device_id)
+    ip = _client_ip(request)
+    _rate_check("challenge_ip", ip)
+    _rate_check("challenge_device", f"{body.device_id}|{ip}")
     if not _find(body.device_id):
         raise HTTPException(404, "Unknown device. Enrol it first.")
     nonce = secrets.token_urlsafe(32)
-    expires = _now() + CHALLENGE_TTL_S
+    now = _now()
+    expires = now + CHALLENGE_TTL_S
     with _LOCK:
-        _challenges[body.device_id] = (nonce, expires)
+        # Keys are per address now, so forget the expired ones or a spray of source
+        # addresses could grow this without bound.
+        for k in [k for k, (_n, exp) in _challenges.items() if exp <= now]:
+            _challenges.pop(k, None)
+        _challenges[f"{body.device_id}|{ip}"] = (nonce, expires)
     return {"nonce": nonce, "expires_in": CHALLENGE_TTL_S}
 
 
@@ -629,15 +763,22 @@ class TokenIn(BaseModel):
 def token(body: TokenIn, request: Request):
     """Exchange a signature over the outstanding challenge for a short-lived token."""
     # Counted before verification, so *failed* signature attempts burn the
-    # allowance. Counting only successes would leave the grind unbounded.
-    _rate_check("token_ip", _client_ip(request))
-    _rate_check("token_device", body.device_id)
+    # allowance. Counting only successes would leave the grind unbounded. On top
+    # of that, failures lock the (device, IP) pair out: scoped to the pair so the
+    # attacker's address is locked out of this device while the device itself,
+    # signing in from its own address, is untouched.
+    ip = _client_ip(request)
+    pair = f"tok:{body.device_id}:{ip}"
+    _check_locked(pair)
+    _rate_check("token_ip", ip)
+    _rate_check("token_device", f"{body.device_id}|{ip}")
     device = _find(body.device_id)
     if not device:
         raise HTTPException(404, "Unknown device. Enrol it first.")
     with _LOCK:
-        entry = _challenges.pop(body.device_id, None)  # single use, win or lose
+        entry = _challenges.pop(f"{body.device_id}|{ip}", None)  # single use, win or lose
     if not entry:
+        _fail(pair, LOCK_DEVICE_IP)
         raise HTTPException(400, "No outstanding challenge for this device; request one first.")
     nonce, expires = entry
     if _now() > expires:
@@ -651,6 +792,7 @@ def token(body: TokenIn, request: Request):
     try:
         signature = base64.b64decode(body.signature_b64, validate=True)
     except Exception:
+        _fail(pair, LOCK_DEVICE_IP)
         raise HTTPException(400, "signature_b64 is not valid base64.")
     try:
         if alg == "ES256":
@@ -660,18 +802,24 @@ def token(body: TokenIn, request: Request):
             # KeyCredential.RequestSignAsync returns.
             key.verify(signature, nonce.encode("utf-8"), padding.PKCS1v15(), hashes.SHA256())
     except InvalidSignature:
+        _fail(pair, LOCK_DEVICE_IP)
         raise HTTPException(401, "Signature does not match this device's enrolled key.")
 
+    _throttle.reset(pair)
     raw = secrets.token_urlsafe(32)
     _load_state()
     with _LOCK:
         _tokens[_hash_token(raw)] = (body.device_id, _now() + TOKEN_TTL_S)
     _save_tokens()
-    data = _read()
-    for d in data.get("devices", []):
-        if d.get("id") == body.device_id:
-            d["last_seen"] = _now()
-    _write(data)
+    # Read-modify-write under the lock: with the read outside it, a /revoke landing
+    # between the read and the write was silently undone when this wrote the old
+    # device list back.
+    with _LOCK:
+        data = _read()
+        for d in data.get("devices", []):
+            if d.get("id") == body.device_id:
+                d["last_seen"] = _now()
+        _write(data)
     return {"token": raw, "expires_in": TOKEN_TTL_S, "device_id": body.device_id}
 
 
@@ -682,7 +830,14 @@ def _hash_token(raw: str) -> str:
 
 
 def resolve_token(raw: Optional[str]) -> Optional[str]:
-    """Device id for a bearer token, or None. Expired tokens are dropped on read."""
+    """Device id for a bearer token, or None. Expired tokens are dropped on read.
+
+    A token whose device is no longer enrolled is dead even if nothing purged it (a
+    hand-edited devices.json, a tokens.json restored from before a revocation).
+    Checked here rather than only in forward auth so that require_device() and
+    /whoami -- the things that will guard real routes later -- cannot resurrect a
+    revoked device either.
+    """
     if not raw:
         return None
     _load_state()
@@ -695,6 +850,8 @@ def resolve_token(raw: Optional[str]) -> Optional[str]:
         if _now() > expires:
             _tokens.pop(th, None)
             return None
+    if not _find(device_id):
+        return None
     return device_id
 
 
@@ -768,3 +925,59 @@ def set_config(body: ConfigIn, _admin: dict = Depends(require_admin)):
         raise HTTPException(400, "Nothing to set.")
     _ensure()
     return _save_config(patch)
+
+
+# ---------------------------------------------------------------------------
+# Operator CLI -- run on the VM as the hub's own user (same home directory as
+# the service), from the directory that holds auth.py:
+#
+#     cd ~/hub && .venv/bin/python -m auth mint-code
+#
+# Shell access to the VM is the root of trust for the FIRST device: nothing
+# reachable over HTTP with only the relay password can mint a code once a
+# device exists (see _mint_guard). Never run it with sudo -- DATA is under
+# Path.home(), so root would read and write /root/hub/auth_data and appear to
+# "lose" every device.
+# ---------------------------------------------------------------------------
+
+def _cli(argv: list[str]) -> int:
+    import argparse
+    import sys
+
+    p = argparse.ArgumentParser(prog="python -m auth")
+    sub = p.add_subparsers(dest="cmd", required=True)
+    m = sub.add_parser("mint-code", help="print a single-use enrolment code")
+    m.add_argument("--ttl", type=int, default=ENROL_CODE_TTL_S, help="seconds valid")
+    sub.add_parser("list", help="enrolled devices")
+    r = sub.add_parser("revoke", help="revoke a device by id; works while the hub is down")
+    r.add_argument("device_id")
+    a = p.parse_args(argv)
+
+    if a.cmd == "mint-code":
+        print(mint_enrol_code(ttl_s=a.ttl))
+        print(f"valid {a.ttl}s, single use; data dir {DATA}", file=sys.stderr)
+    elif a.cmd == "list":
+        for d in list_devices():
+            print(d["id"], d["name"], "last_seen=", d["last_seen"])
+    elif a.cmd == "revoke":
+        # DELETE /api/auth/devices/<id> needs credentials once the mode is not
+        # `permissive`, so a bare `curl localhost:9000` cannot revoke a stolen device
+        # in exactly the modes where you would want to. This needs none: shell access
+        # to the VM is the credential. The device's tokens need no purge -- resolve_token()
+        # refuses a token whose device is no longer enrolled, in the running hub too.
+        with _LOCK:
+            data = _read()
+            kept = [d for d in data.get("devices", []) if d.get("id") != a.device_id]
+            if len(kept) == len(data.get("devices", [])):
+                print("no such device", file=sys.stderr)
+                return 1
+            data["devices"] = kept
+            _write(data)
+        print("revoked", a.device_id)
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    raise SystemExit(_cli(sys.argv[1:]))
