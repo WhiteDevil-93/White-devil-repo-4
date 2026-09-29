@@ -1,7 +1,7 @@
-"""Setup: persist the LTX 2.5 LoRA pack (all 11 Lightricks files) on the relay.
+"""Setup: persist the LTX 2.5 LoRA pack (11 Lightricks + all NSFW content LoRAs).
 
-The LTX screen reads this list. Saving here is what wires every LoRA onto LTX 2.5,
-not just the one Civitai file that used to get loaded.
+Saving wires every LoRA onto LTX 2.5 — Lightricks IC/control plus the full NSFW
+content set (CoachBate, Praxis, BEANFLK, …), not a single Civitai file.
 """
 from __future__ import annotations
 
@@ -15,11 +15,13 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/api/setup")
 HUB = Path(__file__).resolve().parent
 CATALOG = HUB / "static" / "setup" / "loras.json"
+CONTENT = HUB / "static" / "setup" / "content_loras.json"
 STATE = Path.home() / ".forge_setup.json"
 HF = "https://huggingface.co"
+CIVIT = "https://civitai.com/api/download/models"
 
 
-def catalog() -> list[dict]:
+def _lightricks() -> list[dict]:
     try:
         data = json.loads(CATALOG.read_text())
     except (FileNotFoundError, ValueError) as e:
@@ -29,10 +31,39 @@ def catalog() -> list[dict]:
     out = []
     for row in data:
         rec = dict(row)
+        rec["pack"] = "lightricks"
         rec["url"] = f"{HF}/{rec['repo']}/resolve/main/{rec['file']}"
         rec["filename"] = Path(rec["file"]).name
         out.append(rec)
     return out
+
+
+def _content() -> list[dict]:
+    try:
+        data = json.loads(CONTENT.read_text())
+    except (FileNotFoundError, ValueError):
+        return []
+    if not isinstance(data, list):
+        return []
+    out = []
+    for row in data:
+        rec = dict(row)
+        rec["pack"] = "nsfw"
+        rec["target"] = rec.get("target") or "ltx-2.5"
+        name = rec.get("file") or ""
+        rec["filename"] = Path(name).name
+        if rec.get("source") == "civitai" and rec.get("vid"):
+            rec["url"] = f"{CIVIT}/{rec['vid']}"
+        elif rec.get("url"):
+            pass
+        else:
+            continue
+        out.append(rec)
+    return out
+
+
+def catalog() -> list[dict]:
+    return _lightricks() + _content()
 
 
 def load_state() -> dict:
@@ -49,7 +80,9 @@ def load_state() -> dict:
 
 def merge(cat: list[dict], st: dict) -> dict:
     enabled = set(st.get("enabled") or [])
-    # After a save, every catalog id is on. Before the first save, none are "on LTX".
+    # After a save, every catalog id is on. Before the first save, none are "on
+    # LTX" — reporting them as enabled would claim a setup that never happened.
+    # The Setup screen pre-ticks its boxes off `saved`, not off this flag.
     saved = bool(st.get("saved"))
     if saved and not enabled:
         enabled = {r["id"] for r in cat}
@@ -57,10 +90,14 @@ def merge(cat: list[dict], st: dict) -> dict:
     for r in cat:
         on = r["id"] in enabled if saved else False
         loras.append(dict(r, enabled=on))
+    n_lt = sum(1 for r in loras if r.get("pack") == "lightricks")
+    n_ns = sum(1 for r in loras if r.get("pack") == "nsfw")
     return {
         "saved": saved,
         "count": len(cat),
         "enabled": sum(1 for r in loras if r["enabled"]),
+        "lightricks": n_lt,
+        "nsfw": n_ns,
         "target": "ltx-2.5",
         "loras": loras,
         "dest": "~/civitai_dl/ltx-2.5/",
@@ -101,22 +138,37 @@ def download_script():
         "set -euo pipefail",
         'DEST="${HOME}/civitai_dl/ltx-2.5"',
         "mkdir -p \"$DEST\"",
-        f'echo "Downloading {len(rows)} LTX 2.5 LoRAs into $DEST"',
+        'CT="${CIVITAI_TOKEN:-}"',
+        '[ -z "$CT" ] && [ -f "$HOME/.civitai_token" ] && CT=$(tr -d "\\n\\r" < "$HOME/.civitai_token")',
+        f'echo "Downloading {len(rows)} LTX 2.5 LoRAs (Lightricks + NSFW) into $DEST"',
         "",
     ]
     for r in rows:
         dest = f"$DEST/{r['filename']}"
-        lines += [
-            f'if [ -s "{dest}" ]; then echo "have {r["filename"]}"; else',
-            f'  echo "get {r["name"]}"',
-            f'  wget -c -q --show-progress "{r["url"]}" -O "{dest}.part"',
-            f'  mv "{dest}.part" "{dest}"',
-            "fi",
-            "",
-        ]
+        url = r["url"]
+        if r.get("source") == "civitai":
+            lines += [
+                f'if [ -s "{dest}" ]; then echo "have {r["filename"]}"; else',
+                f'  if [ -z "$CT" ]; then echo "SKIP {r["filename"]} (no CIVITAI_TOKEN)"; else',
+                f'    echo "get {r["name"]}"',
+                f'    wget -c -q --show-progress "{url}?token=$CT" -O "{dest}.part"',
+                f'    mv "{dest}.part" "{dest}"',
+                "  fi",
+                "fi",
+                "",
+            ]
+        else:
+            lines += [
+                f'if [ -s "{dest}" ]; then echo "have {r["filename"]}"; else',
+                f'  echo "get {r["name"]}"',
+                f'  wget -c -q --show-progress "{url}" -O "{dest}.part"',
+                f'  mv "{dest}.part" "{dest}"',
+                "fi",
+                "",
+            ]
     lines += [
         f'echo "done  {len(rows)} files in $DEST"',
-        'echo "Setup has all 11. LTX 2.5 loads this whole list, not one file."',
+        'echo "Setup has Lightricks + NSFW content. LTX 2.5 loads this whole list."',
         "",
     ]
     return PlainTextResponse("\n".join(lines), media_type="text/x-shellscript")

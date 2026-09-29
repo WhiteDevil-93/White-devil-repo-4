@@ -37,9 +37,13 @@ def ssh(cmd: str, timeout: int = 60, stdin: Optional[str] = None) -> subprocess.
         )
     except subprocess.TimeoutExpired:
         raise HTTPException(504, "The laptop took too long to answer.")
-    if r.returncode == 255:
-        raise HTTPException(503, "Laptop is offline (asleep, or WSL not running).")
     r.stdout, r.stderr = decode(r.stdout), decode(r.stderr)
+    # 255 is ssh's own transport failure code, but it is also a perfectly legal
+    # exit code for the remote command. Only call the laptop offline when the
+    # error actually looks like ssh failing to connect, so a script exiting 255
+    # is not reported as a dead machine.
+    if r.returncode == 255 and (not r.stderr.strip() or "ssh:" in r.stderr.lower()):
+        raise HTTPException(503, "Laptop is offline (asleep, or WSL not running).")
     return r
 
 
@@ -98,7 +102,10 @@ def run(body: RunIn):
     workdir = "$HOME/" + cwd
     remote = (
         f"mkdir -p \"$HOME/venice_run\" && cat > \"{staged}\" && "
-        f"test -d \"{workdir}\" && cd \"{workdir}\" && {exe.replace(name, staged)}"
+        # A bare `test -d` failed the chain with no stdout and no stderr, so a
+        # missing cwd reached the agent as a blank failure it could not diagnose.
+        f"{{ test -d \"{workdir}\" || {{ echo \"cwd not found: ~/{cwd}\" >&2; exit 2; }}; }} && "
+        f"cd \"{workdir}\" && {exe.replace(name, staged)}"
     )
     r = ssh(remote, timeout=body.timeout, stdin=code if code.endswith("\n") else code + "\n")
     out = (r.stdout or "").strip()

@@ -17,14 +17,20 @@ def test_tools_catalog_matches_android_plus_terminal():
         "list_directory",
         "delete_file",
         "get_render_status",
+        "review_latest_render",
         "list_prompt_packs",
         "run_laptop_command",
         "run_in_terminal",
         "download_civitai_lora",
+        "remember",
+        "delegate_to_subagent",
+        "collect_subagents",
+        "transcribe_audio",
     ):
         assert need in names
-    assert data["max_iterations"] == 8
-    assert "WhiteDevil Venice Agent" in data["system_prompt"]
+    assert "/review" in data["system_prompt"]
+    assert data["max_iterations"] == venice.MAX_TOOL_ITERATIONS
+    assert "WhiteDevil" in data["system_prompt"]
     st = client.get("/api/venice/status").json()
     assert st["agent"] is True
     assert "run_in_terminal" in st["tools"]
@@ -51,8 +57,20 @@ def test_workspace_file_tools(tmp_path, monkeypatch):
     assert escaped["ok"] is False
     assert "escapes" in escaped["output"]
 
-    deleted = client.post("/api/venice/tool", json={"name": "delete_file", "arguments": {"path": "notes/hi.txt"}}).json()
-    assert deleted["output"] == "Deleted notes/hi.txt"
+    # delete_file is gated by allow_file_delete, which ships off. The chat path
+    # used to ignore that switch while the background runner honoured it.
+    blocked = client.post("/api/venice/tool", json={"name": "delete_file", "arguments": {"path": "notes/hi.txt"}}).json()
+    assert "allow_file_delete=false" in blocked["output"]
+
+    from agentic import store as agentic_store
+
+    before = bool(agentic_store.permissions().get("allow_file_delete"))
+    agentic_store.save_permissions({"allow_file_delete": True})
+    try:
+        deleted = client.post("/api/venice/tool", json={"name": "delete_file", "arguments": {"path": "notes/hi.txt"}}).json()
+        assert deleted["output"] == "Deleted notes/hi.txt"
+    finally:
+        agentic_store.save_permissions({"allow_file_delete": before})
 
 
 def test_run_in_terminal_returns_paste_payload():

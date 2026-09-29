@@ -12,3 +12,7 @@ laptop-app/dist/
 credentials.json
 .gradle/
 build/
+
+# .NET build output (desktop/hello-helper)
+bin/
+obj/

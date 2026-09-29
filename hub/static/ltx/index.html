@@ -2,53 +2,450 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0c"><title>LTX</title>
 <link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
+<style>
+.pick{display:grid;place-items:center;min-height:160px;border:1.5px dashed var(--line);border-radius:16px;cursor:pointer;overflow:hidden;background:rgba(0,0,0,.2)}
+.pick img{width:100%;max-height:340px;object-fit:contain;display:block}
+textarea.input{min-height:110px;resize:vertical;font:inherit;line-height:1.45}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.seg button{flex:1;min-width:60px}
+.seg button.on{background:var(--acc);color:#111;border-color:var(--acc)}
+.job{padding:14px 0;border-top:1px solid var(--line)}.job:first-child{border-top:0;padding-top:4px}
+.job video{width:100%;border-radius:12px;margin-top:10px;background:#000}
+.thumb{width:56px;height:56px;object-fit:cover;border-radius:10px;flex:none}
+.tip{font-size:13px;color:var(--mut);line-height:1.5;margin-top:8px}
+.lrow{display:grid;grid-template-columns:1fr 90px 36px 32px;gap:6px;align-items:center;margin-top:6px}
+.lrow select{min-width:0}.lrow b{font-size:13px;text-align:right}
+</style>
 </head><body>
 
 <div class="row" style="margin:4px 2px 12px">
-  <div class="grow"><div class="tiny mut">Lightricks 22B</div><h1 style="margin:2px 0 0">LTX 2.5</h1></div>
+  <div class="grow"><div class="tiny mut">LTX-2.5 · Stubelius · on Colab</div><h1 style="margin:2px 0 0">LTX</h1></div>
   <span id="st" class="pill">…</span>
 </div>
 
-<div class="card" id="hero">
-  <div class="skel" style="height:70px"></div>
+<div class="card" id="down" hidden>
+  <div style="font-weight:700" id="downtitle">LTX isn't reachable</div>
+  <div class="small mut" id="downmsg" style="margin-top:4px"></div>
+  <div class="row wrap" style="margin-top:12px"><a class="btn grow" href="/app/colab/" style="text-align:center">Colab screen</a>
+    <a class="btn grow" href="/app/setup/" style="text-align:center">Setup</a></div>
 </div>
 
-<h2>LoRAs from Setup</h2>
-<div class="card" id="loras"><div class="skel" style="height:60px"></div></div>
+<div class="card">
+  <div class="row"><div class="grow" style="font-weight:700">1. Starting picture <span class="small mut">(optional)</span></div>
+    <button class="btn sm" id="clear" hidden onclick="clearPic()">✕ No picture</button></div>
+  <div class="tip" style="margin-top:4px" id="pictip">With a picture, the clip starts from that exact frame (image-to-video). Leave it empty for <b>text-to-video</b>: the video is made from your words alone.</div>
+  <div id="cont" class="row" style="margin-top:10px" hidden><div class="grow small">Continuing from <b id="contname"></b> — the new parts start on its last frame and get joined after it.</div>
+    <button class="btn sm" onclick="setCont(null)">✕</button></div>
+  <label class="pick" id="pickbox" style="margin-top:10px"><span id="pick"><span class="mut">Tap to choose a picture (or leave empty for text-to-video)</span></span>
+    <input type="file" id="img" accept="image/*" hidden></label>
+</div>
 
-<div class="tiny mut" style="margin:14px 4px">LTX 2.5 reads the Setup pack. If you only see one LoRA, open Setup and Save all 11.</div>
+<div class="card">
+  <div style="font-weight:700">2. What happens</div>
+  <div class="tip" id="whattip" style="margin-top:4px">Type a few rough words (slang is fine) and press <b>Write it for me</b>: it looks at your picture and writes the full prompt. Edit it after if you like.</div>
+  <textarea class="input" id="prompt" style="margin-top:10px" placeholder="e.g. he strokes slowly, looks at the camera"></textarea>
+  <button class="btn" style="width:100%;margin-top:10px" id="assist" onclick="assist()">✦ Write it for me</button>
+</div>
+
+<div class="card">
+  <details id="models"><summary style="cursor:pointer"><b>3. Models</b> <span class="small mut" id="msum"></span></summary>
+    <label class="field" style="margin-top:10px"><span>Video model</span><select class="input" id="m_tr"></select></label>
+    <label class="field"><span>Speed LoRA (distilled) <b id="m_dv">0.8</b> · 0 = off (then it needs more steps and looks rough)</span>
+      <input type="range" id="m_d" min="0" max="1.2" step="0.05" value="0.8"></label>
+    <div class="small mut" style="margin-top:10px">LoRAs (applied in order)</div>
+    <div id="m_loras"></div>
+    <button class="btn sm" id="m_add" style="margin-top:6px">+ Add LoRA</button>
+    <div class="small mut" style="margin-top:12px">Decoder</div>
+    <div class="seg" id="m_vae"><button class="btn sm" data-v="quality">Quality</button><button class="btn sm" data-v="fast">Fast</button></div>
+    <label class="field" style="margin-top:10px"><span>Text encoder</span><select class="input" id="m_clip"></select></label>
+    <label class="field"><span>Prompt writer: reads your picture and writes the prompts (if it refuses, Grok 4.5 takes over)</span><select class="input" id="m_writer"></select></label>
+    <input class="input" id="m_wid" hidden placeholder="any OpenRouter model id that takes images, e.g. x-ai/grok-4.6" style="margin-bottom:10px">
+    <button class="btn sm" onclick="resetModels()">Reset to defaults</button>
+    <div style="font-weight:700;margin-top:16px">Install a LoRA or video model</div>
+    <div class="tip" style="margin-top:2px">Paste a CivitAI link (open the version you want first) or a Hugging Face .safetensors link. It downloads straight onto Colab and shows up in the lists above when done.</div>
+    <input class="input" id="m_url" style="margin-top:8px" placeholder="https://civitai.com/models/…?modelVersionId=…">
+    <div class="seg" id="m_kind"><button class="btn sm on" data-v="lora">LoRA</button><button class="btn sm" data-v="transformer">Video model</button></div>
+    <button class="btn" style="width:100%;margin-top:8px" id="m_inst" onclick="install()">Download to Colab</button>
+    <div id="m_list"></div>
+  </details>
+</div>
+
+<div class="card">
+  <div style="font-weight:700">4. Settings</div>
+  <div class="small mut" style="margin-top:10px">Length</div>
+  <div class="seg" id="frames"></div>
+  <div class="small mut" style="margin-top:12px">Clips in a row</div>
+  <div class="seg" id="parts"><button class="btn sm on" data-v="1">1</button><button class="btn sm" data-v="2">2</button><button class="btn sm" data-v="3">3</button><button class="btn sm" data-v="4">4</button><button class="btn sm" data-v="6">6</button><button class="btn sm" data-v="8">8</button><button class="btn sm" data-v="12">12</button><button class="btn sm" data-v="20">20</button></div>
+  <div class="tip" id="chaintip" hidden>Each clip starts on the last frame of the one before and they're joined into one video. Describe the whole story in rough words (it writes each part's prompt from that part's start frame), or write one line per clip.</div>
+  <div class="small mut shape" style="margin-top:12px">Shape</div>
+  <div class="seg shape" id="size"><button class="btn sm on" data-v="landscape">Landscape</button><button class="btn sm" data-v="portrait">Portrait</button><button class="btn sm" data-v="square">Square</button></div>
+  <details style="margin-top:12px"><summary class="small mut">More</summary>
+    <label class="field"><span>Seed (blank = random; reuse one to redo a take with a new length)</span><input class="input" id="seed" type="number" placeholder="random"></label>
+  </details>
+  <button class="btn primary" style="width:100%;margin-top:14px" id="go" onclick="render()">Render</button>
+  <div class="tip">Start at 2 seconds to find a good take, then redo that seed at 4–5 seconds. The first clip after the runtime starts takes a few extra minutes while the models load.</div>
+</div>
+
+
+<div class="card" id="setuppill" hidden>
+  <div class="row"><div class="grow"><div style="font-weight:700">Setup pack</div>
+    <div class="small mut" id="setupmsg">…</div></div>
+    <a class="btn sm" href="/app/setup/">Setup</a></div>
+</div>
+
+<h2>AI review</h2>
+<div class="card" id="aireview">
+  <div class="tip">Vision pass on the latest LTX contact sheet, or run the render→assess→adjust QA cycle.</div>
+  <div id="aihero" class="skel" style="height:120px;border-radius:14px;margin:10px 0"></div>
+  <div class="row wrap" style="gap:8px">
+    <button class="btn primary grow" id="airev" onclick="aiReview()">✦ AI review latest</button>
+    <button class="btn grow" id="cycstart" onclick="cycleAct('start')">Start QA cycle</button>
+    <button class="btn grow" id="cycstop" onclick="cycleAct('stop')">Stop</button>
+  </div>
+  <div class="small mut" id="cycst" style="margin-top:10px">Cycle: …</div>
+  <pre id="cycout" class="tiny mut" style="margin-top:8px;white-space:pre-wrap;max-height:160px;overflow:auto"></pre>
+</div>
+
+<h2>Video review</h2>
+<div class="card" id="videoreview"></div>
+
+<h2>Clips</h2>
+<div class="card" id="jobs"><div class="skel" style="height:50px"></div></div>
 
 <script>
 const {$, esc} = F;
-async function load(){
+const LEN = {49: '2 s', 73: '3 s', 97: '4 s', 121: '5 s', 193: '8 s', 241: '10 s'};
+let S = null, frames = 49, size = 'landscape', parts = 1, cont = null, pic = null;
+const D = JSON.parse(localStorage.getItem('ltx_draft') || '{}');
+function saveDraft(){ localStorage.setItem('ltx_draft', JSON.stringify({prompt: $('prompt').value, frames, parts, size, seed: $('seed').value, cont: cont?.id || null})); }
+function selSeg(id, v){ $(id).querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v == v)); }
+function idb(mode, fn){
+  return new Promise((ok, bad) => {
+    const r = indexedDB.open('ltx', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onerror = () => bad(r.error);
+    r.onsuccess = () => { const tx = r.result.transaction('kv', mode), q = fn(tx.objectStore('kv')); tx.oncomplete = () => ok(q.result); tx.onerror = () => bad(tx.error); };
+  });
+}
+
+function seg(id, set){ $(id).querySelectorAll('button').forEach(b => b.onclick = () => { $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); set(b.dataset.v); }); }
+async function status(){
+  try { S = await F.api('/api/ltx/status'); } catch (e) { S = {online: false, detail: e.message}; }
+  $('down').hidden = S.online; $('downmsg').textContent = S.detail || ''; if ($('downtitle')) $('downtitle').textContent = S.billing ? 'Colab is BILLING — Comfy tunnel down' : 'LTX isn\'t reachable';
+  if (S.online) {
+    $('st').className = 'pill ' + (S.busy ? 'warn live' : 'ok');
+    $('st').textContent = S.busy ? `Busy · ${S.busy}` : 'Ready';
+  } else if (S.billing) {
+    $('st').className = 'pill warn live';
+    $('st').textContent = 'BILLING · Comfy down';
+  } else {
+    $('st').className = 'pill bad';
+    $('st').textContent = 'Offline';
+  }
+  $('go').disabled = !S.online;
+  if (S.online && !$('frames').children.length) {
+    $('frames').innerHTML = S.frames.map(f => `<button class="btn sm ${f === frames ? 'on' : ''}" data-v="${f}">${LEN[f] || f + 'f'}</button>`).join('');
+    seg('frames', v => { frames = +v; saveDraft(); });
+  }
+  if (S.online) models();
+  installs();
+}
+
+const nice = n => (n || '').replace(/^ltx_|\.safetensors$/g, '').replace(/_/g, ' ');
+const opt = (v, label, sel) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(label)}</option>`;
+let O = JSON.parse(localStorage.getItem('ltx_opts') || 'null'), lists = '';
+function saveO(){ localStorage.setItem('ltx_opts', JSON.stringify(O)); summary(); }
+function defaults(){ return {transformer: null, loras: S.loras.length ? [[S.loras[0], 0.7]] : [], distill: 0.8, vae: 'quality', clip: null, writer: 'x-ai/grok-4.5'}; }
+function resetModels(){ O = defaults(); saveO(); lists = ''; models(); }
+function summary(){
+  if (!O) return;
+  const tr = O.transformer || S?.transformers?.[0] || '';
+  $('msum').textContent = `· ${nice(tr).slice(0, 26)} · ${O.loras.length} LoRA${O.loras.length === 1 ? '' : 's'} · ${O.vae}`;
+}
+function models(){
+  const key = JSON.stringify([S.transformers, S.loras, S.clips, S.decoders]);
+  if (key === lists) return; lists = key;
+  if (!O) O = defaults();
+  O.loras = O.loras.filter(([n]) => S.loras.includes(n));
+  if (O.transformer && !S.transformers.includes(O.transformer)) O.transformer = null;
+  $('m_tr').innerHTML = S.transformers.map(t => opt(t, nice(t), O.transformer || S.transformers[0])).join('');
+  $('m_d').value = O.distill; $('m_dv').textContent = O.distill;
+  $('m_d').disabled = !S.distilled;
+  $('m_clip').innerHTML = S.clips.map(c => opt(c, nice(c), O.clip || S.clips[0])).join('');
+  const w = O.writer || 'x-ai/grok-4.5', listed = S.writers.some(([id]) => id === w);
+  $('m_writer').innerHTML = S.writers.map(([id, label]) => opt(id, label, w)).join('') + opt('other', 'Other OpenRouter model…', listed ? '' : 'other');
+  $('m_wid').hidden = listed; $('m_wid').value = listed ? '' : w;
+  $('m_vae').querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.v === O.vae); b.disabled = !S.decoders[b.dataset.v]; });
+  loraRows(); saveO();
+}
+function loraRows(){
+  $('m_loras').innerHTML = O.loras.length ? O.loras.map(([n, s], i) => `<div class="lrow">
+    <select class="input" onchange="O.loras[${i}][0]=this.value;loraRows();saveO()">${S.loras.map(l => opt(l, nice(l), n)).join('')}</select>
+    <input type="range" min="0" max="1.5" step="0.05" value="${s}" oninput="O.loras[${i}][1]=+this.value;this.nextElementSibling.textContent=this.value;saveO()">
+    <b>${s}</b><button class="btn sm" onclick="O.loras.splice(${i},1);loraRows();saveO()">✕</button></div>
+    ${S.triggers?.[n] ? `<div class="tiny mut">adds “${esc(S.triggers[n])}” to the prompt</div>` : ''}`).join('')
+    : `<div class="small mut" style="margin-top:4px">${S.loras.length ? 'None: plain model.' : 'No LoRAs on Colab yet; install one below.'}</div>`;
+  const free = S.loras.filter(l => !O.loras.some(([n]) => n === l));
+  $('m_add').hidden = O.loras.length >= 4 || !free.length;
+  $('m_add').onclick = () => { O.loras.push([free[0], 0.7]); loraRows(); saveO(); };
+}
+$('m_tr').onchange = () => { O.transformer = $('m_tr').value; saveO(); };
+$('m_d').oninput = () => { O.distill = +$('m_d').value; $('m_dv').textContent = $('m_d').value; saveO(); };
+$('m_clip').onchange = () => { O.clip = $('m_clip').value; saveO(); };
+$('m_writer').onchange = () => {
+  const other = $('m_writer').value === 'other'; $('m_wid').hidden = !other;
+  if (other) $('m_wid').focus(); else { O.writer = $('m_writer').value; saveO(); }
+};
+$('m_wid').onchange = () => { const v = $('m_wid').value.trim(); if (!/^~?[\w.-]+\/[\w.:-]+$/.test(v)) return F.toast('That doesn\'t look like a model id (maker/model).'); O.writer = v; saveO(); };
+seg('m_vae', v => { O.vae = v; saveO(); });
+let kind = 'lora', itimer;
+seg('m_kind', v => kind = v);
+async function install(){
+  const url = $('m_url').value.trim(); if (!url) return F.toast('Paste a CivitAI or Hugging Face link first.');
+  $('m_inst').disabled = true;
+  try { const it = await F.post('/api/ltx/install', {url, kind}); $('m_url').value = ''; F.toast(it.warn || `Downloading ${nice(it.name)} to Colab.`); status(); }
+  catch (e) { F.toast(e.message); }
+  $('m_inst').disabled = false;
+}
+function installs(){
+  const its = Object.values(S?.installs || {}).sort((a, b) => b.started - a.started);
+  const pill = {downloading: 'warn live', done: 'ok', failed: 'bad'};
+  $('m_list').innerHTML = its.map(it => `<div class="row" style="margin-top:8px"><div class="grow small" style="overflow-wrap:anywhere">${esc(nice(it.name))}
+    <div class="tiny mut">${esc(it.detail)}${it.size_mb ? ` · ${it.size_mb} MB` : ''}${it.warn ? ' · ' + esc(it.warn) : ''}</div></div>
+    <span class="pill ${pill[it.state] || ''}">${it.state}</span></div>`).join('');
+  clearTimeout(itimer);
+  if (its.some(it => it.state === 'downloading')) itimer = setTimeout(status, 15000);
+}
+seg('size', v => { size = v; saveDraft(); });
+seg('parts', v => { parts = +v; mode(); saveDraft(); });
+function mode(){
+  const chain = parts > 1 || cont;
+  $('chaintip').hidden = !chain; $('go').textContent = cont ? `Continue with ${parts} more` : chain ? `Render ${parts} clips` : 'Render';
+  $('assist').textContent = chain ? '✦ Plan the clips for me' : '✦ Write it for me';
+  $('whattip').innerHTML = chain ? 'Type the whole story in rough words (slang is fine) and press <b>Plan the clips for me</b>: you get one line per clip to edit. When each clip runs, its line is written out into a full prompt from that clip\'s real start frame. Leave it rough and it plans as it goes.'
+    : 'Type a few rough words (slang is fine) and press <b>Write it for me</b>: it looks at your picture and writes the full prompt. Edit it after if you like.';
+  $('pickbox').hidden = !!cont; $('cont').hidden = !cont; $('pictip').hidden = !!cont;
+  const t2v = !cont && !pic;
+  $('prompt').placeholder = cont ? 'what happens next, e.g. he climbs on top' : t2v ? 'who is in it and what happens, e.g. two muscular men in their 30s kiss on a sofa, one unbuttons the other\'s shirt' : 'e.g. he strokes slowly, looks at the camera';
+  if (!cont) $('go').textContent = (t2v ? 'Text-to-video: ' : '') + $('go').textContent;
+  document.querySelectorAll('.shape').forEach(e => e.hidden = !!cont);
+}
+function setCont(j){
+  cont = j; if (j) $('contname').textContent = j.name;
+  mode(); if (j) { $('prompt').value = ''; scrollTo({top: 0, behavior: 'smooth'}); }
+  saveDraft();
+}
+$('img').onchange = () => { const f = $('img').files[0]; if (f) setPic(f); };
+function setPic(f){
+  pic = f; $('pick').innerHTML = `<img src="${URL.createObjectURL(f)}" alt="">`; $('clear').hidden = false; mode();
+  idb('readwrite', st => st.put(f, 'pic')).catch(() => {});
+}
+function clearPic(){
+  pic = null; $('img').value = ''; $('pick').innerHTML = '<span class="mut">Tap to choose a picture (or leave empty for text-to-video)</span>'; $('clear').hidden = true; mode();
+  idb('readwrite', st => st.delete('pic')).catch(() => {});
+}
+$('prompt').oninput = saveDraft; $('seed').oninput = saveDraft;
+
+function shrink(file, max = 768){
+  return new Promise((ok, bad) => {
+    const im = new Image();
+    im.onload = () => { const k = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas');
+      c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      ok(c.toDataURL('image/jpeg', 0.85)); };
+    im.onerror = bad; im.src = URL.createObjectURL(file);
+  });
+}
+async function assist(){
+  const idea = $('prompt').value.trim(), f = cont ? null : pic, chain = parts > 1 || cont;
+  if (!idea && !f && !cont) return F.toast('Type a few words or pick a picture first.');
+  const b = $('assist'), label = b.textContent; b.disabled = true; b.textContent = chain ? 'Planning…' : 'Writing…';
+  try {
+    // OpenRouter caption+plan can take well over the default 15s API timeout.
+    const r = await F.post('/api/ltx/assist', {idea, frames, image: f ? await shrink(f) : null,
+      parts: chain ? parts : 1, from_job: cont ? cont.id : null, writer: O?.writer}, {timeout: 240000});
+    $('prompt').value = r.prompt; saveDraft(); $('prompt').style.height = 'auto'; $('prompt').style.height = $('prompt').scrollHeight + 'px';
+  } catch (e) { F.toast(e.message); }
+  b.disabled = false; b.textContent = label;
+}
+async function render(){
+  if (parts > 1 || cont) return chain();
+  const f = pic, prompt = $('prompt').value.trim();
+  if (prompt.length < 10) return F.toast(f ? 'Write what happens in the clip.' : 'Describe who is in the video and what happens.');
+  const fd = new FormData();
+  if (f) fd.append('image', f, f.name || 'start.jpg'); fd.append('prompt', prompt); fd.append('frames', frames); fd.append('size', size);
+  fd.append('opts', JSON.stringify(O || {}));
+  if ($('seed').value) fd.append('seed', $('seed').value);
+  $('go').disabled = true; $('go').textContent = 'Sending…';
+  try { await F.api('/api/ltx/render', {method: 'POST', body: fd}); F.toast('Rendering. It appears below and in Renders.'); jobs(); status(); }
+  catch (e) { F.toast(e.message); }
+  $('go').disabled = false; mode();
+}
+async function chain(){
+  const f = pic, idea = $('prompt').value.trim();
+  if (!cont && !f && !idea) return F.toast('With no picture, describe who is in the video and what happens.');
+  const fd = new FormData();
+  if (cont) fd.append('from_job', cont.id); else { if (f) fd.append('image', f, f.name || 'start.jpg'); fd.append('size', size); }
+  fd.append('idea', idea); fd.append('parts', parts); fd.append('frames', frames);
+  fd.append('opts', JSON.stringify(O || {}));
+  if ($('seed').value) fd.append('seed', $('seed').value);
+  $('go').disabled = true; $('go').textContent = 'Sending…';
+  try { await F.api('/api/ltx/chain', {method: 'POST', body: fd}); F.toast('Started. It writes and renders each part in turn; the joined video lands below and in Renders.'); setCont(null); jobs(); status(); }
+  catch (e) { F.toast(e.message); }
+  $('go').disabled = false; mode();
+}
+
+const PILL = {queued: ['Queued', ''], rendering: ['Rendering', 'warn live'], done: ['Done', 'ok'], failed: ['Failed', 'bad']};
+let timer;
+async function jobs(){
+  let js; try { js = await F.api('/api/ltx/jobs'); } catch (e) { return; }
+  const live = js.some(j => j.status === 'queued' || j.status === 'rendering');
+  $('jobs').innerHTML = js.length ? js.map(j => {
+    const [w, c] = PILL[j.status] || [j.status, ''];
+    const thumb = !j.t2v && !j.from_job ? `<img class="thumb" src="/api/ltx/jobs/${j.id}/input" alt="" loading="lazy" onerror="this.remove()">` : '';
+    return `<div class="job"><div class="row">${thumb}<div class="grow"><div style="font-weight:700;overflow-wrap:anywhere">${esc(j.name)}</div>
+      <div class="small mut">${j.kind === 'sharpen' ? '2× · ' : ''}${j.t2v ? 'text · ' : ''}${j.kind === 'chain' ? `${j.parts.length} × ` : ''}${LEN[j.frames] || j.frames + 'f'} · seed ${j.seed}${j.kind !== undefined && j.step && live && j.status !== 'failed' ? ' · ' + esc(j.step) : ''} · ${j.status === 'done' ? 'took ' + F.dur(j.seconds) : F.ago(j.created)}</div></div>
+      <span class="pill ${c}">${w}</span></div>
+      ${j.status === 'done' ? `<video src="${F.clipUrl(j.out)}" controls playsinline preload="metadata" loop></video>
+        <div class="row wrap" style="margin-top:8px">${j.kind === 'sharpen' ? '' : `<button class="btn sm grow" onclick="setCont(window._jobs.find(x => x.id === '${j.id}'))">Continue ▸</button>`}
+        ${j.kind === 'chain' || j.kind === 'sharpen' ? '' : `<button class="btn sm grow" onclick="again('${j.id}')">Same seed, longer</button>`}
+        ${j.kind === 'sharpen' ? '' : `<button class="btn sm grow" onclick="sharpen('${j.id}')">Sharpen 2×</button>`}
+        ${j.kind === 'sharpen' ? '' : `<button class="btn sm grow" onclick="reuse('${j.id}')">Reuse</button>`}
+        <a class="btn sm grow" href="${F.clipUrl(j.out)}" download style="text-align:center">Download</a></div>` : ''}
+      ${j.kind === 'chain' && j.parts.some(p => p.prompt) ? `<details style="margin-top:8px"><summary class="small mut">Prompts</summary>${j.parts.map((p, i) => p.prompt ? `<div class="tip"><b>${i + 1}.</b> ${esc(p.prompt)}</div>` : '').join('')}</details>` : ''}
+      ${j.status === 'failed' ? `<div class="small" style="margin-top:6px;color:#fca5a5;overflow-wrap:anywhere">${esc(j.error || '')}</div>` : ''}
+      ${j.status === 'failed' && j.kind !== 'sharpen' ? `<button class="btn sm" style="margin-top:8px" onclick="reuse('${j.id}')">Reuse</button>` : ''}
+      ${live && (j.status === 'queued' || j.status === 'rendering') ? `<button class="btn sm" style="margin-top:8px" onclick="cancel('${j.id}')">Cancel</button>` : ''}
+    </div>`;
+  }).join('') : '<div class="small mut">No clips yet.</div>';
+  window._jobs = js;
+  if (D.cont && !cont) { const c = js.find(x => x.id === D.cont), p = $('prompt').value; if (c) { setCont(c); $('prompt').value = p; saveDraft(); } D.cont = null; }
+  clearTimeout(timer); timer = setTimeout(() => { jobs(); if (live) status(); }, live ? 8000 : 60000);
+}
+async function reuse(id, quiet){
+  const j = window._jobs.find(x => x.id === id); if (!j) return;
+  setCont(null);
+  if (j.kind === 'chain') { $('prompt').value = j.lines?.length ? j.lines.join('\n') : (j.idea || j.prompt || ''); parts = j.parts.length; }
+  else { $('prompt').value = j.prompt; parts = 1; }
+  frames = j.frames; size = j.size; $('seed').value = j.seed;
+  selSeg('parts', parts); selSeg('frames', frames); selSeg('size', size);
+  if (j.opts) { O = JSON.parse(JSON.stringify(j.opts)); lists = ''; saveO(); if (S?.online) models(); }
+  if (j.from_job) { const src = window._jobs.find(x => x.id === j.from_job); if (src) setCont(src); $('prompt').value = j.lines?.length ? j.lines.join('\n') : (j.idea || ''); }
+  else if (j.t2v) clearPic();
+  else {
+    const r = await fetch(`/api/ltx/jobs/${id}/input`).catch(() => null);
+    if (r?.ok) setPic(new File([await r.blob()], 'start.jpg', {type: r.headers.get('content-type') || 'image/jpeg'}));
+    else F.toast('That clip\'s picture wasn\'t kept (older clip): pick it again.');
+  }
+  mode(); saveDraft(); scrollTo({top: 0, behavior: 'smooth'});
+  if (!quiet) F.toast('Loaded its picture, prompt, seed and models.');
+}
+async function again(id){
+  const j = window._jobs.find(x => x.id === id); if (!j) return;
+  await reuse(id, true);
+  frames = {49: 97, 73: 97, 97: 121, 121: 193, 193: 241, 241: 241}[j.frames]; selSeg('frames', frames); saveDraft();
+  F.toast('Same picture, prompt and seed, longer. Press Render.');
+}
+async function sharpen(id){
+  try { await F.post(`/api/ltx/jobs/${id}/sharpen`); F.toast('Sharpening to 1536×1024. The 2× version appears at the top and in Renders.'); jobs(); status(); }
+  catch (e) { F.toast(e.message); }
+}
+async function cancel(id){ try { await F.post(`/api/ltx/jobs/${id}/cancel`); jobs(); } catch (e) { F.toast(e.message); } }
+
+
+let vrev = null;
+async function loadSetupPill(){
   try {
     const S = await F.api('/api/setup');
     const n = S.enabled, t = S.count;
-    $('st').textContent = S.saved ? n + ' / ' + t : 'Setup empty';
-    $('st').className = 'pill ' + (S.saved && n === t ? 'ok' : S.saved ? 'warn' : 'bad');
-    $('hero').innerHTML = S.saved && n === t
-      ? `<div style="font-weight:700">All ${t} Setup LoRAs are on LTX 2.5</div>
-         <div class="small mut" style="margin-top:6px">Distilled speed LoRA plus the 8 IC LoRAs and 2 controls. Content LoRAs (CoachBate penis, …) stack on top from ~/civitai_dl.</div>`
-      : `<div style="font-weight:700">${S.saved ? n + ' of ' + t + ' LoRAs enabled' : 'No pack saved'}</div>
-         <div class="small mut" style="margin-top:6px">Only a single Civitai file used to land here. Save the full pack in Setup.</div>
-         <div style="margin-top:12px"><a class="btn primary" href="/app/setup/">Open Setup</a></div>`;
-    $('loras').innerHTML = (S.loras || []).map(r => `
-      <div class="item">
-        <div class="ico">${r.enabled ? '●' : '○'}</div>
-        <div class="grow">
-          <div class="trunc" style="font-weight:600">${esc(r.name)}</div>
-          <div class="tiny mut">${esc(r.kind)} · ${esc(r.filename)}</div>
-        </div>
-        <span class="pill ${r.enabled ? 'ok' : ''}">${r.enabled ? 'on' : 'off'}</span>
-      </div>`).join('') || '<div class="empty">Setup catalog missing.</div>';
-  } catch (e) {
-    $('st').textContent = 'Error'; $('st').className = 'pill bad';
-    $('hero').innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
-    $('loras').innerHTML = '';
-  }
+    $('setuppill').hidden = false;
+    const ns = S.nsfw || 0, lt = S.lightricks || 11;
+    $('setupmsg').textContent = S.saved
+      ? (n + ' / ' + t + ' LoRAs on LTX (' + lt + ' Lightricks + ' + ns + ' NSFW)')
+      : 'Setup pack not saved — open Setup (saves Lightricks + all NSFW content LoRAs)';
+  } catch (e) { $('setuppill').hidden = true; }
 }
-F.pull(load);
-load();
-F.onVisible && F.onVisible(load);
+async function loadAiReview(){
+  try {
+    const lib = await F.api('/api/media/library');
+    const all = [];
+    for (const g of (Array.isArray(lib) ? lib : [])) {
+      for (const c of (g.clips || [])) {
+        if (!c?.name) continue;
+        const src = c.source || F.clipSource?.(c.name, g.source) || '';
+        if (src !== 'ltx' && !(c.name||'').includes('ltx')) continue;
+        all.push(c);
+      }
+    }
+    all.sort((a,b) => (b.mtime||0)-(a.mtime||0));
+    const latest = all[0];
+    const hero = $('aihero');
+    if (!latest) { hero.className=''; hero.innerHTML = '<div class="empty" style="padding:20px">No LTX clip to review yet.</div>'; }
+    else {
+      hero.className=''; hero.style.cssText='';
+      hero.innerHTML = `<div style="border-radius:14px;overflow:hidden;border:1px solid var(--line);cursor:pointer" onclick="F.viewer([{name:'${esc(latest.name)}'}],0,c=>c.name)">
+        <img loading="lazy" src="${F.contactUrl(latest.name)}" alt="contact" style="display:block;width:100%;aspect-ratio:16/9;object-fit:cover" onerror="this.parentElement.innerHTML='<div class=empty>No contact sheet</div>'">
+      </div>`;
+      window._aiLatest = latest.name;
+    }
+  } catch (e) { $('aihero').innerHTML = '<div class="empty">'+esc(e.message)+'</div>'; }
+  cycleStatus();
+}
+async function aiReview(){
+  const name = window._aiLatest;
+  if (!name) return F.toast('Render something first.');
+  try {
+    // Prefer Venice agent slash if available; otherwise open contact in viewer with a toast.
+    const url = F.contactUrl(name);
+    sessionStorage.setItem('wd_ai_review_clip', name);
+    sessionStorage.setItem('wd_ai_review_contact', url);
+    const target = '/app/venice/?review=' + encodeURIComponent(name);
+    // This screen usually runs inside the shell's iframe, where location.href
+    // navigates THIS frame — which loaded the whole agent app inside the agent's
+    // own workspace pane instead of switching screens. Ask the shell to switch.
+    try {
+      if (parent !== window && typeof parent.show === 'function') {
+        parent.show('agent', false, target);
+        return;
+      }
+    } catch (e) { /* cross-origin parent: fall through to a top-level nav */ }
+    (window.top || window).location.href = target;
+  } catch (e) { F.toast(e.message); }
+}
+async function cycleStatus(){
+  try {
+    const s = await F.api('/api/ltx/cycle/status');
+    const run = s.running || s.pid;
+    $('cycst').textContent = run
+      ? `Cycle running${s.pid ? ' · pid '+s.pid : ''}${s.round != null ? ' · round '+s.round : ''}`
+      : (s.last_status ? 'Last: '+s.last_status : 'Cycle idle');
+    $('cycst').className = 'small mut' + (run ? ' warn' : '');
+    if (s.tail || s.log_tail || s.detail) $('cycout').textContent = s.tail || s.log_tail || s.detail || '';
+    else if (s.state) $('cycout').textContent = typeof s.state === 'string' ? s.state : JSON.stringify(s.state, null, 2).slice(0, 800);
+  } catch (e) { $('cycst').textContent = 'Cycle API: ' + (e.message || e); }
+}
+async function cycleAct(act){
+  try {
+    if (act === 'start') {
+      const body = {rounds: 5};
+      // Prefer a finished LTX job id if we have one in the jobs list
+      const done = (window._jobs || []).find(j => j.status === 'done');
+      if (done) body.src = done.id;
+      await F.post('/api/ltx/cycle/start', body);
+      F.toast('QA cycle started');
+    } else {
+      await F.post('/api/ltx/cycle/stop', {});
+      F.toast('QA cycle stop requested');
+    }
+    cycleStatus();
+  } catch (e) { F.toast(e.message); }
+}
+
+
+vrev = F.mountVideoReview($('videoreview'), { source: 'ltx', title: 'Video review' });
+F.pull?.(() => { status(); jobs(); loadSetupPill(); loadAiReview(); vrev && vrev.refresh(); });
+$('prompt').value = D.prompt || ''; $('seed').value = D.seed || '';
+frames = D.frames || 49; parts = D.parts || 1; size = D.size || 'landscape';
+selSeg('parts', parts); selSeg('size', size);
+idb('readonly', st => st.get('pic')).then(f => { if (f) setPic(f); }).catch(() => {});
+mode(); status(); jobs(); loadSetupPill(); loadAiReview();
 </script>
 </body></html>
