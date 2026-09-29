@@ -2,5 +2,6 @@ fastapi
 uvicorn[standard]
 requests
 httpx
+bcrypt  # basic-auth fallback in /api/auth/verify (hub/auth.py)
 cryptography  # ES256 device-key verification (hub/auth.py)
 python-multipart  # ltx.py upload endpoints; without it _mount silently drops /api/ltx/*

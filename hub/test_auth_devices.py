@@ -36,12 +36,14 @@ def isolate(tmp_path, monkeypatch):
     monkeypatch.setattr(auth, "DEVICES", tmp_path / "auth_data" / "devices.json")
     auth._challenges.clear()
     auth._tokens.clear()
+    auth._tokens_src = None
+    auth._throttle.clear()
     yield
 
 
 def _enrol(client, name="laptop"):
     priv, pem = _keypair()
-    r = client.post("/api/auth/devices", json={"name": name, "public_key_pem": pem})
+    r = client.post("/api/auth/devices", json={"name": name, "public_key_pem": pem, "enrol_code": auth.mint_enrol_code()})
     assert r.status_code == 200, r.text
     return priv, r.json()["id"]
 
@@ -121,12 +123,12 @@ def test_keys_are_never_listed_and_weak_curves_refused():
     weak = ec.generate_private_key(ec.SECP192R1()).public_key().public_bytes(
         serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
     ).decode()
-    r = client.post("/api/auth/devices", json={"name": "weak", "public_key_pem": weak})
+    r = client.post("/api/auth/devices", json={"name": "weak", "public_key_pem": weak, "enrol_code": auth.mint_enrol_code()})
     assert r.status_code == 400 and "P-256" in r.json()["detail"]
 
 
 def test_unknown_device_and_garbage_key_are_clean_errors():
     client = TestClient(app)
     assert client.post("/api/auth/challenge", json={"device_id": "nope"}).status_code == 404
-    r = client.post("/api/auth/devices", json={"name": "x", "public_key_pem": "not a key"})
+    r = client.post("/api/auth/devices", json={"name": "x", "public_key_pem": "not a key", "enrol_code": auth.mint_enrol_code()})
     assert r.status_code == 400 and "PEM" in r.json()["detail"]
