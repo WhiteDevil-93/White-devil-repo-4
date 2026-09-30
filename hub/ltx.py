@@ -77,9 +77,10 @@ MODEL_ID = re.compile(r"^~?[\w.-]+/[\w.:-]+$")
 
 
 def norm_opts(o):
-    """Model choices: {transformer, loras (max 2), distill, vae, clip, writer, i2v}."""
+    """Model choices: {transformer, loras (max 4 content adapters), distill, vae, clip, writer, i2v}.
+    Distilled 450 is separate (default 1.0). Content stack is anatomy then motion; camera/lighting only if chosen."""
     loras = []
-    for it in (o.get("loras") or [])[:2]:
+    for it in (o.get("loras") or [])[:4]:
         try:
             name, s = str(it[0] or ""), float(it[1])
         except (TypeError, ValueError, IndexError):
@@ -87,9 +88,9 @@ def norm_opts(o):
         if name:
             loras.append([name, max(-1.0, min(1.5, s))])
     try:
-        distill = max(0.0, min(1.2, float(o.get("distill", 0.55))))
+        distill = max(0.0, min(1.2, float(o.get("distill", 1.0))))
     except (TypeError, ValueError):
-        distill = 0.55
+        distill = 1.0
     try:
         i2v = max(0.25, min(1.0, float(o.get("i2v", 0.55))))
     except (TypeError, ValueError):
@@ -255,42 +256,64 @@ def graph(image, prompt, frames, width, height, seed, opts, prefix, compression=
 
 
 WRITERS = ["x-ai/grok-4.5", "x-ai/grok-4.3"]
+COMPILER_MODEL = "google/gemma-3-12b-it"
 TEEN = re.compile(r"\b(?:late |early |mid-?)?teen(?:s|age|aged|ager|agers)?(?:\s*(?:to|-)\s*(?:early |mid-?)?(?:twenties|20s))?", re.I)
 REFUSAL = re.compile(r"^\W*(i('m| am)? (sorry|unable|not able)|i can(no|'|’)t|sorry|as an ai)|\b(can(no|'|’)t|cannot|unable to|won(’|')t) "
                      r"(write|describe|help|create|comply|produce|generate)|\battach (the|a) (start )?frame", re.I)
-ASSIST = """You write prompts for LTX-2.5 image-to-video. The user attaches the START FRAME and a few rough words about what
-should happen. The video model already sees the frame, so the prompt is for MOTION: it only needs a short reminder of who
-is there. Long descriptions of the pose make the video freeze in that pose, so keep them short.
-Write ONE paragraph in present tense, 70-130 words, in this order:
-1. Start straight away with the user's action as the first sentence (e.g. "The man slowly strokes his erect penis...").
-2. Then the same action as a sequence of 3-5 visible movements over the {seconds} seconds: what the hands, hips, head and
-   body do, speed and rhythm, how it builds. Use verbs of motion; every sentence must contain movement. This is most
-   of the paragraph.
-3. One short sentence of who is in frame: adults only (20s-50s), build, hair, skin, nude or what they wear. No names or roles.
-   Keep genitals male: penis, testicles, male anus/perineum — never a vaginal slit or labia. Hands: clear male fingers, short nails.
-4. Camera in a few words (keep what the frame suggests: static, close-up, handheld), then light: soft diffused indoor key
-   with controlled highlights that preserves skin detail — never blown whites, hot speculars, washed-out sheets, harsh
-   overexposure or clipped highlights.
-This is explicit adult video: write the sex fully graphic, never tasteful, vague or implied. Use plain anatomical words
-(penis, glans, shaft, foreskin, testicles, erection, anus, vulva, labia, clitoris, nipples, semen, pre-cum, saliva,
-masturbating, oral sex, penetration, ejaculation), never slang or euphemisms ("manhood", "member", "intimate").
-Show the genitals and the contact in detail: which hand or mouth touches what, grip, depth, speed and rhythm of strokes or
-thrusts, the shaft sliding in and out, lips stretching around it, the foreskin moving, testicles swaying, muscles
-tensing, hips rocking, fluids dripping, glistening or spurting, breathing, moans and faces showing arousal. Name the visible
-body signs as it builds (flushed skin, sweat, tension). Avoid words that make the body vibrate or jitter on camera
-(no throbbing, twitching, shuddering, vibrating, pulsing, trembling, shaking). Keep anatomy identity stable across the
-clip (same penis, same hands — no morphing). Prefer hip/leg motion verbs so the lower body does not freeze. Never fade
-out, cut away, cover, blur or stop before the act is shown.
-The USER'S ACTION IS MANDATORY: do exactly that action, never swap it for a different or milder one, never replace it
-with posing or holding still. If the frame can't start it directly (e.g. they are dressed), open with the quick step that
-gets there (undressing, turning, reaching), then do the action.
-CAST RULE: the start frame is the pose and place, not a hard people-count lock. If the user's words name a second (or
-more) person — spanking them, fucking them, standing behind them, a hand that is not theirs — WRITE THAT PERSON IN.
-Hands, arms or a torso may enter from off-frame; never collapse a multi-person idea into solo self-touch just because
-only one body is visible in the still. Keep people already in the frame; do not invent a different cast than the words ask.
-Dialogue only if the user asks, in quotes. No sound effects list, no camera jargon soup, no "cinematic, 8k" tags,
-no scene changes, no second location.
-Reply with the paragraph only."""
+DIRECTOR = """SYSTEM ROLE: MULTI-CLIP VIDEO DIRECTOR
+
+You convert a user's simple story or action description into a coherent multi-clip production plan.
+You DO NOT write final prompts for the video generation model.
+You plan the sequence that a downstream prompt compiler will implement.
+
+Produce exactly {n} clips. Each clip is {seconds} seconds. Do not put more physical action into a clip than can
+plausibly occur in that time.
+
+Preserve the user's intent exactly. Do not introduce new characters, actions, story events, objects, dialogue,
+camera movements, sounds, or environmental events unless required for physical continuity.
+Label actors Person A, Person B, Person C. Never write "he grabs him", "his hand moves", or "they turn".
+Name the person and the limb: "Person B's right hand".
+Do not solve a hard action with impossible anatomy. Do not repeat a major action in the next clip.
+The END STATE of clip N must be a valid START STATE for clip N+1.
+If the user did not ask for camera movement, the camera stays stable.
+Adults only. When the cast is male, the plan is gay male sex: men, penises, anus, mouths — never a woman or female anatomy.
+Use plain anatomical words, never slang.
+
+Reply in EXACTLY this layout, no markdown, no commentary:
+
+GLOBAL CONTINUITY
+Persistent facts every clip must keep: actor identity, clothing, positions, facing, left/right, limb ownership,
+objects, camera, environment, lighting.
+
+CLIP 1
+DURATION: {seconds} seconds
+START STATE: ...
+ACTION: chronological physical action for this clip only
+END STATE: state handed to the next clip
+ACTOR/LIMB OWNERSHIP: who moves which limb
+CAMERA: shot size, angle, movement (stable if none was requested)
+CONTINUITY: what must not change
+
+CLIP 2
+(same fields, through CLIP {n})"""
+
+COMPILER = """SYSTEM ROLE: LTX-2.5 VIDEO PROMPT COMPILER
+
+You receive ONE clip specification from an upstream director, plus a global continuity state and the reference-image state.
+Translate that specification into one precise LTX-2.5 prompt. The clip specification is authoritative.
+
+DO NOT rewrite the story, add actions, add characters, change who acts, change left/right limbs, add dramatic movement,
+add camera movement that was not specified, add dialogue, sound, music, ambience, cuts, or secondary actions.
+
+Priority: reference-image geometry, actor identity, spatial position, limb ownership, starting pose, the one primary
+action, chronological movement, end state, camera, lighting. Audio only if the spec explicitly requests it.
+When two people are present, keep repeating whose limb it is wherever a hand or arm could be confused.
+Motion order: starting position, initiation, movement, contact, immediate result, final position.
+One primary action. If a limb is only partly in frame, it still belongs to its actor — do not borrow the other person's visible limb.
+If the camera is not specified, say the viewpoint stays stable. Do not invent speech, breathing, impacts, vibration, humming,
+ambience, or music. No throbbing, twitching, shuddering, vibrating, pulsing, trembling, or shaking.
+Adult graphic anatomy when the spec names it (penis, glans, shaft, foreskin, testicles, anus, mouth), never slang.
+70-130 words, present tense, one paragraph. Reply with that paragraph only."""
 
 
 MEN = """
@@ -346,18 +369,19 @@ class Assist(BaseModel):
     writer: Optional[str] = None
 
 
-PLAN = """You plan a run of {n} image-to-video clips of {seconds} seconds each. Each clip starts on the last frame of the one
-before, so together they make ONE continuous video that begins on the attached START FRAME.
-Split the user's idea into exactly {n} beats, in order, one per line: one sentence each, plain visible action of bodies and
-hands, written graphically: name the genitals and the exact contact (plain anatomical words for sex between consenting
-adults, never slang or euphemisms), sized for {seconds} seconds.
-Each beat moves the action one step further; nothing repeats; the last beat is the peak or a natural end.
-The start frame sets pose and place. If the user's idea names more people than the still shows (second man spanking,
-partner behind them, etc.), keep those people in every beat — hands/arms may enter off-frame. Never rewrite a
-two-person idea as solo masturbation or self-spanking.
-When the cast is male, keep every beat as gay male sex / male-only sex: men, penises, anus, mouths — never a woman or
-female anatomy.
-Adults only. No numbering, no quotes, no extra text: exactly {n} lines."""
+CLIP_HEAD = re.compile(r"(?im)^CLIP\s+\d+\s*$")
+GLOBAL_HEAD = re.compile(r"(?im)^GLOBAL CONTINUITY\s*$")
+
+
+def parse_director(text):
+    """(continuity, [{raw}]) or None. The director document is the only story the compiler sees."""
+    raw = (text or "").strip()
+    if not GLOBAL_HEAD.search(raw) or not re.search(r"(?im)^CLIP\s+1\s*$", raw):
+        return None
+    chunks = CLIP_HEAD.split(raw)
+    continuity = GLOBAL_HEAD.sub("", chunks[0]).strip()
+    specs = [{"raw": block.strip()} for block in chunks[1:] if block.strip()]
+    return (continuity, specs) if specs else None
 
 
 @router.post("/assist")
@@ -380,7 +404,6 @@ def assist(a: Assist):
         tmp.unlink(missing_ok=True)
     if a.image and (len(a.image) > 4_000_000 or not re.match(r"^data:image/(jpeg|png|webp);base64,", a.image)):
         raise HTTPException(400, "The picture couldn't be read; pick it again.")
-    system = ASSIST.format(seconds=max(2, round(a.frames / 24))) + ("" if a.image else T2V)
     frame = ""
     if a.image:
         frame, _ = ask(key, CAPTION, [{"type": "text", "text": "Describe the frame."},
@@ -388,42 +411,60 @@ def assist(a: Assist):
     men = men_only(frame, idea)
     if a.parts > 1 or a.from_job:
         return plan(key, a, idea, frame, men)
-    system += MEN if men else ""
-    user = (f"START FRAME (ground truth, keep these exact people and clothes): {frame}\n\n" if frame else
-            "Text-to-video, no picture: use the people the words describe, or invent adults in their 20s-40s and a plain "
-            "setting that fit the words.\n\n") + f"What should happen: {idea or 'something natural that fits the picture'}"
-    content = [{"type": "text", "text": user}] + ([{"type": "image_url", "image_url": {"url": a.image}}] if a.image else [])
-    text, model = ask(key, system, content, 450, a.writer)
+    directed = direct(key, idea, frame, 1, a.frames, men, a.writer, a.image)
+    text, model = compile_clip(key, directed["continuity"], directed["specs"][0], frame, a.image if a.image else None, men)
     if not text:
-        raise HTTPException(502, f"Couldn't write a prompt ({model}). Try different words.")
-    text = plain_words(text)
+        raise HTTPException(502, f"Couldn't compile the prompt ({model}). Try different words.")
     return {"prompt": fix_men(text) if men else text, "model": model, "frame": frame}
+
+
+def direct(key, idea, frame, n, frames, men, writer, image=None):
+    """Director only. Returns continuity + one spec per clip. Does not write an LTX prompt."""
+    seconds = max(2, round(frames / 24))
+    system = DIRECTOR.format(n=n, seconds=seconds) + (MEN if men else "")
+    user = (f"REFERENCE IMAGE:\n{frame}\n\n" if frame else
+            "No reference image. Use only the people and place the words name. Adults in their 20s-40s.\n\n") + \
+        f"CLIPS: {n}\nDURATION EACH: {seconds} seconds\nSTORY:\n{idea or 'something natural that fits the picture'}"
+    content = [{"type": "text", "text": user}] + ([{"type": "image_url", "image_url": {"url": image}}] if image else [])
+    text, model = "", ""
+    parsed = None
+    for _ in range(2):
+        text, model = ask(key, system, content, 400 + n * 180, writer, temperature=0.3)
+        parsed = parse_director(text)
+        if parsed and len(parsed[1]) == n:
+            break
+        parsed = None
+    if not parsed:
+        raise HTTPException(502, f"Couldn't direct {n} clips ({'wrong clip count' if text else model}). Try again.")
+    return {"continuity": parsed[0], "specs": parsed[1], "model": model, "text": text.strip()}
 
 
 def plan(key, a, idea, frame, men=False):
     n = max(1, min(20, a.parts))
-    system = PLAN.format(n=n, seconds=max(2, round(a.frames / 24))) + (MEN if men else "")
-    user = (f"START FRAME (ground truth): {frame}\n\n" if frame else
-            "No start frame is attached: keep the beats about adults in their 20s-40s that fit the words.\n\n") + \
-        f"The idea for the whole video: {idea or 'something natural that fits the picture'}"
-    content = [{"type": "text", "text": user}] + ([{"type": "image_url", "image_url": {"url": a.image}}] if a.image else [])
-    text, model = "", ""
-    for _ in range(2):
-        text, model = ask(key, system, content, 60 + n * 60, a.writer)
-        lines = [re.sub(r"^\s*(\d+[.):]|[-*•])\s*", "", l).strip() for l in text.splitlines() if l.strip()]
-        if len(lines) == n:
-            text = plain_words("\n".join(lines))
-            return {"prompt": fix_men(text) if men else text, "model": model, "frame": frame, "lines": n}
-    raise HTTPException(502, f"Couldn't plan {n} clips ({'wrong number of lines' if text else model}). Try again.")
+    directed = direct(key, idea, frame, n, a.frames, men, a.writer, a.image)
+    return {"prompt": directed["text"], "model": directed["model"], "frame": frame, "lines": n}
 
 
-def ask(key, system, content, max_tokens, writer=None):
+def compile_clip(key, continuity, spec, frame, image, men):
+    """Gemma compiles exactly one clip. It does not see the rest of the story."""
+    system = COMPILER + (MEN if men else "") + ("" if frame or image else
+             "\nNo reference image. Use only the people and place named in the clip specification.")
+    user = f"GLOBAL CONTINUITY STATE:\n{continuity or 'none'}\n\nCLIP SPECIFICATION:\n{spec.get('raw') or ''}\n\n" + \
+        (f"REFERENCE IMAGE STATE:\n{frame}\n" if frame else "REFERENCE IMAGE STATE:\nnone\n")
+    content = [{"type": "text", "text": user}] + ([{"type": "image_url", "image_url": {"url": image}}] if image else [])
+    return ask(key, system, content, 500, models=[COMPILER_MODEL] + WRITERS, temperature=0.2)
+
+
+def ask(key, system, content, max_tokens, writer=None, models=None, temperature=0.5):
     """(text, model) from the first writer that answers without refusing; ("", reason) if none."""
     last = ""
-    for model in ([writer] if writer and MODEL_ID.match(writer) else []) + [w for w in WRITERS if w != writer]:
+    order = models if models is not None else ([writer] if writer and MODEL_ID.match(writer) else []) + [w for w in WRITERS if w != writer]
+    for model in order:
+        if not model or not MODEL_ID.match(model):
+            continue
         try:
             r = requests.post("https://openrouter.ai/api/v1/chat/completions", timeout=120, json={
-                "model": model, "temperature": 0.5, "max_tokens": max_tokens,
+                "model": model, "temperature": temperature, "max_tokens": max_tokens,
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": content}]},
                 headers={"Authorization": f"Bearer {key}", "HTTP-Referer": "https://84-12-112-249.sslip.io",
                          "X-Title": "Forge LTX"})
@@ -761,50 +802,62 @@ def join(parts, dst, trims=None):
 
 CHAIN = """
 This clip is part {i} of {n} of ONE continuous video; each part starts on the last frame of the part before.
-People already visible (keep them; do not gender-swap): {cast}
+People already visible (keep them; do not gender-swap). Label them Person A, Person B in the prompt: {cast}
 Overall idea for the whole video: {idea}
-If the idea names an extra person not yet listed in the cast (second man spanking, partner behind, etc.), INCLUDE them —
-their hand/arm/torso may enter from off-frame. Never collapse a multi-person idea into solo self-touch.
+If the idea names an extra person not yet listed, INCLUDE them — their hand or arm may enter from off-frame.
+Bind every contact to one person's limb. Never let Person A perform an action that belongs to Person B, and never
+collapse a two-person idea into solo self-touch. Do not invent extra limbs, camera moves, cuts or sound.
 Actions already done in earlier parts (do NOT repeat them): {story}
-Write part {i}: continue from this frame with a NEW action that moves the story one clear step forward, not the same
-movement again and not a reset. {end}"""
+Write part {i}: one new, physically simple step forward from this frame, not a repeat and not a reset. {end}"""
 
 
 SENTENCE = re.compile(r"(?<=[.!?])\s")
 
 
 def write_part(key, job, i, frame_path):
+    """Compile clip i only. The director's spec is authoritative; the full story is not sent again."""
     import base64
-    n = len(job["parts"])
-    beat = job["parts"][i].get("beat")
+    job = load(job["id"])
+    part = job["parts"][i]
     writer = job_opts(job)["writer"]
     url = frame = ""
     if frame_path:
         mime = "png" if frame_path.suffix == ".png" else "jpeg"
         url = f"data:image/{mime};base64," + base64.b64encode(frame_path.read_bytes()).decode()
-        frame, _ = ask(key, CAPTION, [{"type": "text", "text": "Describe the frame."}, {"type": "image_url", "image_url": {"url": url}}],
-                       250, writer)
-    if not job.get("cast") and frame_path:
-        job = load(job["id"])
-        job["cast"] = frame if i == 0 else cast_of(key, job, writer)
+        frame, _ = ask(key, CAPTION, [{"type": "text", "text": "Describe the frame."},
+                                      {"type": "image_url", "image_url": {"url": url}}], 250, writer)
+    if not job.get("cast") and frame:
+        job["cast"] = frame
         save(job)
-    story = " / ".join(f"part {k + 1}: {p.get('beat') or SENTENCE.split(p['prompt'])[0][:200]}"
-                       for k, p in enumerate(job["parts"][:i])) or "nothing yet, this is the start"
-    end = "This is the LAST part: bring the action to its peak or a natural end." if i == n - 1 else ""
-    if beat:
-        end = f"THIS PART'S ACTION (mandatory, write exactly this, paced for the clip): {beat}. " + end
-    idea = job["idea"] or " / ".join(job.get("lines") or []) or "something natural that fits the picture"
-    system = ASSIST.format(seconds=max(2, round(job["frames"] / 24))) + CHAIN.format(
-        i=i + 1, n=n, cast=job.get("cast") or "as in the frame", idea=idea, story=story, end=end) + ("" if frame_path else T2V)
-    men = men_only(job.get("cast") or frame, idea if not job.get("cast") else "")
-    system += MEN if men else ""
-    user = (f"Current frame (the pose to continue from; if it seems to show different people than the cast list, it's "
-            f"misread, keep the cast): {frame}\n\n" if frame else "") + \
-        (f"Do this now: {beat}" if beat else f"What should happen overall: {idea}")
-    text, model = ask(key, system, [{"type": "text", "text": user}] + ([{"type": "image_url", "image_url": {"url": url}}] if url else []),
-                      500, writer)
+    if not part.get("spec") and not part.get("beat"):
+        if not any(p.get("spec") for p in job["parts"]):
+            try:
+                directed = direct(key, job.get("idea") or job.get("prompt") or "", frame, len(job["parts"]),
+                                  job["frames"], men_only(frame, job.get("idea") or ""), writer, url or None)
+            except HTTPException as e:
+                raise RuntimeError(e.detail)
+            job = load(job["id"])
+            job["continuity"] = directed["continuity"]
+            job["idea"] = ""
+            for p, spec in zip(job["parts"], directed["specs"]):
+                p["spec"] = spec
+            save(job)
+            part = job["parts"][i]
+    spec = part.get("spec")
+    if not spec and part.get("beat"):
+        seconds = max(2, round(job["frames"] / 24))
+        spec = {"raw": f"DURATION: {seconds} seconds\nSTART STATE: the reference frame\nACTION: {part['beat']}\n"
+                       "END STATE: the pose after this one action\nACTOR/LIMB OWNERSHIP: only the person named in ACTION moves\n"
+                       "CAMERA: stable\nCONTINUITY: identity, clothes, and positions stay as in the reference frame"}
+    if not spec:
+        raise RuntimeError(f"No clip specification for part {i + 1}.")
+    men = men_only(job.get("cast") or frame, spec.get("raw") or "")
+    text, model = compile_clip(key, job.get("continuity") or "", spec, frame, url or None, men)
     if not text:
-        raise RuntimeError(f"Couldn't write the prompt for part {i + 1} ({model})")
+        raise RuntimeError(f"Couldn't compile part {i + 1} ({model}).")
+    job = load(job["id"])
+    job["parts"][i]["compiler"] = model
+    save(job)
     return fix_men(plain_words(text)) if men else plain_words(text)
 
 
@@ -885,14 +938,17 @@ async def chain(image: Optional[UploadFile] = File(None), from_job: Optional[str
                 sex_lora: Optional[str] = Form(None), sex_strength: float = Form(0.7), opts: Optional[str] = Form(None)):
     """A run of clips, each starting on the previous one's last frame, joined into one video in Renders.
     Either a start picture, or from_job = a finished clip to continue (it's kept at the front of the joined video).
-    idea: one line for the whole run (prompts are written per part from the frames), or exactly one line per part."""
+    idea: one line for the whole run, one line per part, or a director plan (GLOBAL CONTINUITY + CLIP blocks)."""
     if not 1 <= parts <= 20:
         raise HTTPException(400, "Between 1 and 20 parts.")
     if frames not in FRAMES:
         raise HTTPException(400, f"Frames must be one of {FRAMES}.")
-    lines = [l.strip() for l in idea.strip().splitlines() if l.strip()]
+    directed = parse_director(idea)
+    lines = [] if directed else [l.strip() for l in idea.strip().splitlines() if l.strip()]
+    if directed and len(directed[1]) != parts:
+        raise HTTPException(400, f"The plan has {len(directed[1])} clips and this run is set to {parts}.")
     if len(lines) > 1 and len(lines) != parts:
-        raise HTTPException(400, f"You wrote {len(lines)} lines for {parts} parts: write one line for the whole thing, or one per part.")
+        raise HTTPException(400, f"You wrote {len(lines)} lines for {parts} parts: write one line for the whole thing, one per part, or a director plan.")
     jid = secrets.token_hex(6)
     d = JOBS / jid
     src = None
@@ -919,13 +975,19 @@ async def chain(image: Optional[UploadFile] = File(None), from_job: Optional[str
         raw.write_bytes(data)
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(raw), "-frames:v", "1", "-q:v", "2", str(d / "start.jpg")],
                        check=True, timeout=60)
-    name = ("more: " + src["name"]) if src else (lines[0] if lines else "chain")
-    job = {"id": jid, "kind": "chain", "created": time.time(), "status": "queued", "idea": idea.strip() if len(lines) <= 1 else "",
+    name = ("more: " + src["name"]) if src else ((directed[1][0]["raw"][:60] if directed else lines[0]) if (directed or lines) else "chain")
+    job = {"id": jid, "kind": "chain", "created": time.time(), "status": "queued",
+           "idea": "" if directed else (idea.strip() if len(lines) <= 1 else ""),
+           "continuity": directed[0] if directed else "",
            "lines": lines if len(lines) > 1 else [], "parts": [{} for _ in range(parts)], "frames": frames, "size": size,
            "seed": seed if seed is not None else random.randint(1, 2**48), "opts": o,
-           "sex_lora": o["loras"][0][0] if o["loras"] else None, "from_job": from_job, "name": name[:60], "prompt": idea.strip(),
+           "sex_lora": o["loras"][0][0] if o["loras"] else None, "from_job": from_job, "name": name[:60],
+           "prompt": "" if directed else idea.strip(),
            "out": f"ltx_chain_{slug(name)}_{jid}.mp4", "step": "writing part 1", "t2v": not src and image is None}
-    if len(lines) > 1:
+    if directed:
+        for p, spec in zip(job["parts"], directed[1]):
+            p["spec"] = spec
+    elif len(lines) > 1:
         for p, l in zip(job["parts"], lines):
             p["prompt" if len(l) >= 200 else "beat"] = plain_words(l)
     save(job)

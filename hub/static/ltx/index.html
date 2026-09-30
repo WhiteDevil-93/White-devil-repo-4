@@ -49,9 +49,9 @@ textarea.input{min-height:110px;resize:vertical;font:inherit;line-height:1.45}
 <div class="card">
   <details id="models"><summary style="cursor:pointer"><b>3. Models</b> <span class="small mut" id="msum"></span></summary>
     <label class="field" style="margin-top:10px"><span>Video model</span><select class="input" id="m_tr"></select></label>
-    <label class="field"><span>Speed LoRA (distilled) <b id="m_dv">0.8</b> · 0 = off (then it needs more steps and looks rough)</span>
-      <input type="range" id="m_d" min="0" max="1.2" step="0.05" value="0.8"></label>
-    <div class="small mut" style="margin-top:10px">LoRAs (applied in order)</div>
+    <label class="field"><span>Distilled 450 <b id="m_dv">1.0</b> · 1.0 on the speed schedule, 0 = full Dev (slower)</span>
+      <input type="range" id="m_d" min="0" max="1.2" step="0.05" value="1"></label>
+    <div class="small mut" style="margin-top:10px">Content LoRAs, in order: anatomy ~0.65, then motion ~0.45. Add camera or lighting only for that shot.</div>
     <div id="m_loras"></div>
     <button class="btn sm" id="m_add" style="margin-top:6px">+ Add LoRA</button>
     <div class="small mut" style="margin-top:12px">Decoder</div>
@@ -154,7 +154,25 @@ const nice = n => (n || '').replace(/^ltx_|\.safetensors$/g, '').replace(/_/g, '
 const opt = (v, label, sel) => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(label)}</option>`;
 let O = JSON.parse(localStorage.getItem('ltx_opts') || 'null'), lists = '';
 function saveO(){ localStorage.setItem('ltx_opts', JSON.stringify(O)); summary(); }
-function defaults(){ return {transformer: null, loras: S.loras.length ? [[S.loras[0], 0.7]] : [], distill: 0.8, vae: 'quality', clip: null, writer: 'x-ai/grok-4.5'}; }
+function startStrength(name){
+  const n = (name || '').toLowerCase();
+  if (/camera|dolly|orbit|zoom/.test(n)) return 0.35;
+  if (/light|lux|glow/.test(n)) return 0.35;
+  if (/thrust|motion|action/.test(n)) return 0.45;
+  if (/style|beanflk|cinematic/.test(n)) return 0.5;
+  return 0.65;
+}
+function defaults(){
+  const first = S.loras.find(l => /coachbate/i.test(l) && /penis/i.test(l) && !/uncut/i.test(l))
+    || S.loras.find(l => /coachbate/i.test(l))
+    || S.loras.find(l => /muscle|penile|praxis|anatomy|defined/i.test(l))
+    || S.loras[0];
+  const motion = S.loras.find(l => /thrust|motion/i.test(l) && l !== first);
+  const loras = [];
+  if (first) loras.push([first, startStrength(first)]);
+  if (motion) loras.push([motion, 0.45]);
+  return {transformer: null, loras, distill: 1, vae: 'quality', clip: null, writer: 'x-ai/grok-4.5'};
+}
 function resetModels(){ O = defaults(); saveO(); lists = ''; models(); }
 function summary(){
   if (!O) return;
@@ -186,7 +204,7 @@ function loraRows(){
     : `<div class="small mut" style="margin-top:4px">${S.loras.length ? 'None: plain model.' : 'No LoRAs on Colab yet; install one below.'}</div>`;
   const free = S.loras.filter(l => !O.loras.some(([n]) => n === l));
   $('m_add').hidden = O.loras.length >= 4 || !free.length;
-  $('m_add').onclick = () => { O.loras.push([free[0], 0.7]); loraRows(); saveO(); };
+  $('m_add').onclick = () => { O.loras.push([free[0], startStrength(free[0])]); loraRows(); saveO(); };
 }
 $('m_tr').onchange = () => { O.transformer = $('m_tr').value; saveO(); };
 $('m_d').oninput = () => { O.distill = +$('m_d').value; $('m_dv').textContent = $('m_d').value; saveO(); };
@@ -221,7 +239,7 @@ function mode(){
   const chain = parts > 1 || cont;
   $('chaintip').hidden = !chain; $('go').textContent = cont ? `Continue with ${parts} more` : chain ? `Render ${parts} clips` : 'Render';
   $('assist').textContent = chain ? '✦ Plan the clips for me' : '✦ Write it for me';
-  $('whattip').innerHTML = chain ? 'Type the whole story in rough words (slang is fine) and press <b>Plan the clips for me</b>: you get one line per clip to edit. When each clip runs, its line is written out into a full prompt from that clip\'s real start frame. Leave it rough and it plans as it goes.'
+  $('whattip').innerHTML = chain ? 'Type the story and press <b>Plan the clips for me</b>. That writes a director sheet (start, action, end, who owns each limb). Render then compiles each clip on its own. It does not re-plan the story.'
     : 'Type a few rough words (slang is fine) and press <b>Write it for me</b>: it looks at your picture and writes the full prompt. Edit it after if you like.';
   $('pickbox').hidden = !!cont; $('cont').hidden = !cont; $('pictip').hidden = !!cont;
   const t2v = !cont && !pic;
