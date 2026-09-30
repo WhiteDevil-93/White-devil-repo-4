@@ -506,23 +506,142 @@ def _basic_credential() -> Optional[tuple[str, str]]:
     return None
 
 
-def _check_basic(header: str) -> bool:
-    """True if this Authorization: Basic header matches the hub's credential."""
-    cred = _basic_credential()
-    if not cred:
+# --- bcrypt user file -------------------------------------------------------
+# A second source beside the single env/JSON credential above, so the relay's
+# EXISTING Caddyfile users can be pasted in unchanged rather than re-issued.
+# Caddy stores exactly what `caddy hash-password` prints; this reads the same.
+BASIC_CACHE_TTL_S = 300
+
+_basic_users: dict[str, bytes] = {}
+_basic_sig: Optional[tuple] = None
+_basic_ok: dict[str, float] = {}       # hmac(header) -> expiry of a verified credential
+_basic_key = secrets.token_bytes(32)   # per-process, so the cache stores no reusable secret
+
+
+def _basic_file() -> Path:
+    return Path(os.environ.get("HUB_BASIC_AUTH_FILE") or (DATA / "basic_users"))
+
+
+def _plain_bcrypt(h: str) -> str:
+    """Older Caddyfiles store the hash base64-wrapped ('JDJh...'). Accept that too,
+    so pasting the Caddyfile value unchanged works instead of silently never matching."""
+    if h.startswith("$2"):
+        return h
+    try:
+        dec = base64.b64decode(h, validate=True).decode("ascii")
+        return dec if dec.startswith("$2") else h
+    except Exception:
+        return h
+
+
+def _load_basic() -> dict[str, bytes]:
+    """`user:bcrypt-hash` lines, reloaded when the file's mtime/size changes."""
+    global _basic_sig
+    path = _basic_file()
+    try:
+        st = path.stat()
+        sig = (str(path), st.st_mtime_ns, st.st_size)
+    except OSError:
+        sig = None
+    with _LOCK:
+        if sig != _basic_sig:
+            _basic_users.clear()
+            # Deleting a line must take effect now, not in five minutes.
+            _basic_ok.clear()
+            if sig is not None:
+                try:
+                    for line in path.read_text(encoding="utf-8").splitlines():
+                        line = line.strip()
+                        if line and not line.startswith("#") and ":" in line:
+                            user, _, h = line.partition(":")
+                            _basic_users[user] = _plain_bcrypt(h.strip()).encode()
+                except OSError:
+                    pass
+            _basic_sig = sig
+        return dict(_basic_users)
+
+
+def _check_basic_file(header: str) -> bool:
+    """True if the header matches a line in the bcrypt user file."""
+    users = _load_basic()
+    if not users:
         return False
     try:
-        decoded = base64.b64decode(header.split(" ", 1)[1], validate=True).decode("utf-8")
-        user, _, password = decoded.partition(":")
+        user, _, password = base64.b64decode(
+            header.split(" ", 1)[1], validate=True).decode("utf-8").partition(":")
     except Exception:
         return False
-    want_user, want_hash = cred
-    got_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
-    # Both compared in constant time; `and` would short-circuit on the username
-    # and leak which half was wrong through timing.
-    ok_user = hmac.compare_digest(user, want_user)
-    ok_pass = hmac.compare_digest(got_hash, want_hash)
-    return ok_user and ok_pass
+    tag = hmac.new(_basic_key, header.encode(), hashlib.sha256).hexdigest()
+    now = _now()
+    with _LOCK:
+        if _basic_ok.get(tag, 0) > now:
+            return True
+    stored = users.get(user)
+    if stored is None:
+        return False
+    try:
+        import bcrypt
+
+        ok = bcrypt.checkpw(password.encode("utf-8"), stored)
+    except ImportError:  # pragma: no cover - depends on the deployed venv
+        log.error("bcrypt is not installed; the basic_users file cannot be checked. "
+                  "Install requirements.txt on the relay.")
+        return False
+    except ValueError:
+        return False
+    if ok:
+        with _LOCK:
+            # bcrypt at Caddy's default cost is ~1s per check; without this cache
+            # every page load on a screen full of thumbnails would stall.
+            _basic_ok[tag] = now + BASIC_CACHE_TTL_S
+            if len(_basic_ok) > 1000:
+                for k in [k for k, v in _basic_ok.items() if v <= now]:
+                    _basic_ok.pop(k, None)
+    return ok
+
+
+def _basic_configured() -> bool:
+    """Whether ANY basic credential exists — env/JSON single, or the bcrypt file."""
+    return _basic_credential() is not None or bool(_load_basic())
+
+
+def _check_basic(header: str) -> bool:
+    """True if this Authorization: Basic header matches any configured credential."""
+    cred = _basic_credential()
+    if cred:
+        try:
+            decoded = base64.b64decode(header.split(" ", 1)[1], validate=True).decode("utf-8")
+            user, _, password = decoded.partition(":")
+        except Exception:
+            return _check_basic_file(header)
+        want_user, want_hash = cred
+        got_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
+        # Both compared in constant time; `and` would short-circuit on the username
+        # and leak which half was wrong through timing.
+        ok_user = hmac.compare_digest(user, want_user)
+        ok_pass = hmac.compare_digest(got_hash, want_hash)
+        if ok_user and ok_pass:
+            return True
+    return _check_basic_file(header)
+
+
+_legacy_logged: dict[str, float] = {}
+
+
+def _note_legacy(ip: str) -> None:
+    """Once a minute per client, record that the shared password was used.
+
+    This is the evidence needed before flipping to device-only: when
+    `journalctl -u forge-hub | grep 'legacy basic'` goes quiet for every client
+    that matters, nothing is still relying on the password. Guessing instead is
+    how the phone gets locked out remotely.
+    """
+    now = _now()
+    if now - _legacy_logged.get(ip, -1e9) >= 60:
+        _legacy_logged[ip] = now
+        if len(_legacy_logged) > 1000:
+            _legacy_logged.clear()
+        log.info("legacy basic-auth accepted from %s", ip)
 
 
 def _deny(detail: str, offer_basic: bool) -> HTTPException:
@@ -581,9 +700,11 @@ def _decide(authorization: str, ip: Optional[str] = None) -> dict[str, Any]:
                 False,
             )
         if mode == "permissive":
+            if ip:
+                _note_legacy(ip)
             return {"ok": True, "method": "basic-passthrough", "mode": mode}
         # basic_or_token
-        if not _basic_credential():
+        if not _basic_configured():
             # Refusing loudly beats silently degrading to permissive: a
             # misconfigured relay that waves everything through is exactly the
             # failure this endpoint exists to prevent.
@@ -591,7 +712,8 @@ def _decide(authorization: str, ip: Optional[str] = None) -> dict[str, Any]:
                 503,
                 "forward_auth_mode=basic_or_token but the hub has no basic-auth "
                 "credential. Set HUB_BASIC_AUTH_USER and HUB_BASIC_AUTH_PASSWORD, "
-                "or drop back to forward_auth_mode=permissive.",
+                "or populate the basic_users file (HUB_BASIC_AUTH_FILE), or drop "
+                "back to forward_auth_mode=permissive.",
             )
         if ip:
             _check_locked(f"basic:{ip}")
@@ -941,7 +1063,11 @@ def get_config():
     return {
         **cfg,
         "devices_enrolled": len(list_devices()),
-        "basic_credential_configured": _basic_credential() is not None,
+        # Reported so the migration doc's pre-flight check ("is the fallback
+        # actually usable before I remove Caddy's?") sees both sources.
+        "basic_credential_configured": _basic_configured(),
+        "basic_users_file": str(_basic_file()),
+        "basic_users_count": len(_load_basic()),
         "modes": list(FORWARD_AUTH_MODES),
     }
 

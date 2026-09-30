@@ -512,3 +512,108 @@ def test_the_operator_is_told_why(caplog):
         auth.config()
     assert any("not one of" in r.message or "not one of" in r.getMessage() for r in caplog.records), \
         "a silently-corrected auth mode is the failure this guard exists to prevent"
+
+
+# ---------------------------------------------------------------------------
+# The bcrypt basic_users file (ported from the unmerged device-auth branch)
+#
+# Caddy holds the only copy of the relay password today. Once its basic_auth is
+# removed, something must still verify it during the migration, or the
+# "fallback" is really "any Basic header at all". This reads the same format
+# `caddy hash-password` prints, so the existing Caddyfile users paste in
+# unchanged rather than having to be re-issued.
+# ---------------------------------------------------------------------------
+
+bcrypt = pytest.importorskip("bcrypt")
+
+
+def _write_users(tmp_path, lines: str) -> None:
+    d = tmp_path / "auth_data"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "basic_users").write_text(lines, encoding="utf-8")
+    # Force a reload (mtime granularity is coarser than a test), but deliberately
+    # do NOT clear _basic_ok here: invalidating the success cache is the production
+    # behaviour under test, and clearing it from the helper would mask its absence.
+    auth._basic_sig = None
+
+
+def _basic(user: str, password: str) -> dict[str, str]:
+    return {"Authorization": "Basic " + base64.b64encode(f"{user}:{password}".encode()).decode()}
+
+
+def _hash(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=4)).decode()
+
+
+def test_a_user_from_the_file_is_accepted_and_a_wrong_password_is_not(tmp_path):
+    _write_users(tmp_path, f"anon3:{_hash('right-password')}\n")
+    assert auth._check_basic(_basic("anon3", "right-password")["Authorization"]) is True
+    assert auth._check_basic(_basic("anon3", "wrong-password")["Authorization"]) is False
+    assert auth._check_basic(_basic("someone-else", "right-password")["Authorization"]) is False
+
+
+def test_a_base64_wrapped_hash_from_an_older_caddyfile_still_matches(tmp_path):
+    # Older Caddy wrote the hash base64-wrapped. Pasting that unchanged must work,
+    # not silently never match -- a failure that looks exactly like a wrong password.
+    wrapped = base64.b64encode(_hash("pw").encode()).decode()
+    _write_users(tmp_path, f"anon3:{wrapped}\n")
+    assert auth._check_basic(_basic("anon3", "pw")["Authorization"]) is True
+
+
+def test_deleting_a_line_takes_effect_immediately(tmp_path):
+    # The success cache must not outlive the credential it vouched for, or a
+    # revoked user keeps working for up to BASIC_CACHE_TTL_S.
+    _write_users(tmp_path, f"anon3:{_hash('pw')}\n")
+    hdr = _basic("anon3", "pw")["Authorization"]
+    assert auth._check_basic(hdr) is True          # populates the cache
+    _write_users(tmp_path, "# removed\n")
+    assert auth._check_basic(hdr) is False
+
+
+def test_comments_and_blank_lines_are_ignored(tmp_path):
+    _write_users(tmp_path, f"# a comment\n\nanon3:{_hash('pw')}\n\n")
+    assert auth._check_basic(_basic("anon3", "pw")["Authorization"]) is True
+    assert len(auth._load_basic()) == 1
+
+
+def test_basic_or_token_no_longer_503s_when_only_the_file_is_configured(tmp_path):
+    # Before the file existed, _basic_credential() was the only source, so a relay
+    # configured purely from basic_users would refuse every request with a 503.
+    _write_users(tmp_path, f"anon3:{_hash('pw')}\n")
+    auth._save_config({"forward_auth_mode": "basic_or_token"})
+    assert auth._basic_configured() is True
+    c = TestClient(app)
+    assert c.get("/api/auth/forward", headers=_basic("anon3", "pw")).status_code == 200
+    assert c.get("/api/auth/forward", headers=_basic("anon3", "nope")).status_code in (401, 429)
+
+
+def test_no_users_file_means_no_basic_credential(tmp_path):
+    assert auth._load_basic() == {}
+    assert auth._basic_configured() is False
+    assert auth._check_basic(_basic("anon3", "pw")["Authorization"]) is False
+
+
+def test_legacy_password_use_is_logged_once_a_minute(caplog):
+    # The evidence for when it is safe to flip to device-only.
+    auth._legacy_logged.clear()
+    with caplog.at_level("INFO", logger="forge-hub.auth"):
+        auth._note_legacy("203.0.113.7")
+        auth._note_legacy("203.0.113.7")   # inside the minute: not logged again
+        auth._note_legacy("203.0.113.8")
+    hits = [r for r in caplog.records if "legacy basic-auth" in r.getMessage()]
+    assert len(hits) == 2, "expected one line per client per minute"
+
+
+def test_rotating_a_password_invalidates_the_cached_old_one(tmp_path):
+    # The deletion case above is covered by the empty-file early return, so it
+    # does not actually exercise the success cache. This does: the file still has
+    # the user, only the hash changed. Without invalidating _basic_ok on reload,
+    # the OLD password keeps working for up to BASIC_CACHE_TTL_S after a rotation
+    # -- which is exactly when someone rotates it because it leaked.
+    _write_users(tmp_path, f"anon3:{_hash('old-password')}\n")
+    old = _basic("anon3", "old-password")["Authorization"]
+    assert auth._check_basic(old) is True          # caches the old credential
+
+    _write_users(tmp_path, f"anon3:{_hash('new-password')}\n")
+    assert auth._check_basic(old) is False, "the rotated-away password still works"
+    assert auth._check_basic(_basic("anon3", "new-password")["Authorization"]) is True

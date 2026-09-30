@@ -4,3 +4,4 @@ requests
 httpx
 cryptography  # ES256 device-key verification (hub/auth.py)
 python-multipart  # ltx.py upload endpoints; without it _mount silently drops /api/ltx/*
+bcrypt  # verifies the Caddy-format basic_users file during the auth migration
