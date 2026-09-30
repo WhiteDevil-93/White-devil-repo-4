@@ -391,6 +391,25 @@ class HelloHelperTest {
     // These prove the timeout/destroy/cancel/cap logic with a stand-in child. They say
     // nothing about wd-hello.exe itself.
 
+    /**
+     * These six exercise JvmHelloProcessRunner -- timeout, output capping,
+     * descendant destruction, cancellation -- for a helper (wd-hello.exe) that
+     * only exists on WINDOWS, yet they need a POSIX shell to build a fake helper,
+     * so they skip on the very platform they describe. That is uncomfortable but
+     * currently correct.
+     *
+     * Git for Windows does ship a sh.exe, and pointing this at it was tried: the
+     * tests then RUN but fail falsely, because MSYS mangles arguments on the way
+     * through -- printf '%s
+' '{"ok":false,...}' arrives as {ok:false,...} with
+     * the quotes stripped. A shell that rewrites its arguments is not a faithful
+     * substitute, and a suite that fails for environment reasons is worse than one
+     * that skips honestly.
+     *
+     * So: the runner's process handling is VERIFIED ON LINUX ONLY. To close that
+     * gap properly, drive a real Windows helper (a .cmd or wd-hello.exe itself)
+     * rather than emulating one through a POSIX shell.
+     */
     private fun requireSh() = assumeTrue(File("/bin/sh").canExecute(), "needs /bin/sh")
 
     private fun waitDead(pid: Long, timeoutMs: Long = 5_000): Boolean {
