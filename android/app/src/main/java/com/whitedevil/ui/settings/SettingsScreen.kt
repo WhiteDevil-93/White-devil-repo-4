@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +22,12 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.password
@@ -154,6 +160,29 @@ private fun DeviceAuthSection(
     val state = host.deviceAuthStatePublic()
     val busy = host.deviceAuthBusyPublic()
     val message = host.deviceAuthMessagePublic()
+    // Re-enrolling replaces the key in this phone's hardware, which strands the existing enrolment
+    // the moment it happens. Ask first, the way the desktop app does.
+    var confirmReenrol by remember { mutableStateOf(false) }
+    if (confirmReenrol) {
+        AlertDialog(
+            onDismissRequest = { confirmReenrol = false },
+            title = { Text("Replace this phone's device key?") },
+            text = {
+                Text(
+                    "This phone is already enrolled. Enrolling again creates a new key and replaces the " +
+                        "current one, so the existing enrolment stops working. If the hub refuses the new " +
+                        "key you will have to enrol again.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmReenrol = false
+                    host.enrolDeviceAuthPublic(form.deviceName, form.enrolCode)
+                }) { Text("Replace key") }
+            },
+            dismissButton = { TextButton(onClick = { confirmReenrol = false }) { Text("Cancel") } },
+        )
+    }
     SettingsSection("Device key") {
         Text(
             state.summary,
@@ -162,6 +191,15 @@ private fun DeviceAuthSection(
         )
         Spacer(Modifier.height(8.dp))
         Field("Device name", form.deviceName) { onFormChange(form.copy(deviceName = it)) }
+        Field("Enrolment code (only if the hub asks for one)", form.enrolCode) {
+            onFormChange(form.copy(enrolCode = it))
+        }
+        Text(
+            "Single use, good for 15 minutes. The operator makes it on the VM with python -m auth mint-code. It is not saved.",
+            style = MaterialTheme.typography.labelSmall,
+            color = WdPalette.textSecondary,
+            modifier = Modifier.padding(top = 2.dp),
+        )
         Text(
             "Enrolling stores a private key in this phone's secure hardware. It never leaves " +
                 "the device and each use needs your fingerprint, face or PIN. The relay password " +
@@ -172,7 +210,9 @@ private fun DeviceAuthSection(
         )
         Spacer(Modifier.height(10.dp))
         Button(
-            onClick = { host.enrolDeviceAuthPublic(form.deviceName) },
+            onClick = {
+                if (state.enrolled) confirmReenrol = true else host.enrolDeviceAuthPublic(form.deviceName, form.enrolCode)
+            },
             enabled = !busy,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),

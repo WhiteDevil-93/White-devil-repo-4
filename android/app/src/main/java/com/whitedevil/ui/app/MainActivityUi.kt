@@ -27,4 +27,6 @@ data class SettingsFormState(
     val biometricUnlock: Boolean = false,
     /** Name this phone enrols under with the hub's device-bound auth. */
     val deviceName: String = "",
+    /** Single-use enrolment code, typed only when the hub asks for one. Never saved. */
+    val enrolCode: String = "",
 )

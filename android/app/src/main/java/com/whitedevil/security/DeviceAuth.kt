@@ -131,10 +131,35 @@ object DeviceAuth {
         relayBase: String,
         basicAuth: String,
         deviceName: String,
+        enrolCode: String? = null,
     ): Outcome {
         BiometricAuth.signingBlockedReason(activity)?.let { return Outcome.Skipped(it) }
 
         val name = deviceName.trim().ifBlank { defaultDeviceName() }.take(80)
+        val code = DeviceAuthCodec.normaliseEnrolCode(enrolCode)
+
+        // Ask the hub BEFORE touching the key. Creating a key replaces the one this phone may already
+        // be enrolled with, so every refusal we can predict has to come first: a hub that wants a code
+        // we were not given, or one we cannot reach, must leave a working enrolment alone.
+        val needsCode = try {
+            withContext(Dispatchers.IO) { DeviceAuthClient.config(relayBase, basicAuth).requireEnrolCode }
+        } catch (e: Exception) {
+            if (DeviceAuthClient.isMissingEndpoint(e)) {
+                false // a hub that predates the endpoint: the enrol call below will say so
+            } else {
+                return Outcome.Failed(
+                    "Could not ask the hub whether it needs an enrolment code, so nothing was changed " +
+                        "and this phone's key was not touched: ${failureText(e)}",
+                )
+            }
+        }
+        if (needsCode && code == null) {
+            return Outcome.Failed(
+                "This hub requires a single-use enrolment code. Ask the operator for one " +
+                    "(on the VM: python -m auth mint-code; it is good for 15 minutes), paste it above, then try " +
+                    "again. Nothing was changed.",
+            )
+        }
         val created = try {
             withContext(Dispatchers.IO) { DeviceKeystore.createKeyPair() }
         } catch (e: DeviceKeystore.KeystoreUnavailable) {
@@ -145,7 +170,7 @@ object DeviceAuth {
 
         val enrolled = try {
             withContext(Dispatchers.IO) {
-                DeviceAuthClient.enrol(relayBase, basicAuth, name, created.publicKeyPem)
+                DeviceAuthClient.enrol(relayBase, basicAuth, name, created.publicKeyPem, code)
             }
         } catch (e: Exception) {
             DeviceKeystore.deleteKey()
@@ -155,7 +180,10 @@ object DeviceAuth {
                         "the relay password. Nothing else changed.",
                 )
             } else {
-                Outcome.Failed("Enrolment refused by the hub: ${short(e)}")
+                Outcome.Failed(
+                    "Enrolment refused by the hub: ${failureText(e)} The key on this phone was replaced, " +
+                        "so any earlier enrolment of this phone no longer works; enrol again.",
+                )
             }
         }
 
@@ -279,6 +307,14 @@ object DeviceAuth {
     }
 
     private class SignInError(message: String, val fatal: Boolean) : Exception(message)
+
+    /** A hub refusal as a sentence: the hub's own `detail` for an HTTP error, else [short]. */
+    private fun failureText(e: Throwable): String =
+        if (e is com.whitedevil.relay.RelayHttpException) {
+            "HTTP ${e.code}: ${DeviceAuthCodec.hubDetail(e.message.orEmpty())}"
+        } else {
+            short(e)
+        }
 
     /** Error text for the UI, trimmed and free of anything sensitive (bodies are hub messages). */
     private fun short(e: Throwable): String =

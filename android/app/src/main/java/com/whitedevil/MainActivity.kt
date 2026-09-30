@@ -1560,7 +1560,7 @@ class MainActivity : FragmentActivity() {
     }
 
     /** Enrol (or re-enrol) this phone, then sign in. Prompts for fingerprint / PIN. */
-    internal fun enrolDeviceAuth(deviceName: String) {
+    internal fun enrolDeviceAuth(deviceName: String, enrolCode: String = "") {
         if (deviceAuthBusy) return
         deviceAuthBusy = true
         deviceAuthMessage = "Enrolling this phone…"
@@ -1570,6 +1570,7 @@ class MainActivity : FragmentActivity() {
                 relayBase = relayBase,
                 basicAuth = basicAuth("wan"),
                 deviceName = deviceName,
+                enrolCode = enrolCode,
             )
             deviceAuthBusy = false
             deviceAuthMessage = outcome.message

@@ -118,6 +118,54 @@ class DeviceAuthCodecTest {
     }
 
     @Test
+    fun enrolBodyCarriesTheEnrolmentCodeOnlyWhenThereIsOne() {
+        val pem = DeviceAuthCodec.publicKeyPem(p256().public.encoded)
+        val without = DeviceAuthCodec.encodeEnrol(DeviceAuthCodec.EnrolRequest(name = "phone", publicKeyPem = pem))
+        // Older hubs and hubs with the code gate off must see exactly the body earlier builds sent.
+        assertFalse(without, without.contains("enrol_code"))
+        val with = DeviceAuthCodec.encodeEnrol(
+            DeviceAuthCodec.EnrolRequest(name = "phone", publicKeyPem = pem, enrolCode = "ABCD-1234"),
+        )
+        assertTrue(with, with.contains("\"enrol_code\":\"ABCD-1234\""))
+    }
+
+    @Test
+    fun enrolmentCodeIsTrimmedAndBlankMeansNone() {
+        assertEquals("ABCD-1234", DeviceAuthCodec.normaliseEnrolCode("  ABCD-1234\n"))
+        assertEquals(null, DeviceAuthCodec.normaliseEnrolCode(""))
+        assertEquals(null, DeviceAuthCodec.normaliseEnrolCode("   \n\t"))
+        assertEquals(null, DeviceAuthCodec.normaliseEnrolCode(null))
+    }
+
+    @Test
+    fun authConfigSaysWhetherTheHubWantsACode() {
+        val yes = DeviceAuthCodec.decodeConfig(
+            """{"require_enrol_code":true,"require_enrol_code_configured":false,"forward_auth_mode":"strict","devices_enrolled":1,"modes":["permissive"]}""",
+        )
+        assertTrue(yes.requireEnrolCode)
+        assertFalse(DeviceAuthCodec.decodeConfig("""{"require_enrol_code":false,"forward_auth_mode":"permissive"}""").requireEnrolCode)
+        // A hub that does not send the field is not assumed to want one.
+        assertFalse(DeviceAuthCodec.decodeConfig("""{}""").requireEnrolCode)
+    }
+
+    @Test
+    fun hubDetailGivesTheSentenceNotTheJson() {
+        assertEquals(
+            "An enrolment code is required.",
+            DeviceAuthCodec.hubDetail("""{"detail":"An enrolment code is required."}"""),
+        )
+        assertEquals(
+            "the request was rejected as invalid",
+            DeviceAuthCodec.hubDetail("""{"detail":[{"loc":["body","name"],"msg":"field required"}]}"""),
+        )
+        // Not JSON (a proxy page): shortened and flattened, never dumped whole.
+        val page = DeviceAuthCodec.hubDetail("<html>\n<body>" + "Bad gateway ".repeat(100) + "</body></html>")
+        assertTrue(page.length <= 200)
+        assertFalse(page.contains('\n'))
+        assertEquals("HTTP 401", DeviceAuthCodec.hubDetail("HTTP 401"))
+    }
+
+    @Test
     fun requestBodiesUseServerFieldNames() {
         assertEquals(
             """{"device_id":"abc123"}""",

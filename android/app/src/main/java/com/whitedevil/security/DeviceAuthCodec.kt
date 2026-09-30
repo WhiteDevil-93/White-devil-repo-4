@@ -20,10 +20,16 @@ object DeviceAuthCodec {
 
     // ---------------------------------------------------------------- requests
 
+    /**
+     * [enrolCode] is the hub's single-use enrolment code. It is optional on the wire and omitted
+     * when null (kotlinx does not encode defaults), so a hub that does not ask for one sees exactly
+     * the body older builds sent.
+     */
     @Serializable
     data class EnrolRequest(
         val name: String,
         @SerialName("public_key_pem") val publicKeyPem: String,
+        @SerialName("enrol_code") val enrolCode: String? = null,
     )
 
     @Serializable
@@ -44,6 +50,12 @@ object DeviceAuthCodec {
         val id: String,
         val name: String = "",
         val created: Double = 0.0,
+    )
+
+    /** GET /api/auth/config, only what the phone needs: does the hub want a code right now? */
+    @Serializable
+    data class AuthConfigResponse(
+        @SerialName("require_enrol_code") val requireEnrolCode: Boolean = false,
     )
 
     @Serializable
@@ -75,6 +87,30 @@ object DeviceAuthCodec {
 
     fun encodeToken(body: TokenRequest): String =
         json.encodeToString(TokenRequest.serializer(), body)
+
+    fun decodeConfig(text: String): AuthConfigResponse =
+        json.decodeFromString(AuthConfigResponse.serializer(), text)
+
+    /** What the user typed, or null when it is blank. Codes are not case- or space-sensitive on the hub, but a pasted one often has a trailing newline. */
+    fun normaliseEnrolCode(raw: String?): String? = raw?.trim()?.takeIf { it.isNotEmpty() }
+
+    /**
+     * The sentence in a FastAPI error body (`{"detail": "..."}`), for showing to a person.
+     * A validation error (a list) gets a fixed sentence, and anything that is not JSON (a
+     * proxy's page) is cut to a short prefix rather than dumped on screen.
+     */
+    fun hubDetail(body: String): String {
+        val detail = try {
+            (json.parseToJsonElement(body) as? kotlinx.serialization.json.JsonObject)?.get("detail")
+        } catch (_: Exception) {
+            null
+        }
+        return when {
+            detail is kotlinx.serialization.json.JsonPrimitive && detail.isString -> detail.content.take(300)
+            detail != null -> "the request was rejected as invalid"
+            else -> body.trim().replace(Regex("\\s+"), " ").take(200)
+        }
+    }
 
     fun decodeEnrol(text: String): EnrolResponse =
         json.decodeFromString(EnrolResponse.serializer(), text)

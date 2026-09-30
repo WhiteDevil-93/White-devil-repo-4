@@ -16,14 +16,19 @@ object DeviceAuthClient {
     fun isMissingEndpoint(e: Throwable): Boolean =
         e is RelayHttpException && (e.code == 404 || e.code == 405 || e.code == 501)
 
+    /** GET /api/auth/config: does this hub demand an enrolment code? Asked before a key is made. */
+    fun config(relayBase: String, basicAuth: String): DeviceAuthCodec.AuthConfigResponse =
+        DeviceAuthCodec.decodeConfig(RelayHttp.get(relayBase, basicAuth, "/api/auth/config"))
+
     fun enrol(
         relayBase: String,
         basicAuth: String,
         name: String,
         publicKeyPem: String,
+        enrolCode: String? = null,
     ): DeviceAuthCodec.EnrolResponse {
         val body = DeviceAuthCodec.encodeEnrol(
-            DeviceAuthCodec.EnrolRequest(name = name, publicKeyPem = publicKeyPem),
+            DeviceAuthCodec.EnrolRequest(name = name, publicKeyPem = publicKeyPem, enrolCode = enrolCode),
         )
         return DeviceAuthCodec.decodeEnrol(
             RelayHttp.post(relayBase, basicAuth, "/api/auth/devices", body),

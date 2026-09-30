@@ -89,6 +89,6 @@ fun MainActivity.attachPhoneUriPublic(uri: android.net.Uri) = attachPhoneUri(uri
 fun MainActivity.deviceAuthStatePublic(): com.whitedevil.security.DeviceAuth.State = deviceAuthState
 fun MainActivity.deviceAuthBusyPublic(): Boolean = deviceAuthBusy
 fun MainActivity.deviceAuthMessagePublic(): String = deviceAuthMessage
-fun MainActivity.enrolDeviceAuthPublic(name: String) = enrolDeviceAuth(name)
+fun MainActivity.enrolDeviceAuthPublic(name: String, enrolCode: String = "") = enrolDeviceAuth(name, enrolCode)
 fun MainActivity.signInDeviceAuthPublic() = signInDeviceAuth()
 fun MainActivity.forgetDeviceAuthPublic() = forgetDeviceAuth()
