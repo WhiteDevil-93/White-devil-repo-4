@@ -4,22 +4,22 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Agentic side-track</title>
+<link rel="stylesheet" href="/app/ui/tokens.css">
 <style>
-  :root { --bg:#12110f; --fg:#e8e2d6; --mut:#9a9286; --line:#2a2620; --acc:#c4a574; --bad:#c45c4a; --ok:#6a9a6a; }
   * { box-sizing: border-box; }
   body { margin:0; font: 14px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
   header { padding:16px 20px; border-bottom:1px solid var(--line); }
   header h1 { margin:0; font-size:18px; font-weight:600; }
   header p { margin:6px 0 0; color:var(--mut); font-size:13px; }
   main { display:grid; gap:16px; padding:16px 20px 40px; max-width:960px; }
-  section { border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  section { border:1px solid var(--line); border-radius:var(--r); padding:14px 16px; }
   section h2 { margin:0 0 10px; font-size:14px; color:var(--acc); font-weight:600; }
   .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:8px 0; }
-  input, textarea, button, select { font:inherit; color:var(--fg); background:#1c1a17; border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+  input, textarea, button, select { font:inherit; color:var(--fg); background:var(--well); border:1px solid var(--control); border-radius:var(--r2); padding:8px 10px; }
   textarea { width:100%; min-height:72px; }
-  button { cursor:pointer; background:#2a241c; }
-  button.primary { background:var(--acc); color:#1a140c; border-color:transparent; font-weight:600; }
-  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#1c1a17; color:var(--mut); }
+  button { cursor:pointer; background:var(--panel2); }
+  button.primary { background:var(--acc2); color:var(--ink); border-color:transparent; font-weight:600; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:var(--panel2); color:var(--mut); }
   .pill.on { color:var(--ok); } .pill.off { color:var(--bad); }
   pre { white-space:pre-wrap; word-break:break-word; font-size:12px; color:var(--mut); margin:0; max-height:280px; overflow:auto; }
   .job { border-top:1px solid var(--line); padding:8px 0; }
@@ -89,7 +89,7 @@ async function refresh() {
   const jobs = await api('/api/agentic/jobs');
   const box = document.getElementById('jobs');
   box.innerHTML = (jobs.jobs||[]).slice(0,15).map(j => {
-    return `<div class="job"><b>${esc(j.id)}</b> · ${esc(j.status)} · step ${j.step||0}<br/><span style="color:#9a9286">${esc((j.goal||'').slice(0,120))}</span><br/><pre>${esc((j.result||j.error||j.last||'').toString().slice(0,500))}</pre>
+    return `<div class="job"><b>${esc(j.id)}</b> · ${esc(j.status)} · step ${j.step||0}<br/><span style="color:var(--dim)">${esc((j.goal||'').slice(0,120))}</span><br/><pre>${esc((j.result||j.error||j.last||'').toString().slice(0,500))}</pre>
       <button data-stop="${esc(j.id)}" type="button">Stop</button></div>`;
   }).join('') || '<div class="pill">no jobs</div>';
   box.querySelectorAll('[data-stop]').forEach(btn => btn.onclick = async () => {

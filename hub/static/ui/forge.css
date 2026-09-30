@@ -1,16 +1,6 @@
 /* Forge Hub design system: HypnoForge "Forge" darkroom (UX Pilot ynOSH8tw71u4rkWjTqVt). */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
-:root{
-  --bg:#0a0b0f; --fg:#eceef5; --mut:#a9afc2; --dim:#9097ad; --strong:#eceef5;
-  --acc:#8f82ff; --acc2:#5b4be8; --acc3:#b3a9ff; --accsoft:rgba(91,75,232,.14);
-  --glass:rgba(255,255,255,.03); --glass2:rgba(255,255,255,.05); --line:#232838;
-  --ok:#3fbf8a; --warn:#e5a23a; --bad:#f0645a; --info:#58a6ff; --pmv:#e05ad6;
-  --panel:#141722; --panel2:#1b1f2c; --side:#0f1117; --ink:#ffffff; --well:#0c0e14;
-  --control:#646d8c; --gold-from:#8f82ff; --gold-to:#5b4be8; --tool:#58a6ff;
-  --r:10px; --r2:6px; --blur:none;
-  --shadow:none;
-  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-}
+@import url("tokens.css");
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg)}
 body{margin:0;min-height:100vh;color:var(--fg);font:13px/1.45 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;

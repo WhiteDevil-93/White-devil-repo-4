@@ -8,13 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app/ui/tokens.css">
 <link rel="manifest" href="/app/desktop/manifest.webmanifest" crossorigin="use-credentials">
 <link rel="icon" href="/app/desktop/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/app/desktop/icon-192.png">
 <style>
-:root{--bg:#0a0b0f;--side:#0f1117;--fg:#eceef5;--mut:#a9afc2;--dim:#9097ad;--strong:#eceef5;--acc:#8f82ff;
-  --line:#232838;--hover:rgba(255,255,255,.04);--on:rgba(91,75,232,.16);--ok:#3fbf8a;--warn:#e5a23a;--bad:#f0645a;
-  --acc2:#5b4be8;--panel:#141722;--well:#0c0e14;--ink:#fff}
+/* Palette comes from ui/tokens.css (linked above); only shell-specific steps live here. */
+:root{--hover:rgba(255,255,255,.04);--on:rgba(91,75,232,.16)}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden;
   font:13px/1.4 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.011em}

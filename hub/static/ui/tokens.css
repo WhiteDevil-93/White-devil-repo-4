@@ -1,0 +1,15 @@
+/* Forge Hub design tokens: the single source of truth for the palette.
+   ui/forge.css imports this file. Pages that cannot take all of forge.css (it sets
+   global body/h1/.grid rules that collide with Tailwind pages and the desktop shell)
+   link just this file. Change a colour here and every screen follows. */
+:root{
+  --bg:#0a0b0f; --fg:#eceef5; --mut:#a9afc2; --dim:#9097ad; --strong:#eceef5;
+  --acc:#8f82ff; --acc2:#5b4be8; --acc3:#b3a9ff; --accsoft:rgba(91,75,232,.14);
+  --glass:rgba(255,255,255,.03); --glass2:rgba(255,255,255,.05); --line:#232838;
+  --ok:#3fbf8a; --warn:#e5a23a; --bad:#f0645a; --info:#58a6ff; --pmv:#e05ad6;
+  --panel:#141722; --panel2:#1b1f2c; --side:#0f1117; --ink:#ffffff; --well:#0c0e14;
+  --control:#646d8c; --gold-from:#8f82ff; --gold-to:#5b4be8; --tool:#58a6ff;
+  --r:10px; --r2:6px; --blur:none;
+  --shadow:none;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}

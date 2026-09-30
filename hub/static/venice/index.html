@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Venice Agent</title>
 <script>if (window !== window.top) document.documentElement.classList.add('in-desk');</script>
+<link rel="stylesheet" href="/app/ui/tokens.css">
+<style>
+/* Alpha steps of the shared tokens. Tailwind 3 cannot apply a slash-opacity modifier to a colour that
+   comes from var() (it silently falls back to currentColor), so the steps this page needs are named here. */
+:root{
+  --acc-a20: color-mix(in srgb, var(--acc) 20%, transparent);
+  --acc-a30: color-mix(in srgb, var(--acc) 30%, transparent);
+  --acc-a40: color-mix(in srgb, var(--acc) 40%, transparent);
+  --ok-a10: color-mix(in srgb, var(--ok) 10%, transparent);
+  --ok-a20: color-mix(in srgb, var(--ok) 20%, transparent);
+}
+</style>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,22 +26,22 @@ tailwind.config = {
   theme: {
     extend: {
       colors: {
-        ground: '#141110',
-        panel: '#1B1714',
-        panel2: '#211C18',
-        primary: '#9b2c2c',
-        primaryfg: '#ffffff',
-        secondary: '#fdf2d6',
-        secondaryfg: '#805500',
-        accent: '#fef3c7',
-        accentfg: '#7f1d1d',
-        muted: '#2a2420',
-        mutedfg: '#a89e93',
-        border: 'rgba(253,242,214,0.10)',
-        ring: '#9b2c2c',
-        oktext: '#9bbfa0',
-        warntext: '#d7b475',
-        badtext: '#d99393',
+        ground: 'var(--bg)',
+        panel: 'var(--panel)',
+        panel2: 'var(--panel2)',
+        primary: 'var(--acc)',
+        primaryfg: 'var(--ink)',
+        secondary: 'var(--accsoft)',
+        secondaryfg: 'var(--acc3)',
+        accent: 'var(--acc)',
+        accentfg: 'var(--ink)',
+        muted: 'var(--well)',
+        mutedfg: 'var(--mut)',
+        border: 'var(--line)',
+        ring: 'var(--acc2)',
+        oktext: 'var(--ok)',
+        warntext: 'var(--warn)',
+        badtext: 'var(--bad)',
       },
       fontFamily: {
         sans: ['Poppins','sans-serif'],
@@ -58,60 +70,60 @@ try { if (window.parent !== window) document.documentElement.dataset.embedded = 
 catch (e) { document.documentElement.dataset.embedded = '1'; }
 </script>
 </head>
-<body class="bg-ground text-[#f0e9e0] font-sans antialiased" style="letter-spacing:0em;">
+<body class="bg-ground text-[var(--fg)] font-sans antialiased" style="letter-spacing:0em;">
 
 <div id="app-shell" class="flex h-[100dvh] w-full overflow-hidden">
 
   <!-- SIDEBAR -->
-  <aside id="sidebar" class="w-[236px] shrink-0 h-full bg-[#17130F] border-r border-[rgba(253,242,214,0.08)] flex flex-col">
-    <div id="brand" class="h-[52px] flex items-center gap-2.5 px-5 border-b border-[rgba(253,242,214,0.08)]">
-      <div class="w-7 h-7 rounded-[8px] bg-gradient-to-br from-[#fdf2d6] to-[#c9a35c] flex items-center justify-center shadow-[1px_1px_16px_-2px_hsl(0_63%_18%/0.3)]">
-        <i class="fa-solid fa-cube text-[11px] text-[#3a2e12]"></i>
+  <aside id="sidebar" class="w-[236px] shrink-0 h-full bg-[var(--side)] border-r border-[var(--line)] flex flex-col">
+    <div id="brand" class="h-[52px] flex items-center gap-2.5 px-5 border-b border-[var(--line)]">
+      <div class="w-7 h-7 rounded-[8px] bg-gradient-to-br from-[var(--acc)] to-[var(--acc2)] flex items-center justify-center shadow-[1px_1px_16px_-2px_rgba(0,0,0,0.3)]">
+        <i class="fa-solid fa-cube text-[11px] text-[var(--ink)]"></i>
       </div>
-      <span class="font-semibold text-[13.5px] tracking-tight text-[#f5efe6]">Forge Hub</span>
+      <span class="font-semibold text-[13.5px] tracking-tight text-[var(--strong)]">Forge Hub</span>
     </div>
 
     <nav class="flex-1 overflow-y-auto py-4 px-3" id="venice-side-nav">
-      <p class="px-2.5 mb-2 text-[10.5px] uppercase tracking-[0.12em] text-[#65656C] font-medium">Studio</p>
+      <p class="px-2.5 mb-2 text-[10.5px] uppercase tracking-[0.12em] text-[var(--dim)] font-medium">Studio</p>
       <ul class="space-y-0.5 mb-5">
-        <li><a href="/app/home/" data-desk="home" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-house w-4 text-[12px] text-[#8a8178]"></i>Home</a></li>
-        <li><a href="/app/renders/" data-desk="renders" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-clapperboard w-4 text-[12px] text-[#8a8178]"></i>Renders</a></li>
-        <li><a href="/app/gallery/" data-desk="gallery" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-images w-4 text-[12px] text-[#8a8178]"></i>Gallery</a></li>
-        <li><a href="/app/hypno/" data-desk="hypno" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-spiral w-4 text-[12px] text-[#8a8178]"></i>HypnoForge</a></li>
-        <li><a href="/app/term/" data-desk="term" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-terminal w-4 text-[12px] text-[#8a8178]"></i>Shell</a></li>
+        <li><a href="/app/home/" data-desk="home" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-house w-4 text-[12px] text-[var(--dim)]"></i>Home</a></li>
+        <li><a href="/app/renders/" data-desk="renders" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-clapperboard w-4 text-[12px] text-[var(--dim)]"></i>Renders</a></li>
+        <li><a href="/app/gallery/" data-desk="gallery" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-images w-4 text-[12px] text-[var(--dim)]"></i>Gallery</a></li>
+        <li><a href="/app/hypno/" data-desk="hypno" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-spiral w-4 text-[12px] text-[var(--dim)]"></i>HypnoForge</a></li>
+        <li><a href="/app/term/" data-desk="term" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-terminal w-4 text-[12px] text-[var(--dim)]"></i>Shell</a></li>
       </ul>
 
-      <p class="px-2.5 mb-2 text-[10.5px] uppercase tracking-[0.12em] text-[#65656C] font-medium">Laptop</p>
+      <p class="px-2.5 mb-2 text-[10.5px] uppercase tracking-[0.12em] text-[var(--dim)] font-medium">Laptop</p>
       <ul class="space-y-0.5">
-        <li><a href="/app/colab/" data-desk="colab" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-microchip w-4 text-[12px] text-[#8a8178]"></i>Colab</a></li>
-        <li><a href="/app/ltx/" data-desk="ltx" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-bolt-lightning w-4 text-[12px] text-[#8a8178]"></i>LTX</a></li>
-        <li><a href="/app/thunder/" data-desk="thunder" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-cloud-bolt w-4 text-[12px] text-[#8a8178]"></i>Thunder</a></li>
-        <li><a href="/app/vast/" data-desk="vast" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-server w-4 text-[12px] text-[#8a8178]"></i>Vast</a></li>
-        <li><a href="/app/setup/" data-desk="setup" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-sliders w-4 text-[12px] text-[#8a8178]"></i>Setup</a></li>
-        <li><a href="/app/venice/" data-desk="agent" id="nav-venice" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] bg-[rgba(253,242,214,0.08)] text-[#f5efe6] font-medium relative">
-          <span class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-full bg-gradient-to-b from-[#fdf2d6] to-[#c9a35c]"></span>
-          <i class="fa-solid fa-sparkles w-4 text-[12px] text-[#e7dbbf]"></i>Venice</a></li>
-        <li><a href="/laptop/files/" data-desk="files" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.05)] hover:text-[#f0e9e0] transition-colors">
-          <i class="fa-solid fa-folder-open w-4 text-[12px] text-[#8a8178]"></i>Files</a></li>
+        <li><a href="/app/colab/" data-desk="colab" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-microchip w-4 text-[12px] text-[var(--dim)]"></i>Colab</a></li>
+        <li><a href="/app/ltx/" data-desk="ltx" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-bolt-lightning w-4 text-[12px] text-[var(--dim)]"></i>LTX</a></li>
+        <li><a href="/app/thunder/" data-desk="thunder" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-cloud-bolt w-4 text-[12px] text-[var(--dim)]"></i>Thunder</a></li>
+        <li><a href="/app/vast/" data-desk="vast" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-server w-4 text-[12px] text-[var(--dim)]"></i>Vast</a></li>
+        <li><a href="/app/setup/" data-desk="setup" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-sliders w-4 text-[12px] text-[var(--dim)]"></i>Setup</a></li>
+        <li><a href="/app/venice/" data-desk="agent" id="nav-venice" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] bg-[var(--accsoft)] text-[var(--strong)] font-medium relative">
+          <span class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-full bg-gradient-to-b from-[var(--acc)] to-[var(--acc2)]"></span>
+          <i class="fa-solid fa-sparkles w-4 text-[12px] text-[var(--acc3)]"></i>Venice</a></li>
+        <li><a href="/laptop/files/" data-desk="files" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] text-[var(--mut)] hover:bg-[var(--glass2)] hover:text-[var(--fg)] transition-colors">
+          <i class="fa-solid fa-folder-open w-4 text-[12px] text-[var(--dim)]"></i>Files</a></li>
       </ul>
     </nav>
 
-    <div id="sidebar-footer" class="p-3 border-t border-[rgba(253,242,214,0.08)]">
-      <div class="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] bg-[rgba(253,242,214,0.04)]">
+    <div id="sidebar-footer" class="p-3 border-t border-[var(--line)]">
+      <div class="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] bg-[var(--glass)]">
         <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" class="w-7 h-7 rounded-full object-cover" alt="user avatar">
         <div class="min-w-0">
-          <p class="text-[12.5px] font-medium text-[#f0e9e0] truncate">Operator</p>
-          <p class="text-[10.5px] text-[#7a7168] truncate">local session</p>
+          <p class="text-[12.5px] font-medium text-[var(--fg)] truncate">Operator</p>
+          <p class="text-[10.5px] text-[var(--dim)] truncate">local session</p>
         </div>
       </div>
     </div>
@@ -121,34 +133,34 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
   <div id="main-column" class="flex-1 flex flex-col min-w-0 h-full">
 
     <!-- TOP BAR -->
-    <header id="topbar" class="h-[52px] shrink-0 flex items-center justify-between px-5 border-b border-[rgba(253,242,214,0.08)] bg-[#141110]/95 z-20">
+    <header id="topbar" class="h-[52px] shrink-0 flex items-center justify-between px-5 border-b border-[var(--line)] bg-[var(--panel)] z-20">
       <div class="flex items-center gap-3 min-w-0">
-        <h1 class="text-[14px] font-semibold tracking-tight text-[#f5efe6]">Venice Intelligence</h1>
+        <h1 class="text-[14px] font-semibold tracking-tight text-[var(--strong)]">Venice Intelligence</h1>
 
         <div class="relative">
-          <button id="model-dropdown" type="button" class="flex items-center gap-2 pl-2.5 pr-2 py-[6px] rounded-[9px] border border-[rgba(253,242,214,0.10)] bg-[rgba(253,242,214,0.03)] hover:bg-[rgba(253,242,214,0.06)] transition-colors cursor-pointer" data-model-id="zai-org-glm-5-2" aria-haspopup="listbox" aria-expanded="false">
-            <i class="fa-solid fa-brain text-[11px] text-[#c9b896] pointer-events-none"></i>
-            <span id="model-label" class="text-[12px] text-[#e7dbbf] font-medium pointer-events-none">GLM 5.2</span>
-            <i class="fa-solid fa-chevron-down text-[9px] text-[#7a7168] pointer-events-none"></i>
+          <button id="model-dropdown" type="button" class="flex items-center gap-2 pl-2.5 pr-2 py-[6px] rounded-[9px] border border-[var(--line)] bg-[var(--glass)] hover:bg-[var(--glass2)] transition-colors cursor-pointer" data-model-id="zai-org-glm-5-2" aria-haspopup="listbox" aria-expanded="false">
+            <i class="fa-solid fa-brain text-[11px] text-[var(--acc3)] pointer-events-none"></i>
+            <span id="model-label" class="text-[12px] text-[var(--fg)] font-medium pointer-events-none">GLM 5.2</span>
+            <i class="fa-solid fa-chevron-down text-[9px] text-[var(--dim)] pointer-events-none"></i>
           </button>
-          <div id="model-menu" hidden class="fixed z-[200] min-w-[320px] max-h-[420px] overflow-auto rounded-[12px] border border-[rgba(253,242,214,0.12)] bg-[#1a1614] shadow-[0_16px_40px_rgba(0,0,0,.55)] py-1"></div>
+          <div id="model-menu" hidden class="fixed z-[200] min-w-[320px] max-h-[420px] overflow-auto rounded-[12px] border border-[var(--line)] bg-[var(--panel2)] shadow-[0_16px_40px_rgba(0,0,0,.55)] py-1"></div>
         </div>
 
-        <div id="status-pill" class="flex items-center gap-1.5 pl-2 pr-2.5 py-[5px] rounded-full bg-[rgba(155,191,160,0.08)] border border-[rgba(155,191,160,0.18)]">
-          <span class="w-[7px] h-[7px] rounded-full bg-oktext shadow-[0_0_6px_rgba(155,191,160,0.7)] animate-pulse"></span>
+        <div id="status-pill" class="flex items-center gap-1.5 pl-2 pr-2.5 py-[5px] rounded-full bg-[var(--ok-a10)] border border-[var(--ok-a20)]">
+          <span class="w-[7px] h-[7px] rounded-full bg-oktext shadow-[0_0_6px_var(--ok)] animate-pulse"></span>
           <span class="text-[11px] text-oktext font-medium uppercase tracking-wider">Sync Active</span>
         </div>
       </div>
 
       <div class="flex items-center gap-1.5">
-        <div class="flex items-center gap-2 px-3 py-[7px] rounded-[9px] bg-primary/10 border border-primary/20 text-[11px] text-primary font-bold uppercase tracking-widest mr-2">
+        <div class="flex items-center gap-2 px-3 py-[7px] rounded-[9px] bg-[var(--accsoft)] border border-[var(--acc-a20)] text-[11px] text-primary font-bold uppercase tracking-widest mr-2">
           <i class="fa-solid fa-eye"></i> Full App Access
         </div>
-        <button id="btn-clear" class="flex items-center gap-1.5 px-3 py-[7px] rounded-[9px] text-[12.5px] text-[#c9c2b8] hover:bg-[rgba(253,242,214,0.06)] transition-colors">
+        <button id="btn-clear" class="flex items-center gap-1.5 px-3 py-[7px] rounded-[9px] text-[12.5px] text-[var(--mut)] hover:bg-[var(--glass2)] transition-colors">
           <i class="fa-regular fa-trash-can text-[11px]"></i>
         </button>
-        <div class="w-px h-5 bg-[rgba(253,242,214,0.10)] mx-1"></div>
-        <button id="btn-shell" class="flex items-center gap-1.5 px-3 py-[7px] rounded-[9px] text-[12.5px] font-medium text-[#1a1410] bg-gradient-to-b from-[#fdf2d6] to-[#e7d19f] hover:brightness-105 transition-all shadow-[1px_1px_16px_-2px_hsl(0_63%_18%/0.2)]">
+        <div class="w-px h-5 bg-[var(--glass2)] mx-1"></div>
+        <button id="btn-shell" class="flex items-center gap-1.5 px-3 py-[7px] rounded-[9px] text-[12.5px] font-medium text-[var(--ink)] bg-gradient-to-b from-[var(--acc)] to-[var(--acc2)] hover:brightness-105 transition-all shadow-[1px_1px_16px_-2px_rgba(0,0,0,0.3)]">
           <i class="fa-solid fa-expand text-[11px]"></i>
         </button>
       </div>
@@ -156,20 +168,20 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
 
     <div class="flex-1 flex overflow-hidden">
       <!-- AGENT SYSTEM STATE (LEFT) -->
-      <section id="agent-workspace" class="flex-1 bg-[#0c0a09] relative flex flex-col overflow-hidden border-r border-[rgba(253,242,214,0.05)]">
+      <section id="agent-workspace" class="flex-1 bg-[var(--well)] relative flex flex-col overflow-hidden border-r border-[var(--line)]">
         <!-- Top Tabs for System State -->
         <div class="h-10 shrink-0 border-b border-white/5 bg-black/20 flex items-center px-4 gap-6">
-          <button data-tab="pipeline" class="tab-btn text-[11px] font-bold uppercase tracking-widest text-[#fdf2d6] border-b-2 border-primary h-full px-2">Pipeline</button>
-          <button data-tab="workspace" class="tab-btn text-[11px] font-bold uppercase tracking-widest text-mutedfg hover:text-[#fdf2d6] transition-colors h-full px-2">Workspace</button>
-          <button data-tab="shell" class="tab-btn text-[11px] font-bold uppercase tracking-widest text-mutedfg hover:text-[#fdf2d6] transition-colors h-full px-2">Remote Shell</button>
-          <button data-tab="memory" class="tab-btn text-[11px] font-bold uppercase tracking-widest text-mutedfg hover:text-[#fdf2d6] transition-colors h-full px-2">Memory</button>
+          <button data-tab="pipeline" class="tab-btn text-[11px] font-bold uppercase tracking-widest text-[var(--acc)] border-b-2 border-primary h-full px-2">Pipeline</button>
+          <button data-tab="workspace" class="tab-btn text-[11px] font-bold uppercase tracking-widest text-mutedfg hover:text-[var(--acc)] transition-colors h-full px-2">Workspace</button>
+          <button data-tab="shell" class="tab-btn text-[11px] font-bold uppercase tracking-widest text-mutedfg hover:text-[var(--acc)] transition-colors h-full px-2">Remote Shell</button>
+          <button data-tab="memory" class="tab-btn text-[11px] font-bold uppercase tracking-widest text-mutedfg hover:text-[var(--acc)] transition-colors h-full px-2">Memory</button>
         </div>
 
         <div id="tab-pipeline" class="tab-panel flex-1 overflow-y-auto p-6 space-y-8">
           <!-- Live Pipeline / Hub Overview -->
           <div id="hub-sitrep">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-[12px] font-bold uppercase tracking-[0.2em] text-[#c9b896]">Hub Sitrep</h3>
+              <h3 class="text-[12px] font-bold uppercase tracking-[0.2em] text-[var(--acc3)]">Hub Sitrep</h3>
               <span id="sitrep-pulse" class="text-[10px] font-mono text-mutedfg">polling…</span>
             </div>
             <div class="grid grid-cols-4 gap-4 mb-6">
@@ -177,23 +189,23 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
                 <p class="text-[9px] uppercase text-mutedfg font-bold mb-1">Colab</p>
                 <div class="flex items-center gap-2">
                   <span id="sitrep-colab-dot" class="w-2 h-2 rounded-full bg-mutedfg"></span>
-                  <p id="sitrep-colab" class="text-xl font-mono text-[#fdf2d6]">—</p>
+                  <p id="sitrep-colab" class="text-xl font-mono text-[var(--strong)]">—</p>
                 </div>
               </div>
               <div class="p-4 rounded-xl bg-panel border border-border">
                 <p class="text-[9px] uppercase text-mutedfg font-bold mb-1">Thunder</p>
                 <div class="flex items-center gap-2">
                   <span id="sitrep-thunder-dot" class="w-2 h-2 rounded-full bg-mutedfg"></span>
-                  <p id="sitrep-thunder" class="text-xl font-mono text-[#fdf2d6]">—</p>
+                  <p id="sitrep-thunder" class="text-xl font-mono text-[var(--strong)]">—</p>
                 </div>
               </div>
               <div class="p-4 rounded-xl bg-panel border border-border">
                 <p class="text-[9px] uppercase text-mutedfg font-bold mb-1">LTX Queue</p>
-                <p id="sitrep-ltx" class="text-xl font-mono text-[#fdf2d6]">— <span class="text-[12px] text-mutedfg">Jobs</span></p>
+                <p id="sitrep-ltx" class="text-xl font-mono text-[var(--strong)]">— <span class="text-[12px] text-mutedfg">Jobs</span></p>
               </div>
               <div class="p-4 rounded-xl bg-panel border border-border">
                 <p class="text-[9px] uppercase text-mutedfg font-bold mb-1">Laptop</p>
-                <p id="sitrep-credits" class="text-xl font-mono text-[#fdf2d6]">—</p>
+                <p id="sitrep-credits" class="text-xl font-mono text-[var(--strong)]">—</p>
               </div>
             </div>
 
@@ -220,7 +232,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
                 <span id="term-alive-label" class="text-[9px] font-mono text-mutedfg">…</span>
               </div>
             </div>
-            <div id="term-log" class="flex-1 p-4 font-mono text-[11px] leading-relaxed overflow-y-auto text-[#8a8178]">
+            <div id="term-log" class="flex-1 p-4 font-mono text-[11px] leading-relaxed overflow-y-auto text-[var(--dim)]">
               <p class="text-mutedfg"># waiting for tool / shell activity…</p>
             </div>
           </div>
@@ -228,24 +240,24 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
 
         <!-- WORKSPACE TAB -->
         <div id="tab-workspace" class="tab-panel hidden flex-1 flex-col min-h-0">
-          <div class="shrink-0 flex gap-2 items-center px-3 py-2 border-b border-[rgba(253,242,214,0.08)] bg-[rgba(20,17,16,.95)]">
-            <span class="text-[10px] uppercase tracking-[0.12em] text-[#65656C] font-semibold flex-none">Hub</span>
-            <select class="flex-1 min-w-0 text-[12px] bg-[rgba(253,242,214,0.03)] border border-[rgba(253,242,214,0.10)] rounded-[9px] px-3 py-2 text-[#f0e9e0] outline-none" id="hub-screen"></select>
-            <button type="button" id="hub-refresh" class="text-[12px] px-3 py-2 rounded-[9px] bg-[rgba(253,242,214,0.065)] text-[#f0e9e0] border border-[rgba(253,242,214,0.10)]">↻</button>
-            <button type="button" id="hub-pop" class="text-[12px] px-3 py-2 rounded-[9px] bg-[rgba(253,242,214,0.065)] text-[#f0e9e0] border border-[rgba(253,242,214,0.10)]">↗</button>
+          <div class="shrink-0 flex gap-2 items-center px-3 py-2 border-b border-[var(--line)] bg-[var(--panel)]">
+            <span class="text-[10px] uppercase tracking-[0.12em] text-[var(--dim)] font-semibold flex-none">Hub</span>
+            <select class="flex-1 min-w-0 text-[12px] bg-[var(--glass)] border border-[var(--line)] rounded-[9px] px-3 py-2 text-[var(--fg)] outline-none" id="hub-screen"></select>
+            <button type="button" id="hub-refresh" class="text-[12px] px-3 py-2 rounded-[9px] bg-[var(--glass2)] text-[var(--fg)] border border-[var(--line)]">↻</button>
+            <button type="button" id="hub-pop" class="text-[12px] px-3 py-2 rounded-[9px] bg-[var(--glass2)] text-[var(--fg)] border border-[var(--line)]">↗</button>
           </div>
-          <div class="flex-1 min-h-0 relative bg-[#0a0908]">
-            <iframe id="hub-frame" title="Hub base window" class="absolute inset-0 w-full h-full border-0 bg-[#141110]" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads"></iframe>
+          <div class="flex-1 min-h-0 relative bg-[var(--well)]">
+            <iframe id="hub-frame" title="Hub base window" class="absolute inset-0 w-full h-full border-0 bg-[var(--bg)]" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads"></iframe>
           </div>
         </div>
 
         <!-- REMOTE SHELL TAB -->
         <div id="tab-shell" class="tab-panel hidden flex-1 flex-col min-h-0">
-          <div class="shrink-0 flex gap-3 items-center px-3 py-2 border-b border-[rgba(253,242,214,0.08)] bg-[rgba(20,17,16,.95)]">
+          <div class="shrink-0 flex gap-3 items-center px-3 py-2 border-b border-[var(--line)] bg-[var(--panel)]">
             <label class="flex items-center gap-2 text-[11px] text-mutedfg uppercase tracking-[0.12em] font-semibold cursor-pointer">
               <input type="checkbox" id="to-term" checked class="w-4 h-4 accent-primary"> Echo agent commands
             </label>
-            <span class="text-[10px] text-[#65656C]">live laptop shell (ttyd)</span>
+            <span class="text-[10px] text-[var(--dim)]">live laptop shell (ttyd)</span>
           </div>
           <iframe id="shell-frame" src="/app/term/" title="Remote Shell" class="flex-1 min-h-0 w-full border-0 bg-black"></iframe>
         </div>
@@ -254,17 +266,17 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
         <div id="tab-memory" class="tab-panel hidden flex-1 overflow-y-auto p-6 space-y-6">
           <div class="flex items-center justify-between">
             <h4 class="text-[11px] font-bold text-mutedfg uppercase tracking-widest">Chats</h4>
-            <button type="button" id="btn-new-chat" class="text-[11px] px-3 py-2 rounded-[9px] bg-[#1a1410] text-[#f0e9e0] font-bold uppercase tracking-widest hover:brightness-110">New chat</button>
+            <button type="button" id="btn-new-chat" class="text-[11px] px-3 py-2 rounded-[9px] bg-[var(--panel2)] text-[var(--fg)] font-bold uppercase tracking-widest hover:brightness-110">New chat</button>
           </div>
           <div id="chat-list" class="space-y-2"></div>
           <h4 class="text-[11px] font-bold text-mutedfg uppercase tracking-widest pt-4">Agent Memory</h4>
           <div id="mem-view" class="text-[12px] text-mutedfg font-mono whitespace-pre-wrap">Loading…</div>
         </div>
 
-        <div class="absolute bottom-6 left-6 flex items-center gap-3 px-4 py-2 rounded-xl bg-black/80 backdrop-blur-md border border-primary/30 z-20">
+        <div class="absolute bottom-6 left-6 flex items-center gap-3 px-4 py-2 rounded-xl bg-black/80 backdrop-blur-md border border-[var(--acc-a30)] z-20">
           <div class="flex items-center gap-2 pr-3 border-r border-white/10">
             <i id="agent-float-icon" class="fa-solid fa-robot text-primary"></i>
-            <span id="agent-float-label" class="text-[11px] font-mono text-[#fdf2d6] uppercase tracking-widest">Idle</span>
+            <span id="agent-float-label" class="text-[11px] font-mono text-[var(--acc3)] uppercase tracking-widest">Idle</span>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-[9px] text-mutedfg uppercase">Goal</span>
@@ -276,16 +288,16 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       </section>
 
       <!-- VENICE CONSOLE (RIGHT) -->
-      <section id="venice-console" class="w-[480px] shrink-0 flex flex-col bg-[#141110] shadow-[-10px_0_40px_rgba(0,0,0,0.6)] z-10">
+      <section id="venice-console" class="w-[480px] shrink-0 flex flex-col bg-[var(--panel)] shadow-[-10px_0_40px_rgba(0,0,0,0.6)] z-10">
         <!-- CHAT AREA -->
         <main id="chat-area" class="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-6">
-          <div id="goal-block" class="border border-primary/20 bg-primary/5 rounded-2xl p-5 shrink-0">
+          <div id="goal-block" class="border border-[var(--acc-a20)] bg-[var(--accsoft)] rounded-2xl p-5 shrink-0">
             <div class="flex items-center gap-2 mb-3">
               <i class="fa-solid fa-bullseye text-primary text-[12px]"></i>
-              <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#fdf2d6]">Current Goal</span>
+              <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--acc3)]">Current Goal</span>
               <span id="goal-status" class="ml-auto text-[9px] font-mono uppercase text-mutedfg">none</span>
             </div>
-            <p id="goal-text" class="text-[13px] text-[#f5efe6] font-medium leading-relaxed">No agentic job running. Goals appear here from /api/agentic/jobs.</p>
+            <p id="goal-text" class="text-[13px] text-[var(--strong)] font-medium leading-relaxed">No agentic job running. Goals appear here from /api/agentic/jobs.</p>
             <div id="goal-steps" class="mt-4 space-y-2"></div>
           </div>
 
@@ -294,20 +306,20 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
         </main>
 
         <!-- COMPOSER -->
-        <footer id="composer" class="shrink-0 border-t border-[rgba(253,242,214,0.08)] bg-[#161210] p-6">
+        <footer id="composer" class="shrink-0 border-t border-[var(--line)] bg-[var(--well)] p-6">
           <div id="multimedia-shelf" class="flex items-center gap-2 mb-4">
-            <button title="Attach Image/Video" class="px-3 h-9 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center gap-2 text-mutedfg hover:text-[#fdf2d6] hover:bg-white/[0.06] transition-all">
+            <button title="Attach Image/Video" class="px-3 h-9 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center gap-2 text-mutedfg hover:text-[var(--fg)] hover:bg-white/[0.06] transition-all">
               <i class="fa-solid fa-paperclip text-[12px]"></i>
               <span class="text-[10px] font-bold uppercase tracking-widest">Attach</span>
             </button>
-            <button type="button" id="btn-voice" title="Voice Input" class="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-mutedfg hover:text-[#fdf2d6] hover:bg-white/[0.06] transition-all">
+            <button type="button" id="btn-voice" title="Voice Input" class="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-mutedfg hover:text-[var(--fg)] hover:bg-white/[0.06] transition-all">
               <i class="fa-solid fa-microphone text-[13px]"></i>
             </button>
-            <button type="button" id="btn-camera" title="Camera View" class="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-mutedfg hover:text-[#fdf2d6] hover:bg-white/[0.06] transition-all">
+            <button type="button" id="btn-camera" title="Camera View" class="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-mutedfg hover:text-[var(--fg)] hover:bg-white/[0.06] transition-all">
               <i class="fa-solid fa-camera text-[13px]"></i>
             </button>
             <div class="w-px h-5 bg-white/5 mx-2"></div>
-            <button type="button" id="btn-websearch" title="Web Search" class="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-mutedfg hover:text-[#fdf2d6] hover:bg-white/[0.06] transition-all">
+            <button type="button" id="btn-websearch" title="Web Search" class="w-9 h-9 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-mutedfg hover:text-[var(--fg)] hover:bg-white/[0.06] transition-all">
               <i class="fa-solid fa-globe text-[13px]"></i>
             </button>
             <div class="flex-1"></div>
@@ -318,9 +330,9 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
           </div>
 
           <div id="composer-input-row" class="relative">
-            <textarea id="idea-input" rows="4" placeholder="Give Venice a goal or feedback..." class="w-full bg-[rgba(253,242,214,0.03)] border border-[rgba(253,242,214,0.12)] rounded-xl px-5 py-4 outline-none text-[14px] text-[#f0e9e0] placeholder-[#6b6259] resize-none focus:border-primary/40 transition-colors pr-16"></textarea>
-            <button id="btn-send" class="absolute right-3 bottom-4 w-12 h-12 rounded-xl bg-gradient-to-b from-[#fdf2d6] to-[#e7d19f] flex items-center justify-center shadow-xl hover:brightness-110 transition-all">
-              <i class="fa-solid fa-bolt text-[#1a1410] text-[16px]"></i>
+            <textarea id="idea-input" rows="4" placeholder="Give Venice a goal or feedback..." class="w-full bg-[var(--glass)] border border-[var(--line)] rounded-xl px-5 py-4 outline-none text-[14px] text-[var(--fg)] placeholder-[var(--dim)] resize-none focus:border-[var(--acc-a40)] transition-colors pr-16"></textarea>
+            <button id="btn-send" class="absolute right-3 bottom-4 w-12 h-12 rounded-xl bg-gradient-to-b from-[var(--acc)] to-[var(--acc2)] flex items-center justify-center shadow-xl hover:brightness-110 transition-all">
+              <i class="fa-solid fa-bolt text-[var(--ink)] text-[16px]"></i>
             </button>
           </div>
 
@@ -328,14 +340,14 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
             <div class="flex items-center gap-6">
               <label class="flex items-center gap-2 cursor-pointer group">
                 <input type="checkbox" id="toggle-autonomous" checked class="w-4 h-4 accent-primary bg-transparent border-white/20">
-                <span class="text-[11px] text-mutedfg group-hover:text-[#c9c2b8] uppercase tracking-[0.15em] font-bold">Autonomous Cycle</span>
+                <span class="text-[11px] text-mutedfg group-hover:text-[var(--mut)] uppercase tracking-[0.15em] font-bold">Autonomous Cycle</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer group">
                 <input type="checkbox" id="toggle-appcontrol" checked class="w-4 h-4 accent-primary bg-transparent border-white/20">
-                <span class="text-[11px] text-mutedfg group-hover:text-[#c9c2b8] uppercase tracking-[0.15em] font-bold">App Control</span>
+                <span class="text-[11px] text-mutedfg group-hover:text-[var(--mut)] uppercase tracking-[0.15em] font-bold">App Control</span>
               </label>
             </div>
-            <button id="btn-mcp-tools" class="flex items-center gap-2 text-[11px] text-[#c9b896] hover:text-[#fdf2d6] font-bold uppercase tracking-widest">
+            <button id="btn-mcp-tools" class="flex items-center gap-2 text-[11px] text-[var(--acc3)] hover:text-[var(--fg)] font-bold uppercase tracking-widest">
               <i class="fa-solid fa-plug"></i> MCP Tools
             </button>
           </div>
@@ -359,30 +371,30 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       0% { top: 0; }
       100% { top: 100%; }
     }
-    #chat-log .msg{max-width:92%;margin:0;padding:14px 16px;border-radius:16px;line-height:1.5;font-size:13.5px;white-space:pre-wrap;word-break:break-word;color:#dcd4c8;background:#1b1714;border:1px solid rgba(253,242,214,.08)}
-    #chat-log .msg.user{margin-left:auto;background:linear-gradient(135deg,#2a231a,#221c15);border-color:rgba(253,242,214,.14);color:#f5efe6}
+    #chat-log .msg{max-width:92%;margin:0;padding:14px 16px;border-radius:16px;line-height:1.5;font-size:13.5px;white-space:pre-wrap;word-break:break-word;color:var(--fg);background:var(--panel);border:1px solid var(--line)}
+    #chat-log .msg.user{margin-left:auto;background:var(--panel2);border-color:var(--control);color:var(--strong)}
     #chat-log .msg.assistant,#chat-log .msg.venice{border-top-left-radius:6px}
-    #chat-log .msg.err,#chat-log .msg.error{border-color:rgba(217,147,147,.28);background:rgba(217,147,147,.06);color:#e0aeae}
-    #chat-log .msg.laptop{border-color:rgba(155,191,160,.28);background:rgba(155,191,160,.06)}
-    #chat-log .msg.tool_call{background:rgba(127,168,224,.05);border-color:rgba(127,168,224,.28);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
-    #chat-log .msg.tool,#chat-log .msg.tool_output{background:#0f0d0b;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#8a8178}
+    #chat-log .msg.err,#chat-log .msg.error{border-color:color-mix(in srgb,var(--bad) 28%,transparent);background:color-mix(in srgb,var(--bad) 6%,transparent);color:var(--bad)}
+    #chat-log .msg.laptop{border-color:color-mix(in srgb,var(--ok) 28%,transparent);background:color-mix(in srgb,var(--ok) 6%,transparent)}
+    #chat-log .msg.tool_call{background:color-mix(in srgb,var(--info) 5%,transparent);border-color:color-mix(in srgb,var(--info) 28%,transparent);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+    #chat-log .msg.tool,#chat-log .msg.tool_output{background:var(--well);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--dim)}
     #chat-log .msg .who-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-2px 0 8px}
-    #chat-log .msg .who{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:#8a8178}
-    #chat-log .msg.tool_call .who{color:#7fa8e0}
-    #chat-log .msg.tool .who,#chat-log .msg.tool_output .who{color:#65656c}
-    #chat-log .msg.laptop .who{color:#9bbfa0}
-    #chat-log .msg.error .who,#chat-log .msg.err .who{color:#d99393}
+    #chat-log .msg .who{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--dim)}
+    #chat-log .msg.tool_call .who{color:var(--info)}
+    #chat-log .msg.tool .who,#chat-log .msg.tool_output .who{color:var(--dim)}
+    #chat-log .msg.laptop .who{color:var(--ok)}
+    #chat-log .msg.error .who,#chat-log .msg.err .who{color:var(--bad)}
     #chat-log .msg .acts{display:flex;gap:6px;flex:none;flex-wrap:wrap}
-    #chat-log .msg .copy{appearance:none;border:0;background:rgba(253,242,214,.08);color:#c9b896;font:600 10.5px system-ui,sans-serif;padding:4px 8px;border-radius:8px;cursor:pointer}
+    #chat-log .msg .copy{appearance:none;border:0;background:var(--glass2);color:var(--acc);font:600 10.5px system-ui,sans-serif;padding:4px 8px;border-radius:8px;cursor:pointer}
     #chat-log .msg .copy[disabled]{opacity:.35;cursor:default}
     #chat-log .empty{padding:32px 8px 12px;text-align:center}
-    #chat-log .empty h2{font-size:18px;letter-spacing:-.02em;color:#fdf2d6;margin:0 0 10px;font-weight:600}
-    #chat-log .empty .mut{color:#8a8178;font-size:12.5px;line-height:1.55}
-    #term-log .tl-cmd{color:#c9b896}
-    #term-log .tl-out{color:#8a8178}
-    #term-log .tl-ok{color:#9bbfa0}
-    #term-log .tl-bad{color:#d99393}
-    #term-log .tl-note{color:#7fa8e0}
+    #chat-log .empty h2{font-size:18px;letter-spacing:-.02em;color:var(--strong);margin:0 0 10px;font-weight:600}
+    #chat-log .empty .mut{color:var(--dim);font-size:12.5px;line-height:1.55}
+    #term-log .tl-cmd{color:var(--acc)}
+    #term-log .tl-out{color:var(--dim)}
+    #term-log .tl-ok{color:var(--ok)}
+    #term-log .tl-bad{color:var(--bad)}
+    #term-log .tl-note{color:var(--info)}
   </style>
 
   <script src="/app/ui/forge.js"></script>
@@ -426,7 +438,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
     function setStatus(text, kind) {
       const pill = document.getElementById('status-pill');
       if (!pill) return;
-      pill.innerHTML = `<span class="w-[7px] h-[7px] rounded-full bg-${kind === 'ok' ? 'oktext' : kind === 'warn' ? 'warntext' : 'badtext'} shadow-[0_0_6px_rgba(155,191,160,0.7)] animate-pulse"></span><span class="text-[11px] text-${kind === 'ok' ? 'oktext' : kind === 'warn' ? 'warntext' : 'badtext'} font-medium uppercase tracking-wider">${text}</span>`;
+      pill.innerHTML = `<span class="w-[7px] h-[7px] rounded-full bg-${kind === 'ok' ? 'oktext' : kind === 'warn' ? 'warntext' : 'badtext'} shadow-[0_0_6px_var(--ok)] animate-pulse"></span><span class="text-[11px] text-${kind === 'ok' ? 'oktext' : kind === 'warn' ? 'warntext' : 'badtext'} font-medium uppercase tracking-wider">${text}</span>`;
     }
     function maskKey(k) {
       const s = String(k || '').trim();
@@ -787,11 +799,11 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       for (const a of pendingAttach) {
         const el = document.createElement('div');
         el.className = 'att';
-        el.style.cssText = 'position:relative;width:36px;height:36px;border-radius:8px;overflow:hidden;border:1px solid rgba(253,242,214,.14);background:#0f0d0b;flex:none;margin-left:8px;';
+        el.style.cssText = 'position:relative;width:36px;height:36px;border-radius:8px;overflow:hidden;border:1px solid var(--control);background:var(--well);flex:none;margin-left:8px;';
         if (a.kind === 'image' && a.dataUrl) {
           el.innerHTML = `<img src="${a.dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
         } else {
-          el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:10px;color:#a89e93;">${a.kind}</div>`;
+          el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:10px;color:var(--mut);">${a.kind}</div>`;
         }
         const x = document.createElement('button');
         x.type = 'button';
@@ -1264,9 +1276,9 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
             if (price) bits.push(price);
             if (m.supports_vision) bits.push('vision');
             if (m.uncensored) bits.push('uncensored');
-            return `<button type="button" data-id="${F.esc(m.id)}" class="w-full text-left px-3 py-2.5 ${on ? 'bg-[rgba(253,242,214,0.08)]' : 'hover:bg-[rgba(253,242,214,0.05)]'}">` +
-              `<div class="text-[12.5px] ${on ? 'text-[#f5efe6]' : 'text-[#c9c2b8]'} font-medium">${F.esc(m.name || m.id)}</div>` +
-              `<div class="text-[10.5px] text-[#7a7168] mt-0.5">${F.esc(bits.join(' · '))}</div>` +
+            return `<button type="button" data-id="${F.esc(m.id)}" class="w-full text-left px-3 py-2.5 ${on ? 'bg-[var(--glass2)]' : 'hover:bg-[var(--glass2)]'}">` +
+              `<div class="text-[12.5px] ${on ? 'text-[var(--strong)]' : 'text-[var(--mut)]'} font-medium">${F.esc(m.name || m.id)}</div>` +
+              `<div class="text-[10.5px] text-[var(--dim)] mt-0.5">${F.esc(bits.join(' · '))}</div>` +
             `</button>`;
           }).join('');
           placeMenu();
@@ -1517,7 +1529,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
     onTermLog = (text, cls) => {
       const lines = String(text || '').split('\n');
       for (const line of lines.slice(0, 12)) {
-        appendTermLine(esc(line), cls || 'text-[#8a8178]');
+        appendTermLine(esc(line), cls || 'text-[var(--dim)]');
       }
     };
 
@@ -1566,7 +1578,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
         else if (reserved.length) { label = 'RESERVED'; kind = 'warn'; }
         else if (ins.length) { label = String(ins[0].status || 'IDLE').slice(0, 10); kind = 'warn'; }
         thEl.textContent = label;
-        thEl.className = 'text-xl font-mono ' + (kind === 'ok' ? 'text-oktext' : kind === 'warn' ? 'text-warntext' : 'text-[#fdf2d6]');
+        thEl.className = 'text-xl font-mono ' + (kind === 'ok' ? 'text-oktext' : kind === 'warn' ? 'text-warntext' : 'text-[var(--strong)]');
         setDot('sitrep-thunder-dot', kind);
       }
 
@@ -1640,7 +1652,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
             return;
           }
           box.innerHTML = top.map((c, i) => `
-            <div class="aspect-video rounded-lg bg-panel border border-white/5 overflow-hidden relative ${i === 0 ? 'border-primary/40' : ''}">
+            <div class="aspect-video rounded-lg bg-panel border border-white/5 overflow-hidden relative ${i === 0 ? 'border-[var(--acc-a40)]' : ''}">
               <img class="w-full h-full object-cover" src="/api/media/contact/${encodeURIComponent(c.name)}" alt="${esc(c.name)}" loading="lazy"/>
               ${i === 0 ? '<div class="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-primary text-[8px] font-bold text-white uppercase">Latest</div>' : ''}
             </div>`).join('');
@@ -1651,7 +1663,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
         const imgs = images.slice(0, 4);
         while (imgs.length < 4) imgs.push(imgs[0]);
         box.innerHTML = imgs.map((src, i) => `
-          <div class="aspect-video rounded-lg bg-panel border border-white/5 overflow-hidden relative ${i === 0 ? 'border-primary/40' : ''}">
+          <div class="aspect-video rounded-lg bg-panel border border-white/5 overflow-hidden relative ${i === 0 ? 'border-[var(--acc-a40)]' : ''}">
             <img class="w-full h-full object-cover" src="${esc(src)}" alt="review frame ${i + 1}" loading="lazy"/>
             ${i === 0 ? '<div class="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-primary text-[8px] font-bold text-white uppercase">Contact</div>' : ''}
           </div>`).join('');
@@ -1693,7 +1705,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
               const ok = step && (step.status === 'done' || step.ok);
               const icon = ok ? 'fa-circle-check text-oktext' : (last ? 'fa-circle-notch animate-spin text-primary' : 'fa-circle text-mutedfg text-[8px]');
               const label = esc(String((step && (step.summary || step.tool || step.text || step.goal)) || JSON.stringify(step)).slice(0, 120));
-              return `<div class="flex items-center gap-3 text-[11px]"><i class="fa-solid ${icon}"></i><span class="${last && !ok ? 'text-[#fdf2d6]' : 'text-[#dcd4c8]'}">${label}</span></div>`;
+              return `<div class="flex items-center gap-3 text-[11px]"><i class="fa-solid ${icon}"></i><span class="${last && !ok ? 'text-[var(--strong)]' : 'text-[var(--mut)]'}">${label}</span></div>`;
             }).join('');
           }
         }
@@ -1708,13 +1720,13 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       if (!slot) return Promise.resolve(false);
       return new Promise(resolve => {
         slot.innerHTML = `
-          <div class="w-full bg-[#1b1714] border-2 border-primary/40 rounded-2xl p-5 shadow-2xl">
+          <div class="w-full bg-[var(--panel)] border-2 border-[var(--acc-a40)] rounded-2xl p-5 shadow-2xl">
             <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-full bg-[var(--accsoft)] flex items-center justify-center">
                 <i class="fa-solid fa-shield-halved text-primary"></i>
               </div>
               <div>
-                <h4 class="text-[13px] font-bold text-[#fdf2d6]">Permission Requested</h4>
+                <h4 class="text-[13px] font-bold text-[var(--fg)]">Permission Requested</h4>
                 <p class="text-[10px] text-mutedfg uppercase tracking-widest">${esc(reason || 'Risky action')}</p>
               </div>
             </div>
@@ -1724,7 +1736,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
             </div>
             <div class="flex gap-3">
               <button type="button" id="perm-approve" class="flex-1 py-2.5 rounded-xl bg-primary text-white text-[12px] font-bold hover:brightness-110 transition-all">Approve Action</button>
-              <button type="button" id="perm-decline" class="flex-1 py-2.5 rounded-xl bg-white/5 text-[#fdf2d6] text-[12px] font-bold hover:bg-white/10 transition-all">Decline</button>
+              <button type="button" id="perm-decline" class="flex-1 py-2.5 rounded-xl bg-white/5 text-[var(--fg)] text-[12px] font-bold hover:bg-white/10 transition-all">Decline</button>
             </div>
           </div>`;
         const done = (ok) => { slot.innerHTML = ''; resolve(ok); };
@@ -1833,7 +1845,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
         document.querySelectorAll('.tab-btn').forEach(b => {
           const on = b === btn;
           b.className = 'tab-btn text-[11px] font-bold uppercase tracking-widest h-full px-2 ' +
-            (on ? 'text-[#fdf2d6] border-b-2 border-primary' : 'text-mutedfg hover:text-[#fdf2d6] transition-colors');
+            (on ? 'text-[var(--acc)] border-b-2 border-primary' : 'text-mutedfg hover:text-[var(--acc)] transition-colors');
         });
         document.querySelectorAll('.tab-panel').forEach(p => {
           p.classList.add('hidden');
@@ -1911,8 +1923,8 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
         list.innerHTML = store.chats.map(c => {
           const n = (c.messages || []).length;
           const when = F.ago((c.updated || 0) / 1000);
-          return `<div class="flex gap-3 items-center p-3 rounded-xl bg-panel border border-border cursor-pointer hover:border-[rgba(253,242,214,0.18)]" data-open="${esc(c.id)}">
-            <div class="flex-1 min-w-0"><p class="text-[13px] font-semibold text-[#f5efe6] truncate">${esc(c.title || 'Chat')}</p>
+          return `<div class="flex gap-3 items-center p-3 rounded-xl bg-panel border border-border cursor-pointer hover:border-[var(--control)]" data-open="${esc(c.id)}">
+            <div class="flex-1 min-w-0"><p class="text-[13px] font-semibold text-[var(--strong)] truncate">${esc(c.title || 'Chat')}</p>
             <p class="text-[10px] text-mutedfg">${esc(when)} · ${n} message${n === 1 ? '' : 's'}</p></div>
             <button type="button" class="text-[10px] text-badtext uppercase font-bold tracking-widest" data-del="${esc(c.id)}">Delete</button>
           </div>`;
@@ -1943,9 +1955,9 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
     if (webBtn) {
       webBtn.onclick = () => {
         webSearchOn = !webSearchOn;
-        webBtn.style.color = webSearchOn ? '#fdf2d6' : '';
-        webBtn.style.background = webSearchOn ? 'rgba(155,44,44,.25)' : '';
-        webBtn.style.borderColor = webSearchOn ? 'rgba(155,44,44,.45)' : '';
+        webBtn.style.color = webSearchOn ? 'var(--acc)' : '';
+        webBtn.style.background = webSearchOn ? 'color-mix(in srgb, var(--acc) 25%, transparent)' : '';
+        webBtn.style.borderColor = webSearchOn ? 'color-mix(in srgb, var(--acc) 45%, transparent)' : '';
         F.toast(webSearchOn ? 'Web search ON' : 'Web search off');
       };
     }
@@ -1976,7 +1988,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
             micRec = null;
           };
           micRec.start();
-          voiceBtn.style.color = '#d99393';
+          voiceBtn.style.color = 'var(--bad)';
           F.toast('Recording — tap mic again to stop');
         } catch (e) { F.toast('Mic unavailable: ' + (e.message || e)); }
       };
@@ -2015,10 +2027,10 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
           modal = document.createElement('div');
           modal.id = 'mcp-modal';
           modal.style.cssText = 'position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center';
-          modal.innerHTML = `<div style="background:#1b1714;border:1px solid rgba(253,242,214,.12);border-radius:20px;padding:24px;max-width:560px;width:90%;max-height:70vh;overflow-y:auto">
+          modal.innerHTML = `<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;max-width:560px;width:90%;max-height:70vh;overflow-y:auto">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-              <h2 style="font-size:16px;font-weight:600;color:#f5efe6">MCP Tools</h2>
-              <button id="mcp-close" style="background:none;border:0;color:#a89e93;font-size:18px;cursor:pointer">✕</button>
+              <h2 style="font-size:16px;font-weight:600;color:var(--strong)">MCP Tools</h2>
+              <button id="mcp-close" style="background:none;border:0;color:var(--mut);font-size:18px;cursor:pointer">✕</button>
             </div>
             <div id="mcp-list" style="display:flex;flex-direction:column;gap:10px"></div>
           </div>`;
@@ -2030,8 +2042,8 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
         list.innerHTML = (tools.length ? tools : [{function:{name:'Loading…',description:'Tools appear after boot.'}}]).map(t => {
           const fn = t.function || {};
           return `<div style="padding:12px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.05)">
-            <p style="font-family:monospace;font-size:12px;font-weight:700;color:#fdf2d6">${esc(fn.name || '?')}</p>
-            <p style="font-size:11px;color:#a89e93;margin-top:4px">${esc((fn.description || '').slice(0, 200))}</p>
+            <p style="font-family:monospace;font-size:12px;font-weight:700;color:var(--acc3)">${esc(fn.name || '?')}</p>
+            <p style="font-size:11px;color:var(--mut);margin-top:4px">${esc((fn.description || '').slice(0, 200))}</p>
           </div>`;
         }).join('');
         modal.style.display = 'flex';

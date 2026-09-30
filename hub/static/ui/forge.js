@@ -225,7 +225,7 @@
               onerror="this.style.opacity=.2">
             <div style="position:absolute;left:10px;bottom:10px;right:10px;display:flex;gap:8px;align-items:flex-end">
               <span class="pill ok">Latest</span>
-              <span class="tiny" style="color:#f0e9e0;text-shadow:0 1px 4px #000;font-weight:600" class="trunc">${F.esc(latest.title || latest.name)}</span>
+              <span class="tiny" style="color:var(--fg);text-shadow:0 1px 4px #000;font-weight:600" class="trunc">${F.esc(latest.title || latest.name)}</span>
               <span class="btn sm" style="margin-left:auto">▶ Play</span>
             </div>
           </div>`;
