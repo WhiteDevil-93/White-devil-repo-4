@@ -9,7 +9,7 @@ Components:
 1. **The Agent** — `hub/static/venice/` (the dedicated Agent screen) driven by `hub/venice.py` (tool definitions, Venice proxy, chat persistence) and `hub/agentic/` (background goal runner, permissions, memory, schedules). A `venice-agent/` Kotlin CLI runs the same loop headless.
 2. **Forge Hub (`hub/`)** — FastAPI relay + web screens (renders, Colab, Thunder, LTX, Gallery, Setup, Shell, laptop): the machine's studio surfaces and the tools the agent can drive. Forge Hub is one part of the app, not the app.
 3. **WhiteDevil Android App (`android/`)** — native phone surface (`com.whitedevil`): Agent, Forge Hub, Terminal, Settings; chat state syncs with the hub.
-4. **Laptop app (`laptop-app/`)** — native Electron desktop window onto the same hub and agent.
+4. **Desktop app (`desktop/`)** — native Windows app (Kotlin / Compose Desktop, ships as an MSI): Agent, Shell, Renders, Gallery, Colab, Thunder, Vast, Setup. It replaces the Electron **laptop app (`laptop-app/`)**, which is deprecated and left in place as a fallback. Screens with no native version (Hub Home, HypnoForge, LTX, Files, Shotwriter, bots) stay on the web. See `docs/DESKTOP_MIGRATION.md`.
 5. **Tools (`tools/`)** — Civitai LoRA downloader and Wan2.2 prompt pack ingest utilities.
 
 ---
@@ -32,7 +32,8 @@ White-devil-repo-4/
 │   ├── venice.py                        # Venice relay proxy & persistent chat threads
 │   ├── laptop.py                        # SSH bridge to laptop WSL (~/venice_run)
 │   └── static/                          # Mobile web UIs (venice, term, renders, etc.)
-├── laptop-app/                          # Native Electron laptop app (Forge Hub window)
+├── desktop/                             # Native Windows desktop app (Compose Desktop, MSI)
+├── laptop-app/                          # DEPRECATED Electron laptop app (Forge Hub window), kept as a fallback
 ├── android/                             # WhiteDevil Native Android Client (`com.whitedevil`)
 │   ├── app/src/main/
 │   │   ├── AndroidManifest.xml
@@ -130,9 +131,11 @@ cd android
 
 ---
 
-## 5. Laptop app (`laptop-app/`)
+## 5. Laptop app (`laptop-app/`) — deprecated
 
-Native Electron window for Forge Hub on the WSL/Windows laptop (Venice Agent, Shell, renders). Not a browser tab.
+> Replaced by the native desktop app in `desktop/`; see `docs/DESKTOP_MIGRATION.md` for what moved and how to switch, and `docs/DESKTOP_PACKAGING.md` for building the MSI. This Electron app stays until the operator retires it.
+
+Electron window for Forge Hub on the WSL/Windows laptop (Venice Agent, Shell, renders). Not a browser tab.
 
 `cd laptop-app` from `~` fails — that folder is not in your home directory. On WhiteDevil:
 

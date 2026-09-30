@@ -105,15 +105,22 @@ that installs fine and then cannot enrol a device.
 Deliberately not affected: `compileKotlin`, `test`, `run`. Their task graphs do not
 contain the helper tasks (checked with `--dry-run`, see section 7).
 
-**What the desktop app does at runtime (per the DeviceAuth task, which is not in the
-base commit; check it on the merged branch):** it looks first for
-`<compose.application.resources.dir>\wd-hello.exe`, then falls back to
-`desktop\hello-helper\bin\Release\net8.0-windows10.0.17763.0\win-x64\wd-hello.exe`.
+**What the desktop app does at runtime** (`HelloHelperLocation` and `helperCandidates` in
+`desktop/src/main/kotlin/com/whitedevil/desktop/HelloHelper.kt`): it looks first in the
+app's resources directory (`compose.application.resources.dir`, falling back to the folder
+of the running jar), trying `wd-hello.exe`, then `hello\wd-hello.exe`, then
+`resources\wd-hello.exe` there. Only when it is **not** a packaged app (the system property
+`jpackage.app-path`, which only the jpackage launcher sets, is absent) does it also look in
+the dev build output, `desktop\hello-helper\bin\Release\net8.0-windows10.0.17763.0\win-x64\`
+and its `publish\` folder, relative to the working directory. That is deliberate: an installed
+app must not run an exe it finds next to wherever it happened to be launched from.
+
 So during development, with no MSI, either `dotnet build -c Release` or
 `dotnet publish -c Release` in `hello-helper` is enough for `gradlew run`: both leave
 a working exe at that fallback path (publish builds first, so it populates that folder
 too, and `wd-hello.dll` sits beside the exe there). Only `publish` gives the
-single-file exe the MSI needs.
+single-file exe the MSI needs. An installed app finds the helper only in its resources
+directory, so "enrolment works from a dev build" says nothing about the installed one.
 
 **`wd-hello.exe` is framework-dependent** (`SelfContained false`). The laptop needs the
 .NET 8 Runtime (x64). The MSI does not install it. If it is missing the helper will
@@ -146,7 +153,8 @@ The installed app runs on a jlink-trimmed runtime. Compose includes only
 `build.gradle.kts` adds `java.instrument`, `java.management` and `jdk.unsupported`.
 
 That list is what `./gradlew suggestRuntimeModules` (jdeps over the resolved
-classpath) printed at the base commit. Tracing it with jdeps:
+classpath) prints. It printed the same three modules on `main` after the terminal
+and device-auth work landed (see section 7). Tracing it with jdeps:
 
 - `java.management`: referenced by ktor-utils (`IntellijIdeaDebugDetector`), which
   sits on the Ktor client's path. This one is a genuine requirement.
@@ -158,9 +166,10 @@ classpath) printed at the base commit. Tracing it with jdeps:
   nothing extra has to be bundled for the shell.
 
 Limits of that analysis: jdeps only sees static references, not reflection or
-`ServiceLoader`. Other dependencies (for example a terminal widget) are being added
-in parallel. **Re-run `.\gradlew.bat suggestRuntimeModules` on the merged branch and
-compare it with the `modules(...)` line.** If an installed build fails with
+`ServiceLoader`. JediTerm (the terminal widget, pinned at 3.53) is on the classpath
+it analysed, but a static analysis says nothing about what it loads reflectively.
+**Re-run `.\gradlew.bat suggestRuntimeModules` whenever a dependency changes and compare
+it with the `modules(...)` line.** If an installed build fails with
 `NoClassDefFoundError`, the blunt fix is `includeAllModules = true` in the same
 block (bigger installer, no missing-module class of bug).
 
@@ -186,7 +195,20 @@ block (bigger installer, no missing-module class of bug).
 
 ## 7. What was verified, and what was not
 
-Verified on a Linux box (no Windows, no WiX, no .NET SDK, no TPM):
+Re-checked on a Linux box against `main` after the native screens, the terminal and the
+device-auth work were merged (JDK 17; still no Windows, WiX, .NET SDK or TPM):
+
+- `compileKotlin` succeeds.
+- `suggestRuntimeModules` prints `modules("java.instrument", "java.management", "jdk.unsupported")`,
+  the same list `build.gradle.kts` declares.
+- `checkHelloHelper` fails with the actionable message (the "Refusing to package WhiteDevil
+  without its Windows Hello helper" text, with the `dotnet publish -c Release` instructions)
+  when the published exe is absent. This is the gate that makes `packageMsi` hard-fail
+  without `wd-hello.exe`.
+- `packageMsi --dry-run` lists `checkHelloHelper` first; a dry run of `run`, `compileKotlin`
+  and `test` together contains no helper task.
+
+Verified earlier, when the gate was written (same limits, not repeated in the re-check above):
 
 - The Gradle task graph resolves. `packageMsi --dry-run` lists, in order:
   `checkHelloHelper`, `checkRuntime`, compile tasks, `createRuntimeImage`, `jar`,
@@ -219,4 +241,3 @@ Not verified, and depends on a Windows host or a person:
   the packaged app.
 - The per-machine versus per-user behaviour, the upgrade behaviour, the SmartScreen
   behaviour, and the output file name and folder.
-- Anything about the screens still being built in parallel.
