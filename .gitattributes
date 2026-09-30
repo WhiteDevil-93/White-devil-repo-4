@@ -1,0 +1,11 @@
+# Shell scripts must keep LF. These run in WSL and on the relay, and a CRLF
+# checkout breaks them in a way that reads as nonsense: `set -euo pipefail\r`
+# makes bash reject "pipefail\r" as an invalid option name, so both deploy
+# scripts failed on line 5 with no hint that line endings were the cause.
+*.sh            text eol=lf
+gradlew         text eol=lf
+
+# Windows-side scripts genuinely want CRLF.
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+*.ps1           text eol=crlf

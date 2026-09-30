@@ -13,20 +13,26 @@ if [[ -z "$VC" ]]; then
 fi
 HOST="${HUB_HOST:-wan-relay}"
 
-mkdir -p "$B"
-rsync -a --delete --exclude build --exclude .gradle --exclude app/build --exclude local.properties --exclude keystore.properties "$A/" "$B/"
-if ! cp ~/.config/forgehub-keystore.properties "$B/keystore.properties" 2>/dev/null; then
+# The app depends on :shared, which lives at the REPO ROOT and is wired into the
+# build as file("../shared"). Staging only android/ leaves that path empty and the
+# release build fails with "Could not resolve project :shared -- No variants
+# exist", which reads like a Gradle problem rather than a missing directory. So
+# stage BOTH, keeping the same relative layout the repo has.
+mkdir -p "$B/android" "$B/shared"
+rsync -a --delete --exclude build --exclude .gradle --exclude app/build --exclude local.properties --exclude keystore.properties "$A/" "$B/android/"
+rsync -a --delete --exclude build --exclude .gradle "$REPO/shared/" "$B/shared/"
+if ! cp ~/.config/forgehub-keystore.properties "$B/android/keystore.properties" 2>/dev/null; then
   # Without it the release APK is not signed with the release key and will not
   # install over the existing app. Say so instead of swallowing the failure.
   echo "WARNING: ~/.config/forgehub-keystore.properties missing - APK will not carry the release signature" >&2
 fi
-echo 'sdk.dir=C:/Users/anon3/AppData/Local/Android/Sdk' > "$B/local.properties"
-# PowerShell must cd to the SAME directory as $B; a second hardcoded literal drifts
-# the moment $B changes, and an unquoted cd breaks on a path containing spaces.
-WIN_B=$(wslpath -w "$B")
+echo 'sdk.dir=C:/Users/anon3/AppData/Local/Android/Sdk' > "$B/android/local.properties"
+# PowerShell must cd to the SAME directory gradle runs in; a second hardcoded
+# literal drifts the moment $B changes, and an unquoted cd breaks on spaces.
+WIN_B=$(wslpath -w "$B/android")
 powershell.exe -NoProfile -Command "\$env:JAVA_HOME='C:\Program Files\Microsoft\jdk-17.0.19.10-hotspot'; cd '$WIN_B'; .\gradlew.bat --no-daemon -q assembleRelease; exit \$LASTEXITCODE"
 
-APK="$B/app/build/outputs/apk/release/app-release.apk"
+APK="$B/android/app/build/outputs/apk/release/app-release.apk"
 if [[ ! -f "$APK" ]]; then
   echo "APK missing after build" >&2
   exit 1
