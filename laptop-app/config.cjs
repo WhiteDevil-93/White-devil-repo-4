@@ -1,5 +1,8 @@
 "use strict";
 
+const path = require("path");
+const { fileURLToPath } = require("url");
+
 const DEFAULT_RELAY = "https://84-12-112-249.sslip.io";
 const DEFAULT_HUB = DEFAULT_RELAY + "/app/desktop/";
 
@@ -72,7 +75,63 @@ function hubHost(raw) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Which pages may talk to the main process.
+//
+// The preload bridge (preload.cjs) hands whatever page is in the window the stored relay and
+// laptop passwords. The window shows the hub, and the hub shows content it did not write (agent
+// output, render names, links). Without these checks a link or redirect that moved the window to
+// any other site gave that site the bridge and the passwords; this was reproduced against a stand-in
+// hub before the fix. Only the app's own two file pages may use the bridge, and the window may not
+// leave the hub's origin.
+// ---------------------------------------------------------------------------
+
+const TRUSTED_APP_PAGES = new Set(["start.html", "settings.html"]);
+
+function sameOrigin(a, b) {
+  try {
+    const ua = new URL(String(a));
+    const ub = new URL(String(b));
+    return ua.origin !== "null" && ua.origin === ub.origin;
+  } catch {
+    return false;
+  }
+}
+
+// The name of a file: URL that sits directly in appDir, else null.
+function appPageName(rawUrl, appDir) {
+  let url;
+  try {
+    url = new URL(String(rawUrl || ""));
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "file:") return null;
+  let file;
+  try {
+    file = fileURLToPath(url);
+  } catch {
+    return null;
+  }
+  const rel = path.relative(appDir, file);
+  if (!rel || rel.startsWith("..") || path.isAbsolute(rel) || rel.includes(path.sep)) return null;
+  return rel;
+}
+
+function isTrustedAppPage(rawUrl, appDir) {
+  const name = appPageName(rawUrl, appDir);
+  return name !== null && TRUSTED_APP_PAGES.has(name);
+}
+
+// A navigation the window may make by itself: within the hub's origin, or to the app's own pages.
+function isAllowedNavigation(targetUrl, hubUrl, appDir) {
+  return sameOrigin(targetUrl, hubUrl) || isTrustedAppPage(targetUrl, appDir);
+}
+
 module.exports = {
+  isTrustedAppPage,
+  isAllowedNavigation,
+  sameOrigin,
   DEFAULT_RELAY,
   DEFAULT_HUB,
   defaults,

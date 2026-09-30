@@ -9,7 +9,10 @@ if (process.platform === "linux" && process.env.FORGE_SANDBOX !== "1") {
 }
 const fs = require("fs");
 const path = require("path");
-const { mergeSettings, isLaptopPath, normalizeHubUrl, DEFAULT_HUB, needsRelayPassword } = require("./config.cjs");
+const {
+  mergeSettings, isLaptopPath, normalizeHubUrl, DEFAULT_HUB, needsRelayPassword,
+  isAllowedNavigation, isTrustedAppPage,
+} = require("./config.cjs");
 
 if (process.platform === "win32") {
   app.disableHardwareAcceleration();
@@ -116,6 +119,20 @@ function loadHub() {
   mainWindow.loadURL(hubTarget(s));
 }
 
+// The window may not leave the hub. A page that is not the hub must never be the one holding the
+// preload bridge (see config.cjs); off-hub http(s) links go to the default browser instead.
+function guardNavigation(event, url) {
+  if (isAllowedNavigation(url, hubTarget(cached || loadSettings()), __dirname)) return;
+  event.preventDefault();
+  if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+}
+
+// Only the app's own settings.html / start.html may use the settings IPC, never a page the hub served.
+function requireAppPage(event) {
+  const url = event && event.senderFrame && event.senderFrame.url;
+  if (!isTrustedAppPage(url, __dirname)) throw new Error("This page may not use the app's settings.");
+}
+
 function createMainWindow() {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.show();
@@ -141,6 +158,8 @@ function createMainWindow() {
     },
   });
   win.webContents.setUserAgent(win.webContents.getUserAgent() + " ForgeHubApp/1.0");
+  win.webContents.on("will-navigate", guardNavigation);
+  win.webContents.on("will-redirect", guardNavigation);
   win.webContents.on("did-fail-load", (_e, code, desc, url, isMainFrame) => {
     if (!isMainFrame || code === -3) return;
     showStart("Could not load the Hub (" + (desc || code) + "). Check the URL and password.");
@@ -238,18 +257,24 @@ function createTray() {
   tray.on("click", () => createMainWindow());
 }
 
-ipcMain.handle("settings:get", () => loadSettings());
-ipcMain.handle("settings:save", (_e, raw) => {
+ipcMain.handle("settings:get", (e) => {
+  requireAppPage(e);
+  return loadSettings();
+});
+ipcMain.handle("settings:save", (e, raw) => {
+  requireAppPage(e);
   const s = saveSettings(raw);
   loadHub();
   return s;
 });
-ipcMain.handle("hub:open", () => {
+ipcMain.handle("hub:open", (e) => {
+  requireAppPage(e);
   createMainWindow();
   if (settingsWindow && !settingsWindow.isDestroyed() && mainWindow) settingsWindow.close();
   return true;
 });
-ipcMain.handle("settings:test", async (_e, raw) => {
+ipcMain.handle("settings:test", async (e, raw) => {
+  requireAppPage(e);
   const s = mergeSettings(raw || loadSettings());
   const url = hubTarget(s);
   try {
