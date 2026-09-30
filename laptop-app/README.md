@@ -5,7 +5,7 @@
 > everything this app does. The operator decides when `laptop-app/` is removed, after checking the
 > desktop app on the real laptop.
 >
-> - `desktop/` has no native version of Hub Home, HypnoForge, **LTX**, Files, Shotwriter or the bot screens; they are reachable here or in a browser.
+> - `desktop/` has no native version of Hub Home, HypnoForge, Files, Shotwriter or the bot screens, and only a partial one of LTX (status, jobs, cycle; not rendering); those are reachable here or in a browser.
 > - What moved, what this app still does that `desktop/` does not, and how to switch over:
 >   [`docs/DESKTOP_MIGRATION.md`](../docs/DESKTOP_MIGRATION.md)
 > - How the desktop MSI is built: [`docs/DESKTOP_PACKAGING.md`](../docs/DESKTOP_PACKAGING.md)

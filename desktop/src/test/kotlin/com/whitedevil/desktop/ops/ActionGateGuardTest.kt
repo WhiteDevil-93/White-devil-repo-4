@@ -15,9 +15,9 @@ import kotlin.test.assertTrue
 class ActionGateGuardTest {
 
     private val root = listOf(File("src/main/kotlin"), File("desktop/src/main/kotlin")).first { it.isDirectory }
-    private val screens = listOf("ColabScreen.kt", "ThunderScreen.kt", "VastScreen.kt", "SetupScreen.kt")
+    private val screens = listOf("ColabScreen.kt", "ThunderScreen.kt", "LtxScreen.kt", "VastScreen.kt", "SetupScreen.kt")
 
-    /** The ops package plus the four ops screens; other screens (Agent, Shell, ...) are not this guard's business. */
+    /** The ops package plus the five ops screens; other screens (Agent, Shell, ...) are not this guard's business. */
     private fun sources(): List<File> =
         File(root, "com/whitedevil/desktop/ops").walkTopDown().filter { it.isFile && it.extension == "kt" }.toList() +
             screens.map { File(root, "com/whitedevil/desktop/$it") }
@@ -79,7 +79,7 @@ class ActionGateGuardTest {
         // OpsReader exposes only getJson; if a post method is ever added to it this fails.
         val reader = OpsReader::class.java.declaredMethods.map { it.name }
         assertTrue(reader.none { it.contains("post", ignoreCase = true) || it.contains("put", ignoreCase = true) || it.contains("delete", ignoreCase = true) }, reader.toString())
-        val apis = listOf(ColabApi::class, ThunderApi::class, VastApi::class, SetupApi::class)
+        val apis = listOf(ColabApi::class, ThunderApi::class, LtxApi::class, VastApi::class, SetupApi::class)
         apis.forEach { api ->
             val ctor = api.java.declaredConstructors.single()
             assertEquals(listOf(OpsReader::class.java), ctor.parameterTypes.toList(), "${api.simpleName} must hold only an OpsReader")

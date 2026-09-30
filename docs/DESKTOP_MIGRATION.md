@@ -37,7 +37,7 @@ unaffected. The desktop app is a client of the hub, not a replacement.
 
 ## 2. Desktop screens: native, or not
 
-**Native (8 screens plus Settings).** The desktop navigation is the `Screen` enum in
+**Native (9 screens plus Settings; LTX only in part).** The desktop navigation is the `Screen` enum in
 `desktop/src/main/kotlin/com/whitedevil/desktop/Main.kt`. "Code on main" means implemented, compiles and has
 unit tests on Linux; it has never been run on Windows or against the live hub.
 
@@ -49,9 +49,33 @@ unit tests on Linux; it has never been run on Windows or against the live hub.
 | Gallery | Gallery (`/app/gallery/`) | Lazy bounded thumbnail cache, preview, contact sheet on button press | Try against the real hub with a large library |
 | Colab | Hub Colab | Status, usage and session, polled every 30s. Stop and Start need a typed confirmation. Note that the hub's `GET /api/colab/state` has a side effect on the hub (it can restart the Colab tunnel service), so merely opening this screen can do that. | Look at it read-only first; do not press Stop or Start until you have |
 | Thunder | Hub Thunder | Queue, instances, snapshots. Every spend or destructive action is behind a confirmation; submit honours `ok:false`. Field names for instances and pricing came from the web page, not the hub source. | Try against the real hub |
+| LTX (partial) | Hub LTX (`/app/ltx/`) | **Read-only status, jobs and cycle, plus three confirmed controls.** Shows ComfyUI's readiness and queue, the newest 30 jobs (Cancel on a queued or rendering one), and the render-review cycle (Start needs a source job and a typed `START`; Stop). Everything else LTX does stays on the web, see below. | Look at it read-only first. Start cycle spends GPU time and OpenRouter credit |
 | Vast | Hub Vast | Instances and offers; rent, start, stop and delete behind confirmations | Try against the real hub |
 | Setup | Hub Setup | `enabled=0` shown as "not yet saved"; save behind a confirmation | Try against the real hub |
 | Settings | Settings window (Ctrl+,) | Relay, Venice and model settings, plus a **Device key** section: enrol this PC, sign in, check Windows Hello, sign out, with a confirmation before a re-enrol replaces the key. Details in section 4. | Do the enrolment check in section 5 |
+
+**LTX is native only in part, on purpose.** What is native is what could be checked against `hub/ltx.py` and
+`hub/ltx_qa_cycle.py`: the read routes (`/api/ltx/status`, `/jobs`, `/cycle/status`) and three JSON actions
+(`/cycle/start`, `/cycle/stop`, `/jobs/{id}/cancel`). What stays on the web LTX screen, and is not on the desktop:
+
+- submitting a clip (`/render`), a chain (`/chain`) or a 2× sharpen (`/jobs/{id}/sharpen`): each starts GPU
+  renders from a large option set (models, LoRAs and strengths, distill, i2v, decoder, writer, frames, size, seed)
+  and may carry an uploaded picture of up to 30 MB, and none of it can be run here without spending;
+- installing models (`/install`, `/install-local`), which downloads onto the Colab;
+- the prompt assistant (`/assist`), which spends OpenRouter credit;
+- input pictures. `GET /jobs/{id}/input` is a file response (the job's picture, up to 30 MB, 404 for
+  text-to-video), not JSON, and can be larger than the 8 MB the desktop's image client accepts. `GET /stage/{name}` is a raw
+  `.safetensors` download (`application/octet-stream`, hundreds of MB) that exists for the Colab to pull; the
+  desktop never fetches either.
+
+A cycle is not one render. Each round renders one chain for each of two recipes, each chain has one part per
+line of the source job, and it stops after the first round that yields a KEEP, so the worst case is
+`rounds × 2 × parts` clips, each billed on the Colab GPU plus an OpenRouter review. The start dialog works this out
+from the source you pick. Only a chain made from a picture, with one prompt line per part, can be a source (the script
+raises on anything else); the hub itself checks only that the job file exists, so the desktop is stricter than the hub
+there. The desktop Agent can also reach these routes through its tools (`/cycle start|status|stop`,
+`render_assess_adjust_cycle`, `queue_gpu_render`, `hub_request`); that is a chat tool, not a screen, and it spends GPU
+time when it runs.
 
 **Not native, and no plan in the repository to make them native.** The hub's `hub/screens.json`
 also lists the screens below. The desktop `Screen` enum has nothing for them. Until someone ports them they are
@@ -59,7 +83,6 @@ reachable only in the Electron app or in a browser at `<relay>/app/desktop/`.
 
 | Hub screen | Where it lives | Note |
 |---|---|---|
-| **LTX** | `/api/ltx/*` (`hub/ltx.py`) and the hub's LTX page | **The gap. It stays on the web on purpose:** LTX starts GPU renders, installs models on the Colab and runs a render-review cycle, and that needs a deliberate native design, not a copy of the web page. The desktop **Agent** can already reach a few LTX routes through its tools (`/cycle start|status|stop`, `render_assess_adjust_cycle`, `queue_gpu_render`, `hub_request`); that is a chat tool, not a screen, and it spends GPU time when it runs. |
 | Hub Home | web | |
 | HypnoForge | web | |
 | Files | `/laptop/files/` (needs the laptop user and password) | Shell is native; Files is not |
@@ -76,7 +99,7 @@ Enumerated from `laptop-app/` on `main`: `main.cjs`, `preload.cjs`, `config.cjs`
 
 | # | Electron feature (where) | Desktop | Status |
 |---|---|---|---|
-| 1 | Hosts the whole web hub, so LTX, HypnoForge, Files, Shotwriter, Home and bot screens all work in the window (it loads `/app/desktop/`) | Only the native screens in section 2 | **Not in desktop.** LTX is the gap; see section 2 |
+| 1 | Hosts the whole web hub, so LTX, HypnoForge, Files, Shotwriter, Home and bot screens all work in the window (it loads `/app/desktop/`) | Only the native screens in section 2. LTX is partial: status, jobs and the cycle, not submitting renders. | **Not in desktop** for Home, HypnoForge, Files, Shotwriter, bots and most of LTX; see section 2 |
 | 2 | System-tray icon: Open Forge Hub / Venice Agent / Settings / Quit (`createTray`) | None | Not in desktop |
 | 3 | App menu and shortcuts: Ctrl+1 Home, Ctrl+Shift+V Venice Agent, Ctrl+Shift+T Shell, Ctrl+, Settings, Ctrl+R Reload; Renders has a menu entry but no shortcut (`buildMenu`) | Mouse-driven nav rail only | Not in desktop |
 | 4 | Single-instance lock: a second launch brings the first window forward (`requestSingleInstanceLock`) | None found (grep of `desktop/src/main`) | Not in desktop. A second launch probably opens a second window and a second shell *(uncertain: read, not run)* |
@@ -182,8 +205,11 @@ you cannot tick is a reason to keep Electron.
       `stty size` correct, and closing the app leaves no `wsl.exe`.
 - [ ] Each screen you use daily (Renders, Gallery, Colab, Thunder, Vast, Setup) actually loads real data from
       the hub. They compile and pass unit tests; none has been run against the live hub.
-- [ ] For every screen with no native version (Hub Home, HypnoForge, **LTX**, Files, Shotwriter, bots), you have
-      a plan: browser, or keep Electron. See "The one trap".
+- [ ] For every screen with no native version (Hub Home, HypnoForge, Files, Shotwriter, bots) and for what stays on
+      the web in LTX (submitting clips and chains, 2× sharpen, model installs, the prompt assistant), you have a plan:
+      browser, or keep Electron. See "The one trap".
+- [ ] LTX: the status, jobs and cycle panels show what the web screen shows. Do not press Start cycle, Stop cycle or
+      Cancel until you have compared them; Start cycle spends GPU time and OpenRouter credit.
 - [ ] Persistence: quit and relaunch, and Settings are still there.
 - [ ] Installed-location check: `<install dir>\app\resources\wd-hello.exe` exists, and enrolment worked from the
       installed app, not just from a dev build. (A dev build finds the helper through a fallback path; the
@@ -218,7 +244,7 @@ later steps:
 
 So: get the desktop app configured and enrolled (steps 3 and 4 of this page) **before** you take the device-auth
 migration past its step 4, and do not treat Electron as your fallback after that point. The same applies to any
-browser you use for the screens with no native version, which now includes LTX.
+browser you use for the screens with no native version, and for the parts of LTX that stay on the web.
 
 ## 6. Known gaps and unknowns
 
@@ -230,5 +256,9 @@ browser you use for the screens with no native version, which now includes LTX.
   (used by desktop, shared with Android) and `hub/venice.py` (used by the Electron Agent) are separate
   implementations.
 - The desktop Agent keeps no conversation memory across messages (section 2).
-- Whether Hub Home, HypnoForge, LTX, Files, Shotwriter and the bot screens ever get native screens is undecided;
-  I found no plan for them in the repository.
+- Whether Hub Home, HypnoForge, Files, Shotwriter and the bot screens ever get native screens is undecided; I
+  found no plan for them in the repository. Rendering from LTX (clip, chain, sharpen) has no native screen and is a
+  deliberate choice, not an oversight (section 2).
+- The LTX screen's reading of the hub is from `hub/ltx.py` and `hub/ltx_qa_cycle.py`, not from a live hub, and I have
+  not seen a real job list. The rule for which job can be a cycle source (a chain with prompt lines, not
+  text-to-video) is inferred from `queue()` in the script.

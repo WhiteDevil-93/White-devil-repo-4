@@ -9,7 +9,7 @@ Components:
 1. **The Agent** — `hub/static/venice/` (the dedicated Agent screen) driven by `hub/venice.py` (tool definitions, Venice proxy, chat persistence) and `hub/agentic/` (background goal runner, permissions, memory, schedules). A `venice-agent/` Kotlin CLI runs the same loop headless.
 2. **Forge Hub (`hub/`)** — FastAPI relay + web screens (renders, Colab, Thunder, LTX, Gallery, Setup, Shell, laptop): the machine's studio surfaces and the tools the agent can drive. Forge Hub is one part of the app, not the app.
 3. **WhiteDevil Android App (`android/`)** — native phone surface (`com.whitedevil`): Agent, Forge Hub, Terminal, Settings; chat state syncs with the hub.
-4. **Desktop app (`desktop/`)** — native Windows app (Kotlin / Compose Desktop, ships as an MSI): Agent, Shell, Renders, Gallery, Colab, Thunder, Vast, Setup. It replaces the Electron **laptop app (`laptop-app/`)**, which is deprecated and left in place as a fallback. Screens with no native version (Hub Home, HypnoForge, LTX, Files, Shotwriter, bots) stay on the web. See `docs/DESKTOP_MIGRATION.md`.
+4. **Desktop app (`desktop/`)** — native Windows app (Kotlin / Compose Desktop, ships as an MSI): Agent, Shell, Renders, Gallery, Colab, Thunder, LTX (partial), Vast, Setup. It replaces the Electron **laptop app (`laptop-app/`)**, which is deprecated and left in place as a fallback. LTX is native only for status, jobs and the render-review cycle; rendering from it stays on the web, as do Hub Home, HypnoForge, Files, Shotwriter and the bot screens. See `docs/DESKTOP_MIGRATION.md`.
 5. **Tools (`tools/`)** — Civitai LoRA downloader and Wan2.2 prompt pack ingest utilities.
 
 ---

@@ -67,6 +67,7 @@ fun main() = application {
                             Screen.Gallery -> GalleryScreen(settings)
                             Screen.Colab -> ColabScreen(settings)
                             Screen.Thunder -> ThunderScreen(settings)
+                            Screen.Ltx -> LtxScreen(settings)
                             Screen.Vast -> VastScreen(settings)
                             Screen.Setup -> SetupScreen(settings)
                             Screen.Settings -> SettingsScreen(
@@ -89,6 +90,7 @@ private enum class Screen(val label: String) {
     Gallery("Gallery"),
     Colab("Colab"),
     Thunder("Thunder"),
+    Ltx("LTX"),
     Vast("Vast"),
     Setup("Setup"),
     Settings("Settings"),
