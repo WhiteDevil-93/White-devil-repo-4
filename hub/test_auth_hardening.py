@@ -429,3 +429,86 @@ def test_a_corrupt_token_file_does_not_take_the_hub_down():
     assert r.status_code == 200 and r.json()["authenticated"] is False
     # and the device can simply sign in again
     assert _token_for(client, priv, did)
+
+
+# ---------------------------------------------------------------------------
+# An unrecognised forward_auth_mode must fail CLOSED
+#
+# POST /api/auth/config validates before writing, so these values only reach the
+# file by hand-editing or a restore -- both plausible during the Caddy migration.
+# The bug being pinned here: an unrecognised value used to be rewritten to
+# "permissive", which accepts ANY Basic header without checking it. That is only
+# correct while Caddy validates passwords in front, and strict is reached by
+# removing exactly that. A capital S therefore left the relay open to the
+# internet, silently.
+# ---------------------------------------------------------------------------
+
+# Genuine garbage. Case and whitespace variants are NOT here: those are
+# normalised and honoured, which is the point of normalising before validating.
+BAD_MODES = ["stict", "none", "", "permissve", "device-only", "off"]
+CASE_VARIANTS = ["Strict", "STRICT", "  strict  ", "Basic_Or_Token"]
+
+
+def _bogus_basic() -> dict[str, str]:
+    return {"Authorization": "Basic " + base64.b64encode(b"attacker:wrong-password").decode()}
+
+
+@pytest.mark.parametrize("bad", BAD_MODES)
+def test_unrecognised_mode_in_the_file_refuses_basic(bad):
+    auth._save_config({"forward_auth_mode": bad})
+    assert auth.config()["forward_auth_mode"] == auth.UNKNOWN_MODE_FALLBACK
+    r = TestClient(app).get("/api/auth/forward", headers=_bogus_basic())
+    assert r.status_code == 401, f"forward_auth_mode={bad!r} let an unchecked Basic header through"
+
+
+def test_the_fallback_is_the_strictest_mode_not_the_default():
+    # If this ever becomes "permissive" again the whole guard is inert, so pin it
+    # rather than trusting the constant's name.
+    assert auth.UNKNOWN_MODE_FALLBACK == "strict"
+    assert auth.DEFAULT_CONFIG["forward_auth_mode"] == "permissive"
+
+
+def test_a_good_mode_in_the_file_is_still_honoured():
+    for good in auth.FORWARD_AUTH_MODES:
+        auth._save_config({"forward_auth_mode": good})
+        assert auth.config()["forward_auth_mode"] == good
+
+
+@pytest.mark.parametrize("variant", CASE_VARIANTS)
+def test_case_and_whitespace_variants_are_honoured_not_discarded(variant):
+    # Normalised the same way the env override is, so a capital letter does not
+    # send the operator hunting. Only genuine garbage falls back.
+    auth._save_config({"forward_auth_mode": variant})
+    assert auth.config()["forward_auth_mode"] == variant.strip().lower()
+
+
+def test_typo_in_the_env_override_does_not_downgrade(monkeypatch):
+    # HUB_FORWARD_AUTH_MODE is the documented way out of a lockout, set over SSH
+    # on a relay whose API is unreachable. A typo must not quietly become
+    # permissive, and must not quietly do nothing either -- it is logged.
+    auth._save_config({"forward_auth_mode": "strict"})
+    monkeypatch.setenv("HUB_FORWARD_AUTH_MODE", "permissve")  # misspelt, not a case variant
+    assert auth.config()["forward_auth_mode"] == "strict"
+    assert TestClient(app).get("/api/auth/forward", headers=_bogus_basic()).status_code == 401
+
+
+def test_env_override_still_works_when_spelled_correctly(monkeypatch):
+    # The recovery path itself: locked out in strict, fix it over SSH.
+    auth._save_config({"forward_auth_mode": "strict"})
+    monkeypatch.setenv("HUB_FORWARD_AUTH_MODE", "  PERMISSIVE  ")
+    assert auth.config()["forward_auth_mode"] == "permissive"
+
+
+def test_bad_mode_and_bad_env_together_still_fail_closed(monkeypatch):
+    auth._save_config({"forward_auth_mode": "Strict"})
+    monkeypatch.setenv("HUB_FORWARD_AUTH_MODE", "stict")
+    assert auth.config()["forward_auth_mode"] == "strict"
+    assert TestClient(app).get("/api/auth/forward", headers=_bogus_basic()).status_code == 401
+
+
+def test_the_operator_is_told_why(caplog):
+    with caplog.at_level("ERROR", logger="forge-hub.auth"):
+        auth._save_config({"forward_auth_mode": "stict"})  # genuine garbage, not a case variant
+        auth.config()
+    assert any("not one of" in r.message or "not one of" in r.getMessage() for r in caplog.records), \
+        "a silently-corrected auth mode is the failure this guard exists to prevent"

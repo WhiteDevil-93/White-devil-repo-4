@@ -23,6 +23,7 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import os
 import secrets
 import threading
@@ -110,6 +111,17 @@ DEFAULT_CONFIG: dict[str, Any] = {
 }
 FORWARD_AUTH_MODES = ("permissive", "basic_or_token", "strict")
 
+log = logging.getLogger("forge-hub.auth")
+
+# What an unrecognised forward_auth_mode falls back to. Deliberately the
+# STRICTEST mode, not the default one: permissive accepts any Basic header
+# without checking it, which is only correct while Caddy still validates
+# passwords in front -- and strict is reached precisely by removing that. A
+# typo in the config file would otherwise leave the relay open to the internet,
+# silently. Failing closed is recoverable over SSH (HUB_FORWARD_AUTH_MODE, see
+# docs/DEVICE_AUTH_MIGRATION.md); failing open is not.
+UNKNOWN_MODE_FALLBACK = "strict"
+
 
 def _now() -> float:
     return time.time()
@@ -141,12 +153,40 @@ def config() -> dict[str, Any]:
     except (FileNotFoundError, ValueError, OSError):
         pass
 
+    # POST /api/auth/config validates before writing, so a bad value here means
+    # the file was hand-edited or restored -- both plausible mid-migration.
+    # Normalise first, as the env override does: "Strict" is unambiguous intent
+    # and honouring it beats making someone hunt a capital letter. What is left
+    # after that is genuine garbage, and must not silently mean "permissive".
+    file_mode = cfg.get("forward_auth_mode")
+    if isinstance(file_mode, str):
+        file_mode = file_mode.strip().lower()
+        cfg["forward_auth_mode"] = file_mode
+    if file_mode not in FORWARD_AUTH_MODES:
+        log.error(
+            "auth_config.json has forward_auth_mode=%r, which is not one of %s. "
+            "Falling back to %r rather than the permissive default, which would "
+            "accept any Basic header. Fix the file or set HUB_FORWARD_AUTH_MODE.",
+            file_mode, FORWARD_AUTH_MODES, UNKNOWN_MODE_FALLBACK,
+        )
+        cfg["forward_auth_mode"] = UNKNOWN_MODE_FALLBACK
+
     env_code = os.environ.get("HUB_REQUIRE_ENROL_CODE")
     if env_code is not None:
         cfg["require_enrol_code"] = env_code.strip().lower() in ("1", "true", "yes", "on")
-    env_mode = (os.environ.get("HUB_FORWARD_AUTH_MODE") or "").strip().lower()
+
+    raw_env_mode = os.environ.get("HUB_FORWARD_AUTH_MODE")
+    env_mode = (raw_env_mode or "").strip().lower()
     if env_mode in FORWARD_AUTH_MODES:
         cfg["forward_auth_mode"] = env_mode
+    elif raw_env_mode is not None and raw_env_mode.strip():
+        # This variable is the documented way out of a lockout, set over SSH on
+        # a relay whose API you can no longer reach. Dropping a typo silently
+        # leaves the operator locked out with nothing to tell them why.
+        log.error(
+            "HUB_FORWARD_AUTH_MODE=%r is not one of %s and was ignored; the mode "
+            "is still %r.", raw_env_mode, FORWARD_AUTH_MODES, cfg["forward_auth_mode"],
+        )
     return cfg
 
 
@@ -515,7 +555,11 @@ def _decide(authorization: str, ip: Optional[str] = None) -> dict[str, Any]:
     """
     mode = config().get("forward_auth_mode", "permissive")
     if mode not in FORWARD_AUTH_MODES:
-        mode = "permissive"
+        # config() already normalises this; belt and braces for any other caller
+        # that reaches here with a raw value. Fail closed, never to permissive.
+        log.error("Unrecognised forward_auth_mode %r at the decision point; using %r.",
+                  mode, UNKNOWN_MODE_FALLBACK)
+        mode = UNKNOWN_MODE_FALLBACK
 
     if authorization.startswith("Bearer "):
         device_id = resolve_token(authorization[len("Bearer "):])
