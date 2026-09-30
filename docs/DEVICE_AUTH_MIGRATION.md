@@ -42,7 +42,7 @@ Three settings control the migration, all readable at `GET /api/auth/config`:
 | Setting | Values | Default | What it does |
 |---|---|---|---|
 | `forward_auth_mode` | `permissive`, `basic_or_token`, `strict` | `permissive` | What `/api/auth/forward` accepts |
-| `require_enrol_code` | `true` / `false` | `false` | Whether `POST /api/auth/devices` needs a single-use code |
+| `require_enrol_code` | `true` / `false` | `false` | Whether `POST /api/auth/devices` needs a single-use code. **Outside `permissive` a code is required whatever this says** (`GET /api/auth/config` then reports `true`, and `require_enrol_code_configured` keeps the stored value) |
 | basic credential | `HUB_BASIC_AUTH_USER` + `HUB_BASIC_AUTH_PASSWORD` | unset | The hub's own copy of the relay password, used only in `basic_or_token` |
 
 `forward_auth_mode` in detail:
@@ -74,7 +74,9 @@ is about.
    device has to reach `POST /challenge`, `POST /token` and `POST /devices`
    before it has a token to present. So those three (and only those three, and
    only as `POST`) are routed around `forward_auth` in §1, and defended instead
-   by the rate limits and lockouts in §5 and by the enrolment code in step 3.
+   by the rate limits and lockouts in §5 and by the enrolment code in step 3. The code
+   is enforced in every mode but `permissive` whether or not `require_enrol_code` is set: without
+   Caddy's password in front, an open enrolment route would let anyone add a device key.
 2. **The routes that can change who gets in guard themselves.** `DELETE
    /api/auth/devices/{id}`, `POST /api/auth/enrol-code` and `POST
    /api/auth/config` run `require_admin`. Under `permissive` that is a no-op —
@@ -257,8 +259,9 @@ curl -s $AUTH $RELAY/api/auth/config
 ### Step 2 — enrol both devices, and prove both can sign
 
 This is the step people rush. **Both** devices must produce a token before you
-touch Caddy at all. Enrolment codes are still off, so the current Android build
-(which sends none) enrols exactly as before.
+touch Caddy at all. Enrolment codes are still off, so any Android build enrols as
+before. Android 9.12 and later also has an "Enrolment code" field in Settings, for
+once the hub asks for one; earlier builds send none and cannot enrol a new phone then.
 
 - **Phone:** Android app → device enrolment. It uses StrongBox (ES256).
 - **Laptop:** Compose Desktop app → device enrolment. It uses Windows Hello
@@ -486,7 +489,7 @@ value takes over again.
 | Only the phone 401s | its device was revoked, or its token expired and it cannot re-sign | `python -m auth list` on the VM; re-enrol from the phone |
 | One device gets 429 "failed attempts" | its (device, address) pair tripped the 5-bad-signatures lockout (15 min) | wait, or `sudo systemctl restart forge-hub` (lockouts are in memory; tokens and codes are on disk and survive) |
 | Someone else's wrong-password guessing locked *your* address out of `basic_or_token` | shared address (carrier NAT); wrong passwords lock the address for Basic only, tokens are unaffected | wait 15 min, use the device token, or restart the hub |
-| Enrolment 403 "code required" and you have no code | `require_enrol_code=true` | `cd ~/hub && .venv/bin/python -m auth mint-code` (as `ubuntu`) |
+| Enrolment 403 "code required" and you have no code | `require_enrol_code=true`, or the mode is not `permissive` | `cd ~/hub && .venv/bin/python -m auth mint-code` (as `ubuntu`) |
 | Enrolment 429 right after minting a code | five wrong codes anywhere voided every live code and paused enrolment for five minutes | wait five minutes (or restart the hub), mint again |
 | You need to revoke a stolen device and the API demands credentials | non-`permissive` mode makes `DELETE /api/auth/devices/<id>` require a credential you do not have on the VM | `cd ~/hub && .venv/bin/python -m auth revoke <id>` — needs no credential, works with the hub down, takes effect on the very next request |
 | Caddy returns 502 on all `/api/*` | `forge-hub` is down, so `forward_auth` cannot answer | `journalctl -u forge-hub -n 100`; usually a missing dependency after a `git pull` |
@@ -583,8 +586,9 @@ Tune the numbers in `hub/auth.py` (`RATE_LIMITS`, `LOCK_*`) and restart.
 - **`permissive` waves through any Basic header.** It is only correct while Caddy's
   `basic_auth` still covers `/api/*` (steps 1–4). It is the default so the code is
   additive, not because it is a good place to rest.
-- **The enrolment code is opt-in.** Until step 3, `POST /api/auth/devices` works
-  without one and is not throttled — exactly as before this change.
+- **The enrolment code is opt-in only while the mode is `permissive`.** Until step 3, in
+  `permissive`, `POST /api/auth/devices` works without one and is not throttled, exactly
+  as before. In `basic_or_token` and `strict` it always needs one.
 - **First device over HTTP.** With zero devices enrolled there is no device token to
   ask for, so `POST /api/auth/enrol-code` falls back to whatever guards the hub. The
   CLI (`python -m auth mint-code`) is the strict alternative.
@@ -592,9 +596,11 @@ Tune the numbers in `hub/auth.py` (`RATE_LIMITS`, `LOCK_*`) and restart.
   are protected by codes, signatures and lockouts, not by the password. Anyone who
   reaches them can trip the global wrong-code pause (five minutes, new enrolments
   only).
-- **`GET /api/auth/devices`, `GET /api/auth/config` and `GET /api/auth/whoami` have no
-  hub-level guard in any mode.** They are safe because §1 routes them through
-  `forward_auth`; if you widen `@authpub`, you expose device ids and names.
+- **`GET /api/auth/config` and `GET /api/auth/whoami` have no hub-level guard in any mode.**
+  They are safe because §1 routes them through `forward_auth`; clients probe `/config` to learn
+  whether to ask for a code, and it reports the mode and how many devices are enrolled.
+  `GET /api/auth/devices` (names, ids, last-seen) now guards itself like revoke does, so
+  widening `@authpub` no longer exposes the device list; it is still a no-op under `permissive`.
 - **Password guessing in `basic_or_token` is cheaper than at Caddy.** Caddy checks
   bcrypt (about a second a guess); the hub compares a SHA-256. The per-address
   lockout caps one address, but guessing spread over many addresses is not capped.

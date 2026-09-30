@@ -356,8 +356,9 @@ def test_a_revoked_device_cannot_administer_with_its_old_token():
     stale = {"Authorization": f"Bearer {tok_a}"}
     assert client.post("/api/auth/enrol-code", headers=stale).status_code == 401
     assert client.delete(f"/api/auth/devices/{did_b}", headers=stale).status_code == 401
-    # and the surviving device is still there
-    assert [d["id"] for d in client.get("/api/auth/devices").json()["devices"]] == [did_b]
+    # and the surviving device is still there (the listing needs a device token in strict mode)
+    listed = client.get("/api/auth/devices", headers={"Authorization": f"Bearer {tok_b}"})
+    assert [d["id"] for d in listed.json()["devices"]] == [did_b]
 
 
 # ---------------------------------------------------------------------------
@@ -617,3 +618,82 @@ def test_rotating_a_password_invalidates_the_cached_old_one(tmp_path):
     _write_users(tmp_path, f"anon3:{_hash('new-password')}\n")
     assert auth._check_basic(old) is False, "the rotated-away password still works"
     assert auth._check_basic(_basic("anon3", "new-password")["Authorization"]) is True
+
+
+# ---------------------------------------------------------------------------
+# Enrolment is reachable without a token, so outside `permissive` it needs a code
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("mode", ["basic_or_token", "strict"])
+def test_leaving_permissive_does_not_leave_enrolment_open(mode):
+    """POST /api/auth/devices is routed around forward_auth (a device has no token
+    yet). In permissive, Caddy's password is still in front of it; in the other
+    modes it is not, and with the code flag left off anyone who could reach the URL
+    could enrol a key, sign in with it and own the relay. The code is now required
+    in every mode but permissive, whatever the flag says."""
+    client = TestClient(app)
+    _enrolled(client, "phone")
+    assert client.post("/api/auth/config", json={"forward_auth_mode": mode}).status_code == 200
+    assert auth.config()["require_enrol_code"] is False  # the stored flag is still off
+
+    _priv, r = _enrol(client, "stranger")
+    assert r.status_code == 403, r.text
+    assert "enrolment code is required" in r.json()["detail"]
+    assert len(auth.list_devices()) == 1
+
+    # and a code minted the proper way still works
+    code = auth.mint_enrol_code(minted_by="test")
+    _priv2, ok = _enrol(client, "new-laptop", enrol_code=code)
+    assert ok.status_code == 200, ok.text
+    assert len(auth.list_devices()) == 2
+
+
+def test_permissive_with_the_flag_off_still_enrols_without_a_code():
+    """The additive default is unchanged: nothing above applies until the operator leaves permissive."""
+    client = TestClient(app)
+    _priv, r = _enrol(client, "first")
+    assert r.status_code == 200, r.text
+    assert auth.enrol_code_required() is False
+
+
+def test_a_lockout_recovery_env_mode_does_not_open_enrolment(monkeypatch):
+    """HUB_FORWARD_AUTH_MODE=strict set over SSH with nothing enrolled: the operator has no token,
+    and a stranger must not be able to fill that gap. The CLI's code is the way in."""
+    client = TestClient(app)
+    monkeypatch.setenv("HUB_FORWARD_AUTH_MODE", "strict")
+    assert auth.list_devices() == []
+    _priv, r = _enrol(client, "stranger")
+    assert r.status_code == 403, r.text
+    assert auth.list_devices() == []
+    _priv2, ok = _enrol(client, "operator", enrol_code=auth.mint_enrol_code(minted_by="cli"))
+    assert ok.status_code == 200, ok.text
+
+
+def test_the_config_reports_the_code_requirement_clients_will_actually_meet():
+    """The desktop app reads require_enrol_code to decide whether to ask for a code."""
+    client = TestClient(app)
+    _enrolled(client, "phone")
+    cfg = client.get("/api/auth/config").json()
+    assert cfg["require_enrol_code"] is False and cfg["require_enrol_code_configured"] is False
+
+    assert client.post("/api/auth/config", json={"forward_auth_mode": "strict"}).status_code == 200
+    cfg = client.get("/api/auth/config").json()
+    assert cfg["require_enrol_code"] is True          # enforced now
+    assert cfg["require_enrol_code_configured"] is False  # but not what the operator set
+
+
+def test_the_device_list_is_not_public_once_caddy_stops_checking():
+    """Names, ids and last-seen times of the operator's devices."""
+    client = TestClient(app)
+    priv, did = _enrolled(client, "phone")
+    # permissive: Caddy's password is in front, so the hub does not ask twice
+    assert client.get("/api/auth/devices").status_code == 200
+    assert client.post("/api/auth/config", json={"forward_auth_mode": "strict"}).status_code == 200
+
+    assert client.get("/api/auth/devices").status_code == 401
+    basic = {"Authorization": "Basic " + base64.b64encode(b"relay:hunter2").decode()}
+    assert client.get("/api/auth/devices", headers=basic).status_code == 401
+    tok = _token_for(client, priv, did)
+    ok = client.get("/api/auth/devices", headers={"Authorization": f"Bearer {tok}"})
+    assert ok.status_code == 200
+    assert [d["id"] for d in ok.json()["devices"]] == [did]

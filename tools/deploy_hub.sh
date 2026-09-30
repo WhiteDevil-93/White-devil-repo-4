@@ -74,9 +74,36 @@ if [[ -f ~/hub/static/forgehub.apk ]]; then
   cp -f ~/hub/static/forgehub.apk ~/wan/www/app/forgehub.apk
 fi
 cp -f ~/hub/screens.json ~/wan/www/app/screens.json
+# Dependencies BEFORE the restart. The hub mounts optional modules defensively, so a package the VM lacks
+# (python-multipart, for one) used to drop a whole route family silently. If pip cannot install them this
+# aborts here, while the old hub is still serving.
+if [[ -x ~/hub/.venv/bin/pip ]]; then
+  ~/hub/.venv/bin/pip install -q -r ~/hub/requirements.txt
+else
+  echo "WARNING: ~/hub/.venv/bin/pip not found, so requirements.txt was NOT installed" >&2
+fi
 sudo systemctl restart forge-hub
-sleep 1
-curl -sS http://127.0.0.1:9000/api/manifest | python3 -c "import sys,json; m=json.load(sys.stdin); print('live manifest apk=%s web_rev=%s screens=%d' % (m.get('apk_version'), m.get('web_rev'), len(m.get('screens') or [])))"
+# uvicorn needs more than a second to import the hub; wait for it instead of failing the check on a race.
+for _ in $(seq 1 20); do
+  curl -fsS -o /dev/null http://127.0.0.1:9000/api/manifest && break
+  sleep 1
+done
+# A deploy is only good if every module mounted: /api/manifest lists the ones that did not.
+curl -fsS http://127.0.0.1:9000/api/manifest | python3 -c "
+import sys, json
+m = json.load(sys.stdin)
+print('live manifest apk=%s web_rev=%s screens=%d' % (m.get('apk_version'), m.get('web_rev'), len(m.get('screens') or [])))
+bad = m.get('failed_modules')
+if bad is None:
+    print('WARNING: manifest has no failed_modules field, so module health could not be checked', file=sys.stderr)
+elif bad:
+    print('DEPLOY NOT HEALTHY, these modules did not mount (their routes are missing):', file=sys.stderr)
+    for k, v in bad.items():
+        print('  %s: %s' % (k, v), file=sys.stderr)
+    sys.exit(1)
+else:
+    print('all hub modules mounted')
+"
 REMOTE
 
 # Refresh the phone Terminal publish script so it includes this hub snapshot

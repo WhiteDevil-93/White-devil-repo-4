@@ -190,6 +190,23 @@ def config() -> dict[str, Any]:
     return cfg
 
 
+def enrol_code_required(cfg: Optional[dict[str, Any]] = None) -> bool:
+    """Whether POST /api/auth/devices needs a single-use enrolment code right now.
+
+    True when the operator switched `require_enrol_code` on, AND whenever
+    forward_auth_mode is not `permissive`. Enrolment has to be reachable without
+    a token (a device cannot present one before it has one), so it is routed
+    around forward_auth; in `permissive` Caddy's basic_auth still stands in
+    front of it, but in `basic_or_token` and `strict` that password is gone and
+    the code is the only thing between the internet and a new device key. Left
+    to the flag alone, `strict` with the flag off meant anyone who could reach
+    the URL could enrol a key, sign in with it, and own the relay. An unknown
+    mode is treated as `strict` by config(), so it gates too.
+    """
+    cfg = cfg if cfg is not None else config()
+    return bool(cfg.get("require_enrol_code")) or cfg.get("forward_auth_mode", "permissive") != "permissive"
+
+
 def _save_config(patch: dict[str, Any]) -> dict[str, Any]:
     DATA.mkdir(parents=True, exist_ok=True)
     try:
@@ -840,7 +857,7 @@ class EnrolIn(BaseModel):
 def enrol(body: EnrolIn, request: Request):
     """Register a device's public key. Guarded by whatever already fronts the hub,
     plus a single-use code once `require_enrol_code` is on."""
-    gate = bool(config().get("require_enrol_code"))
+    gate = enrol_code_required()
     code_file = _require_live_code(body.enrol_code, _client_ip(request)) if gate else None
     # Everything that can refuse for a reason that is not the code's fault happens
     # BEFORE the code is spent: an unparsable or already-enrolled key must not burn it.
@@ -867,7 +884,11 @@ def enrol(body: EnrolIn, request: Request):
 
 
 @router.get("/devices")
-def get_devices():
+def get_devices(_admin: dict = Depends(require_admin)):
+    """Who is enrolled. Names, ids and last-seen times are nobody's business but the
+    operator's, and /api/auth/* can sit outside forward_auth, so this guards itself
+    like revoke and config-writes do (a no-op under `permissive`, where Caddy's
+    password is still in front)."""
     return {"devices": list_devices()}
 
 
@@ -1062,6 +1083,10 @@ def get_config():
     cfg = config()
     return {
         **cfg,
+        # What clients act on: whether a code is needed NOW, which is also true in any
+        # mode but `permissive` (see enrol_code_required). The stored flag is kept apart.
+        "require_enrol_code": enrol_code_required(cfg),
+        "require_enrol_code_configured": bool(cfg.get("require_enrol_code")),
         "devices_enrolled": len(list_devices()),
         # Reported so the migration doc's pre-flight check ("is the fallback
         # actually usable before I remove Caddy's?") sees both sources.

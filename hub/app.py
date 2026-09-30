@@ -50,13 +50,22 @@ app.include_router(gen_router)
 app.include_router(venice_router)
 
 
+# Modules that failed to mount, name -> reason. They stay optional (a partial
+# checkout must still serve the rest), but a missing dependency used to make a
+# whole route family vanish with one WARNING line nobody reads: python-multipart
+# absent silently dropped every /api/ltx/* route. /api/manifest now reports them,
+# and tools/deploy_hub.sh refuses to call a deploy good while any are listed.
+MOUNT_FAILURES: dict[str, str] = {}
+
+
 def _mount(mod_name: str, attr: str = "router") -> None:
     try:
         mod = __import__(mod_name)
         app.include_router(getattr(mod, attr))
         log.info("mounted %s", mod_name)
     except Exception as e:  # noqa: BLE001
-        log.warning("optional module %s not loaded: %s", mod_name, e)
+        MOUNT_FAILURES[mod_name] = f"{type(e).__name__}: {e}"[:300]
+        log.error("module %s NOT mounted, its routes are missing: %s", mod_name, e)
 
 
 # Laptop / setup — white-devil names
@@ -135,6 +144,7 @@ def manifest():
     m = json.loads((HUB / "screens.json").read_text())
     m["screens"] = m["screens"] + bot_screens()
     m["generated"] = time.time()
+    m["failed_modules"] = dict(MOUNT_FAILURES)
     return m
 
 
