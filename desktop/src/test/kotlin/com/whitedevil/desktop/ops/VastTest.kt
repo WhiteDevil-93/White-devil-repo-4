@@ -102,7 +102,7 @@ class VastTest {
     // ---- rent / start / stop / delete ------------------------------------------------------------
 
     @Test
-    fun `rent succeeds only with an instance id`() = runBlocking {
+    fun `rent succeeds only with an instance id`() = runBlocking<Unit> {
         val ok = VastActions(FakeHub("""{"id": "9001"}""").actor).rent("555", 150, "forge")
         val s = assertIs<ActionOutcome.Succeeded>(ok)
         assertTrue(s.headline.contains("9001"))
