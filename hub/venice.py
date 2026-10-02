@@ -158,10 +158,34 @@ def price_label(price_in: Any = None, price_out: Any = None) -> str:
     return f"{_fmt_price(price_in)}/{_fmt_price(price_out)} per 1M"
 
 
+# Models that answer a tool-bearing request with prose instead of tool_calls.
+# This page always sends the agent tool catalog, so a model in here cannot drive
+# it: it narrates "I will use the get_render_status function" as message content,
+# nothing executes, and the unanswered text lands in history. The model then
+# invents the result it never got — observed producing a fabricated
+# "Colab: Idle - Thunder: Idle - Laptop: Connected" status line.
+#
+# Venice exposes no capability flag for this (/models carries none), so the list
+# is measured, not declared: each id was sent a one-tool request and checked for
+# tool_calls on 2026-10-02. Re-probe before trusting it after a model update.
+# Known tool-capable at that time, for contrast: gemma-4-uncensored (the
+# uncensored option that DOES drive agent mode), zai-org-glm-5/-5-2, z-ai/glm-5.2,
+# qwen3-vl-235b-a22b, mistral-small-3-2-24b-instruct, claude-opus-4-8 and the
+# openrouter-prefixed twins. Two were indeterminate and are deliberately absent
+# rather than guessed: dolphin-mistral-24b-venice-edition (404) and kimi-k2-6
+# (timed out).
+TOOL_INCAPABLE_MODELS = frozenset({
+    "venice-uncensored-1-2",
+    "venice-uncensored-role-play",
+})
+
+
 def _enrich_model(m: dict[str, Any]) -> dict[str, Any]:
     out = dict(m)
     host = (out.get("host") or ("openrouter" if "/" in str(out.get("id") or "") else "venice")).lower()
     out["host"] = "openrouter" if host.startswith("open") else "venice"
+    if "supports_tools" not in out:
+        out["supports_tools"] = str(out.get("id") or "") not in TOOL_INCAPABLE_MODELS
     out["uncensored"] = bool(out.get("uncensored")) or ("uncensored" in str(out.get("id") or "").lower()) or ("uncensored" in str(out.get("name") or "").lower())
     if out.get("price_in") is not None or out.get("price_out") is not None:
         out["price"] = price_label(out.get("price_in"), out.get("price_out"))

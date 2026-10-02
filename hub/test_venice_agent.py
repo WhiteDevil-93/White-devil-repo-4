@@ -37,6 +37,34 @@ def test_tools_catalog_matches_android_plus_terminal():
     assert st["default_model"] == (os.environ.get("VENICE_MODEL") or venice.DEFAULT_MODEL)
 
 
+def test_models_report_tool_capability_and_ui_gates_on_it():
+    # A model that cannot emit tool_calls narrates the call instead, executes
+    # nothing, and then invents the result — that is how a fabricated
+    # "Colab: Idle - Thunder: Idle" status reached a live transcript. The picker
+    # must be able to tell the two apart.
+    client = TestClient(app)
+    models = client.get("/api/venice/models").json()["models"]
+    by_id = {m["id"]: m for m in models}
+    assert all("supports_tools" in m for m in models)
+
+    for bad in venice.TOOL_INCAPABLE_MODELS:
+        if bad in by_id:
+            assert by_id[bad]["supports_tools"] is False, bad
+    # Measured tool-capable on 2026-10-02; the uncensored one matters because it
+    # is the drop-in for the uncensored models that cannot drive the agent.
+    for good in ("zai-org-glm-5-2", "gemma-4-uncensored"):
+        if good in by_id:
+            assert by_id[good]["supports_tools"] is True, good
+    assert "venice-uncensored-1-2" in venice.TOOL_INCAPABLE_MODELS
+
+    page = client.get("/app/venice/").text
+    assert "supportsTools" in page
+    assert "no tools — cannot run the agent" in page
+    assert "cannot call tools" in page
+    # Unknown ids must default to usable, not blocked.
+    assert "(m in modelTools) ? !!modelTools[m] : true" in page
+
+
 def test_workspace_file_tools(tmp_path, monkeypatch):
     monkeypatch.setattr(venice, "WORKSPACE", tmp_path / "ws")
     client = TestClient(app)

@@ -2,7 +2,7 @@
   "apk_version": 21,
   "apk_url": "/app/forgehub.apk",
   "force_update": true,
-  "web_rev": 42,
+  "web_rev": 45,
   "screens": [
     {
       "id": "agent",

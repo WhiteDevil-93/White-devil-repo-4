@@ -418,6 +418,9 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
     let configured = false;
     let abort = null;
     let modelVision = {};
+    // id -> can the model emit real tool_calls. Server-measured; see
+    // TOOL_INCAPABLE_MODELS in hub/venice.py. Absent id means "assume yes".
+    let modelTools = {};
     let store = {activeId: null, chats: []};
     let persistTimer = 0;
     let pendingAttach = [];
@@ -1044,6 +1047,14 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       if (/glm-5-2$|glm-5$|glm-4|kimi|claude-opus|olafangensan/.test(low) && !/vl|5v|vision/.test(low)) return false;
       return /vl|vision|5v|gemini|mistral-31|mistral-small|uncensored|gemma-4/.test(low);
     }
+    // This page always sends the agent tool catalog, so a model that cannot
+    // emit tool_calls will narrate the call instead, execute nothing, and then
+    // hallucinate the result it never received. Default to true so an unknown
+    // or newly added model is not wrongly blocked.
+    function supportsTools(id) {
+      const m = String(id || '');
+      return (m in modelTools) ? !!modelTools[m] : true;
+    }
     function contentHasImage(content) {
       if (!Array.isArray(content)) return false;
       return content.some(p => p && (p.type === 'image_url' || p.image_url));
@@ -1213,9 +1224,11 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       } catch (e) {}
       if (!models.length) models = [{id:'venice-uncensored-1-2',name:'Venice Uncensored 1.2',host:'venice',price:'$0.20/$0.90 per 1M',uncensored:true},{id:'zai-org-glm-5-2',name:'GLM 5.2',host:'venice',price:'$1.40/$4.40 per 1M'},{id:'anthropic/claude-opus-4.8',name:'Claude Opus 4.8',host:'openrouter',price:'$5/$25 per 1M'}];
       modelVision = {};
+      modelTools = {};
       for (const m of models) {
         if (typeof m.supports_vision === 'boolean') modelVision[m.id] = m.supports_vision;
         else modelVision[m.id] = isVisionModel(m.id);
+        if (typeof m.supports_tools === 'boolean') modelTools[m.id] = m.supports_tools;
       }
       const prefer = localStorage.getItem(LS_MODEL) || st.default_model || 'zai-org-glm-5-2';
       const modelDropdown = document.getElementById('model-dropdown');
@@ -1246,6 +1259,12 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
           modelDropdown.title = (m.name || m.id) + ' via ' + hostLabel(m) + (priceLabel(m) ? ' — ' + priceLabel(m) : '');
         }
         localStorage.setItem(LS_MODEL, m.id);
+        // Warn rather than block: the model may still be the right choice for a
+        // plain conversation. What it cannot do is drive tools, and silence here
+        // is what let a fabricated render status reach the transcript.
+        if (!supportsTools(m.id)) {
+          F.toast((m.name || m.id) + ' cannot call tools — it will describe actions instead of running them');
+        }
       }
       function selectedModelId() {
         return modelDropdown?.dataset.modelId || localStorage.getItem(LS_MODEL) || prefer;
@@ -1276,8 +1295,10 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
             if (price) bits.push(price);
             if (m.supports_vision) bits.push('vision');
             if (m.uncensored) bits.push('uncensored');
+            const noTools = !supportsTools(m.id);
+            if (noTools) bits.push('no tools — cannot run the agent');
             return `<button type="button" data-id="${F.esc(m.id)}" class="w-full text-left px-3 py-2.5 ${on ? 'bg-[var(--glass2)]' : 'hover:bg-[var(--glass2)]'}">` +
-              `<div class="text-[12.5px] ${on ? 'text-[var(--strong)]' : 'text-[var(--mut)]'} font-medium">${F.esc(m.name || m.id)}</div>` +
+              `<div class="text-[12.5px] ${on ? 'text-[var(--strong)]' : (noTools ? 'text-[var(--dim)]' : 'text-[var(--mut)]')} font-medium">${F.esc(m.name || m.id)}${noTools ? ' ⚠' : ''}</div>` +
               `<div class="text-[10.5px] text-[var(--dim)] mt-0.5">${F.esc(bits.join(' · '))}</div>` +
             `</button>`;
           }).join('');
