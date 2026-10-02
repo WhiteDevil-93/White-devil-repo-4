@@ -5,14 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WAN 2.2 Prompt Generator (5B + 14B)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app/ui/tokens.css">
 <style>
+/* Palette comes from ui/tokens.css (linked above). This page keeps its own
+   global html/body/header rules, so it links the tokens rather than all of
+   forge.css, which would collide with them — see the note in tokens.css.
+   It used to carry a separate blue/amber palette; the names below are the two
+   roles that have no direct token, aliased so usage sites stay readable. */
 :root{
-  --bg:#1b2130; --panel:#232b3d; --line:#34405a; --ink:#e7eaf1; --dim:#9aa4ba;
-  --tungsten:#e8a33d; --tungsten-ink:#231a08; --cyan:#7cc6d6; --bad:#e2735f;
+  --gen-accent:var(--acc2); --gen-accent-ink:var(--fg); --gen-mark:var(--info);
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Archivo,system-ui,sans-serif;font-size:15px;line-height:1.5}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.5}
 header{padding:28px 24px 8px;max-width:1180px;margin:0 auto}
 header h1{margin:0;font-weight:800;font-size:clamp(26px,4vw,40px);letter-spacing:-.02em;line-height:1.05}
 header p{margin:8px 0 0;color:var(--dim);max-width:68ch}
@@ -21,42 +26,42 @@ header p{margin:8px 0 0;color:var(--dim);max-width:68ch}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
 .panel h2{margin:0 0 12px;font-size:17px;font-weight:600}
 label{display:block;font-weight:500;font-size:13px;color:var(--dim);margin:12px 0 4px}
-input,select,textarea{width:100%;background:#1a2030;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font:inherit;font-size:14px}
+input,select,textarea{width:100%;background:var(--well);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font:inherit;font-size:14px}
 textarea{resize:vertical;min-height:70px}
-input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gen-mark);outline-offset:1px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.check{display:flex;gap:8px;align-items:center;margin-top:10px;color:var(--ink);font-size:14px}
+.check{display:flex;gap:8px;align-items:center;margin-top:10px;color:var(--fg);font-size:14px}
 .check input{width:auto}
 details{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 summary{cursor:pointer;font-weight:600}
-button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:#2c3650;color:var(--ink);padding:8px 12px}
-button.go{width:100%;margin-top:16px;background:var(--tungsten);color:var(--tungsten-ink);border-color:var(--tungsten);font-weight:800;font-size:16px;padding:12px}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);padding:8px 12px}
+button.go{width:100%;margin-top:16px;background:var(--gen-accent);color:var(--gen-accent-ink);border-color:var(--gen-accent);font-weight:800;font-size:16px;padding:12px}
 button.go:disabled{opacity:.6;cursor:wait}
 .tabs{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:6px}
-.tabs button{border:0;border-radius:0;background:#1a2030;color:var(--dim);font-weight:600;padding:10px}
-.tabs button[aria-selected="true"]{background:var(--tungsten);color:var(--tungsten-ink)}
+.tabs button{border:0;border-radius:0;background:var(--well);color:var(--dim);font-weight:600;padding:10px}
+.tabs button[aria-selected="true"]{background:var(--gen-accent);color:var(--gen-accent-ink)}
 .hint{color:var(--dim);font-size:12.5px;margin-top:4px}
 .status{margin-top:10px;font-size:13.5px;min-height:1.5em}
 .status.err{color:var(--bad)}
 .settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:16px}
-.settings div{background:#1a2030;border:1px solid var(--line);border-radius:6px;padding:8px 10px}
-.settings b{display:block;font-size:18px;color:var(--tungsten)}
+.settings div{background:var(--well);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.settings b{display:block;font-size:18px;color:var(--gen-accent)}
 .settings span{font-size:12px;color:var(--dim)}
-.variant{border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px;background:#1f2636}
-.variant.bible{border-color:var(--cyan)}
+.variant{border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px;background:var(--panel2)}
+.variant.bible{border-color:var(--gen-mark)}
 .variant h3{margin:0 0 8px;font-size:15px;font-weight:600;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .wc{font-size:12px;color:var(--dim);font-weight:400;white-space:nowrap}
 .state{font-size:13px;color:var(--dim);margin:0 0 8px}
-.state b{color:var(--cyan);font-weight:600}
-pre{white-space:pre-wrap;word-wrap:break-word;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;background:#171c29;border:1px solid var(--line);border-radius:6px;padding:10px;margin:0 0 8px}
-pre.neg{color:#d9b3aa}
+.state b{color:var(--gen-mark);font-weight:600}
+pre{white-space:pre-wrap;word-wrap:break-word;font-family:var(--mono);font-size:13px;background:var(--well);border:1px solid var(--line);border-radius:6px;padding:10px;margin:0 0 8px}
+pre.neg{color:var(--mut)}
 pre.script{max-height:360px;overflow:auto;white-space:pre}
 .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .actions select{width:auto}
 .empty{color:var(--dim);padding:30px 6px;text-align:center}
 .history{margin-top:18px}
-.btnlink{display:inline-block;text-decoration:none;border-radius:6px;border:1px solid var(--cyan);color:var(--cyan);padding:8px 12px;font-weight:600}
-.history button{display:block;width:100%;text-align:left;margin-bottom:6px;font-size:13px;background:#1a2030}
+.btnlink{display:inline-block;text-decoration:none;border-radius:6px;border:1px solid var(--gen-mark);color:var(--gen-mark);padding:8px 12px;font-weight:600}
+.history button{display:block;width:100%;text-align:left;margin-bottom:6px;font-size:13px;background:var(--well)}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
