@@ -1,0 +1,14 @@
+[Unit]
+Description=Relay caretaker pass (dry-run unless CARETAKER_LIVE=1 is set)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/caretaker
+ExecStart=/home/ubuntu/litert-venv/bin/python /home/ubuntu/caretaker/loop.py
+Nice=19
+IOSchedulingClass=idle
+CPUWeight=10
+MemoryMax=6G
+TimeoutStartSec=300

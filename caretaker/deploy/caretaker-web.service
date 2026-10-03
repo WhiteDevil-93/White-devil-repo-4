@@ -1,0 +1,17 @@
+[Unit]
+Description=Caretaker domain (page, API, chat) on 127.0.0.1:9100
+After=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/caretaker
+ExecStart=/home/ubuntu/litert-venv/bin/python /home/ubuntu/caretaker/server.py
+Restart=on-failure
+RestartSec=5
+Nice=19
+IOSchedulingClass=idle
+CPUWeight=20
+MemoryMax=6G
+
+[Install]
+WantedBy=multi-user.target
