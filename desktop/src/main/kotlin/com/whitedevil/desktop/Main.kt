@@ -32,7 +32,12 @@ import androidx.compose.ui.window.rememberWindowState
  * The shell (sidebar, top bar, Home) follows the UX Pilot "Forge Hub laptop PWA" design;
  * colours come from [Forge], which mirrors hub/static/ui/tokens.css.
  */
-fun main() = application {
+fun main() {
+    CrashLog.install()
+    runApp()
+}
+
+private fun runApp() = application {
     val windowState = rememberWindowState(size = DpSize(1280.dp, 860.dp))
 
     Window(
