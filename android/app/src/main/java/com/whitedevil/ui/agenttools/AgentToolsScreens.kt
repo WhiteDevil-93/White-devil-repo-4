@@ -41,6 +41,7 @@ import com.whitedevil.MainActivity
 import com.whitedevil.agent.ConversationMeta
 import com.whitedevil.agent.McpDiscovery
 import com.whitedevil.agent.McpServerConfig
+import com.whitedevil.agent.Project
 import com.whitedevil.agent.Skill
 import com.whitedevil.ui.components.WdHairline
 import com.whitedevil.ui.components.WdScreenBackground
@@ -119,6 +120,8 @@ fun ChatsScreen(host: MainActivity) {
     var query by remember { mutableStateOf("") }
     var renaming by remember { mutableStateOf<ConversationMeta?>(null) }
     var deleting by remember { mutableStateOf<ConversationMeta?>(null) }
+    var moving by remember { mutableStateOf<ConversationMeta?>(null) }
+    val projectNames = remember(rev) { host.workspace.projects.list().associate { it.id to it.name } }
     val items = remember(rev) { store.list() }
     val hits = remember(rev, query) { if (query.isBlank()) emptyList() else store.search(query) }
     val currentId = remember(rev) { store.currentId() }
@@ -135,7 +138,8 @@ fun ChatsScreen(host: MainActivity) {
                 var menu by remember { mutableStateOf(false) }
                 Row2(
                     title = (if (c.pinned) "★ " else "") + c.title + (if (c.id == currentId) "  (open)" else ""),
-                    sub = "${c.messageCount} messages · " + DateUtils.getRelativeTimeSpanString(c.updatedAt),
+                    sub = "${c.messageCount} messages · " + DateUtils.getRelativeTimeSpanString(c.updatedAt) +
+                        (projectNames[c.projectId]?.let { " · $it" } ?: ""),
                     onClick = { host.openConversation(c.id) },
                     trailing = {
                         Column {
@@ -143,6 +147,7 @@ fun ChatsScreen(host: MainActivity) {
                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                                 DropdownMenuItem(text = { Text("Rename") }, onClick = { menu = false; renaming = c })
                                 DropdownMenuItem(text = { Text(if (c.pinned) "Unpin" else "Pin") }, onClick = { menu = false; store.pin(c.id, !c.pinned); rev++ })
+                                DropdownMenuItem(text = { Text("Move to project") }, onClick = { menu = false; moving = c })
                                 DropdownMenuItem(text = { Text("Export (share)") }, onClick = {
                                     menu = false
                                     val md = store.exportMarkdown(c.id)
@@ -173,6 +178,88 @@ fun ChatsScreen(host: MainActivity) {
     }
     deleting?.let { c ->
         Confirm("Delete chat?", "\"${c.title}\" will be removed from this phone.", "Delete", { store.delete(c.id); rev++ }, { deleting = null })
+    }
+    moving?.let { c ->
+        AlertDialog(
+            onDismissRequest = { moving = null },
+            title = { Text("Move to project") },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    TextButton(onClick = { store.setProject(c.id, null); moving = null; rev++ }) { Text(if (c.projectId == null) "• No project" else "No project") }
+                    projectNames.forEach { (pid, name) ->
+                        TextButton(onClick = { store.setProject(c.id, pid); moving = null; rev++ }) { Text(if (c.projectId == pid) "• $name" else name) }
+                    }
+                    if (projectNames.isEmpty()) Text("No projects yet. Create one in You > Projects.", style = MaterialTheme.typography.labelMedium)
+                }
+            },
+            confirmButton = { TextButton(onClick = { moving = null }) { Text("Close") } },
+        )
+    }
+}
+
+// ------------------------------------------------------------------------------------ projects
+
+@Composable
+fun ProjectsScreen(host: MainActivity) {
+    val ws = host.workspace
+    var rev by remember { mutableIntStateOf(0) }
+    var editing by remember { mutableStateOf<Project?>(null) }
+    var creating by remember { mutableStateOf(false) }
+    var deleting by remember { mutableStateOf<Project?>(null) }
+    val projects = remember(rev) { ws.projects.list() }
+    val chats = remember(rev) { ws.conversations.list() }
+
+    ToolsPage("Projects", "${projects.size} projects", host) {
+        Text(
+            "A project holds standing instructions that apply to every chat inside it. Start a chat from here, " +
+                "or move an existing chat into a project from Chats.",
+            style = MaterialTheme.typography.labelMedium, color = WdPalette.textMetadata,
+        )
+        Button(onClick = { creating = true }, modifier = Modifier.fillMaxWidth()) { Text("New project") }
+        if (projects.isEmpty()) Text("No projects yet.", color = WdPalette.textMetadata)
+        projects.forEach { p ->
+            val n = chats.count { it.projectId == p.id }
+            Row2(
+                p.name,
+                "$n chats" + (if (p.instructions.isNotBlank()) "\n" + p.instructions.take(160) else ""),
+                onClick = { editing = p },
+                trailing = { TextButton(onClick = { host.startNewChat(p.id) }) { Text("New chat") } },
+            )
+        }
+    }
+    if (creating || editing != null) {
+        val base = editing
+        var name by remember(base?.id) { mutableStateOf(base?.name.orEmpty()) }
+        var instr by remember(base?.id) { mutableStateOf(base?.instructions.orEmpty()) }
+        var err by remember(base?.id) { mutableStateOf<String?>(null) }
+        AlertDialog(
+            onDismissRequest = { creating = false; editing = null },
+            title = { Text(if (base == null) "New project" else "Edit project") },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Field("Name", name, { name = it })
+                    Field("Instructions for every chat in this project", instr, { instr = it }, lines = 6)
+                    err?.let { Text(it, color = WdPalette.accentLight, style = MaterialTheme.typography.labelMedium) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    runCatching { if (base == null) ws.projects.create(name, instr) else ws.projects.update(base.id, name, instr) }
+                        .onSuccess { creating = false; editing = null; rev++ }
+                        .onFailure { err = it.message }
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                Row {
+                    if (base != null) TextButton(onClick = { deleting = base; editing = null }) { Text("Delete") }
+                    TextButton(onClick = { creating = false; editing = null }) { Text("Cancel") }
+                }
+            },
+        )
+    }
+    deleting?.let { p ->
+        Confirm("Delete project?", "\"${p.name}\" and its instructions will be removed. Its chats are kept, outside any project.", "Delete",
+            { ws.deleteProject(p.id); rev++ }, { deleting = null })
     }
 }
 

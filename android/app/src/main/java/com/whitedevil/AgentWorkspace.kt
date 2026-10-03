@@ -20,6 +20,17 @@ class AgentWorkspace(private val root: File) {
     val memory = MemoryStore(File(root, "memory.json"))
     val skills = SkillStore(File(root, "skills"))
     val mcp = McpRegistry(File(root, "mcp_servers.json"))
+    val projects = com.whitedevil.agent.ProjectStore(File(root, "projects.json"))
+
+    /** System-prompt text for the project the given chat belongs to ("" if none). */
+    fun projectBlock(conversationId: String): String =
+        projects.promptBlock(conversations.meta(conversationId)?.projectId)
+
+    /** Deletes a project; its chats are kept, outside any project. */
+    fun deleteProject(id: String) {
+        projects.delete(id)
+        conversations.detachProject(id)
+    }
 
     @Volatile private var mcpCache: Pair<Long, List<McpDiscovery>>? = null
 

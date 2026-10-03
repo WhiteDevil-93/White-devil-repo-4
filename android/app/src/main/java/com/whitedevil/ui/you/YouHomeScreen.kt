@@ -52,6 +52,7 @@ fun YouHomeScreen(
     onSettings: () -> Unit,
     onPhoneFiles: () -> Unit,
     onChats: () -> Unit,
+    onProjects: () -> Unit,
     onMemory: () -> Unit,
     onSkills: () -> Unit,
     onConnectors: () -> Unit,
@@ -123,6 +124,8 @@ fun YouHomeScreen(
             }
             WdHairline()
             ProfileRow(Icons.Outlined.Forum, "Chats", "History, search, export", onChats)
+            WdHairline(Modifier.padding(start = 16.dp))
+            ProfileRow(Icons.Outlined.Folder, "Projects", "Standing instructions per topic", onProjects)
             WdHairline(Modifier.padding(start = 16.dp))
             ProfileRow(Icons.Outlined.Psychology, "Memory", "What the agent remembers", onMemory)
             WdHairline(Modifier.padding(start = 16.dp))

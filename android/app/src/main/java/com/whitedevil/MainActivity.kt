@@ -97,7 +97,7 @@ class MainActivity : FragmentActivity() {
 
     enum class Tab { AGENT, FORGE_HUB, YOU }
 
-    enum class YouSub { HOME, TERMINAL, SETTINGS, FILES, CHATS, MEMORY, SKILLS, CONNECTORS }
+    enum class YouSub { HOME, TERMINAL, SETTINGS, FILES, CHATS, MEMORY, SKILLS, CONNECTORS, PROJECTS }
 
     private data class Screen(val id: String, val title: String, val icon: String, val url: String)
 
@@ -805,14 +805,14 @@ class MainActivity : FragmentActivity() {
     }
 
     /** Starts an empty chat. The previous one stays in Chats. */
-    internal fun startNewChat() {
+    internal fun startNewChat(projectId: String? = null) {
         currentAgentJob?.cancel()
         agentShowProgress = false
         agentThinking = false
         setAgentComposerEnabled(true)
-        workspace.conversations.create()
+        workspace.conversations.create(projectId = projectId)
         chatMessages.clear()
-        agentStatusSubtitle = "New chat"
+        agentStatusSubtitle = workspace.projects.get(projectId)?.let { "New chat in ${it.name}" } ?: "New chat"
         selectTab(Tab.AGENT)
     }
 
@@ -948,7 +948,8 @@ class MainActivity : FragmentActivity() {
                     access = accessConfig,
                     extensions = extensions,
                 )
-                val addendum = toolBox.promptAddendum()
+                // The chat's project (standing instructions) comes first, then memory / skills / connectors.
+                val addendum = listOf(workspace.projectBlock(convId), toolBox.promptAddendum()).filter { it.isNotBlank() }.joinToString("\n\n")
                 val sysPrompt = if (addendum.isBlank()) baseSysPrompt else baseSysPrompt + "\n\n" + addendum
                 val agent = Agent(
                     client = currentClient,

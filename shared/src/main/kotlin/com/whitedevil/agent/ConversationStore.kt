@@ -14,6 +14,8 @@ data class ConversationMeta(
     val updatedAt: Long,
     val messageCount: Int = 0,
     val pinned: Boolean = false,
+    /** Optional [Project] this chat belongs to. Defaulted so chats saved before projects existed still load. */
+    val projectId: String? = null,
 )
 
 data class SearchHit(val meta: ConversationMeta, val snippet: String)
@@ -54,9 +56,9 @@ class ConversationStore(
         if (idx.items.any { it.id == id }) writeIndex(idx.copy(currentId = id))
     }
 
-    fun create(title: String = DEFAULT_TITLE): ConversationMeta = synchronized(lock) {
+    fun create(title: String = DEFAULT_TITLE, projectId: String? = null): ConversationMeta = synchronized(lock) {
         val t = now()
-        val meta = ConversationMeta(id = newId(), title = title.trim().ifBlank { DEFAULT_TITLE }.take(MAX_TITLE), createdAt = t, updatedAt = t)
+        val meta = ConversationMeta(id = newId(), title = title.trim().ifBlank { DEFAULT_TITLE }.take(MAX_TITLE), createdAt = t, updatedAt = t, projectId = projectId)
         val idx = readIndex()
         writeAtomic(fileFor(meta.id), json.encodeToString(listSer, emptyList()))
         writeIndex(idx.copy(currentId = meta.id, items = idx.items + meta))
@@ -91,6 +93,20 @@ class ConversationStore(
         val idx = readIndex()
         writeIndex(idx.copy(items = idx.items.map { if (it.id == id) it.copy(pinned = pinned) else it }))
     }
+
+    /** Moves a chat into [projectId] (null = out of any project). */
+    fun setProject(id: String, projectId: String?) = synchronized(lock) {
+        val idx = readIndex()
+        writeIndex(idx.copy(items = idx.items.map { if (it.id == id) it.copy(projectId = projectId) else it }))
+    }
+
+    /** When a project is deleted its chats stay, just outside any project. */
+    fun detachProject(projectId: String) = synchronized(lock) {
+        val idx = readIndex()
+        writeIndex(idx.copy(items = idx.items.map { if (it.projectId == projectId) it.copy(projectId = null) else it }))
+    }
+
+    fun meta(id: String): ConversationMeta? = synchronized(lock) { readIndex().items.firstOrNull { it.id == id } }
 
     fun delete(id: String) = synchronized(lock) {
         val idx = readIndex()

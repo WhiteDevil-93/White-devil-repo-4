@@ -94,6 +94,65 @@ class AgentParityTest {
         assertNull(s.importLegacy(legacy))                                   // nothing left to migrate
     }
 
+    // ---------------------------------------------------------------- projects
+
+    @Test
+    fun projectsCreateEditValidateAndBuildTheirPromptBlock() {
+        val ps = com.whitedevil.agent.ProjectStore(File(folder.newFolder("p1"), "projects.json"))
+        val book = ps.create("  Novel  ", "Write in British English. Keep chapters under 2000 words.")
+        assertEquals("Novel", book.name)
+        for (bad in listOf("", "   ", "novel")) {                            // blank, and a duplicate ignoring case
+            try { ps.create(bad); fail("accepted '$bad'") } catch (e: IllegalArgumentException) { /* expected */ }
+        }
+        val other = ps.create("Taxes")
+        try { ps.update(other.id, "NOVEL", ""); fail("duplicate rename accepted") } catch (e: IllegalArgumentException) { /* expected */ }
+        ps.update(book.id, "Novel", "Write in British English.")
+        assertEquals(listOf("Novel", "Taxes"), ps.list().map { it.name })
+        val block = ps.promptBlock(book.id)
+        assertTrue(block, block.contains("PROJECT \"Novel\"") && block.contains("British English"))
+        assertEquals("", ps.promptBlock(null)); assertEquals("", ps.promptBlock("nope"))
+        assertTrue(ps.promptBlock(other.id).contains("(no extra instructions)"))
+        ps.delete(book.id)
+        assertEquals("", ps.promptBlock(book.id))
+    }
+
+    @Test
+    fun chatsBelongToProjectsAndSurviveTheirDeletion() {
+        val ws = com.whitedevil.AgentWorkspace(folder.newFolder("p2"))
+        val p = ws.projects.create("Novel", "Use British English.")
+        val inside = ws.conversations.create(projectId = p.id)
+        val outside = ws.conversations.create()
+        assertEquals(p.id, ws.conversations.meta(inside.id)!!.projectId)
+        assertNull(ws.conversations.meta(outside.id)!!.projectId)
+        assertTrue(ws.projectBlock(inside.id).contains("British English"))
+        assertEquals("", ws.projectBlock(outside.id))
+        // A save keeps the project link, and a chat can be moved in and out.
+        ws.conversations.save(inside.id, listOf(msg("user", "chapter one")))
+        assertEquals(p.id, ws.conversations.meta(inside.id)!!.projectId)
+        ws.conversations.setProject(outside.id, p.id)
+        assertEquals(2, ws.conversations.list().count { it.projectId == p.id })
+        ws.conversations.setProject(outside.id, null)
+        // Deleting the project keeps the chats, now outside any project, and the prompt block disappears.
+        ws.deleteProject(p.id)
+        assertEquals(2, ws.conversations.list().size)
+        assertTrue(ws.conversations.list().all { it.projectId == null })
+        assertEquals("", ws.projectBlock(inside.id))
+    }
+
+    @Test
+    fun chatsSavedBeforeProjectsExistedStillLoad() {
+        val dir = folder.newFolder("p3")
+        File(dir, "index.json").writeText(
+            """{"currentId":"abcdef012345","items":[{"id":"abcdef012345","title":"Old chat","createdAt":1,"updatedAt":2,"messageCount":2,"pinned":false}]}""",
+        )
+        File(dir, "abcdef012345.json").writeText("""[{"role":"user","content":"hi"},{"role":"assistant","content":"hello"}]""")
+        val s = ConversationStore(dir)
+        val meta = s.list().single()
+        assertEquals("Old chat", meta.title)
+        assertNull(meta.projectId)
+        assertEquals(2, s.load(meta.id).size)
+    }
+
     // ---------------------------------------------------------------- memory
 
     @Test
