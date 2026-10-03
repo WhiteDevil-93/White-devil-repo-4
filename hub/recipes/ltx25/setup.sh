@@ -19,6 +19,9 @@
 #   HF_TOKEN=               required: Lightricks/LTX-2.5 is gated (accept it on the model page first)
 #   CIVITAI_TOKEN=          required for NSFW content LoRAs from Civitai
 #   LISTEN=127.0.0.1  START=1
+#   CoachBate 2.3 (penis-lora-by-coachbate-ltx-2.3.safetensors) is NOT on Civitai as the
+#   full file. Phone setup uploads it into /content/lora_keep/ from the relay stage;
+#   this script restores it into models/loras/ after ComfyUI is (re)cloned.
 set -uo pipefail
 
 BASE="${BASE_DIR:-/workspace}"
@@ -67,6 +70,15 @@ TORCH_INDEX="${TORCH_INDEX:-https://download.pytorch.org/whl/cu128}"
 echo "torch index: $TORCH_INDEX"
 
 # --- ComfyUI (latest: LTX-2.5 / Gemma 4 support is newer than the Wan pin) ---
+# Park the CoachBate penis LoRA outside ComfyUI. Setup deletes that tree, and this file is not on Civitai.
+COACH_NAME=penis-lora-by-coachbate-ltx-2.3.safetensors
+COACH_KEEP="/content/lora_keep/$COACH_NAME"
+mkdir -p /content/lora_keep
+if [ -s "$BASE/ComfyUI/models/loras/$COACH_NAME" ]; then
+  cp -f "$BASE/ComfyUI/models/loras/$COACH_NAME" "$COACH_KEEP"
+  echo "PARKED: $COACH_KEEP"
+fi
+
 if [ "$SKIP_COMFY" != "1" ]; then
   echo "== installing ComfyUI"
   rm -rf "$BASE/ComfyUI"
@@ -88,6 +100,14 @@ else git clone --depth 1 https://github.com/Lightricks/ComfyUI-LTXVideo custom_n
 [ -f custom_nodes/ComfyUI-LTXVideo/requirements.txt ] && "$PYBIN" -m pip install -q -r custom_nodes/ComfyUI-LTXVideo/requirements.txt
 
 mkdir -p models/diffusion_models models/text_encoders models/vae models/loras models/latent_upscale_models models/model_patches
+if [ -s "${COACH_KEEP:-}" ]; then
+  cp -f "$COACH_KEEP" "models/loras/$COACH_NAME" && echo "GOT: models/loras/$COACH_NAME (local CoachBate)"
+elif [ -n "${RELAY_USER:-}" ] && [ -n "${RELAY_PASS:-}" ]; then
+  wget -c -q --user="$RELAY_USER" --password="$RELAY_PASS" \
+    -O "models/loras/$COACH_NAME" "https://84-12-112-249.sslip.io/api/ltx/stage/$COACH_NAME" \
+    && echo "GOT: models/loras/$COACH_NAME" || { rm -f "models/loras/$COACH_NAME"; echo "FAILED: models/loras/$COACH_NAME"; }
+fi
+
 
 dl() { # dl <url> <out> [auth header]
   if [ -s "$2" ]; then echo "SKIP (exists): $2"; return 0; fi
@@ -97,7 +117,17 @@ dl() { # dl <url> <out> [auth header]
     else wget -c -q "$1" -O "$2" && { echo "GOT: $2"; return 0; }; fi
     sleep 5
   done
-  rm -f "$2"; echo "FAILED: $2" >> "$BASE/downloads/failed.txt"; echo "FAILED: $2"; return 1
+  rm -f "$2"
+  code="?"
+  if [ -n "${3:-}" ]; then
+    code=$(curl -s -o /dev/null -w '%{http_code}' -I -H "$3" "$1" || echo err)
+  else
+    code=$(curl -s -o /dev/null -w '%{http_code}' -I "$1" || echo err)
+  fi
+  # 401/403 on Lightricks IC repos = accept that repo's licence on Hugging Face (separate from LTX-2.5).
+  echo "FAILED: $2 (HTTP $code)" >> "$BASE/downloads/failed.txt"
+  echo "FAILED: $2 (HTTP $code)"
+  return 1
 }
 LTX=https://huggingface.co/Lightricks/LTX-2.5/resolve/main
 AUTH="Authorization: Bearer $HF_TOKEN"
@@ -220,6 +250,8 @@ VALIDATE=$?
 cat > "$BASE/start_comfy.sh" <<EOS
 #!/usr/bin/env bash
 BASE="\${BASE_DIR:-$BASE}"
+# Colab puts NVIDIA userspace under /usr/lib64-nvidia; without it torch.cuda and nvidia-smi fail in a fresh shell.
+export LD_LIBRARY_PATH="/usr/lib64-nvidia\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}"
 if [ -x /opt/conda/bin/python ]; then export PATH="/opt/conda/bin:\$PATH"; PYBIN=/opt/conda/bin/python; else PYBIN="\$BASE/venv/bin/python"; fi
 cd "\$BASE/ComfyUI"
 pkill -f "python main.py" 2>/dev/null; sleep 2
@@ -231,7 +263,25 @@ if [ "$VALIDATE" -ne 0 ]; then
   echo "SETUP_VALIDATE_FAILED — not starting Comfy (core models missing/corrupt)"
   exit 1
 fi
-[ "$START" = 1 ] && bash "$BASE/start_comfy.sh"
+if [ "$START" = 1 ]; then
+  bash "$BASE/start_comfy.sh"
+  echo "== waiting for ComfyUI /system_stats on ${LISTEN}:8188"
+  ready=
+  for _ in $(seq 1 60); do
+    if curl -sf -m 3 "http://${LISTEN}:8188/system_stats" >/dev/null; then ready=1; break; fi
+    sleep 3
+  done
+  if [ -n "$ready" ]; then
+    echo "COMFY_READY on ${LISTEN}:8188"
+  else
+    echo "WARN: Comfy process started but /system_stats not ready after ~3 min — check $BASE/comfyui.log"
+  fi
+fi
+
+# CoachBate 2.3 must be present for phone I2V; fail the marker only if START ran and it is still missing.
+if [ "$CONTENT_LORAS" = "1" ] && [ ! -s "models/loras/$COACH_NAME" ]; then
+  echo "WARN: missing $COACH_NAME — stage it on the relay (wan/lora_stage) so phone setup can upload it"
+fi
 
 echo "SETUP_COMPLETE TRANSFORMER=$TRANSFORMER GEMMA=$GEMMA SEX_LORA=$SEX_LORA CONTENT_LORAS=$CONTENT_LORAS"
 echo "Load the official LTX-2.5 I2V template, swap the transformer, LoRA 450 at 0.8 (Stubelius only), content LoRAs at 0.35-0.85,"

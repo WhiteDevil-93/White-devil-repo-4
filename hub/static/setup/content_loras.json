@@ -80,6 +80,14 @@
     "file": "ltx-2.5_penis_coachbate_preview1.safetensors"
   },
   {
+    "id": "coachbate-2.3",
+    "name": "CoachBate Penis LTX-2.3 (full, staged)",
+    "kind": "nsfw",
+    "source": "stage",
+    "file": "penis-lora-by-coachbate-ltx-2.3.safetensors",
+    "note": "Not on Civitai as the full file. Phone setup uploads from ~/wan/lora_stage/ into /content/lora_keep/."
+  },
+  {
     "id": "sulphur",
     "name": "Gay Sex Sulphur 10eros",
     "kind": "nsfw",

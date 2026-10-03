@@ -1,7 +1,7 @@
 {
   "id": "ltx25",
   "title": "LTX-2.5 NSFW kit (ComfyUI)",
-  "summary": "LTX-2.5 22B image-to-video with audio: Stubelius Remix or the official distilled transformer, the LTX Gemma 4 encoder, 2.5 video + audio VAEs, the full Lightricks Setup pack (distilled 450 + 8 IC + 2 control), and every NSFW content LoRA (mylo, sexgod, CoachBate, Praxis, BEANFLK, SexThrust, CGS23, Defined Muscle, cumsplash, plora_sulfter, solo-male, sulphur, bwc). Built for a 96 GB card.",
+  "summary": "LTX-2.5 22B image-to-video with audio: Stubelius Remix or the official distilled transformer, the LTX Gemma 4 encoder, 2.5 video + audio VAEs, the full Lightricks Setup pack (distilled 450 + 8 IC + 2 control), and every NSFW content LoRA (mylo, sexgod, CoachBate 2.3 from relay stage, Praxis, BEANFLK, SexThrust, CGS23, Defined Muscle, cumsplash, plora_sulfter, solo-male, sulphur, bwc). Phone start uploads CoachBate 2.3, strips CRLF, waits for Comfy /system_stats, then brings the relay tunnel up. Built for a 96 GB card.",
   "script": "setup.sh",
   "log": "logs/setup.log",
   "done_marker": "SETUP_COMPLETE",
