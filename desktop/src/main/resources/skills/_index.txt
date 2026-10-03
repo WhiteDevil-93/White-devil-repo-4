@@ -4,8 +4,10 @@ colab-ops
 daily-ops-briefing
 disk-space-triage
 failure-triage
+gcp-compute-ops
 gemma4-litert-export
 git-hygiene
+google-drive-connector
 gpu-cost-guard
 gradle-kotlin-build
 hub-api-explorer
