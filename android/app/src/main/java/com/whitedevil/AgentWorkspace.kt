@@ -46,7 +46,7 @@ class AgentWorkspace(private val root: File) {
 
     /** Extensions for one agent run. [confirm] must block for the user's Allow/Deny. */
     fun extensions(confirm: (title: String, detail: String) -> Boolean): List<ToolExtension> =
-        listOf(MemoryTools(memory), SkillTools(skills), McpTools(mcpDiscoveries(), confirm))
+        listOf(MemoryTools(memory), SkillTools(skills, confirm), McpTools(mcpDiscoveries(), confirm))
 
     private companion object {
         const val MCP_TTL_MS = 5 * 60 * 1000L

@@ -102,7 +102,15 @@ class MainActivity : FragmentActivity() {
     private data class Screen(val id: String, val title: String, val icon: String, val url: String)
 
     /** Conversations, memory, skills and MCP servers (see [AgentWorkspace]). */
-    internal val workspace by lazy { AgentWorkspace(filesDir) }
+    internal val workspace by lazy {
+        AgentWorkspace(filesDir).also { ws ->
+            // Bundled starter skills (assets/skills/*.md): written once each, never over your edits.
+            runCatching {
+                val names = assets.list("skills").orEmpty().filter { it.endsWith(".md") }
+                ws.skills.seedDefaults(names.associate { it.removeSuffix(".md") to assets.open("skills/$it").bufferedReader().use { r -> r.readText() } })
+            }
+        }
+    }
 
     private val prefs by lazy { SettingsManager.getPrefs(this) }
     private val main = Handler(Looper.getMainLooper())

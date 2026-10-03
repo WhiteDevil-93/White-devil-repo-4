@@ -130,10 +130,10 @@ class AgentParityTest {
     @Test
     fun skillsSaveListToggleLoadAndValidate() {
         val store = SkillStore(folder.newFolder("s1"))
-        assertTrue(SkillTools(store).definitions.isEmpty())                  // no tool until a skill exists
+        assertEquals(listOf("save_skill"), SkillTools(store).definitions.map { it.function.name })   // no use_skill until a skill exists
         store.save("weekly-report", "When the user wants a weekly report", "1. Ask for the week.\n2. Summarise.")
         val tools = SkillTools(store)
-        assertEquals(listOf("use_skill"), tools.definitions.map { it.function.name })
+        assertEquals(listOf("use_skill", "save_skill"), tools.definitions.map { it.function.name })
         assertTrue(tools.promptBlock().contains("weekly-report: When the user wants a weekly report"))
         assertTrue(tools.execute("use_skill", """{"name":"weekly-report"}""").contains("2. Summarise."))
         store.setEnabled("weekly-report", false)
@@ -156,6 +156,82 @@ class AgentParityTest {
         assertNull(store.importText("no front matter here"))
         assertNull(store.importText("---\nname: Bad Name\n---\nbody"))
         assertNull(store.importText("---\nname: ok\n---\n"))                 // empty body
+    }
+
+    @Test
+    fun seedDefaultsWritesOnceAndNeverResurrectsOrOverwrites() {
+        val store = SkillStore(folder.newFolder("s3"))
+        store.save("mine", "my own", "My own instructions.")
+        val defaults = mapOf(
+            "alpha" to "---\nname: alpha\ndescription: A\n---\nDo alpha.\n",
+            "beta" to "---\nname: beta\ndescription: B\n---\nDo beta.\n",
+            "mine" to "---\nname: mine\ndescription: bundled\n---\nBundled text.\n",
+            "broken" to "no front matter",
+            "mismatch" to "---\nname: other\ndescription: x\n---\nbody\n",
+        )
+        assertEquals(2, store.seedDefaults(defaults))                          // alpha, beta only
+        assertEquals("My own instructions.", store.get("mine")!!.body)         // user's skill untouched
+        assertNull(store.get("broken")); assertNull(store.get("mismatch"))
+        assertEquals(0, store.seedDefaults(defaults))                          // idempotent
+        store.delete("alpha")
+        assertEquals(0, store.seedDefaults(defaults))                          // a deleted default stays deleted
+        assertNull(store.get("alpha"))
+        store.setEnabled("beta", false)
+        assertEquals(0, store.seedDefaults(defaults)); assertFalse(store.get("beta")!!.enabled)   // toggles survive too
+        assertEquals(1, store.seedDefaults(defaults + ("gamma" to "---\nname: gamma\ndescription: G\n---\nDo gamma.\n")))  // new defaults arrive later
+    }
+
+    @Test
+    fun saveSkillAsksFirstAndRefusesWithoutAUi() {
+        val dir = folder.newFolder("s4")
+        val args = """{"name":"tea-time","description":"When tea is wanted","instructions":"1. Boil water.\n2. Steep."}"""
+        // No confirmation UI: nothing is written.
+        val store = SkillStore(dir)
+        assertTrue(SkillTools(store).execute("save_skill", args).startsWith("Denied"))
+        assertNull(store.get("tea-time"))
+        // User says no.
+        assertTrue(SkillTools(store) { _, _ -> false }.execute("save_skill", args).startsWith("Denied"))
+        assertNull(store.get("tea-time"))
+        // User says yes: saved, and the dialog showed the skill's content.
+        var shown = ""
+        assertTrue(SkillTools(store) { t, d -> shown = "$t|$d"; true }.execute("save_skill", args).startsWith("Saved skill 'tea-time'"))
+        assertEquals("1. Boil water.\n2. Steep.", store.get("tea-time")!!.body)
+        assertTrue(shown, shown.contains("Save new skill") && shown.contains("Boil water"))
+        // Overwriting says so in the dialog.
+        shown = ""
+        SkillTools(store) { t, d -> shown = "$t|$d"; true }.execute("save_skill", args.replace("Steep.", "Steep 3 min."))
+        assertTrue(shown, shown.contains("Replace skill") && shown.contains("REPLACES"))
+        // Bad input never reaches the dialog.
+        var asked = false
+        val tools = SkillTools(store) { _, _ -> asked = true; true }
+        assertTrue(tools.execute("save_skill", """{"name":"Bad Name","description":"d","instructions":"x"}""").startsWith("Error"))
+        assertTrue(tools.execute("save_skill", """{"name":"ok","description":"d","instructions":""}""").startsWith("Error"))
+        assertFalse(asked)
+    }
+
+    @Test
+    fun everyBundledSkillIsValidAndTheIndexStaysSmall() {
+        val dir = File("src/main/assets/skills")
+        val files = dir.listFiles { f -> f.name.endsWith(".md") }.orEmpty().sortedBy { it.name }
+        assertTrue("bundled skills missing from ${dir.absolutePath}", files.size >= 30)
+        val forbidden = listOf("%LOCALAPPDATA%", "gradlew.bat", "packageMsi", "CONNECTORS panel", "MEMORY panel", "mcp-servers.json")
+        var indexChars = 0
+        for (f in files) {
+            val text = f.readText()
+            val s = SkillStore.parse(text)
+            assertNotNull("${f.name} does not parse", s)
+            assertEquals("name must match file name", f.nameWithoutExtension, s!!.name)
+            assertTrue("${f.name} description too long", s.description.isNotBlank() && s.description.length <= 230)
+            assertTrue("${f.name} body too long", s.body.length <= SkillStore.MAX_BODY)
+            forbidden.forEach { assertFalse("${f.name} mentions desktop-only '$it'", text.contains(it)) }
+            indexChars += s.name.length + s.description.length + 4
+        }
+        assertTrue("prompt index is $indexChars chars", indexChars < 9_000)       // what every message pays for
+        // The whole set seeds into a fresh store and loads through use_skill.
+        val store = SkillStore(folder.newFolder("s5"))
+        assertEquals(files.size, store.seedDefaults(files.associate { it.nameWithoutExtension to it.readText() }))
+        assertTrue(SkillTools(store).execute("use_skill", """{"name":"verification-contract"}""").contains("UNVERIFIED"))
+        println("bundled skills: ${files.size}, prompt index $indexChars chars")
     }
 
     // ---------------------------------------------------------------- MCP
