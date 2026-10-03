@@ -106,7 +106,7 @@ fun ClipButtons(actions: ClipActions, name: String, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun SmallButton(text: String, primary: Boolean, onClick: () -> Unit) {
+internal fun SmallButton(text: String, primary: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(8.dp)
     Text(
         text, color = if (primary) androidx.compose.ui.graphics.Color.White else Forge.Mut,

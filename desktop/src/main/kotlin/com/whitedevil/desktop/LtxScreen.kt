@@ -2,6 +2,9 @@ package com.whitedevil.desktop
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -72,6 +75,22 @@ private const val LTX_STATUS_POLL_MS = 60_000L
  */
 @Composable
 fun LtxScreen(settings: Settings) {
+    // Build is the screen you come here for; Monitor keeps the ComfyUI status, the render-review cycle
+    // and the hub's own job list (with Cancel) that the screen had before the builder existed.
+    var tab by remember { mutableStateOf("build") }
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Chip("Build", tab == "build") { tab = "build" }
+            Chip("Monitor & QA cycle", tab == "monitor") { tab = "monitor" }
+        }
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            if (tab == "build") LtxBuilderScreen(settings) else LtxMonitor(settings)
+        }
+    }
+}
+
+@Composable
+private fun LtxMonitor(settings: Settings) {
     val clients = rememberOpsClients(settings)
     val api = remember(clients) { LtxApi(clients.reader) }
     val actions = remember(clients) { LtxActions(clients.actor) }
@@ -385,7 +404,7 @@ private fun BuilderCard(settings: Settings) {
                     runCatching { Desktop.getDesktop().browse(URI(url)) }.onFailure { error = "Couldn't open the browser: ${it.message}" }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Forge.Acc2, contentColor = androidx.compose.ui.graphics.Color.White),
-            ) { Text("Open the LTX builder") }
+            ) { Text("Open the web version") }
             Text(url, color = Forge.Dim, style = MaterialTheme.typography.bodySmall)
         }
         error?.let { Text(it, color = Forge.Bad, style = MaterialTheme.typography.bodySmall) }

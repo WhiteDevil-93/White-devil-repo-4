@@ -119,7 +119,7 @@ private fun SortMenu(current: SortKey, onPick: (SortKey) -> Unit) {
 }
 
 @Composable
-private fun Chip(text: String, selected: Boolean, onClick: () -> Unit) {
+internal fun Chip(text: String, selected: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(99.dp)
     Text(
         text,
