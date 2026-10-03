@@ -3,6 +3,9 @@ package com.whitedevil.desktop
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
@@ -55,6 +58,22 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun SetupScreen(settings: Settings) {
+    // "Install" is the Setup bot: put Wan 2.2 14B or LTX 2.5 on a Thunder, Vast or Colab machine. The LoRA
+    // pack tab is the LTX 2.5 LoRA selection that this screen used to be on its own.
+    var tab by remember { mutableStateOf("install") }
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Chip("Install a setup", tab == "install") { tab = "install" }
+            Chip("LTX 2.5 LoRA pack", tab == "loras") { tab = "loras" }
+        }
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            if (tab == "install") SetupBotScreen(settings) else SetupLoraPack(settings)
+        }
+    }
+}
+
+@Composable
+private fun SetupLoraPack(settings: Settings) {
     val clients = rememberOpsClients(settings)
     val api = remember(clients) { SetupApi(clients.reader) }
     val actions = remember(clients) { SetupActions(clients.actor) }
