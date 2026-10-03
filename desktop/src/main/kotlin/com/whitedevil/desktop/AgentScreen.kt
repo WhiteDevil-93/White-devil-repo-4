@@ -1,6 +1,7 @@
 package com.whitedevil.desktop
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,7 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.AgentEvent
 import com.whitedevil.agent.ToolBox
@@ -141,92 +144,102 @@ private fun TopBar(
     onClear: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
-    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
-        Row(
-            Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("Venice Intelligence", style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.width(12.dp))
-            Text(model, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.weight(1f))
-            if (busy) {
-                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                Spacer(Modifier.width(12.dp))
-                TextButton(onClick = onStop) { Text("Stop") }
-            } else {
-                TextButton(onClick = onClear) { Text("Clear") }
-            }
-            TextButton(onClick = onOpenSettings) { Text("Settings") }
+    // The shell's top bar already carries the page title and hub status; this strip holds only
+    // the agent's own controls.
+    Row(
+        Modifier.fillMaxWidth().height(48.dp).background(Forge.Bg).padding(horizontal = 28.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            Modifier.border(1.dp, Forge.Line, RoundedCornerShape(8.dp)).background(Forge.Panel, RoundedCornerShape(8.dp))
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+        ) { Text(model, color = Forge.Fg, fontSize = 12.sp, fontFamily = FontFamily.Monospace) }
+        if (busy) StatusPill("working", Forge.Ok)
+        Spacer(Modifier.weight(1f))
+        if (busy) {
+            TextButton(onClick = onStop) { Text("STOP", color = Forge.Acc, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
+        } else {
+            TextButton(onClick = onClear) { Text("CLEAR", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
         }
+        TextButton(onClick = onOpenSettings) { Text("SETTINGS", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
     }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(Forge.Line))
 }
 
 @Composable
 private fun EmptyState(settings: Settings) {
     val blocked = settings.blockedReason()
-    Column(Modifier.fillMaxWidth().padding(top = 48.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Give the agent a goal.", style = MaterialTheme.typography.titleMedium)
+    Column(Modifier.fillMaxWidth().padding(top = 64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("Give Venice a goal.", color = Forge.Fg, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(8.dp))
         Text(
             blocked ?: "Connected to ${settings.hubUrl}",
-            style = MaterialTheme.typography.bodySmall,
-            color = if (blocked != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (blocked != null) Forge.Bad else Forge.Mut, fontSize = 13.sp,
         )
     }
 }
 
 @Composable
 private fun Bubble(line: ChatLine) {
-    val tone = MaterialTheme.colorScheme
-    val (bg, fg) = when (line.role) {
-        ROLE_USER -> tone.secondary.copy(alpha = 0.10f) to tone.onBackground
-        ROLE_ERROR -> tone.error.copy(alpha = 0.12f) to tone.error
-        ROLE_TOOL_CALL, ROLE_TOOL_OUT -> tone.surfaceVariant to tone.onSurfaceVariant
-        else -> tone.surface to tone.onSurface
-    }
-    val mono = line.role == ROLE_TOOL_CALL || line.role == ROLE_TOOL_OUT
+    val isUser = line.role == ROLE_USER
+    val isTool = line.role == ROLE_TOOL_CALL || line.role == ROLE_TOOL_OUT
+    val isError = line.role == ROLE_ERROR
+    val bg = when { isUser -> Forge.AccSoft; isError -> Forge.Bad.copy(alpha = 0.10f); isTool -> Forge.Well; else -> Forge.Panel }
+    val border = when { isUser -> Forge.Acc2; isError -> Forge.Bad.copy(alpha = 0.4f); else -> Forge.Line }
+    val fg = when { isError -> Forge.Bad; isTool -> Forge.Mut; else -> Forge.Fg }
+    val titleColor = when { isUser -> Forge.Acc3; isTool -> Forge.Info; isError -> Forge.Bad; else -> Forge.Acc }
 
     Column(
         Modifier.fillMaxWidth()
             .background(bg, RoundedCornerShape(12.dp))
-            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .border(1.dp, border, RoundedCornerShape(12.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Text(line.title, style = MaterialTheme.typography.labelSmall, color = tone.onSurfaceVariant)
-        Spacer(Modifier.height(4.dp))
+        Text(line.title.uppercase(), color = titleColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp)
+        Spacer(Modifier.height(6.dp))
         // Tool output can be enormous; the full text stays in the agent's history,
         // only the rendering is capped so one blob cannot lock the UI.
         val body = if (line.body.length > 4000) line.body.take(4000) + "\n… truncated for display" else line.body
-        if (mono) {
-            // Tool arguments and output are data — render them verbatim, since
+        if (isTool) {
+            // Tool arguments and output are data - render them verbatim, since
             // markdown styling there would misrepresent what actually ran.
-            Text(body, style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace), color = fg)
+            Text(body, fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = fg)
         } else {
-            Text(renderMarkdown(body), style = MaterialTheme.typography.bodyMedium, color = fg)
+            Text(renderMarkdown(body), fontSize = 14.sp, lineHeight = 21.sp, color = fg)
         }
     }
 }
 
 @Composable
 private fun Composer(value: String, busy: Boolean, onValueChange: (String) -> Unit, onSend: () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
+    Box(Modifier.fillMaxWidth().background(Forge.Bg)) {
         Row(
-            Modifier.fillMaxWidth().padding(16.dp),
+            Modifier.fillMaxWidth().widthIn(max = 1100.dp).align(Alignment.Center).padding(horizontal = 28.dp, vertical = 16.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
             OutlinedTextField(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Give Venice a goal…") },
+                shape = RoundedCornerShape(12.dp),
+                placeholder = { Text("Give Venice a goal or feedback…", color = Forge.Dim) },
                 enabled = !busy,
                 maxLines = 6,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Forge.Well, unfocusedContainerColor = Forge.Well, disabledContainerColor = Forge.Well,
+                    focusedBorderColor = Forge.Acc, unfocusedBorderColor = Forge.Line, disabledBorderColor = Forge.Line,
+                    focusedTextColor = Forge.Fg, unfocusedTextColor = Forge.Fg, cursorColor = Forge.Acc,
+                ),
                 keyboardActions = KeyboardActions(onSend = { onSend() }),
             )
             Spacer(Modifier.width(12.dp))
-            Button(onClick = onSend, enabled = !busy && value.isNotBlank(), modifier = Modifier.height(56.dp)) {
-                Text(if (busy) "Working" else "Send")
-            }
+            Button(
+                onClick = onSend, enabled = !busy && value.isNotBlank(),
+                modifier = Modifier.height(56.dp), shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Forge.Acc2, contentColor = Color.White,
+                    disabledContainerColor = Forge.Panel2, disabledContentColor = Forge.Dim),
+            ) { Text(if (busy) "Working" else "Send", fontWeight = FontWeight.SemiBold) }
         }
     }
 }
