@@ -41,7 +41,11 @@ fun main() = application {
         title = "Forge Hub",
     ) {
         var settings by remember { mutableStateOf(Settings.load()) }
-        var screen by remember { mutableStateOf(Screen.Home) }
+        // FORGEHUB_START_SCREEN=Renders (any Screen name) opens there instead of Home: lets a run be
+        // checked screen by screen without clicking, and is ignored when unset or misspelled.
+        var screen by remember {
+            mutableStateOf(Screen.entries.firstOrNull { it.name.equals(System.getenv("FORGEHUB_START_SCREEN"), ignoreCase = true) } ?: Screen.Home)
+        }
 
         MaterialTheme(colorScheme = WhiteDevilColors) {
             Surface(color = Forge.Bg) {

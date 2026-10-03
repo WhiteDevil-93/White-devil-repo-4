@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -55,6 +57,8 @@ fun GalleryScreen(settings: Settings) {
         ThumbLoader(MediaCaches.contactSheets, fetch = { client.contactSheet(it) }, decode = ::decodeToBitmap, permits = 1)
     }
     var selectedKey by remember(client) { mutableStateOf<String?>(null) }
+    // Held above the load state so Refresh keeps the user's search.
+    var filter by remember { mutableStateOf(MediaFilter()) }
     val state = library.state
 
     // Refresh is an explicit press, so it also forgets remembered thumbnail failures.
@@ -82,12 +86,20 @@ fun GalleryScreen(settings: Settings) {
                     "The hub answered normally and its library has no clips to show.",
                     onRefresh = refresh,
                 )
-                is LibraryUiState.Loaded -> {
-                    val sections = remember(state) { buildGallerySections(state.groups) }
-                    val selected = remember(sections, selectedKey) {
-                        selectedKey?.let { k -> sections.firstNotNullOfOrNull { s -> s.items.firstOrNull { it.key == k } } }
+                is LibraryUiState.Loaded -> Column(Modifier.fillMaxSize()) {
+                    val all = remember(state) { buildGallerySections(state.groups).flatMap { it.items } }
+                    val counts = remember(all, filter, nowMs) { filterCounts(all, filter, nowMs) }
+                    val shownItems = remember(all, filter, nowMs) { filterItems(all, filter, nowMs) }
+                    val sections = remember(shownItems, filter, nowMs) { buildSections(shownItems, filter, nowMs) }
+                    val selected = remember(shownItems, selectedKey) {
+                        selectedKey?.let { k -> shownItems.firstOrNull { it.key == k } }
                     }
-                    Row(Modifier.fillMaxSize()) {
+                    MediaFilterBar(filter, { filter = it }, counts, shown = shownItems.size)
+                    if (sections.isEmpty()) {
+                        NoMatches(onReset = { filter = MediaFilter(sort = filter.sort, view = filter.view) })
+                        return@Column
+                    }
+                    Row(Modifier.weight(1f).fillMaxWidth()) {
                         LazyVerticalGrid(
                             columns = GridCells.Adaptive(minSize = 210.dp),
                             modifier = Modifier.weight(1f).fillMaxHeight(),
@@ -101,8 +113,8 @@ fun GalleryScreen(settings: Settings) {
                                 }
                             }
                             sections.forEach { section ->
-                                item(key = section.headerKey, span = { GridItemSpan(maxLineSpan) }) {
-                                    SectionHeader(section.group, nowMs)
+                                item(key = "h:${section.key}", span = { GridItemSpan(maxLineSpan) }) {
+                                    SectionHeader(section, timeline = filter.view == ViewMode.Timeline)
                                 }
                                 items(section.items, key = { it.key }) { item ->
                                     // Composing the tile starts its load; leaving composition cancels it.
@@ -137,19 +149,16 @@ fun GalleryScreen(settings: Settings) {
 }
 
 @Composable
-private fun SectionHeader(group: MediaGroup, nowMs: Long) {
-    val tone = MaterialTheme.colorScheme
-    Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(group.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+private fun SectionHeader(section: ViewSection, timeline: Boolean) {
+    Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (timeline) {
+            Text(section.title.uppercase(), color = Forge.Dim, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.4.sp)
+        } else {
+            Text(section.title, color = Forge.Fg, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+            section.source?.let { Spacer(Modifier.width(10.dp)); Tag(it, Forge.Acc) }
+        }
         Spacer(Modifier.width(10.dp))
-        kindLabel(group.kind)?.let { Tag(it); Spacer(Modifier.width(6.dp)) }
-        group.source?.let { Tag(it, tone.secondary); Spacer(Modifier.width(10.dp)) }
-        Text(
-            "${group.clips.size} ${if (group.clips.size == 1) "clip" else "clips"} - updated ${formatAge(group.updated, nowMs)}",
-            style = MaterialTheme.typography.labelSmall,
-            color = tone.onSurfaceVariant,
-            maxLines = 1,
-        )
+        Text("${section.items.size} ${if (section.items.size == 1) "clip" else "clips"}", color = Forge.Dim, fontSize = 11.sp)
     }
 }
 
