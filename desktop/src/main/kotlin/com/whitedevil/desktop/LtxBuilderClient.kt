@@ -50,22 +50,10 @@ class LtxBuilderClient(
     relayPass: String,
     engine: HttpClientEngine? = null,
 ) : AutoCloseable {
-    private val base: String? = runCatching {
-        val u = URI(hubUrl.trim())
-        if ((u.scheme == "https" || u.scheme == "http") && !u.host.isNullOrBlank()) hubUrl.trim().trimEnd('/') else null
-    }.getOrNull()
-    private val host: String = base?.let { runCatching { URI(it).authority }.getOrNull() } ?: "(no hub)"
-    private val hasPassword = relayPass.isNotEmpty()
-    private val authHeader: String? =
-        if (relayUser.isBlank() && relayPass.isEmpty()) null
-        else "Basic " + Base64.getEncoder().encodeToString("$relayUser:$relayPass".toByteArray(Charsets.UTF_8))
-
-    private val http = HttpClient(engine ?: CIO.create()) {
-        expectSuccess = false
-        // Never follow a redirect with the password attached.
-        followRedirects = false
-        install(HttpTimeout) { connectTimeoutMillis = 10_000; requestTimeoutMillis = 30_000; socketTimeoutMillis = 30_000 }
-    }
+    private val hub = HubCaller(hubUrl, relayUser, relayPass, engine)
+    private fun <T> bad(message: String): MediaResult<T> = hub.bad(message)
+    private suspend fun <T> call(path: String, timeoutMs: Long, post: Any? = null, json: Boolean = false, parse: (String) -> MediaResult<T>): MediaResult<T> =
+        hub.call(path, timeoutMs, post, json, parse)
 
     suspend fun status(): MediaResult<BuilderStatus> = call("/api/ltx/status", 30_000) { text ->
         val json = Json.parseToJsonElement(text)
@@ -125,50 +113,5 @@ class LtxBuilderClient(
         return call("/api/ltx/jobs/$id/cancel", 120_000, post = "") { MediaResult.Ok(Unit) }
     }
 
-    private fun <T> bad(message: String): MediaResult<T> = MediaResult.Failure(MediaError(MediaErrorKind.BadResponse, message))
-
-    private suspend fun <T> call(
-        path: String,
-        timeoutMs: Long,
-        post: Any? = null,
-        json: Boolean = false,
-        parse: (String) -> MediaResult<T>,
-    ): MediaResult<T> {
-        val root = base ?: return MediaResult.Failure(MediaErrors.config("The Hub URL in Settings is not usable. Check it in Settings."))
-        return try {
-            val configure: io.ktor.client.request.HttpRequestBuilder.() -> Unit = {
-                authHeader?.let { header(HttpHeaders.Authorization, it) }
-                timeout { requestTimeoutMillis = timeoutMs; socketTimeoutMillis = timeoutMs; connectTimeoutMillis = 10_000 }
-                if (post != null) {
-                    if (json) contentType(ContentType.Application.Json)
-                    setBody(post)
-                }
-            }
-            val response: HttpResponse = if (post == null) http.get(root + path, configure) else http.post(root + path, configure)
-            val text = response.bodyAsText()
-            val status = response.status.value
-            if (status !in 200..299) return failure(status, text)
-            try {
-                parse(text)
-            } catch (e: Exception) {
-                currentCoroutineContext().ensureActive()
-                bad("The hub's answer could not be read (${e.message ?: e.javaClass.simpleName}).")
-            }
-        } catch (e: Exception) {
-            currentCoroutineContext().ensureActive()
-            // The timeouts are quoted back in the message, so give it the one this call really used.
-            MediaResult.Failure(MediaErrors.fromException(MediaOp.Library, e, host, MediaTimeouts(connectMs = 10_000, libraryMs = timeoutMs)))
-        }
-    }
-
-    /** The hub's own explanation wins for 4xx/5xx (it says what to change); the generic wording covers sign-in problems. */
-    private fun failure(status: Int, body: String): MediaResult.Failure {
-        val generic = MediaErrors.fromStatus(MediaOp.Library, status, body.take(4000), null, hasPassword)
-        val detail = hubDetail(body)
-        return MediaResult.Failure(
-            if (detail != null && status !in listOf(401, 403)) generic.copy(message = detail, detail = null) else generic,
-        )
-    }
-
-    override fun close() { http.close() }
+    override fun close() { hub.close() }
 }

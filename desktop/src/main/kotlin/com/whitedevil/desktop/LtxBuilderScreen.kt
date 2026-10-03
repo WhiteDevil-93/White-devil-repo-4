@@ -316,7 +316,7 @@ private fun summary(o: BuilderOpts, st: BuilderStatus?): String {
     return "${nice(tr).take(26)} · ${o.loras.size} LoRA${if (o.loras.size == 1) "" else "s"} · ${o.vae}"
 }
 
-private fun nice(file: String) = file.removeSuffix(".safetensors").removeSuffix(".comfy").replace('_', ' ')
+internal fun nice(file: String) = file.removeSuffix(".safetensors").removeSuffix(".comfy").replace('_', ' ')
 
 // ---------------------------------------------------------------- clips
 
@@ -411,7 +411,7 @@ private fun Thumb(job: BuilderJob, media: MediaClient, thumbs: MutableMap<String
 // ---------------------------------------------------------------- small parts
 
 @Composable
-private fun Card(title: String, hint: String? = null, content: @Composable () -> Unit) {
+internal fun Card(title: String, hint: String? = null, content: @Composable () -> Unit) {
     val shape = RoundedCornerShape(12.dp)
     Column(
         Modifier.fillMaxWidth().clip(shape).background(Forge.Panel).border(1.dp, Forge.Line, shape).padding(16.dp),
@@ -425,12 +425,12 @@ private fun Card(title: String, hint: String? = null, content: @Composable () ->
     }
 }
 
-@Composable private fun Tip(text: String, color: Color = Forge.Mut) = Text(text, color = color, fontSize = 12.sp, lineHeight = 18.sp)
+@Composable internal fun Tip(text: String, color: Color = Forge.Mut) = Text(text, color = color, fontSize = 12.sp, lineHeight = 18.sp)
 
-@Composable private fun Label(text: String) = Text(text, color = Forge.Dim, fontSize = 12.sp)
+@Composable internal fun Label(text: String) = Text(text, color = Forge.Dim, fontSize = 12.sp)
 
 @Composable
-private fun BigButton(text: String, primary: Boolean, enabled: Boolean, onClick: () -> Unit) {
+internal fun BigButton(text: String, primary: Boolean, enabled: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(12.dp)
     Box(
         Modifier.fillMaxWidth().height(46.dp).clip(shape)
@@ -442,7 +442,7 @@ private fun BigButton(text: String, primary: Boolean, enabled: Boolean, onClick:
 }
 
 @Composable
-private fun Pick(value: String, options: List<Pair<String, String>>, onPick: (String) -> Unit) {
+internal fun Pick(value: String, options: List<Pair<String, String>>, onPick: (String) -> Unit) {
     var open by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(10.dp)
     Box {
@@ -462,13 +462,13 @@ private fun Pick(value: String, options: List<Pair<String, String>>, onPick: (St
 }
 
 @Composable
-private fun sliderColors() = SliderDefaults.colors(
+internal fun sliderColors() = SliderDefaults.colors(
     thumbColor = Forge.Acc, activeTrackColor = Forge.Acc2, inactiveTrackColor = Forge.Panel2,
     disabledThumbColor = Forge.Dim, disabledActiveTrackColor = Forge.Panel2,
 )
 
 @Composable
-private fun forgeFieldColors() = OutlinedTextFieldDefaults.colors(
+internal fun forgeFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedContainerColor = Forge.Well, unfocusedContainerColor = Forge.Well,
     focusedBorderColor = Forge.Acc, unfocusedBorderColor = Forge.Line,
     focusedTextColor = Forge.Fg, unfocusedTextColor = Forge.Fg, cursorColor = Forge.Acc,

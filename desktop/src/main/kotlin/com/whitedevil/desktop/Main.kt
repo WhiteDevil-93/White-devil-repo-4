@@ -47,6 +47,7 @@ fun main() = application {
             mutableStateOf(Screen.entries.firstOrNull { it.name.equals(System.getenv("FORGEHUB_START_SCREEN"), ignoreCase = true) } ?: Screen.Home)
         }
 
+        var createTab by remember { mutableStateOf(CREATE_WAN) }
         MaterialTheme(colorScheme = WhiteDevilColors) {
             Surface(color = Forge.Bg) {
                 // One library request for the shell: it drives the status pill and Home. The
@@ -67,9 +68,12 @@ fun main() = application {
                         Box(Modifier.weight(1f)) {
                             when (screen) {
                                 Screen.Home -> HomeScreen(library.state, nowMs, onOpen = { screen = it })
+                                Screen.Create -> CreateScreen(settings, createTab, onTab = { createTab = it })
                                 Screen.Agent -> AgentScreen(
                                     settings = settings,
                                     onOpenSettings = { screen = Screen.Settings },
+                                    // Saved right away, so the choice is still there after a restart.
+                                    onModelChange = { id -> settings = settings.copy(model = id).also { Settings.save(it) } },
                                 )
                                 // Kept alive across tab switches: restarting the shell
                                 // on every switch would discard the session and any
@@ -77,10 +81,10 @@ fun main() = application {
                                 Screen.Terminal -> TerminalScreen()
                                 Screen.Renders -> RendersScreen(settings)
                                 Screen.Gallery -> GalleryScreen(settings)
-                                Screen.Colab -> ColabScreen(settings)
-                                Screen.Thunder -> ThunderScreen(settings)
+                                Screen.Colab -> ColabScreen(settings, onCreate = { createTab = it; screen = Screen.Create })
+                                Screen.Thunder -> ThunderScreen(settings, onCreate = { createTab = it; screen = Screen.Create })
                                 Screen.Ltx -> LtxScreen(settings)
-                                Screen.Vast -> VastScreen(settings)
+                                Screen.Vast -> VastScreen(settings, onCreate = { createTab = it; screen = Screen.Create })
                                 Screen.Setup -> SetupScreen(settings)
                                 Screen.Settings -> SettingsScreen(
                                     initial = settings,

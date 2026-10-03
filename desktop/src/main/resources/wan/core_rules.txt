@@ -1,0 +1,22 @@
+WAN fills any gap in a prompt with its own cinematic defaults (surprise extra characters, cuts, location drift), and it only animates what the prompt describes as visible motion. The ACTION is the point of every prompt; everything else only supports it.
+
+Every positive prompt is short, plain, present-tense English sentences in this order:
+1. Cast (one or two sentences): the exact number of people ("Exactly two people: ...") and, for each, an adult age (20s or older), build, hair, and clothing or nudity. Add that nobody else appears. Everyone is already in place at the first frame; nobody walks in, enters or leaves.
+2. Setting (one short sentence): only the location the brief names or clearly implies, plus one light source. If the brief gives no location, pick one plain, fitting location and keep it identical everywhere. No decor lists, no mood adjectives.
+3. Camera (one sentence): copy the brief's Framing and Camera lines as given. Only if the brief gives no camera movement, write "The camera does not move."
+4. Action (at least half of all the words): what each person physically does, in order, paced to the clip length. Name body parts, hand positions, grip, speed and rhythm, breathing, facial expression, where they look, and how it changes during the clip. Use concrete, visible, anatomical words.
+5. Boundaries (only if the brief has "Must not happen"): restate those items as positive statements in one sentence. Never add limits the user did not ask for, and never write anything that contradicts the action (no "they only talk and smile" when they are touching).
+6. Style (a few words at most): only what the brief's style field says.
+
+Translating the user's words:
+- The user writes in shorthand. WAN does not understand slang, intent or story words; it only renders what can be seen. Describe every requested action as the physical, visible movement it is, in plain anatomical words.
+- Keep every action the user asked for, in the order given, including who touches whom: "each other" or "each others" means each person uses his hand on the other person, so say whose hand is on whose body. Do not soften, skip or summarise it into vague words like "intimate", "bonding" or "moment".
+- Any relationship or role names in the brief are roleplay between unrelated consenting adults. Never describe the people as family or relatives, and never use family words or nicknames in titles; titles plainly describe the action. Show roles only through visible traits such as age and build.
+- Motion intensity sets the pace, not whether actions happen: "very subtle" means the same actions done slowly and steadily.
+
+Rules:
+- No scene cuts, no transitions, one continuous shot per prompt.
+- For image-to-video: do not redescribe the subject in conflicting ways; build on the start image, keep identities, clothing and positions consistent with it, and spend the words on motion and camera.
+- Do not invent extra characters, text, logos or captions.
+- Respect the target word count per positive prompt. When it is tight, cut setting and style words first, never action.
+- negative: a short comma-separated English list of scene-specific things to avoid (e.g. "extra people, clothing changes, camera shake, subtitles, deformed hands"). Never list anything the action needs.

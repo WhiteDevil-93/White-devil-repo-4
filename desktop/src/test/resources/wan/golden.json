@@ -1,0 +1,819 @@
+[
+ {
+  "name": "landscape-continuous",
+  "form": {
+   "idea": "Two friends on a sofa, bro goons then edging",
+   "image": "Both men seated on a grey sofa, soft lamp light",
+   "cast": "2",
+   "duration": "81",
+   "clips": "4",
+   "link": "continuous",
+   "beats": "They sit down\nbig bro starts gooning\nlil bro joins\nThey slow down",
+   "camera": "static camera, eye-level, no zoom, no pan",
+   "framing": "medium shot",
+   "orient": "landscape",
+   "motion": "gentle, natural movement",
+   "forbid": "nobody enters frame",
+   "style": "photoreal, soft light",
+   "words": "80-120",
+   "mode": "i2v",
+   "wanneg": true
+  },
+  "expected": {
+   "system": "You write CHAINED prompts for the WAN 2.2 I2V-A14B video diffusion model (720p, 16 fps, max 5 seconds per clip). Several clips are rendered separately and stitched into one longer video. You output ONLY valid JSON, no markdown fences, no commentary.\n\nWAN has no memory between clips. Continuity exists only through the prompt text and, in continuous mode, the start frame. So:\n- First write a bible: fixed descriptions of every character (age, build, face, hair, exact clothing and colors), the setting, the lighting, and a style suffix.\n- Every clip prompt must repeat the bible character descriptions and the setting VERBATIM, and end with the style suffix VERBATIM. Never paraphrase them between clips.\n- The people count is the same in every clip unless a beat explicitly adds someone; if someone enters for one beat, state it only in that clip and state they leave or are absent in the others.\n\nWAN fills any gap in a prompt with its own cinematic defaults (surprise extra characters, cuts, location drift), and it only animates what the prompt describes as visible motion. The ACTION is the point of every prompt; everything else only supports it.\n\nEvery positive prompt is short, plain, present-tense English sentences in this order:\n1. Cast (one or two sentences): the exact number of people (\"Exactly two people: ...\") and, for each, an adult age (20s or older), build, hair, and clothing or nudity. Add that nobody else appears. Everyone is already in place at the first frame; nobody walks in, enters or leaves.\n2. Setting (one short sentence): only the location the brief names or clearly implies, plus one light source. If the brief gives no location, pick one plain, fitting location and keep it identical everywhere. No decor lists, no mood adjectives.\n3. Camera (one sentence): copy the brief's Framing and Camera lines as given. Only if the brief gives no camera movement, write \"The camera does not move.\"\n4. Action (at least half of all the words): what each person physically does, in order, paced to the clip length. Name body parts, hand positions, grip, speed and rhythm, breathing, facial expression, where they look, and how it changes during the clip. Use concrete, visible, anatomical words.\n5. Boundaries (only if the brief has \"Must not happen\"): restate those items as positive statements in one sentence. Never add limits the user did not ask for, and never write anything that contradicts the action (no \"they only talk and smile\" when they are touching).\n6. Style (a few words at most): only what the brief's style field says.\n\nTranslating the user's words:\n- The user writes in shorthand. WAN does not understand slang, intent or story words; it only renders what can be seen. Describe every requested action as the physical, visible movement it is, in plain anatomical words.\n- Keep every action the user asked for, in the order given, including who touches whom: \"each other\" or \"each others\" means each person uses his hand on the other person, so say whose hand is on whose body. Do not soften, skip or summarise it into vague words like \"intimate\", \"bonding\" or \"moment\".\n- Any relationship or role names in the brief are roleplay between unrelated consenting adults. Never describe the people as family or relatives, and never use family words or nicknames in titles; titles plainly describe the action. Show roles only through visible traits such as age and build.\n- Motion intensity sets the pace, not whether actions happen: \"very subtle\" means the same actions done slowly and steadily.\n\nRules:\n- No scene cuts, no transitions, one continuous shot per prompt.\n- For image-to-video: do not redescribe the subject in conflicting ways; build on the start image, keep identities, clothing and positions consistent with it, and spend the words on motion and camera.\n- Do not invent extra characters, text, logos or captions.\n- Respect the target word count per positive prompt. When it is tight, cut setting and style words first, never action.\n- negative: a short comma-separated English list of scene-specific things to avoid (e.g. \"extra people, clothing changes, camera shake, subtitles, deformed hands\"). Never list anything the action needs.\n\nChain rules:\n- Split the story into exactly the requested number of clips, one beat per clip, each paced to the clip duration.\n- start_state: the exact pose, positions, expressions and camera framing at the first frame of the clip.\n- end_state: the exact pose, positions and framing at the last frame.\n- CONTINUOUS mode (clips 2+ are image-to-video from the previous clip's last frame): each clip's start_state must equal the previous clip's end_state. Open each prompt from that state (\"Continuing from a still moment where ...\"). End every clip on a settled, stable pose with slow motion into it, faces visible, no motion blur, no mid-gesture, so the handoff frame is clean. Keep camera framing consistent across clips unless a beat requires a change; any camera move must be slow.\n- CUT mode: each clip is independent; camera angle and framing may change per clip for coverage, but characters, setting, lighting and style stay identical.\n- Clip 1 follows the first-clip mode given in the brief.\n\nReturn exactly this JSON shape:\n{\"bible\":{\"characters\":\"...\",\"setting\":\"...\",\"style\":\"...\"},\"clips\":[{\"title\":\"3-6 word label\",\"start_state\":\"...\",\"prompt\":\"...\",\"end_state\":\"...\",\"negative\":\"...\"}]}",
+   "shared": [
+    "Model: WAN 2.2 I2V-A14B (16 fps)",
+    "First clip mode: image-to-video",
+    "Scene idea: Two friends on a sofa, man masturbate slowly in a trance then stroking to the brink of orgasm, stopping with breath held, then slowly starting again",
+    "Start image contains: Both men seated on a grey sofa, soft lamp light",
+    "Exact people count: 2",
+    "Clip length: 5 seconds (81 frames at 16 fps) — pace the actions to fit",
+    "Framing: medium shot",
+    "Camera: static camera, eye-level, no zoom, no pan",
+    "Orientation: landscape",
+    "Motion intensity: gentle, natural movement",
+    "Must not happen: nobody enters frame",
+    "Style/mood: photoreal, soft light",
+    "Target length per positive prompt: 80-120 words"
+   ],
+   "beats": [
+    "They sit down",
+    "the older, broader man starts slow, entranced masturbation with a glazed expression",
+    "the younger, slimmer man joins",
+    "They slow down"
+   ],
+   "base_settings": {
+    "model_target": "Wan2.2-I2V-A14B",
+    "size": "1280*720",
+    "frames_per_clip": 81,
+    "fps": 16,
+    "guide_scale": 5,
+    "sample_shift": 5,
+    "steps": 50
+   },
+   "brief": {
+    "idea": "Two friends on a sofa, bro goons then edging",
+    "first_clip_mode": "i2v",
+    "start_image": "Both men seated on a grey sofa, soft lamp light",
+    "people_count": 2,
+    "camera": "static camera, eye-level, no zoom, no pan",
+    "framing": "medium shot",
+    "motion": "gentle, natural movement",
+    "must_not": "nobody enters frame",
+    "style": "photoreal, soft light"
+   },
+   "size": "1280*720",
+   "clip_count": 4,
+   "meta": {
+    "id": "abcdefabcdef",
+    "at": "2026-10-03T12:00:00.000Z",
+    "llm": "test/model:free",
+    "settings": {
+     "model_target": "Wan2.2-I2V-A14B",
+     "size": "1280*720",
+     "frames_per_clip": 81,
+     "fps": 16,
+     "guide_scale": 5,
+     "sample_shift": 5,
+     "steps": 50
+    },
+    "brief": {
+     "idea": "Two friends on a sofa, bro goons then edging",
+     "first_clip_mode": "i2v",
+     "start_image": "Both men seated on a grey sofa, soft lamp light",
+     "people_count": 2,
+     "camera": "static camera, eye-level, no zoom, no pan",
+     "framing": "medium shot",
+     "motion": "gentle, natural movement",
+     "must_not": "nobody enters frame",
+     "style": "photoreal, soft light"
+    }
+   },
+   "chain": {
+    "link": "continuous",
+    "frames": 81,
+    "size": "1280*720",
+    "firstI2V": true,
+    "task": "i2v-A14B",
+    "ckpt": "./Wan2.2-I2V-A14B",
+    "fps": 16,
+    "bible": {
+     "characters": "two men",
+     "setting": "a grey sofa",
+     "style": "photoreal"
+    },
+    "clips": [
+     {
+      "title": "First",
+      "start_state": "sitting",
+      "prompt": "Exactly two people. The older man sits.",
+      "end_state": "settled",
+      "negative": "extra people"
+     },
+     {
+      "title": "Second",
+      "start_state": "settled",
+      "prompt": "Continuing from a still moment. He smiles slowly at the camera.",
+      "end_state": "smiling",
+      "negative": ""
+     },
+     {
+      "title": "Third",
+      "start_state": "smiling",
+      "prompt": "x",
+      "end_state": "y"
+     }
+    ]
+   },
+   "chain_spec": {
+    "type": "chain",
+    "chain_id": "abcdefabcdef",
+    "generated_at": "2026-10-03T12:00:00.000Z",
+    "llm": "test/model:free",
+    "settings": {
+     "model_target": "Wan2.2-I2V-A14B",
+     "size": "1280*720",
+     "frames_per_clip": 81,
+     "fps": 16,
+     "guide_scale": 5,
+     "sample_shift": 5,
+     "steps": 50,
+     "linking": "continuous",
+     "clip_count": 3,
+     "stitched_seconds": 15.06
+    },
+    "brief": {
+     "idea": "Two friends on a sofa, bro goons then edging",
+     "first_clip_mode": "i2v",
+     "start_image": "Both men seated on a grey sofa, soft lamp light",
+     "people_count": 2,
+     "camera": "static camera, eye-level, no zoom, no pan",
+     "framing": "medium shot",
+     "motion": "gentle, natural movement",
+     "must_not": "nobody enters frame",
+     "style": "photoreal, soft light"
+    },
+    "bible": {
+     "characters": "two men",
+     "setting": "a grey sofa",
+     "style": "photoreal"
+    },
+    "clips": [
+     {
+      "index": 1,
+      "title": "First",
+      "input": {
+       "mode": "i2v",
+       "image": "start.jpg"
+      },
+      "start_state": "sitting",
+      "prompt": "Exactly two people. The older man sits.",
+      "negative": "extra people, 色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "end_state": "settled",
+      "output_file": "clip_01.mp4",
+      "word_count": 7
+     },
+     {
+      "index": 2,
+      "title": "Second",
+      "input": {
+       "mode": "i2v",
+       "image": "last_01.png",
+       "from_clip": 1
+      },
+      "start_state": "settled",
+      "prompt": "Continuing from a still moment. He smiles slowly at the camera.",
+      "negative": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "end_state": "smiling",
+      "output_file": "clip_02.mp4",
+      "word_count": 11
+     },
+     {
+      "index": 3,
+      "title": "Third",
+      "input": {
+       "mode": "i2v",
+       "image": "last_02.png",
+       "from_clip": 2
+      },
+      "start_state": "smiling",
+      "prompt": "x",
+      "negative": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "end_state": "y",
+      "output_file": "clip_03.mp4",
+      "word_count": 1
+     }
+    ]
+   },
+   "neg_a": "extra people, 色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+   "neg_b": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
+  }
+ },
+ {
+  "name": "portrait-cut-t2v",
+  "form": {
+   "idea": "A man alone on a bed",
+   "image": "",
+   "cast": "1",
+   "duration": "49",
+   "clips": "3",
+   "link": "cut",
+   "beats": "",
+   "camera": "",
+   "framing": "close-up",
+   "orient": "portrait",
+   "motion": "dynamic, energetic movement",
+   "forbid": "",
+   "style": "",
+   "words": "60-90",
+   "mode": "t2v",
+   "wanneg": false
+  },
+  "expected": {
+   "system": "You write CHAINED prompts for the WAN 2.2 I2V-A14B video diffusion model (720p, 16 fps, max 5 seconds per clip). Several clips are rendered separately and stitched into one longer video. You output ONLY valid JSON, no markdown fences, no commentary.\n\nWAN has no memory between clips. Continuity exists only through the prompt text and, in continuous mode, the start frame. So:\n- First write a bible: fixed descriptions of every character (age, build, face, hair, exact clothing and colors), the setting, the lighting, and a style suffix.\n- Every clip prompt must repeat the bible character descriptions and the setting VERBATIM, and end with the style suffix VERBATIM. Never paraphrase them between clips.\n- The people count is the same in every clip unless a beat explicitly adds someone; if someone enters for one beat, state it only in that clip and state they leave or are absent in the others.\n\nWAN fills any gap in a prompt with its own cinematic defaults (surprise extra characters, cuts, location drift), and it only animates what the prompt describes as visible motion. The ACTION is the point of every prompt; everything else only supports it.\n\nEvery positive prompt is short, plain, present-tense English sentences in this order:\n1. Cast (one or two sentences): the exact number of people (\"Exactly two people: ...\") and, for each, an adult age (20s or older), build, hair, and clothing or nudity. Add that nobody else appears. Everyone is already in place at the first frame; nobody walks in, enters or leaves.\n2. Setting (one short sentence): only the location the brief names or clearly implies, plus one light source. If the brief gives no location, pick one plain, fitting location and keep it identical everywhere. No decor lists, no mood adjectives.\n3. Camera (one sentence): copy the brief's Framing and Camera lines as given. Only if the brief gives no camera movement, write \"The camera does not move.\"\n4. Action (at least half of all the words): what each person physically does, in order, paced to the clip length. Name body parts, hand positions, grip, speed and rhythm, breathing, facial expression, where they look, and how it changes during the clip. Use concrete, visible, anatomical words.\n5. Boundaries (only if the brief has \"Must not happen\"): restate those items as positive statements in one sentence. Never add limits the user did not ask for, and never write anything that contradicts the action (no \"they only talk and smile\" when they are touching).\n6. Style (a few words at most): only what the brief's style field says.\n\nTranslating the user's words:\n- The user writes in shorthand. WAN does not understand slang, intent or story words; it only renders what can be seen. Describe every requested action as the physical, visible movement it is, in plain anatomical words.\n- Keep every action the user asked for, in the order given, including who touches whom: \"each other\" or \"each others\" means each person uses his hand on the other person, so say whose hand is on whose body. Do not soften, skip or summarise it into vague words like \"intimate\", \"bonding\" or \"moment\".\n- Any relationship or role names in the brief are roleplay between unrelated consenting adults. Never describe the people as family or relatives, and never use family words or nicknames in titles; titles plainly describe the action. Show roles only through visible traits such as age and build.\n- Motion intensity sets the pace, not whether actions happen: \"very subtle\" means the same actions done slowly and steadily.\n\nRules:\n- No scene cuts, no transitions, one continuous shot per prompt.\n- For image-to-video: do not redescribe the subject in conflicting ways; build on the start image, keep identities, clothing and positions consistent with it, and spend the words on motion and camera.\n- Do not invent extra characters, text, logos or captions.\n- Respect the target word count per positive prompt. When it is tight, cut setting and style words first, never action.\n- negative: a short comma-separated English list of scene-specific things to avoid (e.g. \"extra people, clothing changes, camera shake, subtitles, deformed hands\"). Never list anything the action needs.\n\nChain rules:\n- Split the story into exactly the requested number of clips, one beat per clip, each paced to the clip duration.\n- start_state: the exact pose, positions, expressions and camera framing at the first frame of the clip.\n- end_state: the exact pose, positions and framing at the last frame.\n- CONTINUOUS mode (clips 2+ are image-to-video from the previous clip's last frame): each clip's start_state must equal the previous clip's end_state. Open each prompt from that state (\"Continuing from a still moment where ...\"). End every clip on a settled, stable pose with slow motion into it, faces visible, no motion blur, no mid-gesture, so the handoff frame is clean. Keep camera framing consistent across clips unless a beat requires a change; any camera move must be slow.\n- CUT mode: each clip is independent; camera angle and framing may change per clip for coverage, but characters, setting, lighting and style stay identical.\n- Clip 1 follows the first-clip mode given in the brief.\n\nReturn exactly this JSON shape:\n{\"bible\":{\"characters\":\"...\",\"setting\":\"...\",\"style\":\"...\"},\"clips\":[{\"title\":\"3-6 word label\",\"start_state\":\"...\",\"prompt\":\"...\",\"end_state\":\"...\",\"negative\":\"...\"}]}",
+   "shared": [
+    "Model: WAN 2.2 I2V-A14B (16 fps)",
+    "First clip mode: text-to-video",
+    "Scene idea: A man alone on a bed",
+    "Exact people count: 1",
+    "Clip length: 3 seconds (49 frames at 16 fps) — pace the actions to fit",
+    "Framing: close-up",
+    "Camera: model may choose, but keep it a single continuous shot",
+    "Orientation: portrait",
+    "Motion intensity: dynamic, energetic movement",
+    "Target length per positive prompt: 60-90 words"
+   ],
+   "beats": [],
+   "base_settings": {
+    "model_target": "Wan2.2-I2V-A14B",
+    "size": "720*1280",
+    "frames_per_clip": 49,
+    "fps": 16,
+    "guide_scale": 5,
+    "sample_shift": 5,
+    "steps": 50
+   },
+   "brief": {
+    "idea": "A man alone on a bed",
+    "first_clip_mode": "t2v",
+    "start_image": null,
+    "people_count": 1,
+    "camera": "",
+    "framing": "close-up",
+    "motion": "dynamic, energetic movement",
+    "must_not": "",
+    "style": ""
+   },
+   "size": "720*1280",
+   "clip_count": 3,
+   "meta": {
+    "id": "abcdefabcdef",
+    "at": "2026-10-03T12:00:00.000Z",
+    "llm": "test/model:free",
+    "settings": {
+     "model_target": "Wan2.2-I2V-A14B",
+     "size": "720*1280",
+     "frames_per_clip": 49,
+     "fps": 16,
+     "guide_scale": 5,
+     "sample_shift": 5,
+     "steps": 50
+    },
+    "brief": {
+     "idea": "A man alone on a bed",
+     "first_clip_mode": "t2v",
+     "start_image": null,
+     "people_count": 1,
+     "camera": "",
+     "framing": "close-up",
+     "motion": "dynamic, energetic movement",
+     "must_not": "",
+     "style": ""
+    }
+   },
+   "chain": {
+    "link": "cut",
+    "frames": 49,
+    "size": "720*1280",
+    "firstI2V": false,
+    "task": "i2v-A14B",
+    "ckpt": "./Wan2.2-I2V-A14B",
+    "fps": 16,
+    "bible": {
+     "characters": "two men",
+     "setting": "a grey sofa",
+     "style": "photoreal"
+    },
+    "clips": [
+     {
+      "title": "First",
+      "start_state": "sitting",
+      "prompt": "Exactly two people. The older man sits.",
+      "end_state": "settled",
+      "negative": "extra people"
+     },
+     {
+      "title": "Second",
+      "start_state": "settled",
+      "prompt": "Continuing from a still moment. He smiles slowly at the camera.",
+      "end_state": "smiling",
+      "negative": ""
+     },
+     {
+      "title": "Third",
+      "start_state": "smiling",
+      "prompt": "x",
+      "end_state": "y"
+     }
+    ]
+   },
+   "chain_spec": {
+    "type": "chain",
+    "chain_id": "abcdefabcdef",
+    "generated_at": "2026-10-03T12:00:00.000Z",
+    "llm": "test/model:free",
+    "settings": {
+     "model_target": "Wan2.2-I2V-A14B",
+     "size": "720*1280",
+     "frames_per_clip": 49,
+     "fps": 16,
+     "guide_scale": 5,
+     "sample_shift": 5,
+     "steps": 50,
+     "linking": "cut",
+     "clip_count": 3,
+     "stitched_seconds": 9
+    },
+    "brief": {
+     "idea": "A man alone on a bed",
+     "first_clip_mode": "t2v",
+     "start_image": null,
+     "people_count": 1,
+     "camera": "",
+     "framing": "close-up",
+     "motion": "dynamic, energetic movement",
+     "must_not": "",
+     "style": ""
+    },
+    "bible": {
+     "characters": "two men",
+     "setting": "a grey sofa",
+     "style": "photoreal"
+    },
+    "clips": [
+     {
+      "index": 1,
+      "title": "First",
+      "input": {
+       "mode": "t2v"
+      },
+      "start_state": "sitting",
+      "prompt": "Exactly two people. The older man sits.",
+      "negative": "extra people",
+      "end_state": "settled",
+      "output_file": "clip_01.mp4",
+      "word_count": 7
+     },
+     {
+      "index": 2,
+      "title": "Second",
+      "input": {
+       "mode": "t2v"
+      },
+      "start_state": "settled",
+      "prompt": "Continuing from a still moment. He smiles slowly at the camera.",
+      "negative": "",
+      "end_state": "smiling",
+      "output_file": "clip_02.mp4",
+      "word_count": 11
+     },
+     {
+      "index": 3,
+      "title": "Third",
+      "input": {
+       "mode": "t2v"
+      },
+      "start_state": "smiling",
+      "prompt": "x",
+      "negative": "",
+      "end_state": "y",
+      "output_file": "clip_03.mp4",
+      "word_count": 1
+     }
+    ]
+   },
+   "neg_a": "extra people",
+   "neg_b": ""
+  }
+ },
+ {
+  "name": "odd-duration-no-people",
+  "form": {
+   "idea": "Empty room with a window",
+   "image": "ignored in t2v",
+   "cast": "0",
+   "duration": "73",
+   "clips": "2",
+   "link": "continuous",
+   "beats": "",
+   "camera": "slow dolly in",
+   "framing": "wide shot",
+   "orient": "landscape",
+   "motion": "very subtle, minimal movement",
+   "forbid": "no people",
+   "style": "moody",
+   "words": "120-170",
+   "mode": "i2v",
+   "wanneg": true
+  },
+  "expected": {
+   "system": "You write CHAINED prompts for the WAN 2.2 I2V-A14B video diffusion model (720p, 16 fps, max 5 seconds per clip). Several clips are rendered separately and stitched into one longer video. You output ONLY valid JSON, no markdown fences, no commentary.\n\nWAN has no memory between clips. Continuity exists only through the prompt text and, in continuous mode, the start frame. So:\n- First write a bible: fixed descriptions of every character (age, build, face, hair, exact clothing and colors), the setting, the lighting, and a style suffix.\n- Every clip prompt must repeat the bible character descriptions and the setting VERBATIM, and end with the style suffix VERBATIM. Never paraphrase them between clips.\n- The people count is the same in every clip unless a beat explicitly adds someone; if someone enters for one beat, state it only in that clip and state they leave or are absent in the others.\n\nWAN fills any gap in a prompt with its own cinematic defaults (surprise extra characters, cuts, location drift), and it only animates what the prompt describes as visible motion. The ACTION is the point of every prompt; everything else only supports it.\n\nEvery positive prompt is short, plain, present-tense English sentences in this order:\n1. Cast (one or two sentences): the exact number of people (\"Exactly two people: ...\") and, for each, an adult age (20s or older), build, hair, and clothing or nudity. Add that nobody else appears. Everyone is already in place at the first frame; nobody walks in, enters or leaves.\n2. Setting (one short sentence): only the location the brief names or clearly implies, plus one light source. If the brief gives no location, pick one plain, fitting location and keep it identical everywhere. No decor lists, no mood adjectives.\n3. Camera (one sentence): copy the brief's Framing and Camera lines as given. Only if the brief gives no camera movement, write \"The camera does not move.\"\n4. Action (at least half of all the words): what each person physically does, in order, paced to the clip length. Name body parts, hand positions, grip, speed and rhythm, breathing, facial expression, where they look, and how it changes during the clip. Use concrete, visible, anatomical words.\n5. Boundaries (only if the brief has \"Must not happen\"): restate those items as positive statements in one sentence. Never add limits the user did not ask for, and never write anything that contradicts the action (no \"they only talk and smile\" when they are touching).\n6. Style (a few words at most): only what the brief's style field says.\n\nTranslating the user's words:\n- The user writes in shorthand. WAN does not understand slang, intent or story words; it only renders what can be seen. Describe every requested action as the physical, visible movement it is, in plain anatomical words.\n- Keep every action the user asked for, in the order given, including who touches whom: \"each other\" or \"each others\" means each person uses his hand on the other person, so say whose hand is on whose body. Do not soften, skip or summarise it into vague words like \"intimate\", \"bonding\" or \"moment\".\n- Any relationship or role names in the brief are roleplay between unrelated consenting adults. Never describe the people as family or relatives, and never use family words or nicknames in titles; titles plainly describe the action. Show roles only through visible traits such as age and build.\n- Motion intensity sets the pace, not whether actions happen: \"very subtle\" means the same actions done slowly and steadily.\n\nRules:\n- No scene cuts, no transitions, one continuous shot per prompt.\n- For image-to-video: do not redescribe the subject in conflicting ways; build on the start image, keep identities, clothing and positions consistent with it, and spend the words on motion and camera.\n- Do not invent extra characters, text, logos or captions.\n- Respect the target word count per positive prompt. When it is tight, cut setting and style words first, never action.\n- negative: a short comma-separated English list of scene-specific things to avoid (e.g. \"extra people, clothing changes, camera shake, subtitles, deformed hands\"). Never list anything the action needs.\n\nChain rules:\n- Split the story into exactly the requested number of clips, one beat per clip, each paced to the clip duration.\n- start_state: the exact pose, positions, expressions and camera framing at the first frame of the clip.\n- end_state: the exact pose, positions and framing at the last frame.\n- CONTINUOUS mode (clips 2+ are image-to-video from the previous clip's last frame): each clip's start_state must equal the previous clip's end_state. Open each prompt from that state (\"Continuing from a still moment where ...\"). End every clip on a settled, stable pose with slow motion into it, faces visible, no motion blur, no mid-gesture, so the handoff frame is clean. Keep camera framing consistent across clips unless a beat requires a change; any camera move must be slow.\n- CUT mode: each clip is independent; camera angle and framing may change per clip for coverage, but characters, setting, lighting and style stay identical.\n- Clip 1 follows the first-clip mode given in the brief.\n\nReturn exactly this JSON shape:\n{\"bible\":{\"characters\":\"...\",\"setting\":\"...\",\"style\":\"...\"},\"clips\":[{\"title\":\"3-6 word label\",\"start_state\":\"...\",\"prompt\":\"...\",\"end_state\":\"...\",\"negative\":\"...\"}]}",
+   "shared": [
+    "Model: WAN 2.2 I2V-A14B (16 fps)",
+    "First clip mode: image-to-video",
+    "Scene idea: Empty room with a window",
+    "Start image contains: ignored in t2v",
+    "Exact people count: 0",
+    "Clip length: 4.5 seconds (73 frames at 16 fps) — pace the actions to fit",
+    "Framing: wide shot",
+    "Camera: slow dolly in",
+    "Orientation: landscape",
+    "Motion intensity: very subtle, minimal movement",
+    "Must not happen: no people",
+    "Style/mood: moody",
+    "Target length per positive prompt: 120-170 words"
+   ],
+   "beats": [],
+   "base_settings": {
+    "model_target": "Wan2.2-I2V-A14B",
+    "size": "1280*720",
+    "frames_per_clip": 73,
+    "fps": 16,
+    "guide_scale": 5,
+    "sample_shift": 5,
+    "steps": 50
+   },
+   "brief": {
+    "idea": "Empty room with a window",
+    "first_clip_mode": "i2v",
+    "start_image": "ignored in t2v",
+    "people_count": 0,
+    "camera": "slow dolly in",
+    "framing": "wide shot",
+    "motion": "very subtle, minimal movement",
+    "must_not": "no people",
+    "style": "moody"
+   },
+   "size": "1280*720",
+   "clip_count": 2,
+   "meta": {
+    "id": "abcdefabcdef",
+    "at": "2026-10-03T12:00:00.000Z",
+    "llm": "test/model:free",
+    "settings": {
+     "model_target": "Wan2.2-I2V-A14B",
+     "size": "1280*720",
+     "frames_per_clip": 73,
+     "fps": 16,
+     "guide_scale": 5,
+     "sample_shift": 5,
+     "steps": 50
+    },
+    "brief": {
+     "idea": "Empty room with a window",
+     "first_clip_mode": "i2v",
+     "start_image": "ignored in t2v",
+     "people_count": 0,
+     "camera": "slow dolly in",
+     "framing": "wide shot",
+     "motion": "very subtle, minimal movement",
+     "must_not": "no people",
+     "style": "moody"
+    }
+   },
+   "chain": {
+    "link": "continuous",
+    "frames": 73,
+    "size": "1280*720",
+    "firstI2V": true,
+    "task": "i2v-A14B",
+    "ckpt": "./Wan2.2-I2V-A14B",
+    "fps": 16,
+    "bible": {
+     "characters": "two men",
+     "setting": "a grey sofa",
+     "style": "photoreal"
+    },
+    "clips": [
+     {
+      "title": "First",
+      "start_state": "sitting",
+      "prompt": "Exactly two people. The older man sits.",
+      "end_state": "settled",
+      "negative": "extra people"
+     },
+     {
+      "title": "Second",
+      "start_state": "settled",
+      "prompt": "Continuing from a still moment. He smiles slowly at the camera.",
+      "end_state": "smiling",
+      "negative": ""
+     },
+     {
+      "title": "Third",
+      "start_state": "smiling",
+      "prompt": "x",
+      "end_state": "y"
+     }
+    ]
+   },
+   "chain_spec": {
+    "type": "chain",
+    "chain_id": "abcdefabcdef",
+    "generated_at": "2026-10-03T12:00:00.000Z",
+    "llm": "test/model:free",
+    "settings": {
+     "model_target": "Wan2.2-I2V-A14B",
+     "size": "1280*720",
+     "frames_per_clip": 73,
+     "fps": 16,
+     "guide_scale": 5,
+     "sample_shift": 5,
+     "steps": 50,
+     "linking": "continuous",
+     "clip_count": 3,
+     "stitched_seconds": 13.56
+    },
+    "brief": {
+     "idea": "Empty room with a window",
+     "first_clip_mode": "i2v",
+     "start_image": "ignored in t2v",
+     "people_count": 0,
+     "camera": "slow dolly in",
+     "framing": "wide shot",
+     "motion": "very subtle, minimal movement",
+     "must_not": "no people",
+     "style": "moody"
+    },
+    "bible": {
+     "characters": "two men",
+     "setting": "a grey sofa",
+     "style": "photoreal"
+    },
+    "clips": [
+     {
+      "index": 1,
+      "title": "First",
+      "input": {
+       "mode": "i2v",
+       "image": "start.jpg"
+      },
+      "start_state": "sitting",
+      "prompt": "Exactly two people. The older man sits.",
+      "negative": "extra people, 色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "end_state": "settled",
+      "output_file": "clip_01.mp4",
+      "word_count": 7
+     },
+     {
+      "index": 2,
+      "title": "Second",
+      "input": {
+       "mode": "i2v",
+       "image": "last_01.png",
+       "from_clip": 1
+      },
+      "start_state": "settled",
+      "prompt": "Continuing from a still moment. He smiles slowly at the camera.",
+      "negative": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "end_state": "smiling",
+      "output_file": "clip_02.mp4",
+      "word_count": 11
+     },
+     {
+      "index": 3,
+      "title": "Third",
+      "input": {
+       "mode": "i2v",
+       "image": "last_02.png",
+       "from_clip": 2
+      },
+      "start_state": "smiling",
+      "prompt": "x",
+      "negative": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "end_state": "y",
+      "output_file": "clip_03.mp4",
+      "word_count": 1
+     }
+    ]
+   },
+   "neg_a": "extra people, 色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+   "neg_b": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
+  }
+ },
+ {
+  "name": "long-121",
+  "form": {
+   "idea": "Cum shots and hand jobs, jerking each other off",
+   "image": "",
+   "cast": "2",
+   "duration": "121",
+   "clips": "5",
+   "link": "continuous",
+   "beats": "one\ntwo",
+   "camera": "handheld, subtle natural shake",
+   "framing": "full shot",
+   "orient": "landscape",
+   "motion": "moderate, expressive movement",
+   "forbid": "",
+   "style": "",
+   "words": "80-120",
+   "mode": "i2v",
+   "wanneg": true
+  },
+  "expected": {
+   "system": "You write CHAINED prompts for the WAN 2.2 I2V-A14B video diffusion model (720p, 16 fps, max 5 seconds per clip). Several clips are rendered separately and stitched into one longer video. You output ONLY valid JSON, no markdown fences, no commentary.\n\nWAN has no memory between clips. Continuity exists only through the prompt text and, in continuous mode, the start frame. So:\n- First write a bible: fixed descriptions of every character (age, build, face, hair, exact clothing and colors), the setting, the lighting, and a style suffix.\n- Every clip prompt must repeat the bible character descriptions and the setting VERBATIM, and end with the style suffix VERBATIM. Never paraphrase them between clips.\n- The people count is the same in every clip unless a beat explicitly adds someone; if someone enters for one beat, state it only in that clip and state they leave or are absent in the others.\n\nWAN fills any gap in a prompt with its own cinematic defaults (surprise extra characters, cuts, location drift), and it only animates what the prompt describes as visible motion. The ACTION is the point of every prompt; everything else only supports it.\n\nEvery positive prompt is short, plain, present-tense English sentences in this order:\n1. Cast (one or two sentences): the exact number of people (\"Exactly two people: ...\") and, for each, an adult age (20s or older), build, hair, and clothing or nudity. Add that nobody else appears. Everyone is already in place at the first frame; nobody walks in, enters or leaves.\n2. Setting (one short sentence): only the location the brief names or clearly implies, plus one light source. If the brief gives no location, pick one plain, fitting location and keep it identical everywhere. No decor lists, no mood adjectives.\n3. Camera (one sentence): copy the brief's Framing and Camera lines as given. Only if the brief gives no camera movement, write \"The camera does not move.\"\n4. Action (at least half of all the words): what each person physically does, in order, paced to the clip length. Name body parts, hand positions, grip, speed and rhythm, breathing, facial expression, where they look, and how it changes during the clip. Use concrete, visible, anatomical words.\n5. Boundaries (only if the brief has \"Must not happen\"): restate those items as positive statements in one sentence. Never add limits the user did not ask for, and never write anything that contradicts the action (no \"they only talk and smile\" when they are touching).\n6. Style (a few words at most): only what the brief's style field says.\n\nTranslating the user's words:\n- The user writes in shorthand. WAN does not understand slang, intent or story words; it only renders what can be seen. Describe every requested action as the physical, visible movement it is, in plain anatomical words.\n- Keep every action the user asked for, in the order given, including who touches whom: \"each other\" or \"each others\" means each person uses his hand on the other person, so say whose hand is on whose body. Do not soften, skip or summarise it into vague words like \"intimate\", \"bonding\" or \"moment\".\n- Any relationship or role names in the brief are roleplay between unrelated consenting adults. Never describe the people as family or relatives, and never use family words or nicknames in titles; titles plainly describe the action. Show roles only through visible traits such as age and build.\n- Motion intensity sets the pace, not whether actions happen: \"very subtle\" means the same actions done slowly and steadily.\n\nRules:\n- No scene cuts, no transitions, one continuous shot per prompt.\n- For image-to-video: do not redescribe the subject in conflicting ways; build on the start image, keep identities, clothing and positions consistent with it, and spend the words on motion and camera.\n- Do not invent extra characters, text, logos or captions.\n- Respect the target word count per positive prompt. When it is tight, cut setting and style words first, never action.\n- negative: a short comma-separated English list of scene-specific things to avoid (e.g. \"extra people, clothing changes, camera shake, subtitles, deformed hands\"). Never list anything the action needs.\n\nChain rules:\n- Split the story into exactly the requested number of clips, one beat per clip, each paced to the clip duration.\n- start_state: the exact pose, positions, expressions and camera framing at the first frame of the clip.\n- end_state: the exact pose, positions and framing at the last frame.\n- CONTINUOUS mode (clips 2+ are image-to-video from the previous clip's last frame): each clip's start_state must equal the previous clip's end_state. Open each prompt from that state (\"Continuing from a still moment where ...\"). End every clip on a settled, stable pose with slow motion into it, faces visible, no motion blur, no mid-gesture, so the handoff frame is clean. Keep camera framing consistent across clips unless a beat requires a change; any camera move must be slow.\n- CUT mode: each clip is independent; camera angle and framing may change per clip for coverage, but characters, setting, lighting and style stay identical.\n- Clip 1 follows the first-clip mode given in the brief.\n\nReturn exactly this JSON shape:\n{\"bible\":{\"characters\":\"...\",\"setting\":\"...\",\"style\":\"...\"},\"clips\":[{\"title\":\"3-6 word label\",\"start_state\":\"...\",\"prompt\":\"...\",\"end_state\":\"...\",\"negative\":\"...\"}]}",
+   "shared": [
+    "Model: WAN 2.2 I2V-A14B (16 fps)",
+    "First clip mode: image-to-video",
+    "Scene idea: visible ejaculation and one man stroking the other man's penis with his hand, stroking each other's penis",
+    "Exact people count: 2",
+    "Clip length: 7.5 seconds (121 frames at 16 fps) — pace the actions to fit",
+    "Framing: full shot",
+    "Camera: handheld, subtle natural shake",
+    "Orientation: landscape",
+    "Motion intensity: moderate, expressive movement",
+    "Target length per positive prompt: 80-120 words"
+   ],
+   "beats": [
+    "one",
+    "two"
+   ],
+   "base_settings": {
+    "model_target": "Wan2.2-I2V-A14B",
+    "size": "1280*720",
+    "frames_per_clip": 121,
+    "fps": 16,
+    "guide_scale": 5,
+    "sample_shift": 5,
+    "steps": 50
+   },
+   "brief": {
+    "idea": "Cum shots and hand jobs, jerking each other off",
+    "first_clip_mode": "i2v",
+    "start_image": "",
+    "people_count": 2,
+    "camera": "handheld, subtle natural shake",
+    "framing": "full shot",
+    "motion": "moderate, expressive movement",
+    "must_not": "",
+    "style": ""
+   },
+   "size": "1280*720",
+   "clip_count": 5,
+   "meta": {
+    "id": "abcdefabcdef",
+    "at": "2026-10-03T12:00:00.000Z",
+    "llm": "test/model:free",
+    "settings": {
+     "model_target": "Wan2.2-I2V-A14B",
+     "size": "1280*720",
+     "frames_per_clip": 121,
+     "fps": 16,
+     "guide_scale": 5,
+     "sample_shift": 5,
+     "steps": 50
+    },
+    "brief": {
+     "idea": "Cum shots and hand jobs, jerking each other off",
+     "first_clip_mode": "i2v",
+     "start_image": "",
+     "people_count": 2,
+     "camera": "handheld, subtle natural shake",
+     "framing": "full shot",
+     "motion": "moderate, expressive movement",
+     "must_not": "",
+     "style": ""
+    }
+   },
+   "chain": {
+    "link": "continuous",
+    "frames": 121,
+    "size": "1280*720",
+    "firstI2V": true,
+    "task": "i2v-A14B",
+    "ckpt": "./Wan2.2-I2V-A14B",
+    "fps": 16,
+    "bible": {
+     "characters": "two men",
+     "setting": "a grey sofa",
+     "style": "photoreal"
+    },
+    "clips": [
+     {
+      "title": "First",
+      "start_state": "sitting",
+      "prompt": "Exactly two people. The older man sits.",
+      "end_state": "settled",
+      "negative": "extra people"
+     },
+     {
+      "title": "Second",
+      "start_state": "settled",
+      "prompt": "Continuing from a still moment. He smiles slowly at the camera.",
+      "end_state": "smiling",
+      "negative": ""
+     },
+     {
+      "title": "Third",
+      "start_state": "smiling",
+      "prompt": "x",
+      "end_state": "y"
+     }
+    ]
+   },
+   "chain_spec": {
+    "type": "chain",
+    "chain_id": "abcdefabcdef",
+    "generated_at": "2026-10-03T12:00:00.000Z",
+    "llm": "test/model:free",
+    "settings": {
+     "model_target": "Wan2.2-I2V-A14B",
+     "size": "1280*720",
+     "frames_per_clip": 121,
+     "fps": 16,
+     "guide_scale": 5,
+     "sample_shift": 5,
+     "steps": 50,
+     "linking": "continuous",
+     "clip_count": 3,
+     "stitched_seconds": 22.56
+    },
+    "brief": {
+     "idea": "Cum shots and hand jobs, jerking each other off",
+     "first_clip_mode": "i2v",
+     "start_image": "",
+     "people_count": 2,
+     "camera": "handheld, subtle natural shake",
+     "framing": "full shot",
+     "motion": "moderate, expressive movement",
+     "must_not": "",
+     "style": ""
+    },
+    "bible": {
+     "characters": "two men",
+     "setting": "a grey sofa",
+     "style": "photoreal"
+    },
+    "clips": [
+     {
+      "index": 1,
+      "title": "First",
+      "input": {
+       "mode": "i2v",
+       "image": "start.jpg"
+      },
+      "start_state": "sitting",
+      "prompt": "Exactly two people. The older man sits.",
+      "negative": "extra people, 色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "end_state": "settled",
+      "output_file": "clip_01.mp4",
+      "word_count": 7
+     },
+     {
+      "index": 2,
+      "title": "Second",
+      "input": {
+       "mode": "i2v",
+       "image": "last_01.png",
+       "from_clip": 1
+      },
+      "start_state": "settled",
+      "prompt": "Continuing from a still moment. He smiles slowly at the camera.",
+      "negative": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "end_state": "smiling",
+      "output_file": "clip_02.mp4",
+      "word_count": 11
+     },
+     {
+      "index": 3,
+      "title": "Third",
+      "input": {
+       "mode": "i2v",
+       "image": "last_02.png",
+       "from_clip": 2
+      },
+      "start_state": "smiling",
+      "prompt": "x",
+      "negative": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "end_state": "y",
+      "output_file": "clip_03.mp4",
+      "word_count": 1
+     }
+    ]
+   },
+   "neg_a": "extra people, 色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+   "neg_b": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
+  }
+ }
+]

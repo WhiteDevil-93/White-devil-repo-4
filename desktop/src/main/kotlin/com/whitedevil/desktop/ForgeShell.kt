@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Dns
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.sp
 
 enum class Screen(val label: String, val icon: ImageVector, val group: NavGroup) {
     Home("Home", Icons.Outlined.Home, NavGroup.Studio),
+    Create("Create", Icons.Outlined.AddCircleOutline, NavGroup.Studio),
     Renders("Renders", Icons.Outlined.Movie, NavGroup.Studio),
     Gallery("Gallery", Icons.Outlined.Image, NavGroup.Studio),
     Terminal("Shell", Icons.Outlined.Terminal, NavGroup.Studio),
