@@ -25,6 +25,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.provider.Settings
 import android.text.InputType
 import android.util.Base64
 import android.view.Gravity
@@ -64,6 +65,7 @@ import com.whitedevil.ui.app.WhiteDevilApp
 import com.whitedevil.relay.RelayHttp
 import com.whitedevil.relay.RelayHttpException
 import com.whitedevil.ui.chat.ChatUiMessage
+import com.whitedevil.agent.AccessConfig
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.AgentEvent
 import com.whitedevil.agent.Attachments
@@ -84,6 +86,9 @@ import kotlinx.serialization.json.Json
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.concurrent.thread
@@ -599,6 +604,38 @@ class MainActivity : FragmentActivity() {
             .show()
     }
 
+    /**
+     * Asks the user Allow/Deny from a worker thread and blocks for the answer. Denies on timeout
+     * (e.g. the app is in the background and nobody can see the dialog): the safe default.
+     */
+    private fun askUserBlocking(title: String, detail: String): Boolean {
+        val latch = CountDownLatch(1)
+        val allowed = AtomicBoolean(false)
+        main.post {
+            AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(detail)
+                .setCancelable(false)
+                .setPositiveButton("Allow") { _, _ -> allowed.set(true); latch.countDown() }
+                .setNegativeButton("Deny") { _, _ -> latch.countDown() }
+                .show()
+        }
+        return latch.await(120, TimeUnit.SECONDS) && allowed.get()
+    }
+
+    private fun openAllFilesAccessSettings() {
+        main.post {
+            try {
+                startActivity(
+                    Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:$packageName"))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                )
+            } catch (e: Exception) {
+                startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+        }
+    }
+
     internal fun showModelPicker() {
         val labels = agentModels.map { UiPolish.modelLabel(it) }.toTypedArray()
         // Prefer a real AlertDialog when the bottom sheet theme is invisible / behind Compose.
@@ -742,6 +779,12 @@ class MainActivity : FragmentActivity() {
             relayBaseUrl = relayBase,
             relayUser = relayUser,
             relayPass = relayPass,
+            access = AccessConfig(
+                confirm = { title, detail -> askUserBlocking(title, detail) },
+                phoneRoot = Environment.getExternalStorageDirectory(),
+                phoneAccessGranted = { Environment.isExternalStorageManager() },
+                requestPhoneAccess = { openAllFilesAccessSettings() },
+            ),
         )
 
         agentShowProgress = true
