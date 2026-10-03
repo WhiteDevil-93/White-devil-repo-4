@@ -57,6 +57,7 @@ fun GalleryScreen(settings: Settings) {
         ThumbLoader(MediaCaches.contactSheets, fetch = { client.contactSheet(it) }, decode = ::decodeToBitmap, permits = 1)
     }
     var selectedKey by remember(client) { mutableStateOf<String?>(null) }
+    val actions = rememberClipActions(client)
     // Held above the load state so Refresh keeps the user's search.
     var filter by remember { mutableStateOf(MediaFilter()) }
     val state = library.state
@@ -136,6 +137,7 @@ fun GalleryScreen(settings: Settings) {
                                 cacheKey = mediaCacheKey(settings.hubUrl, selected.clip),
                                 thumbs = thumbs,
                                 contacts = contacts,
+                                actions = actions,
                                 nowMs = nowMs,
                                 onClose = { selectedKey = null },
                                 modifier = Modifier.width(460.dp).fillMaxHeight(),
@@ -283,6 +285,7 @@ private fun PreviewPane(
     cacheKey: String,
     thumbs: ThumbLoader<ImageBitmap>,
     contacts: ThumbLoader<ImageBitmap>,
+    actions: ClipActions,
     nowMs: Long,
     onClose: () -> Unit,
     modifier: Modifier,
@@ -306,6 +309,7 @@ private fun PreviewPane(
             (clip.source ?: item.group.source)?.let { Tag(it, tone.secondary) }
         }
         Text(item.group.title, style = MaterialTheme.typography.bodySmall, color = tone.onSurfaceVariant)
+        ClipButtons(actions, clip.name)
         Text(
             listOfNotNull(
                 clip.idx?.let { "#$it" },

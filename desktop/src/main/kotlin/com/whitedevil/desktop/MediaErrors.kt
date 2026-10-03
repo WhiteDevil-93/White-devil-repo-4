@@ -9,7 +9,7 @@ import java.net.ConnectException
 import java.net.UnknownHostException
 
 /** Which hub call failed; the same status code means different things for each. */
-enum class MediaOp { Library, Thumb, ContactSheet }
+enum class MediaOp { Library, Thumb, ContactSheet, Clip }
 
 enum class MediaErrorKind(val title: String) {
     Config("Hub not configured"),
@@ -62,11 +62,14 @@ data class MediaTimeouts(
     val thumbMs: Long = 60_000,
     // A contact sheet is 12-24 ffmpeg seeks (up to 60 s each in the worst case).
     val contactMs: Long = 150_000,
+    // A whole video; this is also the idle limit between chunks, so a slow link is fine as long as bytes keep arriving.
+    val clipMs: Long = 600_000,
 ) {
     fun forOp(op: MediaOp): Long = when (op) {
         MediaOp.Library -> libraryMs
         MediaOp.Thumb -> thumbMs
         MediaOp.ContactSheet -> contactMs
+        MediaOp.Clip -> clipMs
     }
 }
 

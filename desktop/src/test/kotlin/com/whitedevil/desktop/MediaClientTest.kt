@@ -141,6 +141,7 @@ class MediaClientTest {
             MediaOp.Library -> c.library().failure()
             MediaOp.Thumb -> c.thumb("a.mp4").failure()
             MediaOp.ContactSheet -> c.contactSheet("a.mp4").failure()
+            MediaOp.Clip -> c.downloadClip("a.mp4", java.nio.file.Files.createTempDirectory("mc").resolve("a.mp4")).failure()
         }
     }
 

@@ -33,6 +33,7 @@ fun RendersScreen(settings: Settings) {
     val library = rememberLibrary(client)
     val nowMs by rememberNowMs()
     val expanded = remember(client) { mutableStateMapOf<String, Boolean>() }
+    val actions = rememberClipActions(client)
     // Held here, above the load state, so a Refresh does not throw the user's search away.
     var filter by remember { mutableStateOf(MediaFilter()) }
     val state = library.state
@@ -54,7 +55,7 @@ fun RendersScreen(settings: Settings) {
                 "The hub answered normally and its library has no renders.",
                 onRefresh = library::reload,
             )
-            is LibraryUiState.Loaded -> RenderList(state, filter, { filter = it }, expanded, nowMs)
+            is LibraryUiState.Loaded -> RenderList(state, filter, { filter = it }, expanded, nowMs, actions)
         }
     }
 }
@@ -66,6 +67,7 @@ private fun RenderList(
     onFilter: (MediaFilter) -> Unit,
     expanded: MutableMap<String, Boolean>,
     nowMs: Long,
+    actions: ClipActions,
 ) {
     val all = remember(state) { buildGallerySections(state.groups).flatMap { it.items } }
     val counts = remember(all, filter, nowMs) { filterCounts(all, filter, nowMs) }
@@ -95,10 +97,10 @@ private fun RenderList(
                     item(key = "h:${section.key}") {
                         ProjectHeader(section, open) { expanded[section.key] = !open }
                     }
-                    if (open) items(section.items, key = { it.key }) { ClipRow(it.group, it.clip, nowMs, showProject = false) }
+                    if (open) items(section.items, key = { it.key }) { ClipRow(it.group, it.clip, nowMs, showProject = false, actions = actions) }
                 } else {
                     item(key = "h:${section.key}") { DayHeader(section.title, section.items.size) }
-                    items(section.items, key = { it.key }) { ClipRow(it.group, it.clip, nowMs, showProject = true) }
+                    items(section.items, key = { it.key }) { ClipRow(it.group, it.clip, nowMs, showProject = true, actions = actions) }
                 }
             }
         }
@@ -149,7 +151,7 @@ private fun ProjectHeader(section: ViewSection, open: Boolean, onToggle: () -> U
 }
 
 @Composable
-private fun ClipRow(group: MediaGroup, clip: MediaClip, nowMs: Long, showProject: Boolean) {
+private fun ClipRow(group: MediaGroup, clip: MediaClip, nowMs: Long, showProject: Boolean, actions: ClipActions) {
     Row(
         Modifier.fillMaxWidth()
             .background(Forge.Well, RoundedCornerShape(8.dp))
@@ -168,5 +170,6 @@ private fun ClipRow(group: MediaGroup, clip: MediaClip, nowMs: Long, showProject
         (clip.source ?: group.source)?.let { Tag(it, Forge.Acc) }
         Text(formatMb(clip.mb), color = Forge.Mut, fontSize = 12.sp)
         Text(formatAge(clip.mtime, nowMs), color = Forge.Dim, fontSize = 12.sp, modifier = Modifier.width(96.dp))
+        ClipButtons(actions, clip.name)
     }
 }
