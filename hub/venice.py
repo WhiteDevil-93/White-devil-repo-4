@@ -57,6 +57,14 @@ DEFAULT_MODELS = [
      "price_in": 0.1625, "price_out": 0.50, "uncensored": True},
     {"id": "venice-uncensored-role-play", "name": "Venice Role Play Uncensored", "host": "venice",
      "price_in": 0.50, "price_out": 2.00, "uncensored": True},
+    {"id": "qwen-3-6-plus", "name": "Qwen 3.6 Plus Uncensored", "host": "venice",
+     "price_in": 0.625, "price_out": 3.75, "uncensored": True},
+    {"id": "olafangensan-glm-4.7-flash-heretic", "name": "GLM 4.7 Flash Heretic", "host": "venice",
+     "price_in": 0.07, "price_out": 0.40, "uncensored": True},
+    {"id": "abliteration-abliterated-model-large-v2", "name": "Abliterated Large V2", "host": "venice",
+     "price_in": 3.00, "price_out": 5.00, "uncensored": True},
+    {"id": "e2ee-gemma-4-26b-a4b-uncensored-p", "name": "Gemma 4 26B A4B Uncensored (E2EE)", "host": "venice",
+     "price_in": 0.19, "price_out": 0.88, "uncensored": True},
     {"id": "cognitivecomputations/dolphin-mistral-24b-venice-edition", "name": "Venice Uncensored (Dolphin)", "host": "openrouter",
      "price_in": 0.20, "price_out": 0.90, "uncensored": True},
     # Venice
@@ -177,6 +185,8 @@ def price_label(price_in: Any = None, price_out: Any = None) -> str:
 TOOL_INCAPABLE_MODELS = frozenset({
     "venice-uncensored-1-2",
     "venice-uncensored-role-play",
+    # Measured 2026-10-03: the API answers HTTP 400 "tools is not supported by this model".
+    "e2ee-gemma-4-26b-a4b-uncensored-p",
 })
 
 
