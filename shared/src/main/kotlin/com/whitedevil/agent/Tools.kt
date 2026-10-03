@@ -34,11 +34,20 @@ data class ToolExecution(
  *    - `run_laptop_command`: Execute a command or script on the user's WSL laptop via relay SSH bridge
  *    - `download_civitai_lora`: Invoke the Civitai mirror downloader on the laptop
  */
+/** A pluggable source of extra tools for [ToolBox]. Blocking calls; the agent already runs tools off the UI thread. */
+interface ToolExtension {
+    fun definitions(): List<ToolDefinition>
+    fun handles(name: String): Boolean
+    fun execute(name: String, argumentsJson: String): String
+}
+
 class ToolBox(
     private val workspaceDir: File,
     private val relayBaseUrl: String,
     private val relayUser: String,
     private val relayPass: String,
+    /** Optional extra tools (e.g. MCP servers on the laptop). Android passes none. */
+    private val extension: ToolExtension? = null,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -46,7 +55,9 @@ class ToolBox(
         workspaceDir.mkdirs()
     }
 
-    val definitions: List<ToolDefinition> = buildList {
+    val definitions: List<ToolDefinition> get() = builtInDefinitions + extension?.definitions().orEmpty()
+
+    private val builtInDefinitions: List<ToolDefinition> = buildList {
         // Local device workspace filesystem tools
         add(
             ToolDefinition(
@@ -314,7 +325,8 @@ class ToolBox(
                 "hub_request" -> ToolExecution(hubRequest(argumentsJson))
                 "remember" -> ToolExecution(remember(argumentsJson))
                 "queue_gpu_render" -> ToolExecution(queueGpuRender(argumentsJson))
-                else -> ToolExecution("Error: unknown tool '$name'.")
+                else -> if (extension?.handles(name) == true) ToolExecution(extension.execute(name, argumentsJson))
+                else ToolExecution("Error: unknown tool '$name'.")
             }
             result
         } catch (e: Exception) {

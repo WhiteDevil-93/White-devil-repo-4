@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -50,6 +51,8 @@ private fun runApp() = application {
     var settings by remember { mutableStateOf(Settings.load()) }
     // The Venice conversation belongs to the app, not to the Venice screen: leaving the screen must not lose it.
     val agentSession = remember { AgentSession.load() }
+    val mcpHost = remember { com.whitedevil.desktop.mcp.McpHost(java.io.File(Settings.dir, "mcp-servers.json")) }
+    DisposableEffect(mcpHost) { onDispose { mcpHost.close() } }
     val scale = UiScale.clamp(settings.uiScale)
     // Saved straight away so the size is still there after a restart.
     val setScale = { v: Float -> settings = settings.copy(uiScale = UiScale.clamp(v)).also { Settings.save(it) } }
@@ -106,6 +109,7 @@ private fun runApp() = application {
                                     // Saved right away, so the choice is still there after a restart.
                                     onModelChange = { id -> settings = settings.copy(model = id).also { Settings.save(it) } },
                                     session = agentSession,
+                                    mcp = mcpHost,
                                 )
                                 // Kept alive across tab switches: restarting the shell
                                 // on every switch would discard the session and any
