@@ -16,9 +16,13 @@ NO_PICTURE = "With no picture, describe the video: who is in it and what happens
 
 
 @pytest.fixture()
-def started(monkeypatch):
-    """chain() ends with start_watch(jid), which is what actually renders. Stub it and record."""
+def started(monkeypatch, tmp_path):
+    """chain() ends with start_watch(jid), which is what actually renders. Stub it and record.
+
+    ltx.JOBS is a folder inside the hub source tree (hub/ltx_jobs), not under the home directory, so the
+    conftest sandbox does not cover it: without this every run left job records in the repo."""
     calls = []
+    monkeypatch.setattr(ltx, "JOBS", tmp_path)
     monkeypatch.setattr(ltx, "start_watch", lambda jid: calls.append(jid))
     return calls
 
