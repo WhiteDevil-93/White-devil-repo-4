@@ -1,13 +1,18 @@
 package com.whitedevil.ui.hub
 
 import android.annotation.SuppressLint
+import android.app.DownloadManager
+import android.content.Context
 import android.graphics.Color
 import android.net.Uri
+import android.os.Environment
 import android.view.ViewGroup
 import android.webkit.HttpAuthHandler
+import android.webkit.URLUtil
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -66,6 +71,27 @@ fun HubRelayWebBody(host: MainActivity, path: String) {
                         realm: String,
                     ) {
                         handler.proceed(user, pass)
+                    }
+                }
+                // A WebView ignores `<a download>` unless the app registers a listener, so the
+                // Download button on a finished LTX clip did nothing at all. Hand the file to the
+                // system DownloadManager (notification, resumable, lands in Downloads). It fetches
+                // in its own process, so the relay login is attached explicitly and only for the
+                // relay's own https host; see relayDownloadHeaders.
+                setDownloadListener { dlUrl, _, contentDisposition, mimeType, _ ->
+                    runCatching {
+                        val name = URLUtil.guessFileName(dlUrl, contentDisposition, mimeType)
+                        val req = DownloadManager.Request(Uri.parse(dlUrl))
+                            .setTitle(name)
+                            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name)
+                        mimeType?.takeIf { it.isNotBlank() }?.let { req.setMimeType(it) }
+                        relayDownloadHeaders(dlUrl, hostName, user, pass)
+                            .forEach { (k, v) -> req.addRequestHeader(k, v) }
+                        (ctx.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(req)
+                        Toast.makeText(ctx, "Downloading $name…", Toast.LENGTH_SHORT).show()
+                    }.onFailure {
+                        Toast.makeText(ctx, "Couldn't start the download: ${it.message}", Toast.LENGTH_LONG).show()
                     }
                 }
                 if (hostName.isNotBlank()) {
