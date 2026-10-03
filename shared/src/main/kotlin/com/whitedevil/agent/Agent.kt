@@ -22,6 +22,12 @@ class Agent(
     private val enableWebSearch: Boolean = false,
     private val maxToolIterations: Int = 24,
     private val onEvent: (AgentEvent) -> Unit = {},
+    /**
+     * When set, replies are streamed and this gets the reply text so far each time it grows (it restarts
+     * from empty if a request is retried). A callback rather than an AgentEvent case on purpose: the
+     * desktop app shares this class and matches AgentEvent exhaustively.
+     */
+    private val onPartial: ((String) -> Unit)? = null,
 ) {
     sealed class SlashAction {
         data object Help : SlashAction()
@@ -237,7 +243,9 @@ class Agent(
             var lastError: Exception? = null
             for (attempt in 0 until MAX_REQUEST_ATTEMPTS) {
                 try {
-                    response = client.chatCompletion(request)
+                    val partial = onPartial
+                    if (partial != null) partial("")      // a retry starts the text over
+                    response = if (partial != null) client.chatCompletionStream(request, partial) else client.chatCompletion(request)
                     break
                 } catch (e: CancellationException) {
                     throw e

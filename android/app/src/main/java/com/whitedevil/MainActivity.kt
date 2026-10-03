@@ -871,15 +871,17 @@ class MainActivity : FragmentActivity() {
                     enableWebSearch = webSearch,
                     onEvent = { event ->
                         main.post {
+                            flushStreamNow()   // show the last streamed text before reacting to this event
                             when (event) {
-                                is AgentEvent.User -> addMessageBubble("You", event.text, ROLE_USER)
-                                is AgentEvent.Venice -> addMessageBubble("Venice", event.text, ROLE_VENICE)
-                                is AgentEvent.ToolCall -> addMessageBubble("Tool Call: ${event.name}", event.arguments, ROLE_TOOL_CALL)
-                                is AgentEvent.ToolOutput -> addMessageBubble("Output: ${event.name}", event.output, ROLE_TOOL_OUTPUT)
-                                is AgentEvent.Error -> addMessageBubble("Error", event.message, ROLE_ERROR)
+                                is AgentEvent.User -> { streamBubbleId = null; addMessageBubble("You", event.text, ROLE_USER) }
+                                is AgentEvent.Venice -> finishStreamBubble(event.text)
+                                is AgentEvent.ToolCall -> { streamBubbleId = null; addMessageBubble("Tool Call: ${event.name}", event.arguments, ROLE_TOOL_CALL) }
+                                is AgentEvent.ToolOutput -> { streamBubbleId = null; addMessageBubble("Output: ${event.name}", event.output, ROLE_TOOL_OUTPUT) }
+                                is AgentEvent.Error -> { streamBubbleId = null; addMessageBubble("Error", event.message, ROLE_ERROR) }
                             }
                         }
-                    }
+                    },
+                    onPartial = ::onStreamText,
                 )
 
                 withContext(Dispatchers.IO) {
@@ -1182,6 +1184,55 @@ class MainActivity : FragmentActivity() {
             Uri.fromFile(dest)
         } catch (_: Exception) {
             null
+        }
+    }
+
+    // ---- streaming replies: one bubble that grows as text arrives ----
+
+    private var streamBubbleId: Long? = null
+    private val pendingStream = java.util.concurrent.atomic.AtomicReference<String?>(null)
+    private val streamFlushScheduled = java.util.concurrent.atomic.AtomicBoolean(false)
+
+    /** Called from the network thread with the reply so far. Coalesces updates to about one per 60 ms. */
+    private fun onStreamText(text: String) {
+        pendingStream.set(text)
+        if (streamFlushScheduled.compareAndSet(false, true)) {
+            main.postDelayed({
+                streamFlushScheduled.set(false)
+                flushStreamNow()
+            }, 60)
+        }
+    }
+
+    private fun flushStreamNow() {
+        val text = pendingStream.getAndSet(null) ?: return
+        val id = streamBubbleId
+        val idx = if (id == null) -1 else chatMessages.indexOfFirst { it.id == id }
+        if (text.isEmpty()) {                       // a retry starts the text over
+            if (idx >= 0) chatMessages.removeAt(idx)
+            streamBubbleId = null
+            return
+        }
+        if (idx < 0) {
+            val nid = nextChatId++
+            chatMessages.add(ChatUiMessage(id = nid, sender = "Venice", message = text, role = ROLE_VENICE, toolExpanded = false))
+            streamBubbleId = nid
+        } else {
+            chatMessages[idx] = chatMessages[idx].copy(message = text)
+        }
+        chatScrollTrigger++
+    }
+
+    /** The reply is complete: put the full text in the streaming bubble (or add one if nothing streamed). */
+    private fun finishStreamBubble(fullText: String) {
+        val id = streamBubbleId
+        val idx = if (id == null) -1 else chatMessages.indexOfFirst { it.id == id }
+        streamBubbleId = null
+        if (idx >= 0) {
+            chatMessages[idx] = chatMessages[idx].copy(message = fullText)
+            chatScrollTrigger++
+        } else {
+            addMessageBubble("Venice", fullText, ROLE_VENICE)
         }
     }
 
