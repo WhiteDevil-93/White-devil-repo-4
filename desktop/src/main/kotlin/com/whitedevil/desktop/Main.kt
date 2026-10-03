@@ -3,17 +3,8 @@ package com.whitedevil.desktop
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +18,7 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 
 /**
- * WhiteDevil desktop — the laptop-end interface.
+ * WhiteDevil desktop — the laptop-end interface (Forge Hub).
  *
  * Deliberately not a webview. The agent loop it drives is [com.whitedevil.agent.Agent]
  * from :shared, the same class the Android app runs, so a fix to the loop lands on
@@ -37,6 +28,9 @@ import androidx.compose.ui.window.rememberWindowState
  * The hub on the OCI VM stays the system of record: it is reachable when this
  * laptop is not, which is what lets the phone keep working while the laptop is
  * away. This app is a client of it, not a replacement for it.
+ *
+ * The shell (sidebar, top bar, Home) follows the UX Pilot "Forge Hub laptop PWA" design;
+ * colours come from [Forge], which mirrors hub/static/ui/tokens.css.
  */
 fun main() = application {
     val windowState = rememberWindowState(size = DpSize(1280.dp, 860.dp))
@@ -44,76 +38,56 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         state = windowState,
-        title = "WhiteDevil",
+        title = "Forge Hub",
     ) {
         var settings by remember { mutableStateOf(Settings.load()) }
-        var screen by remember { mutableStateOf(Screen.Agent) }
+        var screen by remember { mutableStateOf(Screen.Home) }
 
         MaterialTheme(colorScheme = WhiteDevilColors) {
-            Surface(color = MaterialTheme.colorScheme.background) {
+            Surface(color = Forge.Bg) {
+                // One library request for the shell: it drives the status pill and Home. The
+                // Renders and Gallery screens keep their own, so they can refresh independently.
+                val client = rememberMediaClient(settings)
+                val library = rememberLibrary(client)
+                val nowMs by rememberNowMs()
+                val health = when (library.state) {
+                    is LibraryUiState.Loaded -> HubHealth.Online
+                    is LibraryUiState.Error -> HubHealth.Unreachable
+                    else -> HubHealth.Connecting
+                }
+
                 Row(Modifier.fillMaxSize()) {
-                    NavRail(current = screen, onSelect = { screen = it })
-                    Box(Modifier.weight(1f)) {
-                        when (screen) {
-                            Screen.Agent -> AgentScreen(
-                                settings = settings,
-                                onOpenSettings = { screen = Screen.Settings },
-                            )
-                            // Kept alive across tab switches: restarting the shell
-                            // on every switch would discard the session and any
-                            // long-running command in it.
-                            Screen.Terminal -> TerminalScreen()
-                            Screen.Renders -> RendersScreen(settings)
-                            Screen.Gallery -> GalleryScreen(settings)
-                            Screen.Colab -> ColabScreen(settings)
-                            Screen.Thunder -> ThunderScreen(settings)
-                            Screen.Ltx -> LtxScreen(settings)
-                            Screen.Vast -> VastScreen(settings)
-                            Screen.Setup -> SetupScreen(settings)
-                            Screen.Settings -> SettingsScreen(
-                                initial = settings,
-                                onSave = { settings = it; screen = Screen.Agent },
-                                onBack = { screen = Screen.Agent },
-                            )
+                    ForgeSidebar(current = screen, onSelect = { screen = it })
+                    Column(Modifier.weight(1f).fillMaxSize()) {
+                        ForgeTopBar(title = screen.label, health = health, hubLabel = client.hubLabel)
+                        Box(Modifier.weight(1f)) {
+                            when (screen) {
+                                Screen.Home -> HomeScreen(library.state, nowMs, onOpen = { screen = it })
+                                Screen.Agent -> AgentScreen(
+                                    settings = settings,
+                                    onOpenSettings = { screen = Screen.Settings },
+                                )
+                                // Kept alive across tab switches: restarting the shell
+                                // on every switch would discard the session and any
+                                // long-running command in it.
+                                Screen.Terminal -> TerminalScreen()
+                                Screen.Renders -> RendersScreen(settings)
+                                Screen.Gallery -> GalleryScreen(settings)
+                                Screen.Colab -> ColabScreen(settings)
+                                Screen.Thunder -> ThunderScreen(settings)
+                                Screen.Ltx -> LtxScreen(settings)
+                                Screen.Vast -> VastScreen(settings)
+                                Screen.Setup -> SetupScreen(settings)
+                                Screen.Settings -> SettingsScreen(
+                                    initial = settings,
+                                    onSave = { settings = it; screen = Screen.Home },
+                                    onBack = { screen = Screen.Home },
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
-    }
-}
-
-private enum class Screen(val label: String) {
-    Agent("Agent"),
-    Terminal("Shell"),
-    Renders("Renders"),
-    Gallery("Gallery"),
-    Colab("Colab"),
-    Thunder("Thunder"),
-    Ltx("LTX"),
-    Vast("Vast"),
-    Setup("Setup"),
-    Settings("Settings"),
-}
-
-/**
- * Left rail rather than a top tab strip: it matches the Forge Hub design's
- * sidebar, and leaves the full window height for the conversation and the shell.
- */
-@Composable
-private fun NavRail(current: Screen, onSelect: (Screen) -> Unit) {
-    NavigationRail(
-        modifier = Modifier.fillMaxHeight().width(96.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) {
-        Spacer(Modifier.height(12.dp))
-        Screen.entries.forEach { screen ->
-            NavigationRailItem(
-                selected = current == screen,
-                onClick = { onSelect(screen) },
-                icon = {},
-                label = { Text(screen.label, style = MaterialTheme.typography.labelMedium) },
-            )
         }
     }
 }

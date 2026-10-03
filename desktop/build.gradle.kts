@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":shared"))            // agent loop, Venice client, tools
     implementation(compose.desktop.currentOs)
     implementation(compose.material3)
+    implementation(compose.materialIconsExtended)   // sidebar icons
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.9.0")
 
     // A real pty, not a pipe: wsl.exe needs a terminal on the other end or
