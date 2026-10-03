@@ -65,6 +65,18 @@ def test_models_report_tool_capability_and_ui_gates_on_it():
     assert "(m in modelTools) ? !!modelTools[m] : true" in page
 
 
+def test_every_known_uncensored_model_is_in_the_picker():
+    # Measured on Venice 2026-10-03 (/models + a live call each). The Android picker lists the same ids.
+    client = TestClient(app)
+    by_id = {m["id"]: m for m in client.get("/api/venice/models").json()["models"]}
+    for mid in ("venice-uncensored-1-2", "venice-uncensored-role-play", "gemma-4-uncensored", "qwen-3-6-plus",
+                "olafangensan-glm-4.7-flash-heretic", "abliteration-abliterated-model-large-v2",
+                "e2ee-gemma-4-26b-a4b-uncensored-p"):
+        assert by_id[mid]["uncensored"] is True, mid
+    assert by_id["e2ee-gemma-4-26b-a4b-uncensored-p"]["supports_tools"] is False
+    assert by_id["gemma-4-uncensored"]["supports_tools"] is True
+
+
 def test_workspace_file_tools(tmp_path, monkeypatch):
     monkeypatch.setattr(venice, "WORKSPACE", tmp_path / "ws")
     client = TestClient(app)

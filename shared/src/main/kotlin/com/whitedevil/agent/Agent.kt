@@ -223,7 +223,8 @@ class Agent(
             val request = ChatCompletionRequest(
                 model = model,
                 messages = history,
-                tools = toolBox.definitions.ifEmpty { null },
+                // E2EE models reject a tools array outright (HTTP 400 "tools is not supported by this model").
+                tools = if (model.startsWith("e2ee-")) null else toolBox.definitions.ifEmpty { null },
                 veniceParameters = if (enableWebSearch) {
                     VeniceParameters(enableWebSearch = "on")
                 } else {
