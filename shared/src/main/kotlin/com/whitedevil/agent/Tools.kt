@@ -40,8 +40,13 @@ class ToolBox(
     private val relayUser: String,
     private val relayPass: String,
     access: AccessConfig = AccessConfig(),
+    /** Memory, skills, MCP servers... Offered to the model alongside the built-in tools. */
+    private val extensions: List<ToolExtension> = emptyList(),
 ) {
     private val json = Json { ignoreUnknownKeys = true }
+
+    /** System-prompt text contributed by the extensions (memories, skill index, connected servers). */
+    fun promptAddendum(): String = extensions.map { it.promptBlock() }.filter { it.isNotBlank() }.joinToString("\n\n")
 
     // Declared before `definitions`: that property reads it during construction.
     private val accessTools = AccessTools(access, ::runBashOnLaptop)
@@ -52,6 +57,7 @@ class ToolBox(
 
     val definitions: List<ToolDefinition> = buildList {
         addAll(accessTools.definitions)
+        extensions.forEach { addAll(it.definitions) }
         // Local device workspace filesystem tools
         add(
             ToolDefinition(
@@ -338,7 +344,11 @@ class ToolBox(
                 "hub_overview" -> ToolExecution(hubOverview())
                 "hub_request" -> ToolExecution(hubRequest(argumentsJson))
                 "queue_gpu_render" -> ToolExecution(queueGpuRender(argumentsJson))
-                else -> ToolExecution(accessTools.execute(name, argumentsJson) ?: "Error: unknown tool '$name'.")
+                else -> ToolExecution(
+                    accessTools.execute(name, argumentsJson)
+                        ?: extensions.firstOrNull { it.handles(name) }?.execute(name, argumentsJson)
+                        ?: "Error: unknown tool '$name'.",
+                )
             }
             result
         } catch (e: Exception) {
