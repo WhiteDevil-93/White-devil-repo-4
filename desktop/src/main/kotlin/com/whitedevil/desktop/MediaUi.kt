@@ -36,7 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -105,27 +107,23 @@ fun rememberNowMs(intervalMs: Long = 30_000): State<Long> =
 
 @Composable
 fun MediaTopBar(title: String, subtitle: String, busy: Boolean, onRefresh: () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
-        Row(
-            Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(title, style = MaterialTheme.typography.titleSmall)
+    // The shell's top bar already shows the page title; this strip holds the summary and Refresh.
+    // `title` stays in the signature because Gallery and Renders both pass it.
+    Row(
+        Modifier.fillMaxWidth().height(48.dp).background(Forge.Bg).padding(horizontal = 28.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(subtitle, color = Forge.Mut, fontSize = 13.sp, maxLines = 1)
+        Spacer(Modifier.weight(1f))
+        if (busy) {
+            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Forge.Acc)
             Spacer(Modifier.size(12.dp))
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-            )
-            Spacer(Modifier.weight(1f))
-            if (busy) {
-                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                Spacer(Modifier.size(12.dp))
-            }
-            TextButton(onClick = onRefresh) { Text("Refresh") }
+        }
+        TextButton(onClick = onRefresh) {
+            Text("REFRESH", color = Forge.Acc, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
         }
     }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(Forge.Line))
 }
 
 @Composable
@@ -209,7 +207,7 @@ fun WarningsBanner(warnings: List<String>) {
 }
 
 @Composable
-fun Tag(text: String, color: Color = MaterialTheme.colorScheme.onSurfaceVariant) {
+fun Tag(text: String, color: Color = Forge.Mut) {
     Text(
         text,
         style = MaterialTheme.typography.labelSmall,

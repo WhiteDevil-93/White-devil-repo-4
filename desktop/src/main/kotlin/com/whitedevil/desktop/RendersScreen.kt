@@ -1,6 +1,7 @@
 package com.whitedevil.desktop
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /**
  * Renders: the hub's clip library, grouped the way the hub groups it (goon packs,
@@ -90,74 +93,57 @@ private fun RenderList(state: LibraryUiState.Loaded, expanded: MutableMap<String
 
 @Composable
 private fun GroupHeader(group: MediaGroup, open: Boolean, nowMs: Long, onToggle: () -> Unit) {
-    val tone = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(10.dp)
     Row(
         Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(tone.surface)
+            .clip(shape)
+            .background(Forge.Panel)
+            .border(1.dp, if (open) Forge.Acc2 else Forge.Line, shape)
             .clickable(onClick = onToggle)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(group.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(group.title, color = Forge.Fg, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 kindLabel(group.kind)?.let { Tag(it) }
-                group.source?.let { Tag(it, tone.secondary) }
+                group.source?.let { Tag(it, Forge.Acc) }
             }
         }
         Spacer(Modifier.width(16.dp))
-        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            val total = group.totalMb?.let { " - ${formatMb(it)}" } ?: ""
+        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            val total = group.totalMb?.let { " · ${formatMb(it)}" } ?: ""
             Text(
                 "${group.clips.size} ${if (group.clips.size == 1) "clip" else "clips"}$total",
-                style = MaterialTheme.typography.bodySmall,
+                color = Forge.Fg, fontSize = 13.sp,
             )
-            Text(
-                "updated ${formatAge(group.updated, nowMs)}",
-                style = MaterialTheme.typography.labelSmall,
-                color = tone.onSurfaceVariant,
-            )
-            Text(
-                if (open) "Hide clips" else "Show clips",
-                style = MaterialTheme.typography.labelSmall,
-                color = tone.secondary,
-            )
+            Text("updated ${formatAge(group.updated, nowMs)}", color = Forge.Dim, fontSize = 12.sp)
+            Text(if (open) "Hide clips" else "Show clips", color = Forge.Acc, fontSize = 12.sp)
         }
     }
 }
 
 @Composable
 private fun ClipRow(group: MediaGroup, clip: MediaClip, nowMs: Long) {
-    val tone = MaterialTheme.colorScheme
     Row(
         Modifier.fillMaxWidth().padding(start = 16.dp)
-            .background(tone.surfaceVariant, RoundedCornerShape(8.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .background(Forge.Well, RoundedCornerShape(8.dp))
+            .border(1.dp, Forge.Line, RoundedCornerShape(8.dp))
+            .padding(horizontal = 14.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            clip.idx?.let { "#$it" } ?: "-",
-            style = MaterialTheme.typography.labelSmall,
-            color = tone.onSurfaceVariant,
-            modifier = Modifier.width(36.dp),
-        )
+        Text(clip.idx?.let { "#$it" } ?: "-", color = Forge.Dim, fontSize = 12.sp, modifier = Modifier.width(36.dp))
         Text(
             clip.name,
-            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+            color = Forge.Fg, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
             modifier = Modifier.weight(1f),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
         // Only worth a tag when this clip came from a different pipeline than its group.
-        clip.source?.takeIf { it != group.source }?.let { Tag(it, tone.secondary) }
-        Text(formatMb(clip.mb), style = MaterialTheme.typography.labelSmall, color = tone.onSurfaceVariant)
-        Text(
-            formatAge(clip.mtime, nowMs),
-            style = MaterialTheme.typography.labelSmall,
-            color = tone.onSurfaceVariant,
-            modifier = Modifier.width(96.dp),
-        )
+        clip.source?.takeIf { it != group.source }?.let { Tag(it, Forge.Acc) }
+        Text(formatMb(clip.mb), color = Forge.Mut, fontSize = 12.sp)
+        Text(formatAge(clip.mtime, nowMs), color = Forge.Dim, fontSize = 12.sp, modifier = Modifier.width(96.dp))
     }
 }
