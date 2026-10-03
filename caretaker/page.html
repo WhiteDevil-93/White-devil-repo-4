@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Caretaker</title>
+<style>
+:root{--bg:#fafaf8;--fg:#1c1c1a;--mut:#6b6b66;--card:#fff;--line:#e3e3de;--ok:#1a7f4b;--warn:#b45309;--bad:#b42318;--acc:#3b5bdb}
+@media(prefers-color-scheme:dark){:root{--bg:#141413;--fg:#ecece8;--mut:#9a9a93;--card:#1d1d1b;--line:#2e2e2b;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--acc:#8aa4ff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif;padding:16px;max-width:760px;margin-inline:auto}
+h1{font-size:20px;margin:0 0 12px}h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:20px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.k{color:var(--mut);font-size:12px}.v{font-size:17px;font-weight:600}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid currentColor}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+button.p{background:var(--acc);color:#fff;border-color:var(--acc)}button:disabled{opacity:.5}
+#log{max-height:240px;overflow:auto;font:12px/1.5 ui-monospace,monospace}
+#log div{padding:3px 0;border-bottom:1px solid var(--line)}
+#chat{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.m{padding:8px 11px;border-radius:10px;max-width:92%;white-space:pre-wrap}.u{background:var(--acc);color:#fff;align-self:flex-end}.a{background:var(--card);border:1px solid var(--line)}
+form{display:flex;gap:8px}input{flex:1;font:inherit;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+</style></head><body>
+<h1>Caretaker</h1>
+<div class="card" id="status">Loading…</div>
+<h2>Now</h2><div class="grid" id="facts"></div>
+<h2>Controls</h2><div class="card"><button id="pause">…</button> <span class="k" id="mode"></span></div>
+<h2>Activity</h2><div class="card" id="log"></div>
+<h2>Ask the caretaker</h2>
+<div id="chat"></div>
+<form id="f"><input id="q" placeholder="Ask about the relay…" autocomplete="off"><button class="p" id="send">Ask</button></form>
+<p class="k">Read-only chat. First answer after idle takes ~20 s while the model loads; replies run at about 5 words per second.</p>
+<script>
+const H={'X-Requested-With':'caretaker','Content-Type':'application/json'};
+const $=id=>document.getElementById(id);let paused=false,history=[];
+const api=(p,o)=>fetch('api/'+p,o).then(r=>r.json());
+function row(k,v,c){return `<div class="card"><div class="k">${k}</div><div class="v ${c||''}">${v}</div></div>`}
+async function refresh(){
+  try{
+    const s=await api('state'),f=s.facts;paused=s.paused;
+    $('status').innerHTML=(s.anomalies.length?`<span class="pill warn">${s.anomalies.length} to look at</span> `+s.anomalies.join(' · '):'<span class="pill ok">all clear</span>')
+      +(s.inflight.length?`<div class="k">In flight: ${s.inflight.join(' · ')}</div>`:'');
+    $('facts').innerHTML=row('Disk',f.disk_used_pct+'%',f.disk_used_pct>80?'bad':'')+row('Free RAM',f.mem_available_mb+' MB')
+      +row('Hub',f.forge_hub_service+' / '+f.forge_hub_http,f.forge_hub_http===200?'ok':'bad')+row('Upgrades',f.apt_upgradable,+f.apt_upgradable?'warn':'')
+      +row('Last backup',f.last_backup_age_h==null?'none':f.last_backup_age_h+' h',f.last_backup_age_h>26?'warn':'')+row('Kernel',f.running_kernel);
+    $('pause').textContent=paused?'Resume caretaker':'Pause caretaker';
+    $('mode').textContent=(paused?'PAUSED. ':'')+(s.live?'Live: it will act on its own.':'Dry-run: it only logs what it would do.');
+    const a=await api('audit');
+    $('log').innerHTML=a.slice().reverse().map(e=>`<div>${(e.t||'').slice(5,16).replace('T',' ')} ${e.event} ${e.action||''} ${e.reason||e.why||''}</div>`).join('')||'Nothing yet.';
+  }catch(e){$('status').innerHTML='<span class="pill bad">unreachable</span> '+e}
+}
+$('pause').onclick=async()=>{$('pause').disabled=true;await api('pause',{method:'POST',headers:H,body:JSON.stringify({paused:!paused})});$('pause').disabled=false;refresh()};
+function add(role,t){const d=document.createElement('div');d.className='m '+(role==='user'?'u':'a');d.textContent=t;$('chat').appendChild(d);d.scrollIntoView({block:'end'});return d}
+$('f').onsubmit=async e=>{e.preventDefault();const q=$('q').value.trim();if(!q)return;$('q').value='';$('send').disabled=true;add('user',q);const w=add('assistant','Thinking…');
+  try{const r=await api('chat',{method:'POST',headers:H,body:JSON.stringify({message:q,history})});
+    w.textContent=r.reply||('Error: '+(r.error||'no reply'));if(r.reply){history.push({role:'user',content:q},{role:'assistant',content:r.reply})}}
+  catch(x){w.textContent='Error: '+x}$('send').disabled=false};
+refresh();setInterval(refresh,15000);
+</script></body></html>

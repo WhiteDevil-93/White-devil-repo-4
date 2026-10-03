@@ -1,0 +1,2 @@
+# Deployed to Linux (rsync, systemd): keep LF regardless of core.autocrlf
+* text eol=lf
