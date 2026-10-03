@@ -17,7 +17,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.Forum
+import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Terminal
@@ -47,6 +51,10 @@ fun YouHomeScreen(
     onTerminal: () -> Unit,
     onSettings: () -> Unit,
     onPhoneFiles: () -> Unit,
+    onChats: () -> Unit,
+    onMemory: () -> Unit,
+    onSkills: () -> Unit,
+    onConnectors: () -> Unit,
     onTestConnections: () -> Unit,
     onAddVeniceKey: () -> Unit,
 ) {
@@ -114,6 +122,14 @@ fun YouHomeScreen(
                 }
             }
             WdHairline()
+            ProfileRow(Icons.Outlined.Forum, "Chats", "History, search, export", onChats)
+            WdHairline(Modifier.padding(start = 16.dp))
+            ProfileRow(Icons.Outlined.Psychology, "Memory", "What the agent remembers", onMemory)
+            WdHairline(Modifier.padding(start = 16.dp))
+            ProfileRow(Icons.Outlined.AutoAwesome, "Skills", "Instruction packs on demand", onSkills)
+            WdHairline(Modifier.padding(start = 16.dp))
+            ProfileRow(Icons.Outlined.Extension, "Connectors", "MCP servers & tools", onConnectors)
+            WdHairline(Modifier.padding(start = 16.dp))
             ProfileRow(Icons.Outlined.Settings, "General Settings", "UI, Language, Regions", onSettings)
             WdHairline(Modifier.padding(start = 16.dp))
             ProfileRow(Icons.Outlined.Folder, "Phone files", "Browse & attach from this device", onPhoneFiles)

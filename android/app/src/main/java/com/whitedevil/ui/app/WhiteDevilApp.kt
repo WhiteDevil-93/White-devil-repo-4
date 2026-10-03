@@ -15,6 +15,10 @@ import com.whitedevil.*
 import com.whitedevil.MainActivity
 import com.whitedevil.R
 import com.whitedevil.ui.agent.AgentScreen
+import com.whitedevil.ui.agenttools.ChatsScreen
+import com.whitedevil.ui.agenttools.ConnectorsScreen
+import com.whitedevil.ui.agenttools.MemoryScreen
+import com.whitedevil.ui.agenttools.SkillsScreen
 import com.whitedevil.ui.components.WdBottomBar
 import com.whitedevil.ui.components.WdTabItem
 import com.whitedevil.ui.files.PhoneFilesScreen
@@ -84,6 +88,10 @@ fun WhiteDevilApp(host: MainActivity) {
                                 host.showYouSub(MainActivity.YouSub.SETTINGS)
                             },
                             onPhoneFiles = { host.showYouSub(MainActivity.YouSub.FILES) },
+                            onChats = { host.showYouSub(MainActivity.YouSub.CHATS) },
+                            onMemory = { host.showYouSub(MainActivity.YouSub.MEMORY) },
+                            onSkills = { host.showYouSub(MainActivity.YouSub.SKILLS) },
+                            onConnectors = { host.showYouSub(MainActivity.YouSub.CONNECTORS) },
                             onTestConnections = { host.runQuickConnectionTest(updateYouHome = true) },
                             onAddVeniceKey = { host.showVeniceKeySheet() },
                         )
@@ -95,6 +103,10 @@ fun WhiteDevilApp(host: MainActivity) {
                             onFormChange = { settingsForm = it },
                         )
                         MainActivity.YouSub.FILES -> PhoneFilesScreen(host)
+                        MainActivity.YouSub.CHATS -> ChatsScreen(host)
+                        MainActivity.YouSub.MEMORY -> MemoryScreen(host)
+                        MainActivity.YouSub.SKILLS -> SkillsScreen(host)
+                        MainActivity.YouSub.CONNECTORS -> ConnectorsScreen(host)
                     }
                 }
             }
