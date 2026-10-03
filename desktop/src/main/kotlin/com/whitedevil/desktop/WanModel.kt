@@ -61,7 +61,7 @@ val WAN_WORDS = listOf("60-90" to "60–90 words", "80-120" to "80–120 words",
 
 object WanPrompts {
     private fun resource(name: String): String =
-        WanPrompts::class.java.getResourceAsStream("/wan/$name")?.use { String(it.readBytes(), Charsets.UTF_8) }
+        WanPrompts::class.java.getResourceAsStream("/wan/$name")?.use { String(it.readBytes(), Charsets.UTF_8) }?.replace("\r\n", "\n")
             ?: error("missing resource /wan/$name")
 
     val coreRules: String by lazy { resource("core_rules.txt") }
