@@ -41,7 +41,7 @@ fun ConnectorsPanel(host: McpHost, onClose: () -> Unit) {
             host.saveConfig(text) ?: run {
                 val s = host.status()
                 if (s.isEmpty()) "Saved. No server started (check the command, or that npx/uvx is installed)."
-                else "Saved. Running: " + s.joinToString(", ") { (n, c) -> "$n ($c tools)" }
+                else "Saved. " + s.joinToString("\n") { st -> if (st.error == null) "${st.name}: running, ${st.tools} tools" else "${st.name}: started but failed: ${st.error}" }
             }
         }
         busy = false
@@ -54,7 +54,7 @@ fun ConnectorsPanel(host: McpHost, onClose: () -> Unit) {
         title = { Text("Connectors (MCP)", color = Forge.Fg, fontSize = 18.sp, fontWeight = FontWeight.SemiBold) },
         text = {
             Column(Modifier.width(600.dp).heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Tip("MCP servers give Venice extra tools (files, web fetch, GitHub, databases…). Same format as Claude Desktop. Servers start the first time you send a message.")
+                Tip("MCP servers give Venice extra tools (files, web fetch, GitHub, databases…). Same format as Claude Desktop. They start when the app opens (the first start can take 1 to 2 minutes). Add \"enabledTools\" or \"disabledTools\" lists to a server to limit its tools; * works as a wildcard.")
                 OutlinedTextField(text, { text = it }, Modifier.fillMaxWidth(), minLines = 8, maxLines = 16, shape = RoundedCornerShape(8.dp), colors = forgeFieldColors())
                 SmallButton(if (busy) "STARTING…" else "SAVE AND START", !busy) { apply() }
                 status?.let { Tip(it, if (it.startsWith("That is not")) Forge.Bad else Forge.Mut) }

@@ -21,6 +21,8 @@ for line in sys.stdin:
     if not line:
         continue
     msg = json.loads(line)
+    if msg.get("jsonrpc") != "2.0":
+        continue
     method = msg.get("method")
     if method == "initialize":
         send({"jsonrpc": "2.0", "id": msg["id"], "result": {"protocolVersion": "2024-11-05", "capabilities": {}, "serverInfo": {"name": "wrapper", "version": "0.1"}}})

@@ -53,7 +53,8 @@ private fun runApp() = application {
     val agentSession = remember { AgentSession.load() }
     val mcpHost = remember { com.whitedevil.desktop.mcp.McpHost(java.io.File(Settings.dir, "mcp-servers.json")) }
     val skillStore = remember { com.whitedevil.desktop.skills.SkillStore(java.io.File(Settings.dir, "skills")).also { runCatching { it.seedDefaults() } } }
-    DisposableEffect(mcpHost) { onDispose { mcpHost.close() } }
+    // Some connectors (Google Drive) need a minute or two to load: start them now so they are ready by the first message.
+    DisposableEffect(mcpHost) { mcpHost.warmUp(); onDispose { mcpHost.close() } }
     val scale = UiScale.clamp(settings.uiScale)
     // Saved straight away so the size is still there after a restart.
     val setScale = { v: Float -> settings = settings.copy(uiScale = UiScale.clamp(v)).also { Settings.save(it) } }

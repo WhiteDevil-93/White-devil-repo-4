@@ -1,27 +1,38 @@
 package com.whitedevil.desktop.mcp
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class JsonRpcRequest(
-    val jsonrpc: String = "2.0",
+    // Must be on the wire: the client's Json has encodeDefaults = false, which would otherwise drop it, and real
+    // MCP servers ignore messages that lack "jsonrpc":"2.0".
+    @EncodeDefault val jsonrpc: String = "2.0",
     val id: Long,
     val method: String,
     val params: JsonElement? = null,
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class JsonRpcNotification(
-    val jsonrpc: String = "2.0",
+    // Must be on the wire: the client's Json has encodeDefaults = false, which would otherwise drop it, and real
+    // MCP servers ignore messages that lack "jsonrpc":"2.0".
+    @EncodeDefault val jsonrpc: String = "2.0",
     val method: String,
     val params: JsonElement? = null,
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class JsonRpcResponse(
-    val jsonrpc: String = "2.0",
+    // Must be on the wire: the client's Json has encodeDefaults = false, which would otherwise drop it, and real
+    // MCP servers ignore messages that lack "jsonrpc":"2.0".
+    @EncodeDefault val jsonrpc: String = "2.0",
     val id: JsonElement? = null,
     val result: JsonElement? = null,
     val error: JsonRpcError? = null,

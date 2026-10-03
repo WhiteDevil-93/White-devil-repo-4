@@ -12,6 +12,8 @@ for line in sys.stdin:
     if not line:
         continue
     msg = json.loads(line)
+    if msg.get("jsonrpc") != "2.0":
+        continue  # a real MCP server ignores anything that is not JSON-RPC 2.0
     method = msg.get("method")
     if method == "initialize":
         if hang_initialize:

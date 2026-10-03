@@ -26,7 +26,7 @@ class McpHostTest {
             assertTrue("remember" in names && "hub_request" in names, "built-in tools are still there")
             assertEquals("hello", box.executeDetailed("fake__echo", """{"text":"hello"}""").text.trim().removePrefix("echo: "))
             assertTrue(box.executeDetailed("nope", "{}").text.startsWith("Error: unknown tool"), "unknown names are still refused")
-            assertEquals(listOf("fake" to names.count { it.startsWith("fake__") }), host.status())
+            assertEquals(listOf(McpHost.ServerStatus("fake", names.count { it.startsWith("fake__") }, null)), host.status())
         } finally { host.close() }
     }
 
@@ -55,5 +55,44 @@ class McpHostTest {
         assertEquals(exe, McpServerLoader.forThisOs(exe, windows = true))
         val rel = McpServerConfig("python.exe")
         assertEquals(rel, McpServerLoader.forThisOs(rel, windows = true))
+    }
+
+    private fun configWith(dir: File, extra: String, serverArgs: String = "") = File(dir, "mcp-servers.json").also {
+        it.writeText("""{"mcpServers":{"fake":{"command":"$py","args":["${script()}"$serverArgs],$extra}}}""".replace(",}}}", "}}}"))
+    }
+
+    @Test fun `disabledTools and enabledTools trim a long tool list and refuse the rest`(@TempDir dir: File) {
+        val all = McpHost(config(dir)).let { h -> try { h.definitions().map { it.function.name } } finally { h.close() } }
+        assertTrue("fake__echo" in all && "fake__fail" in all && all.count { it.startsWith("fake__foo_bar") } >= 1, "baseline has several tools: $all")
+
+        val off = McpHost(configWith(dir, """"disabledTools":["fail","foo*"]"""))
+        try {
+            val box = ToolBox(File(dir, "ws"), "http://127.0.0.1:9", "u", "p", extension = off)
+            val names = box.definitions.map { it.function.name }
+            assertTrue("fake__echo" in names && "fake__fail" !in names && names.none { it.startsWith("fake__foo") }, "$names")
+            assertTrue(box.executeDetailed("fake__fail", "{}").text.startsWith("Error: unknown tool"), "a disabled tool cannot be called")
+            assertEquals(names.count { it.startsWith("fake__") }, off.status().single().tools, "the panel counts only the enabled tools")
+        } finally { off.close() }
+
+        val only = McpHost(configWith(dir, """"enabledTools":["echo"]"""))
+        try { assertEquals(listOf("fake__echo"), only.definitions().map { it.function.name }) } finally { only.close() }
+    }
+
+    @Test fun `a malformed filter list is ignored rather than hiding every tool`(@TempDir dir: File) {
+        val h = McpHost(configWith(dir, """"enabledTools":"echo","disabledTools":[1,null,""]"""))
+        try { assertTrue("fake__echo" in h.definitions().map { it.function.name }) } finally { h.close() }
+    }
+
+    @Test fun `a slow starting connector never holds up the chat`(@TempDir dir: File) {
+        val h = McpHost(configWith(dir, """"env":{}""", ""","--hang-initialize""""))
+        try {
+            h.warmUp()
+            Thread.sleep(500)
+            assertTrue(h.starting, "start-up is running in the background")
+            val t0 = System.currentTimeMillis()
+            val defs = h.definitions()
+            assertTrue(System.currentTimeMillis() - t0 < 8_000, "asking for tools returned promptly, not after the 2 minute start-up")
+            assertTrue(defs.isEmpty(), "and the message simply runs without those tools")
+        } finally { h.close() }
     }
 }

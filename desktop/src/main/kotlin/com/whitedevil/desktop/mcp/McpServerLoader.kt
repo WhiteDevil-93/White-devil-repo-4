@@ -19,7 +19,7 @@ object McpServerLoader {
      * in the file; a server that fails to launch is likewise reported on stderr and skipped
      * rather than aborting the whole agent.
      */
-    fun load(configFile: File): List<McpStdioClient> {
+    fun load(configFile: File, requestTimeoutMillis: Long = 30_000): List<McpStdioClient> {
         if (!configFile.exists()) return emptyList()
 
         val root = runCatching { json.parseToJsonElement(configFile.readText()) }.getOrElse {
@@ -35,7 +35,7 @@ object McpServerLoader {
                 System.err.println("Warning: invalid config for MCP server '$name', skipping it: ${it.message}")
                 return@mapNotNull null
             }
-            runCatching { McpStdioClient(name, forThisOs(config)) }
+            runCatching { McpStdioClient(name, forThisOs(config), requestTimeoutMillis) }
                 .onFailure { System.err.println("Warning: failed to start MCP server '$name': ${it.message}") }
                 .getOrNull()
         }
