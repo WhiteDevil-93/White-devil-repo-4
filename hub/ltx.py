@@ -960,7 +960,10 @@ async def chain(image: Optional[UploadFile] = File(None), from_job: Optional[str
         seed = seed if seed is not None else src["seed"] + 100
     if size not in SIZES:
         raise HTTPException(400, "Size must be landscape, portrait or square.")
-    if not src and image is None and not lines:
+    # A director plan is the description. `lines` is empty whenever the idea parsed as a plan, so
+    # checking only `lines` rejected every text-to-video run made from "Plan the clips for me" with
+    # "describe the video", while the same plan with a picture went through.
+    if not src and image is None and not lines and not directed:
         raise HTTPException(400, "With no picture, describe the video: who is in it and what happens.")
     o = parse_opts(opts, {"loras": [[sex_lora, sex_strength]]} if sex_lora else job_opts(src) if src else {})
     d.mkdir()
