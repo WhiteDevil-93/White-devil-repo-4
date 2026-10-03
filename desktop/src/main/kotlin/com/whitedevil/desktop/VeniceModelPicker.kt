@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.OutlinedTextField
@@ -41,7 +41,13 @@ import androidx.compose.ui.unit.sp
  * typed in, so the picker never leaves you stuck on the current model.
  */
 @Composable
-fun VeniceModelPicker(apiKey: String, current: String, enabled: Boolean, onPick: (String) -> Unit) {
+fun VeniceModelPicker(
+    apiKey: String,
+    current: String,
+    enabled: Boolean,
+    onPick: (String) -> Unit,
+    loadModels: suspend (String) -> MediaResult<List<VeniceModel>> = { fetchVeniceModels(it) },
+) {
     var open by remember { mutableStateOf(false) }
     var models by remember(apiKey) { mutableStateOf<List<VeniceModel>?>(null) }
     var problem by remember(apiKey) { mutableStateOf<String?>(null) }
@@ -51,7 +57,7 @@ fun VeniceModelPicker(apiKey: String, current: String, enabled: Boolean, onPick:
     // Load once, the first time it is opened (and again if the key changes).
     LaunchedEffect(open, apiKey) {
         if (open && models == null) {
-            when (val r = fetchVeniceModels(apiKey)) {
+            when (val r = loadModels(apiKey)) {
                 is MediaResult.Ok -> { models = usableVeniceModels(r.value); problem = null }
                 is MediaResult.Failure -> problem = r.error.message
             }
@@ -82,8 +88,10 @@ fun VeniceModelPicker(apiKey: String, current: String, enabled: Boolean, onPick:
                         )
                         val shown = filterVeniceModels(list, query)
                         if (shown.isEmpty()) Text("No model matches “$query”.", color = Forge.Mut, fontSize = 13.sp, modifier = Modifier.padding(8.dp))
-                        LazyColumn(Modifier.heightIn(max = 380.dp)) {
-                            items(shown, key = { it.id }) { m ->
+                        // A plain scrolling Column, not a LazyColumn: DropdownMenu measures its content with
+                        // IntrinsicSize, which a LazyColumn (a SubcomposeLayout) refuses to answer; that crashed the app.
+                        Column(Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            shown.forEach { m ->
                                 val selected = m.id == current
                                 Row(
                                     Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp)).background(if (selected) Forge.AccSoft else Forge.Panel2)

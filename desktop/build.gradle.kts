@@ -38,6 +38,7 @@ dependencies {
     // Ktor client + kotlinx-serialization arrive transitively via :shared (api).
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-client-mock:2.3.12")
+    testImplementation(compose.desktop.uiTestJUnit4)   // drives real screens (click, type) so a crash on open is caught here, not by the user
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 }
 
