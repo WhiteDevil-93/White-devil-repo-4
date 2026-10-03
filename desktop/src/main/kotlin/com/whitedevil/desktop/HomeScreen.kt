@@ -1,5 +1,6 @@
 package com.whitedevil.desktop
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +21,10 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,7 +42,7 @@ import androidx.compose.ui.unit.sp
  * placeholder figure on a dashboard reads as a fact.
  */
 @Composable
-fun HomeScreen(state: LibraryUiState, nowMs: Long, onOpen: (Screen) -> Unit) {
+fun HomeScreen(state: LibraryUiState, nowMs: Long, client: MediaClient, onOpen: (Screen) -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 24.dp)) {
         Text("Welcome back", color = Forge.Fg, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(4.dp))
@@ -45,7 +50,7 @@ fun HomeScreen(state: LibraryUiState, nowMs: Long, onOpen: (Screen) -> Unit) {
         Spacer(Modifier.height(24.dp))
 
         when (state) {
-            is LibraryUiState.Loaded -> Loaded(state, nowMs, onOpen)
+            is LibraryUiState.Loaded -> Loaded(state, nowMs, client, onOpen)
             is LibraryUiState.Error -> Notice("Couldn't load the library", state.error.message, Forge.Bad)
             else -> Notice("Loading the library…", null, Forge.Warn)
         }
@@ -53,7 +58,7 @@ fun HomeScreen(state: LibraryUiState, nowMs: Long, onOpen: (Screen) -> Unit) {
 }
 
 @Composable
-private fun Loaded(state: LibraryUiState.Loaded, nowMs: Long, onOpen: (Screen) -> Unit) {
+private fun Loaded(state: LibraryUiState.Loaded, nowMs: Long, client: MediaClient, onOpen: (Screen) -> Unit) {
     val clips = state.groups.flatMap { g -> g.clips.map { g to it } }
         .sortedByDescending { it.second.mtime ?: 0.0 }
     val newest = clips.firstOrNull()
@@ -75,7 +80,7 @@ private fun Loaded(state: LibraryUiState.Loaded, nowMs: Long, onOpen: (Screen) -
         Notice("No clips yet", "Finished renders will show up here.", Forge.Mut)
     } else {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            clips.take(5).forEach { (_, c) -> ClipCard(c.name, formatAge(c.mtime, nowMs), Modifier.weight(1f)) }
+            clips.take(5).forEach { (_, c) -> ClipCard(c.name, formatAge(c.mtime, nowMs), client, Modifier.weight(1f)) }
             repeat(5 - clips.take(5).size) { Spacer(Modifier.weight(1f)) }
         }
     }
@@ -96,13 +101,21 @@ private fun Tile(label: String, value: String, sub: String, modifier: Modifier) 
 }
 
 @Composable
-private fun ClipCard(name: String, age: String, modifier: Modifier) {
+private fun ClipCard(name: String, age: String, client: MediaClient, modifier: Modifier) {
+    // The hub makes the thumbnail on demand; until it arrives (or if it can't) the card shows a play mark.
+    val thumb by produceState<ImageBitmap?>(null, name) {
+        value = (client.thumb(name) as? MediaResult.Ok)?.let { r -> runCatching { decodeToBitmap(r.value) }.getOrNull() }
+    }
     Column(modifier) {
         Box(
             Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(10.dp)).background(Forge.Panel2)
                 .border(1.dp, Forge.Line, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Outlined.PlayArrow, null, tint = Forge.Acc3, modifier = Modifier.height(36.dp)) }
+        ) {
+            val bmp = thumb
+            if (bmp != null) Image(bmp, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            else Icon(Icons.Outlined.PlayArrow, null, tint = Forge.Acc3, modifier = Modifier.height(36.dp))
+        }
         Spacer(Modifier.height(8.dp))
         Text(prettyClipName(name), color = Forge.Fg, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(age, color = Forge.Dim, fontSize = 12.sp)

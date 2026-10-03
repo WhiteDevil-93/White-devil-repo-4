@@ -72,7 +72,7 @@ private fun runApp() = application {
                         ForgeTopBar(title = screen.label, health = health, hubLabel = client.hubLabel)
                         Box(Modifier.weight(1f)) {
                             when (screen) {
-                                Screen.Home -> HomeScreen(library.state, nowMs, onOpen = { screen = it })
+                                Screen.Home -> HomeScreen(library.state, nowMs, client, onOpen = { screen = it })
                                 Screen.Create -> CreateScreen(settings, createTab, onTab = { createTab = it })
                                 Screen.Agent -> AgentScreen(
                                     settings = settings,
