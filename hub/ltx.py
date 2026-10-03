@@ -276,8 +276,8 @@ Name the person and the limb: "Person B's right hand".
 Do not solve a hard action with impossible anatomy. Do not repeat a major action in the next clip.
 The END STATE of clip N must be a valid START STATE for clip N+1.
 If the user did not ask for camera movement, the camera stays stable.
-Adults only. When the cast is male, the plan is gay male sex: men, penises, anus, mouths — never a woman or female anatomy.
-Use plain anatomical words, never slang.
+When the cast is male, the plan is gay male sex: men, penises, anus, mouths — never a woman or female anatomy unless the user explicitly asks for female anatomy.
+Use plain anatomical words. Slang dictionary: gooner = someone who edges/goons (prolonged edging session), edging = bringing close to orgasm then stopping repeatedly, bate bros = men who masturbate together, petite = small/slender build, fresh = young-looking but adult, daddy/son = age-play dynamic between consenting adults, gooning = extended edging/orgasm control session. Use these terms when the user uses them; translate to anatomical descriptions for the video model.
 
 Reply in EXACTLY this layout, no markdown, no commentary:
 
@@ -312,12 +312,12 @@ Motion order: starting position, initiation, movement, contact, immediate result
 One primary action. If a limb is only partly in frame, it still belongs to its actor — do not borrow the other person's visible limb.
 If the camera is not specified, say the viewpoint stays stable. Do not invent speech, breathing, impacts, vibration, humming,
 ambience, or music. No throbbing, twitching, shuddering, vibrating, pulsing, trembling, or shaking.
-Adult graphic anatomy when the spec names it (penis, glans, shaft, foreskin, testicles, anus, mouth), never slang.
+Graphic anatomy when the spec names it (penis, glans, shaft, foreskin, testicles, anus, mouth, vagina, vulva, clitoris, breasts) — use explicit terms when the scene calls for it. Female anatomy only when the user explicitly requests it. Slang from the director (gooner, edging, bate bros, etc.) should be translated to anatomical descriptions for LTX-2.5.
 70-130 words, present tense, one paragraph. Reply with that paragraph only."""
 
 
 MEN = """
-EVERYONE IN THIS VIDEO IS AN ADULT MAN. Write GAY male sex / male-only sex — never a woman, never female anatomy, never a
+EVERYONE IN THIS VIDEO IS A MAN. Write GAY male sex / male-only sex — never a woman, never female anatomy unless explicitly requested, never a
 hetero couple. If two or more people are in frame they are men having gay sex with each other; if one man, it is male
 masturbation or solo male sex. Prefer wording like "two men", "gay sex", "his penis", "another man's penis/anus/mouth",
 "male bodies". The video model easily turns a touched chest into breasts, so: call it a "flat, muscular male chest" or
@@ -960,7 +960,7 @@ async def chain(image: Optional[UploadFile] = File(None), from_job: Optional[str
         seed = seed if seed is not None else src["seed"] + 100
     if size not in SIZES:
         raise HTTPException(400, "Size must be landscape, portrait or square.")
-    if not src and image is None and not lines:
+    if not src and image is None and not lines and not directed:
         raise HTTPException(400, "With no picture, describe the video: who is in it and what happens.")
     o = parse_opts(opts, {"loras": [[sex_lora, sex_strength]]} if sex_lora else job_opts(src) if src else {})
     d.mkdir()

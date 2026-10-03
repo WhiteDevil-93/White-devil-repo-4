@@ -54,6 +54,9 @@ def _content() -> list[dict]:
         rec["filename"] = Path(name).name
         if rec.get("source") == "civitai" and rec.get("vid"):
             rec["url"] = f"{CIVIT}/{rec['vid']}"
+        elif rec.get("source") == "stage":
+            # Served from the relay stage dir; phone Colab setup uploads it into /content/lora_keep.
+            rec["url"] = f"/api/ltx/stage/{rec['filename']}"
         elif rec.get("url"):
             pass
         else:
@@ -154,6 +157,13 @@ def download_script():
                 f'    wget -c -q --show-progress "{url}?token=$CT" -O "{dest}.part"',
                 f'    mv "{dest}.part" "{dest}"',
                 "  fi",
+                "fi",
+                "",
+            ]
+        elif r.get("source") == "stage":
+            lines += [
+                f'if [ -s "{dest}" ]; then echo "have {r["filename"]}"; else',
+                f'  echo "SKIP {r["filename"]} (staged on relay; phone Colab setup uploads it)"',
                 "fi",
                 "",
             ]
