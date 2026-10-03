@@ -44,7 +44,7 @@ class ToolBox(
     private val json = Json { ignoreUnknownKeys = true }
 
     // Declared before `definitions`: that property reads it during construction.
-    private val accessTools = AccessTools(access)
+    private val accessTools = AccessTools(access, ::runBashOnLaptop)
 
     init {
         workspaceDir.mkdirs()
@@ -276,6 +276,22 @@ class ToolBox(
 
     fun execute(name: String, argumentsJson: String): String =
         executeDetailed(name, argumentsJson).text
+
+    /**
+     * Runs [code] in bash on the laptop through the relay (same endpoint as run_laptop_command).
+     * Only AccessTools' fixed git commands reach this; the model never supplies the shell text.
+     */
+    private fun runBashOnLaptop(code: String): String = relayHttp(
+        "/api/laptop/run",
+        method = "POST",
+        postBody = buildJsonObject {
+            put("lang", "bash")
+            put("code", code)
+            put("cwd", "venice_run")
+            put("timeout", 90)
+        }.toString(),
+        readTimeoutMs = 120_000,
+    )
 
     /**
      * Confirm-before-acting for the older tools that delete, run code, change the hub or spend money.

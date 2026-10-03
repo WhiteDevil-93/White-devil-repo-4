@@ -1,6 +1,8 @@
 package com.whitedevil.agent
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
@@ -24,13 +26,39 @@ class AccessConfig(
     val phoneAccessGranted: () -> Boolean = { true },
     /** Opens the system screen where the user grants "All files access". */
     val requestPhoneAccess: (() -> Unit)? = null,
+    /** Folder on the laptop (WSL path) that holds the repo checkouts / worktrees. */
+    val gitRepoBase: String = "/mnt/a/New folder (4)",
+    val defaultRepo: String = "white-devil-repo-4",
 )
 
-/** Read/write on the phone's shared storage, with a confirmation for anything that changes data. */
-internal class AccessTools(private val cfg: AccessConfig) {
+/**
+ * Typed git on the laptop's repos (no raw shell, no force, no `add -A`) and read/write on the phone's
+ * shared storage, with a confirmation for anything that sends or changes data.
+ */
+internal class AccessTools(
+    private val cfg: AccessConfig,
+    private val runOnLaptop: (code: String) -> String = { "Error: git tools are not connected to a laptop here." },
+) {
     private val json = Json { ignoreUnknownKeys = true }
 
     val definitions: List<ToolDefinition> = buildList {
+        add(tool("git_status", "git status of a repo on the laptop (short form with branch).", opt = listOf(REPO)))
+        add(
+            tool(
+                "git_diff", "git diff of a repo on the laptop (truncated to 20 KB). Use staged=true for the index.",
+                opt = listOf(REPO, "path" to "Optional single file path inside the repo.", "staged" to "\"true\" to diff staged changes."),
+            ),
+        )
+        add(tool("git_log", "Recent commits (one line each).", opt = listOf(REPO, "count" to "How many, 1-50. Default 10.")))
+        add(
+            tool(
+                "git_commit",
+                "Stage ONLY the listed files and commit them. Paths are required: no '.', no wildcards (concurrent sessions share these repos).",
+                required = listOf("message" to "Commit message.", "paths" to "JSON array string of repo-relative file paths, e.g. [\"a.kt\",\"b/c.py\"]."),
+                opt = listOf(REPO),
+            ),
+        )
+        add(tool("git_push", "Push the CURRENT branch to origin. Asks the user first. Never force, never main/master.", opt = listOf(REPO)))
         if (cfg.phoneRoot != null) {
             add(tool("phone_list", "List a folder on the phone's shared storage (needs All files access).", opt = listOf("path" to "Folder, relative to shared storage. Default \"/\".")))
             add(
@@ -64,6 +92,14 @@ internal class AccessTools(private val cfg: AccessConfig) {
         }
         return try {
             when (name) {
+                "git_status" -> git(args) { "git --no-pager status --short --branch" }
+                "git_diff" -> git(args) { diffCommand(args) }
+                "git_log" -> git(args) {
+                    val n = (args.str("count")?.toIntOrNull() ?: 10).coerceIn(1, 50)
+                    "git --no-pager log --oneline --decorate -n $n"
+                }
+                "git_commit" -> commit(args)
+                "git_push" -> push(args)
                 "phone_list" -> phone { phoneList(args.str("path") ?: "/") }
                 "phone_read" -> phone { phoneRead(args.str("path")) }
                 "phone_write" -> phone { phoneWrite(args.str("path"), args.str("content")) }
@@ -84,6 +120,76 @@ internal class AccessTools(private val cfg: AccessConfig) {
             false
         }
     }
+
+    // ---- git on the laptop ------------------------------------------------------------------
+
+    private fun repoName(args: JsonObject): String? {
+        val name = args.str("repo")?.takeIf { it.isNotBlank() } ?: cfg.defaultRepo
+        return name.takeIf { SAFE_NAME.matches(it) && !it.startsWith(".") }
+    }
+
+    private fun git(args: JsonObject, build: () -> String?): String {
+        val repo = repoName(args) ?: return BAD_REPO
+        val cmd = build() ?: return "Error: that path is not allowed."
+        return runOnLaptop("${enter(repo)}\n$cmd 2>&1 | head -c 20000")
+    }
+
+    internal fun enter(repo: String): String {
+        val dir = sq(cfg.gitRepoBase.trimEnd('/') + "/" + repo)
+        return "cd $dir 2>/dev/null && test -e .git || { echo 'Error: not a git repo: $repo'; exit 2; }"
+    }
+
+    private fun diffCommand(args: JsonObject): String? {
+        val staged = args.str("staged").equals("true", ignoreCase = true)
+        val path = args.str("path")?.takeIf { it.isNotBlank() }?.let { checkedPath(it) ?: return null }
+        return buildString {
+            append("git --no-pager diff --no-color")
+            if (staged) append(" --cached")
+            if (path != null) append(" -- ").append(sq(path))
+        }
+    }
+
+    private fun commit(args: JsonObject): String {
+        val repo = repoName(args) ?: return BAD_REPO
+        val message = args.str("message")?.trim().orEmpty()
+        if (message.isEmpty()) return "Error: 'message' is required."
+        val raw = args["paths"]?.let { it as? JsonArray ?: (it as? JsonPrimitive)?.content?.let { s -> parseJsonOrNull(s) } }
+        val paths = pathList(raw)
+            ?: return "Error: 'paths' must be a non-empty JSON array of explicit repo-relative file paths (no '.', no wildcards)."
+        val code = "${enter(repo)}\ngit add -- ${paths.joinToString(" ") { sq(it) }} && git commit -m ${sq(message)} 2>&1 | head -c 20000"
+        return runOnLaptop(code)
+    }
+
+    private fun push(args: JsonObject): String {
+        val repo = repoName(args) ?: return BAD_REPO
+        if (!approve("Push to GitHub", "Push the current branch of '$repo' to origin.\n(main, master and detached HEAD are refused; no force.)", requireUi = true)) {
+            return "Denied: the user did not approve the push (or no confirmation UI is available)."
+        }
+        val code = "${enter(repo)}\n" +
+            "b=\$(git rev-parse --abbrev-ref HEAD)\n" +
+            "case \"\$b\" in main|master|HEAD) echo \"Error: refusing to push '\$b'\"; exit 3;; esac\n" +
+            "git push -u origin \"\$b\" 2>&1 | head -c 20000"
+        return runOnLaptop(code)
+    }
+
+    private fun parseJsonOrNull(s: String): JsonElement? = try { json.parseToJsonElement(s) } catch (e: Exception) { null }
+
+    /** Explicit repo-relative paths only. Null if empty or any entry is unsafe. */
+    internal fun pathList(el: JsonElement?): List<String>? {
+        val arr = el as? JsonArray ?: return null
+        val out = arr.mapNotNull { (it as? JsonPrimitive)?.content }.map { checkedPath(it) ?: return null }
+        return out.takeIf { it.isNotEmpty() && it.size == arr.size }
+    }
+
+    internal fun checkedPath(p: String): String? {
+        val t = p.trim()
+        if (t.isEmpty() || t == "." || t.startsWith("-") || t.startsWith("/") || t.startsWith("~")) return null
+        if (t.any { it in "*?[]\\\n\r\u0000" }) return null
+        if (t.split('/').any { it == ".." }) return null
+        return t
+    }
+
+    // ---- phone storage ----------------------------------------------------------------------
 
     private fun phone(block: () -> String): String {
         val root = cfg.phoneRoot ?: return "Error: phone storage is not available here."
@@ -152,6 +258,15 @@ internal class AccessTools(private val cfg: AccessConfig) {
     }
 
     private fun JsonObject.str(key: String): String? = (this[key] as? JsonPrimitive)?.content
+
+    private companion object {
+        val REPO = "repo" to "Checkout folder name under the repos folder (e.g. wd-ui). Defaults to the main repo."
+        val SAFE_NAME = Regex("^[A-Za-z0-9._-]+$")
+        const val BAD_REPO = "Error: 'repo' must be a plain folder name (letters, digits, . _ -)."
+
+        /** POSIX single-quote. */
+        fun sq(v: String): String = "'" + v.replace("'", "'\\''") + "'"
+    }
 
     private fun tool(
         name: String,

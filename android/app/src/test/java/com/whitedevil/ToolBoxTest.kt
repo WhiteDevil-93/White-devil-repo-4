@@ -277,4 +277,106 @@ class ToolBoxTest {
         assertEquals(3, prompts)
     }
 
+    // ---- typed git tools --------------------------------------------------------------------
+
+    /** Runs [call] against a one-shot fake relay and returns the JSON body the tool POSTed ("" if none arrived). */
+    private fun postedToRelay(access: AccessConfig, call: (ToolBox) -> Unit): String {
+        val server = ServerSocket(0).apply { soTimeout = 1500 }
+        var posted = ""
+        val serving = thread(start = true, isDaemon = true) {
+            try {
+                server.accept().use { socket ->
+                    val reader = socket.getInputStream().bufferedReader()
+                    reader.readLine()
+                    var len = 0
+                    while (true) {
+                        val line = reader.readLine()
+                        if (line.isEmpty()) break
+                        if (line.startsWith("Content-Length:", ignoreCase = true)) len = line.substringAfter(":").trim().toInt()
+                    }
+                    val chars = CharArray(len)
+                    reader.read(chars)
+                    posted = String(chars)
+                    val body = """{"ok":true,"exit":0,"output":"fake"}""".toByteArray()
+                    socket.getOutputStream().use {
+                        it.write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${body.size}\r\nConnection: close\r\n\r\n".toByteArray())
+                        it.write(body)
+                    }
+                }
+            } catch (e: java.net.SocketTimeoutException) {
+                // nothing was sent: that is the expected outcome for refused calls
+            }
+        }
+        try {
+            call(ToolBox(folder.newFolder("git-" + System.nanoTime()), "http://127.0.0.1:${server.localPort}", "", "", access))
+            serving.join(2500)
+        } finally {
+            server.close()
+        }
+        return posted
+    }
+
+    private fun decoded(posted: String): String = posted.replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\")
+
+    @Test
+    fun gitStatusRunsAFixedCommandInTheNamedRepo() {
+        val posted = decoded(postedToRelay(AccessConfig()) { it.execute("git_status", """{"repo":"wd-ui"}""") })
+        assertTrue(posted, posted.contains("cd '/mnt/a/New folder (4)/wd-ui'"))
+        assertTrue(posted, posted.contains("git --no-pager status --short --branch"))
+        assertTrue(posted, posted.contains("\"lang\":\"bash\""))
+    }
+
+    @Test
+    fun gitRepoNameMustBeAPlainFolderName() {
+        for (bad in listOf("../x", "a b", ".hidden", "x;rm -rf ~", "a/b")) {
+            val sent = postedToRelay(AccessConfig()) { box ->
+                val out = box.execute("git_status", """{"repo":"$bad"}""")
+                assertTrue("$bad -> $out", out.startsWith("Error: 'repo' must be a plain folder name"))
+            }
+            assertEquals("$bad must not reach the laptop", "", sent)
+        }
+    }
+
+    @Test
+    fun gitCommitStagesOnlyExplicitPathsAndQuotesTheMessage() {
+        val posted = decoded(
+            postedToRelay(AccessConfig()) {
+                it.execute("git_commit", """{"message":"it's fixed","paths":["a.kt","b/c.py"],"repo":"wd-ui"}""")
+            },
+        )
+        assertTrue(posted, posted.contains("git add -- 'a.kt' 'b/c.py' && git commit -m 'it'\\''s fixed'"))
+        assertTrue(posted, !posted.contains("add -A") && !posted.contains("add ."))
+    }
+
+    @Test
+    fun gitCommitRefusesBroadOrUnsafePaths() {
+        for (bad in listOf("""["."]""", """["../x"]""", """["-A"]""", """["*.kt"]""", """["/etc/passwd"]""", """[]""", """["ok.kt","."]""")) {
+            val sent = postedToRelay(AccessConfig()) { box ->
+                val out = box.execute("git_commit", """{"message":"m","paths":$bad}""")
+                assertTrue("$bad -> $out", out.startsWith("Error: 'paths' must be"))
+            }
+            assertEquals("$bad must not reach the laptop", "", sent)
+        }
+    }
+
+    @Test
+    fun gitPushNeedsApprovalAndRefusesMainOnTheLaptopSide() {
+        // No UI, or user says no: nothing is sent.
+        assertEquals("", postedToRelay(AccessConfig()) { assertTrue(it.execute("git_push", "{}").startsWith("Denied")) })
+        assertEquals("", postedToRelay(AccessConfig(confirm = { _, _ -> false })) { assertTrue(it.execute("git_push", "{}").startsWith("Denied")) })
+        // User says yes: the script guards against main/master/detached HEAD and never forces.
+        var asked = ""
+        val posted = decoded(postedToRelay(AccessConfig(confirm = { t, d -> asked = "$t|$d"; true })) { it.execute("git_push", """{"repo":"wd-ui"}""") })
+        assertTrue(asked, asked.contains("wd-ui"))
+        assertTrue(posted, posted.contains("main|master|HEAD) echo"))
+        assertTrue(posted, posted.contains("git push -u origin \"\$b\""))
+        assertTrue(posted, !posted.contains("--force") && !posted.contains(" -f "))
+    }
+
+    @Test
+    fun gitToolsAreAlwaysListed() {
+        val names = boxWith(AccessConfig(), "gl").definitions.map { it.function.name }
+        assertTrue(names.containsAll(listOf("git_status", "git_diff", "git_log", "git_commit", "git_push")))
+    }
+
 }
