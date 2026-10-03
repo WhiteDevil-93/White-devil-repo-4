@@ -2,6 +2,7 @@ package com.whitedevil.desktop
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -30,24 +32,37 @@ import kotlinx.coroutines.withContext
 /** One rendered line of the conversation. Mirrors the Android bubble roles. */
 data class ChatLine(val role: String, val title: String, val body: String)
 
-private const val ROLE_USER = "user"
-private const val ROLE_VENICE = "venice"
-private const val ROLE_TOOL_CALL = "tool_call"
-private const val ROLE_TOOL_OUT = "tool_out"
-private const val ROLE_ERROR = "error"
+internal const val ROLE_USER = "user"
+internal const val ROLE_VENICE = "venice"
+internal const val ROLE_TOOL_CALL = "tool_call"
+internal const val ROLE_TOOL_OUT = "tool_out"
+internal const val ROLE_ERROR = "error"
 
+/**
+ * The Venice agent. The conversation lives in [session], which the app keeps, so leaving this screen and coming back
+ * (or closing the app) does not lose it, and each message gives the agent its earlier turns back. The Hub's persistent
+ * memory goes into the system prompt on every message. Tool calls are folded into one quiet line per run.
+ */
 @Composable
-fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit, onModelChange: (String) -> Unit = {}) {
+fun AgentScreen(
+    settings: Settings,
+    onOpenSettings: () -> Unit,
+    onModelChange: (String) -> Unit = {},
+    session: AgentSession = remember { AgentSession(null) },
+) {
     val scope = rememberCoroutineScope()
-    val lines = remember { mutableStateListOf<ChatLine>() }
+    val lines = session.lines
     var input by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var job by remember { mutableStateOf<Job?>(null) }
+    var showTools by remember { mutableStateOf(false) }
+    var memoryOpen by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val items = groupChat(lines)
 
-    // Keep the newest line in view as the agent works.
-    LaunchedEffect(lines.size) {
-        if (lines.isNotEmpty()) listState.animateScrollToItem(lines.lastIndex)
+    // Keep the newest line in view as the agent works (and on coming back to a saved conversation).
+    LaunchedEffect(items.size) {
+        if (items.isNotEmpty()) listState.scrollToItem(items.lastIndex)
     }
 
     fun send() {
@@ -65,6 +80,9 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit, onModelChange: (
             // UI dispatcher is what stops the window freezing mid-run.
             try {
                 withContext(Dispatchers.IO) {
+                    // The Hub's persistent memory (preferences, notes), the same one the web Venice uses. If the hub
+                    // can't be reached the agent simply runs without it.
+                    val memory = HubMemoryClient(settings.hubUrl, settings.relayUser, settings.relayPass).use { (it.get() as? MediaResult.Ok)?.value }
                     VeniceClient(apiKey = settings.veniceApiKey).use { client ->
                         val agent = Agent(
                             client = client,
@@ -75,7 +93,7 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit, onModelChange: (
                                 relayUser = settings.relayUser,
                                 relayPass = settings.relayPass,
                             ),
-                            systemPrompt = DEFAULT_SYSTEM_PROMPT,
+                            systemPrompt = systemPromptWithMemory(DEFAULT_SYSTEM_PROMPT, memory),
                             enableWebSearch = settings.enableWebSearch,
                             onEvent = { event ->
                                 // Compose snapshot state is thread-safe to mutate;
@@ -89,7 +107,13 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit, onModelChange: (
                                 }
                             },
                         )
-                        agent.send(text)
+                        // Give the agent the conversation so far, and keep the new state even if the run is stopped.
+                        agent.restore(session.history)
+                        try {
+                            agent.send(text)
+                        } finally {
+                            session.adopt(agent.snapshot())
+                        }
                     }
                 }
             } catch (e: CancellationException) {
@@ -110,7 +134,10 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit, onModelChange: (
             apiKey = settings.veniceApiKey,
             onModelChange = onModelChange,
             onStop = { job?.cancel() },
-            onClear = { if (!busy) lines.clear() },
+            onNewChat = { if (!busy) session.clear() },
+            showTools = showTools,
+            onToggleTools = { showTools = !showTools },
+            onMemory = { memoryOpen = true },
             onOpenSettings = onOpenSettings,
         )
 
@@ -123,10 +150,16 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit, onModelChange: (
             verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(vertical = 16.dp),
         ) {
-            if (lines.isEmpty()) {
+            if (items.isEmpty()) {
                 item { EmptyState(settings) }
             }
-            items(lines) { line -> Bubble(line) }
+            items(items) { item ->
+                when (item) {
+                    is ChatItem.Message -> Bubble(item.line)
+                    is ChatItem.Tools -> ToolsRow(item, expandedByDefault = showTools)
+                }
+            }
+            if (busy) item { Text("Working…", color = Forge.Dim, fontSize = 12.sp, modifier = Modifier.padding(start = 4.dp)) }
         }
 
         Composer(
@@ -135,6 +168,22 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit, onModelChange: (
             onValueChange = { input = it },
             onSend = ::send,
         )
+    }
+    if (memoryOpen) MemoryPanel(settings, onClose = { memoryOpen = false })
+}
+
+/** One quiet line for a run of tool calls ("Used 3 tools: hub_request x2, remember"); click it to see the details. */
+@Composable
+private fun ToolsRow(group: ChatItem.Tools, expandedByDefault: Boolean) {
+    var open by remember(group.id) { mutableStateOf(false) }
+    val expanded = open || expandedByDefault
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            (if (expanded) "▾ " else "▸ ") + group.summary,
+            color = Forge.Dim, fontSize = 12.sp,
+            modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable { open = !open }.padding(horizontal = 6.dp, vertical = 3.dp),
+        )
+        if (expanded) group.lines.forEach { Bubble(it) }
     }
 }
 
@@ -145,7 +194,10 @@ private fun TopBar(
     apiKey: String,
     onModelChange: (String) -> Unit,
     onStop: () -> Unit,
-    onClear: () -> Unit,
+    onNewChat: () -> Unit,
+    showTools: Boolean,
+    onToggleTools: () -> Unit,
+    onMemory: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     // The shell's top bar already carries the page title and hub status; this strip holds only
@@ -158,10 +210,12 @@ private fun TopBar(
         VeniceModelPicker(apiKey = apiKey, current = model, enabled = !busy, onPick = onModelChange)
         if (busy) StatusPill("working", Forge.Ok)
         Spacer(Modifier.weight(1f))
+        TextButton(onClick = onToggleTools) { Text(if (showTools) "HIDE TOOLS" else "SHOW TOOLS", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
+        TextButton(onClick = onMemory) { Text("MEMORY", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
         if (busy) {
             TextButton(onClick = onStop) { Text("STOP", color = Forge.Acc, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
         } else {
-            TextButton(onClick = onClear) { Text("CLEAR", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
+            TextButton(onClick = onNewChat) { Text("NEW CHAT", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
         }
         TextButton(onClick = onOpenSettings) { Text("SETTINGS", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
     }

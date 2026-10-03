@@ -53,7 +53,7 @@ class LtxBuilderClient(
     private val hub = HubCaller(hubUrl, relayUser, relayPass, engine)
     private fun <T> bad(message: String): MediaResult<T> = hub.bad(message)
     private suspend fun <T> call(path: String, timeoutMs: Long, post: Any? = null, json: Boolean = false, parse: (String) -> MediaResult<T>): MediaResult<T> =
-        hub.call(path, timeoutMs, post, json, parse)
+        hub.call(path, timeoutMs, post, json, parse = parse)
 
     suspend fun status(): MediaResult<BuilderStatus> = call("/api/ltx/status", 30_000) { text ->
         val json = Json.parseToJsonElement(text)

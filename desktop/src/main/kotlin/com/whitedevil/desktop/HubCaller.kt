@@ -9,6 +9,7 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -56,6 +57,7 @@ class HubCaller(
         timeoutMs: Long,
         post: Any? = null,
         json: Boolean = false,
+        method: String = if (post == null) "GET" else "POST",
         parse: (String) -> MediaResult<T>,
     ): MediaResult<T> {
         val root = base ?: return MediaResult.Failure(MediaErrors.config("The Hub URL in Settings is not usable. Check it in Settings."))
@@ -68,7 +70,11 @@ class HubCaller(
                     setBody(post)
                 }
             }
-            val response: HttpResponse = if (post == null) http.get(root + path, configure) else http.post(root + path, configure)
+            val response: HttpResponse = when {
+                post == null -> http.get(root + path, configure)
+                method == "PUT" -> http.put(root + path, configure)
+                else -> http.post(root + path, configure)
+            }
             val text = response.bodyAsText()
             val status = response.status.value
             if (status !in 200..299) return failure(status, text)
