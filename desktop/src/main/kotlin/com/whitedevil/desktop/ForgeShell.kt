@@ -64,7 +64,7 @@ enum class NavGroup(val title: String?) { Studio("STUDIO"), Laptop("LAPTOP"), No
 
 /** The Forge Hub left sidebar: wordmark, two labelled groups, session footer. 236dp like the design. */
 @Composable
-fun ForgeSidebar(current: Screen, onSelect: (Screen) -> Unit) {
+fun ForgeSidebar(current: Screen, onSelect: (Screen) -> Unit, scale: Float = UiScale.DEFAULT, onScale: (Float) -> Unit = {}) {
     Column(
         Modifier.width(236.dp).fillMaxHeight().background(Forge.Side)
             .border(width = 1.dp, color = Forge.Line, shape = RoundedCornerShape(0.dp)),
@@ -95,6 +95,7 @@ fun ForgeSidebar(current: Screen, onSelect: (Screen) -> Unit) {
 
         Column(Modifier.padding(12.dp)) {
             SidebarItem(Screen.Settings, Screen.Settings == current) { onSelect(Screen.Settings) }
+            SizeControl(scale, onScale)
             Spacer(Modifier.height(8.dp))
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Forge.Panel).padding(10.dp),
@@ -172,4 +173,25 @@ fun StatusPill(text: String, color: Color) {
         Spacer(Modifier.width(6.dp))
         Text(text, color = color, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
     }
+}
+
+/** Text and interface size: A- / A+ and the current percentage (click it for 100%). Ctrl + / Ctrl - / Ctrl 0 do the same. */
+@Composable
+fun SizeControl(scale: Float, onScale: (Float) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        SizeButton("A−", enabled = scale > UiScale.MIN + 0.001f) { onScale(UiScale.step(scale, -1)) }
+        Text(UiScale.percent(scale), color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f).clickable { onScale(UiScale.DEFAULT) }.padding(vertical = 6.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        SizeButton("A+", enabled = scale < UiScale.MAX - 0.001f) { onScale(UiScale.step(scale, +1)) }
+    }
+}
+
+@Composable
+private fun SizeButton(label: String, enabled: Boolean, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(8.dp)
+    Text(
+        label, color = if (enabled) Forge.Fg else Forge.Dim, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.clip(shape).background(Forge.Panel).border(1.dp, Forge.Line, shape)
+            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier).padding(horizontal = 14.dp, vertical = 6.dp),
+    )
 }

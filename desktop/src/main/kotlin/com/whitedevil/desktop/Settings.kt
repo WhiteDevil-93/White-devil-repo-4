@@ -24,6 +24,8 @@ data class Settings(
     val enableWebSearch: Boolean = false,
     val deviceId: String = "",
     val deviceName: String = "",
+    /** Interface size, 0.8 to 2.0 (see UiScale). */
+    val uiScale: Float = UiScale.DEFAULT,
 ) {
     companion object {
         const val DEFAULT_HUB_URL = "https://84-12-112-249.sslip.io"

@@ -5,6 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,13 +47,27 @@ fun main() {
 
 private fun runApp() = application {
     val windowState = rememberWindowState(size = DpSize(1280.dp, 860.dp))
+    var settings by remember { mutableStateOf(Settings.load()) }
+    val scale = UiScale.clamp(settings.uiScale)
+    // Saved straight away so the size is still there after a restart.
+    val setScale = { v: Float -> settings = settings.copy(uiScale = UiScale.clamp(v)).also { Settings.save(it) } }
 
     Window(
         onCloseRequest = ::exitApplication,
         state = windowState,
         title = "Forge Hub",
+        // Ctrl + / Ctrl - / Ctrl 0, like a browser.
+        onPreviewKeyEvent = { e ->
+            if (e.type == KeyEventType.KeyDown && e.isCtrlPressed) {
+                when (e.key) {
+                    Key.Equals, Key.Plus, Key.NumPadAdd -> { setScale(UiScale.step(scale, +1)); true }
+                    Key.Minus, Key.NumPadSubtract -> { setScale(UiScale.step(scale, -1)); true }
+                    Key.Zero, Key.NumPad0 -> { setScale(UiScale.DEFAULT); true }
+                    else -> false
+                }
+            } else false
+        },
     ) {
-        var settings by remember { mutableStateOf(Settings.load()) }
         // FORGEHUB_START_SCREEN=Renders (any Screen name) opens there instead of Home: lets a run be
         // checked screen by screen without clicking, and is ignored when unset or misspelled.
         var screen by remember {
@@ -53,6 +75,8 @@ private fun runApp() = application {
         }
 
         var createTab by remember { mutableStateOf(CREATE_WAN) }
+        val baseDensity = LocalDensity.current
+        CompositionLocalProvider(LocalDensity provides Density(baseDensity.density * scale, baseDensity.fontScale)) {
         MaterialTheme(colorScheme = WhiteDevilColors) {
             Surface(color = Forge.Bg) {
                 // One library request for the shell: it drives the status pill and Home. The
@@ -67,7 +91,7 @@ private fun runApp() = application {
                 }
 
                 Row(Modifier.fillMaxSize()) {
-                    ForgeSidebar(current = screen, onSelect = { screen = it })
+                    ForgeSidebar(current = screen, onSelect = { screen = it }, scale = scale, onScale = setScale)
                     Column(Modifier.weight(1f).fillMaxSize()) {
                         ForgeTopBar(title = screen.label, health = health, hubLabel = client.hubLabel)
                         Box(Modifier.weight(1f)) {
@@ -101,6 +125,7 @@ private fun runApp() = application {
                     }
                 }
             }
+        }
         }
     }
 }
