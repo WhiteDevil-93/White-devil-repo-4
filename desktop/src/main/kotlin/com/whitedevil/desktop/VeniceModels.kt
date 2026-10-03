@@ -21,7 +21,7 @@ import kotlinx.serialization.json.intOrNull
 import java.util.Locale
 
 /** One chat model Venice offers. The agent calls tools, so [toolCalling] is what decides whether it can drive it. */
-data class VeniceModel(val id: String, val name: String, val contextTokens: Int?, val toolCalling: Boolean, val offline: Boolean, val reasoning: Boolean) {
+data class VeniceModel(val id: String, val name: String, val contextTokens: Int?, val toolCalling: Boolean, val offline: Boolean, val reasoning: Boolean, val vision: Boolean = false) {
     /** "1M", "262K", "128K": how much the model can read at once. */
     val contextLabel: String? get() = contextTokens?.let { n ->
         when {
@@ -48,6 +48,7 @@ fun parseVeniceModels(json: JsonElement): List<VeniceModel>? {
             toolCalling = flag("supportsFunctionCalling"),
             offline = (spec?.get("offline") as? JsonPrimitive)?.booleanOrNull == true,
             reasoning = flag("supportsReasoning"),
+            vision = flag("supportsVision"),
         )
     }
 }

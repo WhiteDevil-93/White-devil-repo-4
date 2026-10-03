@@ -75,6 +75,8 @@ fun WanBuilderScreen(settings: Settings) {
     val draftFile = remember { File(Settings.dir, "wan_draft.json") }
     val state = remember(client) { WanBuilderState(scope, client, draftFile, WanDraft.parse(runCatching { draftFile.readText() }.getOrNull())) }
 
+    val media = rememberMediaClient(settings)
+    val clipActions = rememberClipActions(media)
     val clients = rememberOpsClients(settings)
     val api = remember(clients) { ThunderApi(clients.reader) }
     val actions = remember(clients) { ThunderActions(clients.actor) }
@@ -93,11 +95,13 @@ fun WanBuilderScreen(settings: Settings) {
                 Box(Modifier.width(1.dp).fillMaxSize().background(Forge.Line))
                 Column(Modifier.weight(1.15f).fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Result(state, queue, controller, actions)
+                    VideoReviewCard(settings, media, clipActions, "thunder")
                 }
             }
         } else {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Form(state); Result(state, queue, controller, actions)
+                VideoReviewCard(settings, media, clipActions, "thunder")
             }
         }
     }

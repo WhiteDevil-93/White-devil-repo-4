@@ -96,6 +96,7 @@ fun LtxBuilderScreen(settings: Settings) {
                 Column(Modifier.weight(1.15f).fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp)) {
                     ClipsHeader(state)
                     LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        item(key = "video-review") { VideoReviewCard(settings, media, actions, "ltx", promptFor = { name -> state.jobs.firstOrNull { it.out == name }?.let { j -> j.prompt?.takeIf { it.isNotBlank() } ?: j.idea } }) }
                         items(state.jobs, key = { it.id }) { JobCard(it, state, media, actions, thumbs) }
                         if (state.jobs.isEmpty()) item { EmptyClips(state) }
                     }
@@ -105,6 +106,7 @@ fun LtxBuilderScreen(settings: Settings) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Form(state)
                 ClipsHeader(state)
+                VideoReviewCard(settings, media, actions, "ltx", promptFor = { name -> state.jobs.firstOrNull { it.out == name }?.let { j -> j.prompt?.takeIf { it.isNotBlank() } ?: j.idea } })
                 state.jobs.forEach { JobCard(it, state, media, actions, thumbs) }
                 if (state.jobs.isEmpty()) EmptyClips(state)
             }
