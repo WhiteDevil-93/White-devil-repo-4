@@ -171,6 +171,14 @@ private fun AgentChatHeader(
                 Icon(Icons.Outlined.Tune, null, tint = WdPalette.textSecondary, modifier = Modifier.size(18.dp))
             }
             DropdownMenu(expanded = overflowOpen, onDismissRequest = onDismissOverflow) {
+                DropdownMenuItem(text = { Text("New chat") }, onClick = {
+                    onDismissOverflow()
+                    host.startNewChat()
+                })
+                DropdownMenuItem(text = { Text("Chats") }, onClick = {
+                    onDismissOverflow()
+                    host.openChats()
+                })
                 DropdownMenuItem(text = { Text("Change model") }, onClick = {
                     onDismissOverflow()
                     host.showModelPicker()

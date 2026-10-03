@@ -97,9 +97,12 @@ class MainActivity : FragmentActivity() {
 
     enum class Tab { AGENT, FORGE_HUB, YOU }
 
-    enum class YouSub { HOME, TERMINAL, SETTINGS, FILES }
+    enum class YouSub { HOME, TERMINAL, SETTINGS, FILES, CHATS, MEMORY, SKILLS, CONNECTORS }
 
     private data class Screen(val id: String, val title: String, val icon: String, val url: String)
+
+    /** Conversations, memory, skills and MCP servers (see [AgentWorkspace]). */
+    internal val workspace by lazy { AgentWorkspace(filesDir) }
 
     private val prefs by lazy { SettingsManager.getPrefs(this) }
     private val main = Handler(Looper.getMainLooper())
@@ -695,34 +698,62 @@ class MainActivity : FragmentActivity() {
     private fun resetAgentChat() {
         currentAgentJob?.cancel()
         agentShowProgress = false
-        runCatching { agentHistoryFile().delete() }
+        runCatching {
+            // New chat first, then drop the old one: deleting the open chat alone would reopen another.
+            val old = workspace.ensureCurrent()
+            workspace.conversations.create()
+            workspace.conversations.delete(old)
+        }
         chatMessages.clear()
         agentStatusSubtitle = "On-device agent"
-        addMessageBubble("Agent Reset", "Chat context cleared. Ready for next task.", ROLE_VENICE)
+        addMessageBubble("Agent Reset", "Chat cleared. Ready for next task.", ROLE_VENICE)
     }
 
-    private fun agentHistoryFile() = File(filesDir, "agent_history.json")
+    /** Starts an empty chat. The previous one stays in Chats. */
+    internal fun startNewChat() {
+        currentAgentJob?.cancel()
+        agentShowProgress = false
+        agentThinking = false
+        setAgentComposerEnabled(true)
+        workspace.conversations.create()
+        chatMessages.clear()
+        agentStatusSubtitle = "New chat"
+        selectTab(Tab.AGENT)
+    }
 
-    private val historyJson = Json { ignoreUnknownKeys = true }
+    /** Opens a saved conversation in the Agent tab. */
+    internal fun openConversation(id: String) {
+        currentAgentJob?.cancel()
+        agentShowProgress = false
+        agentThinking = false
+        setAgentComposerEnabled(true)
+        workspace.conversations.setCurrent(id)
+        chatMessages.clear()
+        val history = loadAgentHistory()
+        agentStatusSubtitle = if (history.isEmpty()) "New chat" else "${history.size} messages restored"
+        renderHistoryBubbles(history)
+        showYouSub(YouSub.HOME)
+        selectTab(Tab.AGENT)
+    }
 
-    /** Persists the conversation (image blobs stripped) so it survives app restarts. */
-    private fun persistAgentHistory(messages: List<ChatMessage>) {
+    internal fun openChats() {
+        selectTab(Tab.YOU)
+        showYouSub(YouSub.CHATS)
+    }
+
+    /** Saves into the open conversation (image blobs are stripped by the store). */
+    private fun persistAgentHistory(messages: List<ChatMessage>, id: String = workspace.ensureCurrent()) {
         runCatching {
             val lean = messages
                 .filter { it.role in setOf("user", "assistant", "tool") }
                 .takeLast(Agent.MAX_HISTORY_MESSAGES)
-                .map { it.copy(content = stripBlobs(it.content)) }
-            agentHistoryFile().writeText(
-                historyJson.encodeToString(ListSerializer(ChatMessage.serializer()), lean),
-            )
+            workspace.conversations.save(id, lean)
         }
     }
 
-    private fun loadAgentHistory(): List<ChatMessage> {
+    private fun loadAgentHistory(id: String = workspace.ensureCurrent()): List<ChatMessage> {
         return runCatching {
-            val file = agentHistoryFile()
-            if (!file.isFile) return emptyList()
-            historyJson.decodeFromString(ListSerializer(ChatMessage.serializer()), file.readText())
+            workspace.conversations.load(id)
                 .filter { it.role in setOf("user", "assistant", "tool") }
                 .takeLast(Agent.MAX_HISTORY_MESSAGES)
         }.getOrDefault(emptyList())
@@ -765,7 +796,7 @@ class MainActivity : FragmentActivity() {
         val selectedModel = agentSelectedModel
         val savedPrompt = prefs.getString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT)
             ?: SettingsManager.DEFAULT_SYSTEM_PROMPT
-        val sysPrompt = buildString {
+        val baseSysPrompt = buildString {
             append(savedPrompt.trim())
             if (!savedPrompt.contains("hub_overview") || !savedPrompt.contains("hub_request") ||
                 !savedPrompt.contains("run_laptop_command")
@@ -780,18 +811,14 @@ class MainActivity : FragmentActivity() {
         val relayUser = prefs.getString(SettingsManager.KEY_RELAY_USER, SettingsManager.DEFAULT_RELAY_USER) ?: SettingsManager.DEFAULT_RELAY_USER
         val relayPass = prefs.getString(SettingsManager.KEY_RELAY_PASS, "") ?: ""
 
-        val toolBox = ToolBox(
-            workspaceDir = workspaceDir,
-            relayBaseUrl = relayBase,
-            relayUser = relayUser,
-            relayPass = relayPass,
-            access = AccessConfig(
-                confirm = { title, detail -> askUserBlocking(title, detail) },
-                phoneRoot = Environment.getExternalStorageDirectory(),
-                phoneAccessGranted = { Environment.isExternalStorageManager() },
-                requestPhoneAccess = { openAllFilesAccessSettings() },
-            ),
+        val accessConfig = AccessConfig(
+            confirm = { title, detail -> askUserBlocking(title, detail) },
+            phoneRoot = Environment.getExternalStorageDirectory(),
+            phoneAccessGranted = { Environment.isExternalStorageManager() },
+            requestPhoneAccess = { openAllFilesAccessSettings() },
         )
+        // Fixed now: a chat switch mid-run must not redirect this run's save into another conversation.
+        val convId = workspace.ensureCurrent()
 
         agentShowProgress = true
         agentThinking = true
@@ -814,6 +841,20 @@ class MainActivity : FragmentActivity() {
                     }
                     return@launch
                 }
+                // Memory, skills and MCP servers. Connecting to MCP servers is network work (cached 5 min).
+                val extensions = withContext(Dispatchers.IO) {
+                    workspace.extensions { title, detail -> askUserBlocking(title, detail) }
+                }
+                val toolBox = ToolBox(
+                    workspaceDir = workspaceDir,
+                    relayBaseUrl = relayBase,
+                    relayUser = relayUser,
+                    relayPass = relayPass,
+                    access = accessConfig,
+                    extensions = extensions,
+                )
+                val addendum = toolBox.promptAddendum()
+                val sysPrompt = if (addendum.isBlank()) baseSysPrompt else baseSysPrompt + "\n\n" + addendum
                 val agent = Agent(
                     client = currentClient,
                     model = selectedModel,
@@ -835,7 +876,7 @@ class MainActivity : FragmentActivity() {
 
                 withContext(Dispatchers.IO) {
                     currentClient.use {
-                        agent.restore(loadAgentHistory())
+                        agent.restore(loadAgentHistory(convId))
                         finishedAgent = agent
                         agent.send(fullText, imageDataUrls)
                     }
@@ -843,7 +884,7 @@ class MainActivity : FragmentActivity() {
             } catch (e: Exception) {
                 addMessageBubble("Error", e.message ?: "Unknown error running Venice agent", ROLE_ERROR)
             } finally {
-                finishedAgent?.let { persistAgentHistory(it.snapshot()) }
+                finishedAgent?.let { persistAgentHistory(it.snapshot(), convId) }
                 agentShowProgress = false
                 agentThinking = false
                 setAgentComposerEnabled(true)
