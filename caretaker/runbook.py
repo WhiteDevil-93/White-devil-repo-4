@@ -71,7 +71,9 @@ def execute(name, dry_run=True, grace_s=GRACE_S, reason=""):
         return {"ok": True, "status": "noop"}
 
     if disruptive:
-        blockers = inflight.detect()
+        # Deep check: also asks the hub about Colab/Thunder/Vast/laptop. restart_hub may act when the hub is unreadable.
+        deep = dict(deep=True, allow_unknown=(name == "restart_hub"))
+        blockers = inflight.detect(**deep)
         if blockers:
             audit(event="deferred", action=name, why=blockers, reason=reason)
             return {"ok": False, "status": "deferred", "why": blockers}
@@ -84,7 +86,8 @@ def execute(name, dry_run=True, grace_s=GRACE_S, reason=""):
             return {"ok": False, "status": "aborted", "why": "backup failed"}
         notify(f"Relay: '{name}' in {grace_s}s, short interruption. {reason}".strip())
         time.sleep(grace_s)
-        blockers = inflight.detect()
+        inflight._cache["v"] = None          # the grace period is exactly when new work may have started
+        blockers = inflight.detect(**deep)
         if blockers:
             audit(event="deferred_after_grace", action=name, why=blockers)
             notify(f"Relay: '{name}' postponed, work started during the notice.")

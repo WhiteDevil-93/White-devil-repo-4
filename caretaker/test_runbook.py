@@ -13,7 +13,7 @@ assert res("noop")["status"] == "noop"
 assert res("reboot", dry_run=True)["status"] == "deferred"                 # in-flight blocks
 assert res("reboot", dry_run=False)["status"] == "deferred"                # blocks even when live
 (fake / "ltx_jobs" / "j.json").write_text(json.dumps({"id": "j", "status": "done"}))
-inflight.detect = lambda: []                                                # ignore ssh session for the test
+inflight.detect = lambda **k: []                                            # ignore ssh session for the test
 assert res("reboot", dry_run=True)["status"] == "dry_run"
 r.PAUSED.write_text("x")
 assert res("restart_hub", dry_run=False)["status"] == "paused"             # kill switch wins
