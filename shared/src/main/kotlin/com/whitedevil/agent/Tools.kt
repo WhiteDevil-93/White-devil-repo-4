@@ -39,14 +39,19 @@ class ToolBox(
     private val relayBaseUrl: String,
     private val relayUser: String,
     private val relayPass: String,
+    access: AccessConfig = AccessConfig(),
 ) {
     private val json = Json { ignoreUnknownKeys = true }
+
+    // Declared before `definitions`: that property reads it during construction.
+    private val accessTools = AccessTools(access, ::runBashOnLaptop)
 
     init {
         workspaceDir.mkdirs()
     }
 
     val definitions: List<ToolDefinition> = buildList {
+        addAll(accessTools.definitions)
         // Local device workspace filesystem tools
         add(
             ToolDefinition(
@@ -272,7 +277,52 @@ class ToolBox(
     fun execute(name: String, argumentsJson: String): String =
         executeDetailed(name, argumentsJson).text
 
+    /**
+     * Runs [code] in bash on the laptop through the relay (same endpoint as run_laptop_command).
+     * Only AccessTools' fixed git commands reach this; the model never supplies the shell text.
+     */
+    private fun runBashOnLaptop(code: String): String = relayHttp(
+        "/api/laptop/run",
+        method = "POST",
+        postBody = buildJsonObject {
+            put("lang", "bash")
+            put("code", code)
+            put("cwd", "venice_run")
+            put("timeout", 90)
+        }.toString(),
+        readTimeoutMs = 120_000,
+    )
+
+    /**
+     * Confirm-before-acting for the older tools that delete, run code, change the hub or spend money.
+     * Only active when the host supplied a confirmation UI, so desktop/CLI behaviour is unchanged.
+     * Returns a refusal message, or null if the call may proceed.
+     */
+    private fun gateLegacy(name: String, argumentsJson: String): String? {
+        val args = try {
+            json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
+        } catch (e: Exception) {
+            return null // let the tool report its own bad-arguments error
+        }
+        val (title, detail) = when (name) {
+            "delete_file" -> "Delete file" to (args.stringOrNull("path") ?: "?")
+            "run_laptop_command" -> "Run on laptop" to
+                "[${args.stringOrNull("lang") ?: "bash"}] ${(args.stringOrNull("code") ?: "").take(900)}"
+            "hub_request" -> {
+                val method = (args.stringOrNull("method") ?: "GET").trim().uppercase()
+                if (method == "GET") return null
+                "Change the hub" to "$method ${args.stringOrNull("path")}\n${(args.stringOrNull("body") ?: "").take(600)}"
+            }
+            "queue_gpu_render" -> "Queue a GPU render (spends money)" to
+                "cloud=${args.stringOrNull("cloud")} ${args.stringOrNull("prompt") ?: args.stringOrNull("packs") ?: ""}".trim()
+            else -> return null
+        }
+        return if (accessTools.approve(title, detail, requireUi = false)) null
+        else "Denied: the user did not approve '$title'. Do not retry it; ask the user what they want instead."
+    }
+
     fun executeDetailed(name: String, argumentsJson: String): ToolExecution {
+        gateLegacy(name, argumentsJson)?.let { return ToolExecution(it) }
         return try {
             val result = when (name) {
                 "read_file" -> ToolExecution(readFile(argumentsJson))
@@ -288,7 +338,7 @@ class ToolBox(
                 "hub_overview" -> ToolExecution(hubOverview())
                 "hub_request" -> ToolExecution(hubRequest(argumentsJson))
                 "queue_gpu_render" -> ToolExecution(queueGpuRender(argumentsJson))
-                else -> ToolExecution("Error: unknown tool '$name'.")
+                else -> ToolExecution(accessTools.execute(name, argumentsJson) ?: "Error: unknown tool '$name'.")
             }
             result
         } catch (e: Exception) {

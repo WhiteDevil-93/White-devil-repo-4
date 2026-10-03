@@ -16,6 +16,10 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- The Venice agent's phone_* tools: read/write shared storage. The user grants it in Settings
+         ("All files access"); writes and deletes still ask first. Sideloaded APK only (not Play-eligible). -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+
     <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
