@@ -82,6 +82,8 @@ textarea.input{min-height:110px;resize:vertical;font:inherit;line-height:1.45}
     <label class="field"><span>Seed (blank = random; reuse one to redo a take with a new length)</span><input class="input" id="seed" type="number" placeholder="random"></label>
   </details>
   <button class="btn primary" style="width:100%;margin-top:14px" id="go" onclick="render()">Render</button>
+  <button class="btn" style="width:100%;margin-top:8px" id="fresh" onclick="freshRender()" title="Clear the picture, prompt, seed and continuation so the next clip starts from nothing">↺ New render</button>
+  <div class="tip" style="margin-top:6px">New render clears the picture, prompt, seed and "continuing from" so the next clip starts clean. Length, shape and models stay. A render that's already running or queued is not touched.</div>
   <div class="tip">Start at 2 seconds to find a good take, then redo that seed at 4–5 seconds. The first clip after the runtime starts takes a few extra minutes while the models load.</div>
 </div>
 
@@ -262,6 +264,22 @@ function clearPic(){
   idb('readwrite', st => st.delete('pic')).catch(() => {});
 }
 $('prompt').oninput = saveDraft; $('seed').oninput = saveDraft;
+
+// Start the next clip from nothing. After a render the composer still holds that clip's picture,
+// prompt, seed and (for a chain) the job it continues from, so a "new" clip silently inherits them.
+// This clears exactly those and nothing else: length, shape and the model/LoRA choices are
+// preferences, not part of one clip, and the server already has its own copy of whatever was
+// submitted, so a render that is running or queued is unaffected.
+function freshRender(){
+  // render()/chain() show 'Sending…' while the request is in flight; clearing then would race it.
+  if ($('go').textContent === 'Sending…') return F.toast('Still sending the last one. Try again in a second.');
+  cont = null; parts = 1; selSeg('parts', 1);
+  $('prompt').value = ''; $('prompt').style.height = 'auto'; $('seed').value = '';
+  clearPic();   // picture, its IndexedDB copy and mode(), which also refreshes the labels
+  saveDraft();
+  scrollTo({top: 0, behavior: 'smooth'});
+  F.toast('Cleared. Pick a picture or describe a new video.');
+}
 
 function shrink(file, max = 768){
   return new Promise((ok, bad) => {
