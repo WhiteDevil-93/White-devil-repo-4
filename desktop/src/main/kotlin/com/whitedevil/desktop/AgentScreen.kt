@@ -50,6 +50,7 @@ fun AgentScreen(
     onModelChange: (String) -> Unit = {},
     session: AgentSession = remember { AgentSession(null) },
     mcp: com.whitedevil.desktop.mcp.McpHost? = null,
+    skills: com.whitedevil.desktop.skills.SkillStore? = null,
 ) {
     val scope = rememberCoroutineScope()
     val lines = session.lines
@@ -59,6 +60,7 @@ fun AgentScreen(
     var showTools by remember { mutableStateOf(false) }
     var memoryOpen by remember { mutableStateOf(false) }
     var connectorsOpen by remember { mutableStateOf(false) }
+    var skillsOpen by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val items = groupChat(lines)
 
@@ -94,9 +96,9 @@ fun AgentScreen(
                                 relayBaseUrl = settings.hubUrl,
                                 relayUser = settings.relayUser,
                                 relayPass = settings.relayPass,
-                                extension = mcp,
+                                extension = com.whitedevil.desktop.skills.CompositeExtension(listOfNotNull(skills?.let { com.whitedevil.desktop.skills.SkillsExtension(it) }, mcp)),
                             ),
-                            systemPrompt = systemPromptWithMemory(DEFAULT_SYSTEM_PROMPT, memory),
+                            systemPrompt = com.whitedevil.desktop.skills.systemPromptWithSkills(systemPromptWithMemory(DEFAULT_SYSTEM_PROMPT, memory), skills?.list().orEmpty()),
                             enableWebSearch = settings.enableWebSearch,
                             onEvent = { event ->
                                 // Compose snapshot state is thread-safe to mutate;
@@ -141,6 +143,7 @@ fun AgentScreen(
             showTools = showTools,
             onToggleTools = { showTools = !showTools },
             onMemory = { memoryOpen = true },
+            onSkills = if (skills != null) ({ skillsOpen = true }) else null,
             onConnectors = if (mcp != null) ({ connectorsOpen = true }) else null,
             onOpenSettings = onOpenSettings,
         )
@@ -174,6 +177,7 @@ fun AgentScreen(
         )
     }
     if (memoryOpen) MemoryPanel(settings, onClose = { memoryOpen = false })
+    if (skillsOpen && skills != null) SkillsPanel(skills, onClose = { skillsOpen = false })
     if (connectorsOpen && mcp != null) ConnectorsPanel(mcp, onClose = { connectorsOpen = false })
 }
 
@@ -204,6 +208,7 @@ private fun TopBar(
     onToggleTools: () -> Unit,
     onMemory: () -> Unit,
     onConnectors: (() -> Unit)?,
+    onSkills: (() -> Unit)?,
     onOpenSettings: () -> Unit,
 ) {
     // The shell's top bar already carries the page title and hub status; this strip holds only
@@ -217,6 +222,7 @@ private fun TopBar(
         if (busy) StatusPill("working", Forge.Ok)
         Spacer(Modifier.weight(1f))
         TextButton(onClick = onToggleTools) { Text(if (showTools) "HIDE TOOLS" else "SHOW TOOLS", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
+        if (onSkills != null) TextButton(onClick = onSkills) { Text("SKILLS", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
         if (onConnectors != null) TextButton(onClick = onConnectors) { Text("CONNECTORS", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
         TextButton(onClick = onMemory) { Text("MEMORY", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
         if (busy) {
