@@ -1596,6 +1596,9 @@ class MainActivity : FragmentActivity() {
             "Forge Hub relay offline\n$relayBase\n${msg ?: "Could not reach relay"}\n\nAgent and Terminal still work on-device."
     }
 
+    /** The relay path the hub's manifest gives for a screen (e.g. "/caretaker/"), or null if unknown. */
+    internal fun hubScreenUrl(id: String?): String? = if (id == null) null else hubScreens.firstOrNull { it.id == id }?.url
+
     private fun checkHubUpdate(json: JSONObject) {
         val latest = json.optInt("apk_version", 0)
         val force = json.optBoolean("force_update", false)

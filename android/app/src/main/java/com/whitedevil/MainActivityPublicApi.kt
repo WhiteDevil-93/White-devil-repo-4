@@ -35,6 +35,7 @@ fun MainActivity.hubScreenJsonPublic(): String = hubScreenJson
 fun MainActivity.hubScreenLoadingPublic(): Boolean = hubScreenLoading
 fun MainActivity.hubScreenErrorPublic(): String? = hubScreenError
 fun MainActivity.hubBlockedByUpdatePublic(): Boolean = hubBlockedByUpdate
+fun MainActivity.hubScreenUrlPublic(id: String?): String? = hubScreenUrl(id)
 fun MainActivity.hubForceUpdateVersionPublic(): Int = hubForceUpdateVersion
 fun MainActivity.hubAppVersionPublic(): Int = BuildConfig.VERSION_CODE
 fun MainActivity.terminalPasteOpenPublic(): Boolean = terminalPasteOpen

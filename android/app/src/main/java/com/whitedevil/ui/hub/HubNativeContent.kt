@@ -46,9 +46,15 @@ fun HubNativeContent(host: MainActivity, screenId: String?) {
             "vast" -> HubVastBody(json, host)
             "files" -> HubFilesBody(json, host)
             "shotwriter" -> HubShotwriterBody(json, host)
-            else -> when {
-                screenId?.startsWith("bot-") == true -> HubBotBody(json)
-                else -> HubFallbackBody(json, screenId ?: "Hub", host)
+            else -> {
+                // Any other screen the hub lists (e.g. the Caretaker domain) is a page on the relay: open it,
+                // so a new domain works without an app update. Only the JSON dump is left for screens with no path.
+                val path = host.hubScreenUrlPublic(screenId)
+                when {
+                    screenId?.startsWith("bot-") == true -> HubBotBody(json)
+                    path != null && path.startsWith("/") -> HubRelayWebBody(host, path)
+                    else -> HubFallbackBody(json, screenId ?: "Hub", host)
+                }
             }
         }
     }
