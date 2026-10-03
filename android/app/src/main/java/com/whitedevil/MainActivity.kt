@@ -204,6 +204,15 @@ class MainActivity : FragmentActivity() {
             pendingPermissionAction = null
         }
 
+    /** Speech-to-text through the system recognizer (no microphone permission needed by this app). */
+    private val voiceLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+            val said = res.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.trim().orEmpty()
+            if (res.resultCode == RESULT_OK && said.isNotEmpty()) {
+                agentInputText = if (agentInputText.isBlank()) said else agentInputText.trimEnd() + " " + said
+            }
+        }
+
     private val pickImagesLauncher =
         registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
             uris.forEach { addContentAttachment(it) }
@@ -341,7 +350,85 @@ class MainActivity : FragmentActivity() {
 
     override fun onDestroy() {
         try { unregisterReceiver(downloadDone) } catch (_: Exception) {}
+        runCatching { tts?.stop(); tts?.shutdown() }
+        tts = null
         super.onDestroy()
+    }
+
+    // ---- voice: dictate a message, and have replies read aloud ----
+
+    private var tts: android.speech.tts.TextToSpeech? = null
+    private var ttsReady = false
+    private var ttsQueued: String? = null
+
+    internal fun startVoiceInput() {
+        val intent = Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Speak to Venice")
+        }
+        try {
+            voiceLauncher.launch(intent)
+        } catch (e: android.content.ActivityNotFoundException) {
+            Toast.makeText(this, "No speech recognizer is installed on this phone", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /** Reads [markdown] aloud (code blocks skipped). Calling it again while speaking stops instead. */
+    internal fun speakText(markdown: String) {
+        val engine = tts
+        if (engine != null && ttsReady && engine.isSpeaking) { engine.stop(); return }
+        val plain = com.whitedevil.agent.SpeechText.clean(markdown)
+        if (plain.isBlank()) return
+        if (engine == null) {
+            ttsQueued = plain
+            tts = android.speech.tts.TextToSpeech(this) { status ->
+                if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                    ttsReady = true
+                    tts?.language = java.util.Locale.getDefault()
+                    ttsQueued?.let { speakNow(it) }
+                } else {
+                    Toast.makeText(this, "Text-to-speech is not available on this phone", Toast.LENGTH_LONG).show()
+                }
+                ttsQueued = null
+            }
+        } else if (ttsReady) {
+            speakNow(plain)
+        }
+    }
+
+    /**
+     * Shows an HTML page or SVG from a reply. The page is self-contained by design: JavaScript runs,
+     * but network loads, file access and navigation are all blocked, so it cannot reach out or read anything.
+     */
+    internal fun previewArtifact(html: String) {
+        val web = android.webkit.WebView(this).apply {
+            settings.javaScriptEnabled = true
+            settings.allowFileAccess = false
+            settings.allowContentAccess = false
+            settings.blockNetworkLoads = true
+            settings.domStorageEnabled = false
+            settings.setSupportMultipleWindows(false)
+            webViewClient = object : android.webkit.WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: android.webkit.WebView, request: android.webkit.WebResourceRequest): Boolean = true
+            }
+            loadDataWithBaseURL(null, html, "text/html", "utf-8", null)
+        }
+        val dlg = AlertDialog.Builder(this)
+            .setTitle("Preview")
+            .setView(web)
+            .setPositiveButton("Close", null)
+            .create()
+        dlg.setOnDismissListener { web.destroy() }
+        dlg.show()
+        dlg.window?.setLayout(MATCH_PARENT, (resources.displayMetrics.heightPixels * 0.8).toInt())
+    }
+
+    private fun speakNow(plain: String) {
+        val engine = tts ?: return
+        val max = (android.speech.tts.TextToSpeech.getMaxSpeechInputLength() - 100).coerceIn(500, 3900)
+        com.whitedevil.agent.SpeechText.chunks(plain, max).forEachIndexed { i, part ->
+            engine.speak(part, if (i == 0) android.speech.tts.TextToSpeech.QUEUE_FLUSH else android.speech.tts.TextToSpeech.QUEUE_ADD, null, "wd-$i")
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

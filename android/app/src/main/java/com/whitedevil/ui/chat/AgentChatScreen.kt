@@ -50,6 +50,10 @@ fun AgentChatScreen(
     onCopy: (String) -> Unit,
     includeInfoMessages: Boolean = true,
     modifier: Modifier = Modifier,
+    /** Read a reply aloud. Null hides the button. */
+    onSpeak: ((String) -> Unit)? = null,
+    /** Show an HTML/SVG block from a reply. Null hides the button. */
+    onPreview: ((String) -> Unit)? = null,
 ) {
     val visible = if (includeInfoMessages) messages else messages.filter { !it.isInfo() }
     val listState = rememberLazyListState()
@@ -65,7 +69,7 @@ fun AgentChatScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(visible, key = { it.id }) { msg ->
-            ChatBubbleRow(msg, onToggleTool, onCopy)
+            ChatBubbleRow(msg, onToggleTool, onCopy, onSpeak, onPreview)
         }
         if (agentThinking) {
             item(key = "typing") { TypingRow() }
@@ -96,12 +100,18 @@ private fun ThinkingDots() {
 }
 
 @Composable
-private fun ChatBubbleRow(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy: (String) -> Unit) {
+private fun ChatBubbleRow(
+    msg: ChatUiMessage,
+    onToggleTool: (Long) -> Unit,
+    onCopy: (String) -> Unit,
+    onSpeak: ((String) -> Unit)?,
+    onPreview: ((String) -> Unit)?,
+) {
     when {
         msg.isInfo() -> InfoLine(msg)
         msg.isUser() -> UserBubble(msg, onCopy)
         msg.isTool() -> ToolBubble(msg, onToggleTool, onCopy)
-        else -> AssistantBubble(msg, onCopy)
+        else -> AssistantBubble(msg, onCopy, onSpeak, onPreview)
     }
 }
 
@@ -135,18 +145,38 @@ private fun UserBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
 }
 
 @Composable
-private fun AssistantBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
+private fun AssistantBubble(
+    msg: ChatUiMessage,
+    onCopy: (String) -> Unit,
+    onSpeak: ((String) -> Unit)? = null,
+    onPreview: ((String) -> Unit)? = null,
+) {
     val fg = if (msg.role == MainActivity.ROLE_ERROR) WdPalette.errorText else WdPalette.text
-    Text(
-        msg.message,
-        style = MaterialTheme.typography.bodyMedium,
-        color = fg,
-        modifier = Modifier
-            .fillMaxWidth()
-            .widthIn(max = 340.dp)
-            .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
-            .padding(end = 4.dp),
-    )
+    val isReply = msg.role == MainActivity.ROLE_VENICE && msg.message.isNotBlank()
+    val page = if (isReply && onPreview != null) androidx.compose.runtime.remember(msg.message) { com.whitedevil.agent.Artifacts.previewable(msg.message) } else null
+    Column(Modifier.fillMaxWidth().widthIn(max = 340.dp)) {
+        Text(
+            msg.message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = fg,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
+                .padding(end = 4.dp),
+        )
+        if (isReply && (onSpeak != null || page != null)) {
+            Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                if (onSpeak != null) {
+                    Text("Listen", style = MaterialTheme.typography.labelMedium, color = WdPalette.accentLight,
+                        modifier = Modifier.clickable { onSpeak(msg.message) }.padding(vertical = 4.dp))
+                }
+                if (page != null && onPreview != null) {
+                    Text("Preview", style = MaterialTheme.typography.labelMedium, color = WdPalette.accentLight,
+                        modifier = Modifier.clickable { onPreview(page) }.padding(vertical = 4.dp))
+                }
+            }
+        }
+    }
 }
 
 @Composable

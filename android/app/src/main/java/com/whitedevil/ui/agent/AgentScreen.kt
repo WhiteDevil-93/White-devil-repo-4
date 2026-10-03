@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -109,6 +110,8 @@ fun AgentScreen(host: MainActivity) {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(horizontal = WdDimens.screenHorizontal),
+                        onSpeak = { host.speakText(it) },
+                        onPreview = { host.previewArtifact(it) },
                     )
                 }
             }
@@ -237,6 +240,13 @@ private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier)
                 modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Attach file" },
             ) {
                 Icon(Icons.Outlined.AttachFile, null, tint = WdPalette.textMetadata, modifier = Modifier.size(18.dp))
+            }
+            IconButton(
+                onClick = { host.startVoiceInput() },
+                enabled = host.agentComposerEnabledPublic(),
+                modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Speak your message" },
+            ) {
+                Icon(Icons.Outlined.Mic, null, tint = WdPalette.textMetadata, modifier = Modifier.size(18.dp))
             }
             BasicTextField(
                 value = input,
