@@ -104,7 +104,7 @@ private fun ClipCard(name: String, age: String, modifier: Modifier) {
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Outlined.PlayArrow, null, tint = Forge.Acc3, modifier = Modifier.height(36.dp)) }
         Spacer(Modifier.height(8.dp))
-        Text(name, color = Forge.Fg, fontSize = 12.sp, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(prettyClipName(name), color = Forge.Fg, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(age, color = Forge.Dim, fontSize = 12.sp)
     }
 }

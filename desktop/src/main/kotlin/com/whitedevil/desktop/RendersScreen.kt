@@ -121,7 +121,7 @@ internal fun NoMatches(onReset: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(48.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("No clips match", color = Forge.Fg, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(6.dp))
-        Text("Try fewer words, a wider date range, or turn on Show tests.", color = Forge.Mut, fontSize = 13.sp)
+        Text("Try fewer words, a wider date range, or turn on Show unsorted.", color = Forge.Mut, fontSize = 13.sp)
         TextButton(onClick = onReset) { Text("RESET FILTERS", color = Forge.Acc, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
     }
 }
@@ -161,10 +161,9 @@ private fun ClipRow(group: MediaGroup, clip: MediaClip, nowMs: Long, showProject
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Column(Modifier.weight(1f)) {
-            Text(clip.name, color = Forge.Fg, fontSize = 12.sp, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            if (showProject) {
-                Text(group.title, color = Forge.Dim, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
+            Text(prettyClipName(clip.name), color = Forge.Fg, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            // the raw file name stays visible (and searchable) in small type under the readable title
+            Text((if (showProject) group.title + "  ·  " else "") + clip.name, color = Forge.Dim, fontSize = 10.sp, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         // Only worth a tag when this clip came from a different pipeline than its group.
         (clip.source ?: group.source)?.let { Tag(it, Forge.Acc) }

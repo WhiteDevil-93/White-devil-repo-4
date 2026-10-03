@@ -80,7 +80,7 @@ fun MediaFilterBar(
             DateRange.entries.forEach { r -> Chip(r.label, filter.range == r) { onChange(filter.copy(range = r)) } }
             Divider()
             if (counts.keepers > 0) Chip("★ Keepers  ${counts.keepers}", filter.keepersOnly) { onChange(filter.copy(keepersOnly = !filter.keepersOnly)) }
-            if (counts.tests > 0) Chip("Show tests  ${counts.tests}", filter.showTests) { onChange(filter.copy(showTests = !filter.showTests)) }
+            if (counts.tests > 0) Chip("Show unsorted  ${counts.tests}", filter.showTests) { onChange(filter.copy(showTests = !filter.showTests)) }
         }
 
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

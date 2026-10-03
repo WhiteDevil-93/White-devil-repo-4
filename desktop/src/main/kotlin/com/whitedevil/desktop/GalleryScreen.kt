@@ -193,7 +193,7 @@ private fun ThumbTile(
             modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
         )
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(item.clip.name, style = MaterialTheme.typography.labelMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(prettyClipName(item.clip.name), style = MaterialTheme.typography.labelMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
                 "${formatMb(item.clip.mb)} - ${formatAge(item.clip.mtime, nowMs)}",
                 style = MaterialTheme.typography.labelSmall,
@@ -302,7 +302,10 @@ private fun PreviewPane(
             TextButton(onClick = onClose) { Text("Close") }
         }
         SelectionContainer {
-            Text(clip.name, style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace))
+            Column {
+                Text(prettyClipName(clip.name), style = MaterialTheme.typography.titleSmall)
+                Text(clip.name, style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             kindLabel(item.group.kind)?.let { Tag(it) }

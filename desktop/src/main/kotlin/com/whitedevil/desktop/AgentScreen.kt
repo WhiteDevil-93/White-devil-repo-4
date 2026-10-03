@@ -37,7 +37,7 @@ private const val ROLE_TOOL_OUT = "tool_out"
 private const val ROLE_ERROR = "error"
 
 @Composable
-fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
+fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit, onModelChange: (String) -> Unit = {}) {
     val scope = rememberCoroutineScope()
     val lines = remember { mutableStateListOf<ChatLine>() }
     var input by remember { mutableStateOf("") }
@@ -107,6 +107,8 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
         TopBar(
             busy = busy,
             model = settings.model,
+            apiKey = settings.veniceApiKey,
+            onModelChange = onModelChange,
             onStop = { job?.cancel() },
             onClear = { if (!busy) lines.clear() },
             onOpenSettings = onOpenSettings,
@@ -140,6 +142,8 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
 private fun TopBar(
     busy: Boolean,
     model: String,
+    apiKey: String,
+    onModelChange: (String) -> Unit,
     onStop: () -> Unit,
     onClear: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -151,10 +155,7 @@ private fun TopBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(
-            Modifier.border(1.dp, Forge.Line, RoundedCornerShape(8.dp)).background(Forge.Panel, RoundedCornerShape(8.dp))
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-        ) { Text(model, color = Forge.Fg, fontSize = 12.sp, fontFamily = FontFamily.Monospace) }
+        VeniceModelPicker(apiKey = apiKey, current = model, enabled = !busy, onPick = onModelChange)
         if (busy) StatusPill("working", Forge.Ok)
         Spacer(Modifier.weight(1f))
         if (busy) {
