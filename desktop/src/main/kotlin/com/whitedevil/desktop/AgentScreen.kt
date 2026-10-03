@@ -61,6 +61,9 @@ fun AgentScreen(
     var memoryOpen by remember { mutableStateOf(false) }
     var connectorsOpen by remember { mutableStateOf(false) }
     var skillsOpen by remember { mutableStateOf(false) }
+    var chatsOpen by remember { mutableStateOf(false) }
+    var attachments by remember { mutableStateOf<List<Attachment>>(emptyList()) }
+    var attachNote by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
     val items = groupChat(lines)
 
@@ -71,13 +74,16 @@ fun AgentScreen(
 
     fun send() {
         val text = input.trim()
-        if (text.isEmpty() || busy) return
+        if ((text.isEmpty() && attachments.isEmpty()) || busy) return
         val blocked = settings.blockedReason()
         if (blocked != null) {
             lines += ChatLine(ROLE_ERROR, "Not configured", blocked)
             return
         }
+        val (fullText, images) = Attachments.compose(text, attachments)
         input = ""
+        attachments = emptyList()
+        attachNote = null
         busy = true
         job = scope.launch {
             // The loop and every tool are blocking JVM work; keeping them off the
@@ -104,7 +110,7 @@ fun AgentScreen(
                                 // Compose snapshot state is thread-safe to mutate;
                                 // recomposition is dispatched to the UI thread.
                                 lines += when (event) {
-                                    is AgentEvent.User -> ChatLine(ROLE_USER, "You", event.text)
+                                    is AgentEvent.User -> ChatLine(ROLE_USER, "You", Attachments.forDisplay(event.text))
                                     is AgentEvent.Venice -> ChatLine(ROLE_VENICE, "Venice", event.text)
                                     is AgentEvent.ToolCall -> ChatLine(ROLE_TOOL_CALL, "Tool · ${event.name}", event.arguments)
                                     is AgentEvent.ToolOutput -> ChatLine(ROLE_TOOL_OUT, "Output · ${event.name}", event.output)
@@ -115,7 +121,7 @@ fun AgentScreen(
                         // Give the agent the conversation so far, and keep the new state even if the run is stopped.
                         agent.restore(session.history)
                         try {
-                            agent.send(text)
+                            agent.send(fullText, images)
                         } finally {
                             session.adopt(agent.snapshot())
                         }
@@ -139,7 +145,8 @@ fun AgentScreen(
             apiKey = settings.veniceApiKey,
             onModelChange = onModelChange,
             onStop = { job?.cancel() },
-            onNewChat = { if (!busy) session.clear() },
+            onNewChat = { if (!busy) session.newChat() },
+            onChats = { chatsOpen = true },
             showTools = showTools,
             onToggleTools = { showTools = !showTools },
             onMemory = { memoryOpen = true },
@@ -174,9 +181,20 @@ fun AgentScreen(
             busy = busy,
             onValueChange = { input = it },
             onSend = ::send,
+            attachments = attachments,
+            note = attachNote,
+            onAttach = {
+                scope.launch(Dispatchers.IO) {
+                    val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Attach to Venice", java.awt.FileDialog.LOAD).apply { isMultipleMode = true; isVisible = true }
+                    val (list, problems) = Attachments.addAll(attachments, dialog.files.toList())
+                    attachments = list; attachNote = problems
+                }
+            },
+            onRemove = { i -> attachments = attachments.filterIndexed { n, _ -> n != i } },
         )
     }
     if (memoryOpen) MemoryPanel(settings, onClose = { memoryOpen = false })
+    if (chatsOpen) ChatsPanel(session, busy, onClose = { chatsOpen = false })
     if (skillsOpen && skills != null) SkillsPanel(skills, onClose = { skillsOpen = false })
     if (connectorsOpen && mcp != null) ConnectorsPanel(mcp, onClose = { connectorsOpen = false })
 }
@@ -204,6 +222,7 @@ private fun TopBar(
     onModelChange: (String) -> Unit,
     onStop: () -> Unit,
     onNewChat: () -> Unit,
+    onChats: () -> Unit,
     showTools: Boolean,
     onToggleTools: () -> Unit,
     onMemory: () -> Unit,
@@ -221,6 +240,7 @@ private fun TopBar(
         VeniceModelPicker(apiKey = apiKey, current = model, enabled = !busy, onPick = onModelChange)
         if (busy) StatusPill("working", Forge.Ok)
         Spacer(Modifier.weight(1f))
+        TextButton(onClick = onChats) { Text("CHATS", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
         TextButton(onClick = onToggleTools) { Text(if (showTools) "HIDE TOOLS" else "SHOW TOOLS", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
         if (onSkills != null) TextButton(onClick = onSkills) { Text("SKILLS", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
         if (onConnectors != null) TextButton(onClick = onConnectors) { Text("CONNECTORS", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
@@ -280,8 +300,25 @@ private fun Bubble(line: ChatLine) {
 }
 
 @Composable
-private fun Composer(value: String, busy: Boolean, onValueChange: (String) -> Unit, onSend: () -> Unit) {
-    Box(Modifier.fillMaxWidth().background(Forge.Bg)) {
+private fun Composer(
+    value: String, busy: Boolean, onValueChange: (String) -> Unit, onSend: () -> Unit,
+    attachments: List<Attachment> = emptyList(), note: String? = null, onAttach: () -> Unit = {}, onRemove: (Int) -> Unit = {},
+) {
+    Column(Modifier.fillMaxWidth().background(Forge.Bg)) {
+    if (attachments.isNotEmpty() || note != null) {
+        Column(Modifier.fillMaxWidth().widthIn(max = 1100.dp).align(Alignment.CenterHorizontally).padding(horizontal = 28.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                attachments.forEachIndexed { i, a ->
+                    Text(
+                        (if (a.isImage) "\uD83D\uDDBC " else "\uD83D\uDCCE ") + a.name + "  \u2715", color = Forge.Fg, fontSize = 12.sp,
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Forge.Panel2).clickable { onRemove(i) }.padding(horizontal = 10.dp, vertical = 5.dp),
+                    )
+                }
+            }
+            note?.let { Text(it, color = Forge.Bad, fontSize = 12.sp) }
+        }
+    }
+    Box(Modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth().widthIn(max = 1100.dp).align(Alignment.Center).padding(horizontal = 28.dp, vertical = 16.dp),
             verticalAlignment = Alignment.Bottom,
@@ -301,14 +338,17 @@ private fun Composer(value: String, busy: Boolean, onValueChange: (String) -> Un
                 ),
                 keyboardActions = KeyboardActions(onSend = { onSend() }),
             )
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(8.dp))
+            TextButton(onClick = onAttach, enabled = !busy, modifier = Modifier.height(56.dp)) { Text("ATTACH", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
+            Spacer(Modifier.width(4.dp))
             Button(
-                onClick = onSend, enabled = !busy && value.isNotBlank(),
+                onClick = onSend, enabled = !busy && (value.isNotBlank() || attachments.isNotEmpty()),
                 modifier = Modifier.height(56.dp), shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Forge.Acc2, contentColor = Color.White,
                     disabledContainerColor = Forge.Panel2, disabledContentColor = Forge.Dim),
             ) { Text(if (busy) "Working" else "Send", fontWeight = FontWeight.SemiBold) }
         }
+    }
     }
 }
 

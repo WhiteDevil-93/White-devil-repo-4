@@ -4,64 +4,149 @@ import androidx.compose.runtime.mutableStateListOf
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.ChatMessage
 import com.whitedevil.agent.stripBlobs
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import java.io.File
 
 /**
- * The Venice conversation, kept for good. It used to live inside the Venice screen: leaving the screen threw it away,
- * and every message started a brand-new agent that had never seen the one before. Now there is one session for the app.
+ * The Venice conversations, kept for good. A conversation used to live inside the Venice screen (leaving it threw it
+ * away) and there was only ever one. Now the app keeps a library: every chat is a file in `<dir>/chats`, the one you
+ * are in is [currentId], and NEW CHAT starts a fresh one while the old stays in the library to be searched and reopened.
  *
- * - [history] is what the agent remembers (its messages), saved to agent_history.json next to the settings after every
- *   run, including a stopped one, and loaded again at start. Image data is stripped so the file stays small.
- * - [lines] is what the chat shows, rebuilt from the history when the app starts.
+ * - [history] is what the agent remembers (its messages), saved after every run, including a stopped one. Image data is
+ *   stripped so files stay small.
+ * - [lines] is what the chat shows, rebuilt from the history when a chat is opened.
+ * - With `dir == null` nothing is written (tests, previews).
  */
-class AgentSession(private val file: File?) {
+@Serializable
+data class StoredChat(val id: String, val title: String, val updated: Long, val messages: List<ChatMessage>)
+
+data class ChatMeta(val id: String, val title: String, val updated: Long, val messageCount: Int, val snippet: String = "")
+
+/** All runs of whitespace (spaces, tabs, line breaks) become single spaces. */
+internal fun String.oneLine(): String = split(Regex("\\s+")).filter { it.isNotEmpty() }.joinToString(" ")
+
+class AgentSession(private val dir: File?) {
     val lines = mutableStateListOf<ChatLine>()
 
     var history: List<ChatMessage> = emptyList()
         private set
 
+    var currentId: String = newId()
+        private set
+
+    private val chatsDir get() = dir?.let { File(it, "chats") }
+
     init {
-        history = load()
-        lines.addAll(linesFrom(history))
+        migrateOldSingleHistory()
+        val saved = dir?.let { File(it, CURRENT).takeIf { f -> f.isFile }?.readText()?.trim() }.orEmpty()
+        // A chat id with no file is a fresh chat you started and have not typed in yet: stay in it.
+        // With no marker at all (first run, or a version before the library), open the newest chat.
+        if (saved.isNotEmpty() && read(saved) == null) currentId = AgentSession.clean(saved)
+        val chat = if (saved.isNotEmpty()) read(saved) else list().firstOrNull()?.let { read(it.id) }
+        if (chat != null) { currentId = chat.id; history = lean(chat.messages); lines.addAll(linesFrom(history)) }
     }
 
-    /** The agent finished (or was stopped): remember its conversation. */
+    /** The agent finished (or was stopped): remember its conversation under the current chat. */
     fun adopt(messages: List<ChatMessage>) {
         history = lean(messages)
         save()
     }
 
-    /** "New chat": forget the conversation. The Hub's persistent memory (preferences, notes) is separate and stays. */
-    fun clear() {
-        lines.clear()
-        history = emptyList()
-        runCatching { file?.delete() }
+    /** Starts a fresh chat. The one you were in stays in the library. The Hub's memory is separate and stays too. */
+    fun newChat() {
+        lines.clear(); history = emptyList(); currentId = newId(); rememberCurrent()
     }
 
+    /** Opens a saved chat. Returns false if it can't be read. */
+    fun open(id: String): Boolean {
+        val c = read(id) ?: return false
+        lines.clear(); currentId = c.id; history = lean(c.messages); lines.addAll(linesFrom(history)); rememberCurrent()
+        return true
+    }
+
+    /** Deletes a saved chat; if it was the open one, a fresh chat starts. */
+    fun delete(id: String) {
+        runCatching { chatFile(id)?.delete() }
+        if (id == currentId) newChat()
+    }
+
+    /** Saved chats, newest first. */
+    fun list(): List<ChatMeta> = chatsDir?.listFiles { f -> f.extension == "json" }.orEmpty()
+        .mapNotNull { f -> readFile(f)?.let { ChatMeta(it.id, it.title, it.updated, it.messages.size) } }
+        .sortedByDescending { it.updated }
+
+    /** Chats whose title or any message contains [query] (case-insensitive), with a snippet around the first hit. */
+    fun search(query: String): List<ChatMeta> {
+        val q = query.trim()
+        if (q.isEmpty()) return list()
+        return chatsDir?.listFiles { f -> f.extension == "json" }.orEmpty().mapNotNull { f ->
+            val c = readFile(f) ?: return@mapNotNull null
+            val hit = c.messages.firstNotNullOfOrNull { m -> m.textContent().takeIf { it.contains(q, ignoreCase = true) } }
+            if (!c.title.contains(q, ignoreCase = true) && hit == null) return@mapNotNull null
+            ChatMeta(c.id, c.title, c.updated, c.messages.size, hit?.let { snippet(it, q) }.orEmpty())
+        }.sortedByDescending { it.updated }
+    }
+
+    private fun snippet(text: String, q: String): String {
+        val i = text.indexOf(q, ignoreCase = true).coerceAtLeast(0)
+        return text.substring((i - 40).coerceAtLeast(0), (i + q.length + 60).coerceAtMost(text.length)).oneLine()
+    }
+
+    private fun chatFile(id: String) = chatsDir?.let { File(it, clean(id) + ".json") }
+
     private fun save() {
-        val f = file ?: return
+        val f = chatFile(currentId) ?: return
+        if (history.isEmpty()) return
+        val chat = StoredChat(currentId, titleOf(history), System.currentTimeMillis(), history)
         runCatching {
             f.parentFile?.mkdirs()
             val tmp = File(f.parentFile, f.name + ".tmp")
-            tmp.writeText(json.encodeToString(ListSerializer(ChatMessage.serializer()), history))
+            tmp.writeText(json.encodeToString(StoredChat.serializer(), chat))
             // renameTo will not replace an existing file on Windows.
             if (!tmp.renameTo(f)) { f.delete(); tmp.renameTo(f) }
         }
+        rememberCurrent()
     }
 
-    private fun load(): List<ChatMessage> = runCatching {
-        val f = file ?: return emptyList()
-        if (!f.isFile) emptyList()
-        // A damaged file must never stop the screen opening; the conversation just starts empty.
-        else lean(json.decodeFromString(ListSerializer(ChatMessage.serializer()), f.readText()))
-    }.getOrDefault(emptyList())
+    private fun rememberCurrent() { runCatching { dir?.let { it.mkdirs(); File(it, CURRENT).writeText(currentId) } } }
+
+    private fun read(id: String): StoredChat? = chatFile(id)?.let(::readFile)
+
+    // A damaged file must never stop the screen opening; that chat is just skipped.
+    private fun readFile(f: File): StoredChat? = runCatching { json.decodeFromString(StoredChat.serializer(), f.readText()) }.getOrNull()
+
+    /** The single agent_history.json of earlier versions becomes the first chat in the library. */
+    private fun migrateOldSingleHistory() {
+        val d = dir ?: return
+        val old = File(d, "agent_history.json")
+        if (!old.isFile) return
+        runCatching {
+            val msgs = lean(json.decodeFromString(ListSerializer(ChatMessage.serializer()), old.readText()))
+            if (msgs.isNotEmpty() && list().isEmpty()) {
+                val id = newId()
+                val f = File(chatsDir!!, "$id.json"); f.parentFile.mkdirs()
+                f.writeText(json.encodeToString(StoredChat.serializer(), StoredChat(id, titleOf(msgs), old.lastModified(), msgs)))
+                File(d, CURRENT).writeText(id)
+            }
+            old.delete()
+        }
+    }
 
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
 
-        fun load(dir: File = Settings.dir) = AgentSession(File(dir, "agent_history.json"))
+        private const val CURRENT = "current_chat.txt"
+
+        fun load(dir: File = Settings.dir) = AgentSession(dir)
+
+        fun newId(): String = "c" + System.currentTimeMillis().toString(36) + (0..999).random().toString(36)
+        fun clean(id: String) = id.filter { it.isLetterOrDigit() || it == '-' || it == '_' }.take(40)
+
+        /** A chat's name: its first thing you said, trimmed. */
+        fun titleOf(messages: List<ChatMessage>): String =
+            messages.firstOrNull { it.role == "user" }?.textContent()?.oneLine()?.trim()?.take(60)?.ifEmpty { null } ?: "New chat"
 
         /** What is worth keeping: the conversation roles, the last [Agent.MAX_HISTORY_MESSAGES], without picture data. */
         fun lean(messages: List<ChatMessage>): List<ChatMessage> = messages
@@ -75,7 +160,7 @@ class AgentSession(private val file: File?) {
             val out = mutableListOf<ChatLine>()
             for (m in history) {
                 when (m.role) {
-                    "user" -> m.textContent().takeIf { it.isNotBlank() }?.let { out += ChatLine(ROLE_USER, "You", it) }
+                    "user" -> m.textContent().takeIf { it.isNotBlank() }?.let { out += ChatLine(ROLE_USER, "You", Attachments.forDisplay(it)) }
                     "assistant" -> {
                         m.textContent().takeIf { it.isNotBlank() }?.let { out += ChatLine(ROLE_VENICE, "Venice", it) }
                         m.toolCalls.orEmpty().forEach { c ->

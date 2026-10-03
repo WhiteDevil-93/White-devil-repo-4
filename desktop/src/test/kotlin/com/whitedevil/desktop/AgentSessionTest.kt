@@ -55,20 +55,58 @@ class AgentSessionTest {
         assertTrue(again.lines.any { it.role == ROLE_TOOL_CALL && it.title == "Tool · remember" })
     }
 
-    @Test fun `new chat forgets the conversation and removes the file`() {
+    @Test fun `new chat starts fresh but the old chat stays in the library`() {
         val dir = Files.createTempDirectory("agent").toFile()
         val s = AgentSession.load(dir); s.adopt(conversation)
-        s.clear()
-        assertTrue(s.lines.isEmpty() && s.history.isEmpty()); assertFalse(java.io.File(dir, "agent_history.json").exists())
-        assertTrue(AgentSession.load(dir).history.isEmpty())
+        val first = s.currentId
+        s.newChat()
+        assertTrue(s.lines.isEmpty() && s.history.isEmpty()); assertTrue(s.currentId != first)
+        assertEquals(listOf(first), s.list().map { it.id }, "the earlier chat is kept")
+        assertEquals(first, AgentSession.load(dir).list().single().id)
+        assertTrue(AgentSession.load(dir).history.isEmpty(), "and the fresh chat is what is open after a restart")
     }
 
-    @Test fun `a damaged history file starts an empty chat instead of breaking the screen`() {
+    @Test fun `a damaged chat file is skipped instead of breaking the screen`() {
         val dir = Files.createTempDirectory("agent").toFile()
-        java.io.File(dir, "agent_history.json").writeText("{ this is not json")
+        java.io.File(dir, "chats").mkdirs(); java.io.File(dir, "chats/bad.json").writeText("{ this is not json")
+        java.io.File(dir, "current_chat.txt").writeText("bad")
         val s = AgentSession.load(dir)
-        assertTrue(s.history.isEmpty() && s.lines.isEmpty())
-        s.adopt(conversation); assertEquals(conversation.size, AgentSession.load(dir).history.size, "and saving works again afterwards")
+        assertTrue(s.history.isEmpty() && s.lines.isEmpty() && s.list().isEmpty())
+        s.adopt(conversation); assertEquals(conversation.size, AgentSession.load(dir).history.size, "and saving works afterwards")
+    }
+
+    @Test fun `the library lists newest first, opens, deletes and names chats by what you said`() {
+        val dir = Files.createTempDirectory("agent").toFile()
+        val s = AgentSession.load(dir)
+        s.adopt(listOf(msg("user", "first   chat" + 10.toChar() + "about   LoRAs"), msg("assistant", "ok")))
+        val a = s.currentId; Thread.sleep(5); s.newChat()
+        s.adopt(listOf(msg("user", "second chat about the L40 box"), msg("assistant", "noted the price")))
+        val b = s.currentId
+        assertEquals(listOf(b, a), s.list().map { it.id }); assertEquals("first chat about LoRAs", s.list().last().title)
+        assertTrue(s.open(a)); assertEquals(a, s.currentId); assertTrue(s.lines.first().body.startsWith("first   chat"), "the bubble keeps what you typed")
+        assertEquals(a, AgentSession.load(dir).currentId, "the open chat is remembered across restarts")
+        assertFalse(s.open("nope"))
+        s.delete(a); assertEquals(listOf(b), s.list().map { it.id }); assertTrue(s.currentId != a && s.lines.isEmpty(), "deleting the open chat starts a new one")
+        assertEquals(60, AgentSession.titleOf(listOf(msg("user", "x".repeat(200)))).length); assertEquals("New chat", AgentSession.titleOf(emptyList()))
+    }
+
+    @Test fun `search finds a word inside any message of any chat, with a snippet`() {
+        val dir = Files.createTempDirectory("agent").toFile()
+        val s = AgentSession.load(dir)
+        s.adopt(listOf(msg("user", "plan the render"), msg("assistant", "Thunder is cheaper than the L40 rental for this."))); Thread.sleep(5); s.newChat()
+        s.adopt(listOf(msg("user", "unrelated"), msg("assistant", "nothing here")))
+        val hits = s.search("l40")
+        assertEquals(1, hits.size); assertTrue("L40 rental" in hits.single().snippet, hits.single().snippet)
+        assertEquals(1, s.search("RENDER").size, "titles match too, ignoring case"); assertTrue(s.search("zzzz").isEmpty()); assertEquals(2, s.search("  ").size, "blank lists everything")
+    }
+
+    @Test fun `the single history file of earlier versions becomes the first chat`() {
+        val dir = Files.createTempDirectory("agent").toFile()
+        java.io.File(dir, "agent_history.json").writeText(Json.encodeToString(kotlinx.serialization.builtins.ListSerializer(ChatMessage.serializer()), conversation))
+        val s = AgentSession.load(dir)
+        assertEquals(conversation.size, s.history.size); assertEquals(1, s.list().size); assertFalse(java.io.File(dir, "agent_history.json").exists())
+        assertEquals("put the 14B remix on a new L40", s.list().single().title)
+        assertEquals(1, AgentSession.load(dir).list().size, "not imported twice")
     }
 
     @Test fun `only the recent messages are kept, and picture data is stripped`() {
