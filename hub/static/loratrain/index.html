@@ -1,0 +1,208 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c"><title>Train LoRA</title>
+<link rel="stylesheet" href="/app/ui/forge.css"><script src="/app/ui/forge.js"></script>
+<style>
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.seg button{flex:1;min-width:90px}
+.seg button.on{background:var(--acc);color:#111;border-color:var(--acc)}
+.tip{font-size:13px;color:var(--mut);line-height:1.5;margin-top:8px}
+.item{padding:12px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0}
+.item img,.item video{width:84px;height:84px;object-fit:cover;border-radius:10px;flex:none;background:#000}
+textarea.input{min-height:64px;resize:vertical;font:inherit;line-height:1.4;width:100%;margin-top:6px}
+.warn{color:#e3b26a}.bad{color:#e3a9a9}.ok{color:#9fd6a8}
+.bar{height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}
+.bar>i{display:block;height:100%;background:var(--acc)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
+.tile{border:1px solid var(--line);border-radius:12px;padding:10px}.tile .k{font-size:12px;color:var(--mut)}.tile .v{font-weight:700;margin-top:2px}
+pre.log{white-space:pre-wrap;font-size:11px;max-height:220px;overflow:auto;background:rgba(0,0,0,.25);padding:8px;border-radius:8px}
+</style>
+</head><body>
+
+<div class="row" style="margin:4px 2px 12px">
+  <div class="grow"><div class="tiny mut">LTX-2.5 · ltx-trainer · on Colab</div><h1 style="margin:2px 0 0">Train LoRA</h1></div>
+</div>
+
+<div class="card" id="newcard">
+  <div style="font-weight:700">New dataset</div>
+  <div class="tip">Character: 25-40 pictures and short clips of one person (different angles, light, outfits, backgrounds) and a made-up trigger word.
+    Motion: 30-50 clips of the movement with different people. A real person needs their consent (LTX licence).</div>
+  <input class="input" id="nname" placeholder="LoRA name" style="margin-top:10px">
+  <div class="seg" id="nkind"><button class="btn sm on" data-v="character">Character</button><button class="btn sm" data-v="motion">Motion</button></div>
+  <input class="input" id="ntrig" placeholder="Trigger word (e.g. ohwx_man)" style="margin-top:8px">
+  <button class="btn" style="margin-top:10px;width:100%" onclick="create()">Create</button>
+</div>
+
+<div class="card"><div style="font-weight:700">Datasets</div><div id="list" class="small mut" style="margin-top:6px">Loading…</div></div>
+
+<div class="card" id="dscard" hidden></div>
+<div class="card"><div style="font-weight:700">Training runs</div><div id="runs" class="small mut" style="margin-top:6px">—</div></div>
+
+<script>
+const H = '/api/loratrain';
+let cur = null, ds = null, runs = [], kind = 'character', timer = null;
+const $ = id => document.getElementById(id), E = F.esc;
+document.querySelectorAll('#nkind button').forEach(b => b.onclick = () => {
+  kind = b.dataset.v; document.querySelectorAll('#nkind button').forEach(x => x.classList.toggle('on', x === b)); });
+
+async function create() {
+  const name = $('nname').value.trim();
+  if (!name) return F.toast('Give the LoRA a name.');
+  try {
+    const d = await F.post(H + '/datasets', {name, kind, trigger: $('ntrig').value.trim()});
+    $('nname').value = ''; $('ntrig').value = ''; cur = d.id; await load();
+  } catch (e) { F.toast(e.message); }
+}
+
+async function load() {
+  try {
+    const [list, r] = await Promise.all([F.api(H + '/datasets'), F.api(H + '/runs')]);
+    runs = r;
+    $('list').innerHTML = list.length ? list.map(x => `<div class="row" style="margin-top:8px">
+        <div class="grow"><b>${E(x.name)}</b><div class="tiny mut">${x.kind} · ${x.items} items · ${x.ready ? '<span class="ok">ready</span>' : 'not ready'}</div></div>
+        <button class="btn sm" onclick="cur='${x.id}';load()">${x.id === cur ? 'Open ✓' : 'Open'}</button></div>`).join('') : 'No datasets yet.';
+    ds = cur ? await F.api(H + '/datasets/' + cur, {timeout: 60000}) : null;
+  } catch (e) { F.toast(e.message); }
+  draw(); drawRuns();
+  clearTimeout(timer);
+  if ((ds && ds.captioning && ds.captioning.status === 'running') || runs.some(x => ['queued', 'uploading', 'training'].includes(x.status)))
+    timer = setTimeout(() => F.isVisible() && load(), 10000);
+}
+
+function media(d, it) {
+  const src = `${H}/datasets/${d.id}/files/${encodeURIComponent(it.file)}`;
+  return it.type === 'video' ? `<video src="${src}" muted preload="metadata"></video>` : `<img loading="lazy" src="${src}" alt="">`;
+}
+
+function draw() {
+  const c = $('dscard');
+  if (!ds) { c.hidden = true; return; }
+  c.hidden = false;
+  const est = ds.estimate || {}, cap = ds.captioning || {};
+  c.innerHTML = `<div class="row"><div class="grow" style="font-weight:700">${E(ds.name)}</div>
+      <span class="pill">${ds.ready ? 'ready to train' : 'not ready'}</span></div>
+    <div class="tiny mut">${E(ds.lora)}.safetensors · ${ds.kind}${ds.trigger ? ' · trigger ' + E(ds.trigger) : ''}</div>
+    <div class="tiles">
+      <div class="tile"><div class="k">Items</div><div class="v">${ds.items.length}</div><div class="tiny mut">${ds.counts.images} pictures · ${ds.counts.videos} clips</div></div>
+      <div class="tile"><div class="k">Captioned</div><div class="v">${ds.items.filter(i => i.caption).length} / ${ds.items.length}</div>
+        <div class="tiny mut">${cap.status === 'running' ? `auto-captioning ${cap.done}/${cap.total}` : ''}</div></div>
+      <div class="tile"><div class="k">Time (estimate)</div><div class="v">${est.minutes != null ? F.dur(est.minutes * 60) : '?'}</div><div class="tiny mut">${est.steps || ''} steps</div></div>
+      <div class="tile"><div class="k">Cost (estimate)</div><div class="v">${est.cost_units != null ? '~' + est.cost_units + ' units' : '?'}</div>
+        <div class="tiny mut">${est.units_per_hr ? est.units_per_hr + ' Colab units/h' : 'rate shows once Colab ran'}</div></div>
+    </div>
+    ${ds.kind_info ? `<div class="tip">Recommended: ${E(ds.kind_info.recommended)}</div>` : ''}
+    ${ds.problems.map(p => `<div class="small warn" style="margin-top:6px">• ${E(p)}</div>`).join('')}
+    ${ds.warnings.map(p => `<div class="small mut" style="margin-top:6px">• ${E(p)}</div>`).join('')}
+    <div class="row wrap" style="margin-top:10px;gap:6px">
+      <input class="input" id="strig" style="flex:2;min-width:120px" placeholder="Trigger word" value="${E(ds.trigger || '')}">
+      <input class="input" id="ssteps" style="flex:1;min-width:80px" inputmode="numeric" placeholder="Steps ${est.steps || ''}" value="${ds.settings.steps || ''}">
+      <input class="input" id="srank" style="flex:1;min-width:70px" inputmode="numeric" placeholder="Rank 32" value="${ds.settings.rank || ''}">
+      <button class="btn sm" onclick="saveSettings()">Save</button></div>
+    <label class="btn" style="display:block;text-align:center;margin-top:12px">Add files (any type, up to 25 GB each)
+      <input type="file" id="files" multiple hidden onchange="upload(this.files)"></label>
+    <div id="up" class="small mut" style="margin-top:6px"></div>
+    <div class="bar" id="upbar" hidden><i style="width:0"></i></div>
+    <div class="tip">Pictures and clips are converted on the relay (clips to 24 fps, first 30 s). A .txt file captions the item with the same name; a .zip is unpacked.</div>
+    <div class="row wrap" style="margin-top:10px;gap:6px">
+      <button class="btn grow" onclick="autoCaption()" ${cap.status === 'running' || !ds.items.length ? 'disabled' : ''}>Auto-caption</button>
+      <button class="btn grow" onclick="saveCaptions()">Save captions</button>
+      <button class="btn grow" style="${ds.ready ? 'background:var(--acc);color:#111' : ''}" onclick="train()" ${ds.ready ? '' : 'disabled'}>Train on Colab</button></div>
+    <div id="items" style="margin-top:10px">${ds.items.map(it => `<div class="item"><div class="row" style="gap:10px;align-items:flex-start">
+        ${media(ds, it)}<div class="grow"><div class="tiny" style="word-break:break-all">${E(it.file)}</div>
+        <div class="tiny mut">${it.type} · ${Math.round(it.size / 1024)} KB${it.caption_by ? ' · caption: ' + E(it.caption_by) : ''}</div>
+        ${it.caption_error ? `<div class="tiny warn">Auto-caption failed: ${E(it.caption_error)}</div>` : ''}</div>
+        <button class="btn sm" onclick="removeItem('${E(it.file)}')">✕</button></div>
+      <textarea class="input cap" data-f="${E(it.file)}" placeholder="Caption">${E(it.caption)}</textarea></div>`).join('') || '<div class="small mut">No items yet.</div>'}</div>
+    <button class="btn sm" style="margin-top:14px" onclick="removeDataset()">Delete dataset</button>`;
+}
+
+function drawRuns() {
+  const rs = runs.filter(r => !cur || r.dataset === cur).slice(0, 10);
+  $('runs').innerHTML = rs.length ? rs.map(r => {
+    const pct = r.step_now && r.step_total ? Math.round(100 * r.step_now / r.step_total) : null;
+    const tone = r.status === 'done' ? 'ok' : r.status === 'failed' ? 'bad' : 'warn';
+    return `<div style="margin-top:10px"><div class="row"><b class="grow">${E(r.name)}</b><span class="${tone}">${r.status}</span>
+        ${['queued', 'uploading', 'training'].includes(r.status) ? `<button class="btn sm" style="margin-left:8px" onclick="cancelRun('${r.id}')">Cancel</button>` : ''}</div>
+      <div class="tiny mut">${E(r.step || '')}</div>
+      ${pct != null ? `<div class="bar"><i style="width:${pct}%"></i></div><div class="tiny mut">Step ${r.step_now} of ${r.step_total}</div>` : ''}
+      ${r.final ? `<div class="tiny ${r.final.verified ? 'ok' : 'bad'}">LoRA ${Math.round(r.final.size / 1048576)} MB on the relay, ${r.final.verified ? 'size verified' : 'NOT verified'}</div>` : ''}
+    </div>`; }).join('') : 'No runs yet.';
+}
+
+function upload(list) {
+  const files = [...list];
+  if (!files.length || !ds) return;
+  let i = 0, added = 0, skipped = [];
+  const bar = $('upbar'), fill = bar.firstElementChild;
+  bar.hidden = false;
+  const next = () => {
+    if (i >= files.length) {
+      bar.hidden = true;
+      $('up').textContent = `${added} added` + (skipped.length ? ` · skipped: ${skipped.join('; ')}` : '');
+      return load();
+    }
+    const f = files[i++], fd = new FormData();
+    fd.append('files', f, f.name);
+    const x = new XMLHttpRequest();
+    x.open('POST', `${H}/datasets/${ds.id}/files`);
+    x.withCredentials = true;
+    x.upload.onprogress = e => { if (e.lengthComputable) {
+      fill.style.width = Math.round(100 * e.loaded / e.total) + '%';
+      $('up').textContent = `Uploading ${i} of ${files.length}: ${f.name} · ${Math.round(e.loaded / 1048576)} / ${Math.round(e.total / 1048576)} MB`;
+      if (e.loaded === e.total) $('up').textContent = `Converting ${f.name} on the relay…`; } };
+    x.onload = () => {
+      let j = {}; try { j = JSON.parse(x.responseText); } catch (e) {}
+      if (x.status >= 200 && x.status < 300) { added += j.added || 0; skipped.push(...(j.skipped || [])); }
+      else skipped.push(`${f.name}: ${j.detail || 'HTTP ' + x.status}`);
+      next();
+    };
+    x.onerror = () => { skipped.push(`${f.name}: network error`); next(); };
+    x.send(fd);
+  };
+  next();
+}
+
+async function saveSettings() {
+  try {
+    const body = {trigger: $('strig').value.trim()};
+    if ($('ssteps').value) body.steps = +$('ssteps').value;
+    if ($('srank').value) body.rank = +$('srank').value;
+    await F.api(`${H}/datasets/${ds.id}`, {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    F.toast('Saved'); load();
+  } catch (e) { F.toast(e.message); }
+}
+async function saveCaptions() {
+  const caps = {};
+  document.querySelectorAll('textarea.cap').forEach(t => caps[t.dataset.f] = t.value);
+  try { await F.api(`${H}/datasets/${ds.id}/captions`, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(caps)});
+    F.toast('Captions saved'); load(); } catch (e) { F.toast(e.message); }
+}
+async function autoCaption() {
+  try { await F.post(`${H}/datasets/${ds.id}/caption`); F.toast('Captioning started'); setTimeout(load, 1500); } catch (e) { F.toast(e.message); }
+}
+async function removeItem(f) {
+  try { await F.api(`${H}/datasets/${ds.id}/files/${encodeURIComponent(f)}`, {method: 'DELETE'}); load(); } catch (e) { F.toast(e.message); }
+}
+async function removeDataset() {
+  if (prompt(`Type delete to remove "${ds.name}" and its files from the relay (trained LoRAs are kept).`) !== 'delete') return;
+  try { await F.api(`${H}/datasets/${ds.id}`, {method: 'DELETE'}); cur = null; load(); } catch (e) { F.toast(e.message); }
+}
+async function train() {
+  const est = ds.estimate || {};
+  const msg = `Train "${ds.lora}" on Colab?\n\n` +
+    `• ${ds.items.length} items are uploaded to the running Colab.\n` +
+    `• About ${F.dur((est.minutes || 0) * 60)} (ESTIMATE, not yet measured on the G4).\n` +
+    `• ${est.cost_units != null ? 'About ' + est.cost_units + ' Colab compute units.' : 'Colab bills compute units while it runs.'}\n` +
+    `• LTX renders are refused until it finishes: training holds the GPU.\n` +
+    `• The first run downloads the 42 GB LTX-2.5 Dev model onto Colab.`;
+  if (!confirm(msg)) return;
+  try { const r = await F.post(`${H}/datasets/${ds.id}/train`, undefined, {timeout: 60000}); F.toast('Training queued: ' + r.step); load(); }
+  catch (e) { F.toast(e.message); }
+}
+async function cancelRun(id) {
+  if (!confirm('Cancel this training run? Checkpoints already on the relay are kept.')) return;
+  try { await F.post(`${H}/runs/${id}/cancel`); load(); } catch (e) { F.toast(e.message); }
+}
+F.onVisible(load);
+load();
+</script>
+</body></html>
