@@ -84,6 +84,13 @@ class ScreenSmokeTest {
         press("LTX 2.5 LoRA pack"); press("Install a setup")
     }
 
+    @Test fun `the caretaker screen draws offline and its ask box responds`() = runComposeUiTest {
+        show { CaretakerScreen(offline) }
+        // The relay cannot be reached: the panels must show errors, and the Ask card must still be there.
+        onAllNodesWithText("Ask the caretaker")[0].assertExists()
+        onAllNodesWithText("Ask")[0]            // present; disabled while the box is empty
+    }
+
     @Test fun `venice and settings draw`() {
         runComposeUiTest { show { AgentScreen(offline, onOpenSettings = {}) } }
         runComposeUiTest { show { SettingsScreen(offline, onSave = {}, onBack = {}) } }

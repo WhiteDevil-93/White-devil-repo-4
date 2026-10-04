@@ -129,6 +129,7 @@ private fun runApp() = application {
                                 Screen.Ltx -> LtxScreen(settings)
                                 Screen.Vast -> VastScreen(settings, onCreate = { createTab = it; screen = Screen.Create })
                                 Screen.Setup -> SetupScreen(settings)
+                                Screen.Caretaker -> CaretakerScreen(settings)
                                 Screen.Settings -> SettingsScreen(
                                     initial = settings,
                                     onSave = { settings = it; screen = Screen.Home },
