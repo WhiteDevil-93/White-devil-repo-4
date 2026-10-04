@@ -799,6 +799,14 @@ def slug(s):
 
 def submit(data, fname, prompt, frames, size, seed, opts, prefix, compression=18, tail=False):
     """data=None renders text-to-video."""
+    try:
+        import lora_train
+        busy = lora_train.training_now()
+    except ImportError:
+        busy = False
+    if busy:
+        raise HTTPException(409, "A LoRA is training on Colab and holds the GPU; renders resume when it finishes "
+                                 "(or cancel it on the Train LoRA screen).")
     image = comfy("POST", "/upload/image", files={"image": (fname, data)}, data={"overwrite": "true"}).json()["name"] if data else None
     width, height = SIZES[size]
     g, unet = graph(image, prompt, frames, width, height, seed, opts, prefix, compression, tail)

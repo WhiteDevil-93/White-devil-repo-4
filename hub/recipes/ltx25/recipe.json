@@ -29,7 +29,8 @@
       "SEX_LORA=sexgod": 2,
       "EXTRAS=true": 1,
       "SEX_LORA=all": 8,
-      "CONTENT_LORAS=true": 12
+      "CONTENT_LORAS=true": 12,
+      "TRAINER=true": 52
     }
   },
   "fixed_env": {
@@ -121,6 +122,12 @@
       "label": "Download ALL NSFW content LoRAs (CoachBate, Praxis, BEANFLK, \u2026)",
       "type": "bool",
       "default": true
+    },
+    {
+      "key": "TRAINER",
+      "label": "Also prepare LoRA training (Dev model 42 GB + trainer, for the Train LoRA screen)",
+      "type": "bool",
+      "default": false
     }
   ]
 }

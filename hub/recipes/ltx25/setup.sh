@@ -26,6 +26,7 @@ set -uo pipefail
 
 BASE="${BASE_DIR:-/workspace}"
 TRANSFORMER="${TRANSFORMER:-stubelius_b2}"
+TRAINER="${TRAINER:-0}"
 GEMMA="${GEMMA:-bf16}"
 SEX_LORA="${SEX_LORA:-all}"
 PACK_LORAS="${PACK_LORAS:-1}"
@@ -110,6 +111,17 @@ elif rm -f "models/loras/$COACH_NAME"; [ -n "${RELAY_USER:-}" ] && [ -n "${RELAY
   wget -c -q --user="$RELAY_USER" --password="$RELAY_PASS" \
     -O "models/loras/$COACH_NAME" "https://84-12-112-249.sslip.io/api/ltx/stage/$COACH_NAME" \
     && echo "GOT: models/loras/$COACH_NAME" || { rm -f "models/loras/$COACH_NAME"; echo "FAILED: models/loras/$COACH_NAME"; }
+fi
+# LoRAs trained on the Train LoRA screen live in the private repo under trained/; this tree was just re-cloned, so
+# bring them back into the picker.
+if [ -n "${HF_TOKEN:-}" ]; then
+  curl -s -m 60 -H "Authorization: Bearer $HF_TOKEN"     "https://huggingface.co/api/models/${COACH_REPO:-WhiteDevil6969/forge-loras}/tree/main/trained" 2>/dev/null     | "$PYBIN" -c "import json,sys
+try: print('\n'.join(x['path'] for x in json.load(sys.stdin) if x.get('path','').endswith('.safetensors')))
+except Exception: pass" | while read -r f; do
+      [ -n "$f" ] || continue
+      out="models/loras/$(basename "$f")"
+      [ -s "$out" ] || wget -q --header="Authorization: Bearer $HF_TOKEN" -O "$out"         "https://huggingface.co/${COACH_REPO:-WhiteDevil6969/forge-loras}/resolve/main/$f"         && echo "GOT: $out (trained LoRA)" || { rm -f "$out"; echo "FAILED: $out (trained LoRA)"; }
+    done
 fi
 
 
@@ -223,6 +235,18 @@ dl_ltx latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safeten
 dl_ltx model_patches/ltx-2.5-duration-head-bf16.safetensors model_patches &
 if [ "$EXTRAS" = "1" ]; then
   dl_ltx latent_upscale_models/ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors latent_upscale_models &
+fi
+if [ "$TRAINER" = 1 ]; then
+  # Pre-install the LoRA trainer so the Train LoRA screen starts at once (recipes/ltxtrain/train.sh reuses these).
+  (
+    export PATH="$HOME/.local/bin:$PATH"
+    command -v uv >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1
+    mkdir -p "$BASE/train/models"
+    if [ -d "$BASE/train/LTX-2/.git" ]; then git -C "$BASE/train/LTX-2" pull -q --ff-only
+    else git clone -q --depth 1 https://github.com/Lightricks/LTX-2 "$BASE/train/LTX-2"; fi
+    (cd "$BASE/train/LTX-2" && uv sync -q) && echo "GOT: ltx-trainer environment" || echo "FAILED: ltx-trainer environment (train.sh retries)"
+  ) &
+  dl "$LTX/diffusion_models/ltx-2.5-22b-dev-transformer-bf16.safetensors"      "$BASE/train/models/ltx-2.5-22b-dev-transformer-bf16.safetensors" "$AUTH" &
 fi
 wait
 echo "== downloads finished"
