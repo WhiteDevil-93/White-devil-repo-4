@@ -32,7 +32,8 @@ JOBS.mkdir(exist_ok=True)
 RENDERS = Path.home() / "wan" / "renders"
 JOB_ID = re.compile(r"^[0-9a-f]{12}$")
 SIGMAS = "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
-NEGATIVE = ("cartoon, anime, cgi, video game, ugly, deformed, blurry, low quality, watermark, text, subtitles, "
+NEGATIVE = ("cartoon, anime, cgi, video game, illustration, concept art, digital painting, painting, drawing, "
+            "fantasy art, comic, 3d render, airbrushed, plastic skin, waxy skin, ugly, deformed, blurry, low quality, watermark, text, subtitles, "
             "woman, women, female, girl, lady, breasts, boobs, tits, cleavage, vagina, vulva, labia, pussy, clitoris, "
             "feminine body, soft chest, bouncing breasts, curvy, futa, shemale, girlfriend, wife, her face, she moans, "
             "labial folds, vaginal slit, feminine hands, long nails, manicure, androgynous torso, soft feminine hips, "
@@ -281,7 +282,10 @@ Name the person and the limb: "Person B's right hand".
 Plan only what a camera can see at this framing: no internal or microscopic changes (follicles, cells, organs, nerves)
 and no imperceptible ones ("slightly", "a fraction"). A gradual change is split into clearly visible steps.
 Do not solve a hard action with impossible anatomy. Do not repeat a major action in the next clip.
-The END STATE of clip N must be a valid START STATE for clip N+1.
+The END STATE of clip N must be a valid START STATE for clip N+1. Every START STATE repeats each fixed feature in
+the continuity's exact words, because each clip is rendered on its own. A transformation changes only what the user
+asked to change; everything else (wing type and colour, hair, face) stays as the continuity says.
+No throbbing, twitching, pulsing, shuddering, vibrating or trembling: describe the movement itself (rises, swings, flexes).
 If the user did not ask for camera movement, the camera stays stable. A camera move that runs across several clips is
 written per clip: where it starts and where it ends in that clip.
 When the cast is male, the plan is gay male sex: men, penises, anus, mouths — never a woman or female anatomy unless the user explicitly asks for female anatomy.
@@ -291,9 +295,13 @@ Reply in EXACTLY this layout, no markdown, no commentary:
 
 GLOBAL CONTINUITY
 Only facts that are true in EVERY clip: each actor's label with a short visible descriptor of 2-5 words
-(Person A = the dark-haired winged man), then their fixed appearance, identity, fixed clothing, environment, and anything else that never changes. Anything that
+(Person A = the dark-haired winged man), then their fixed appearance with exact colour and type for anything a
+transformation might be tempted to change (black feathered wings, short black hair), identity, fixed clothing, environment, and anything else that never changes. Anything that
 changes or first appears later (a transformation, something revealed, a lighting change, a camera move) does NOT go
 here; it goes only in the clips where it happens.
+End it with one line: STYLE: <the look, in a few words>. With a reference image, describe its look (a photo gives
+"photorealistic live-action footage, natural skin texture, real camera"); without one, photorealistic unless the user
+asks for another look. The style never changes, however fantastical the story.
 
 CLIP 1
 DURATION: {seconds} seconds
@@ -319,6 +327,9 @@ move that is not in this clip's CAMERA, nothing revealed before this clip reveal
 DO NOT rewrite the story, add actions, add characters, change who acts, change left/right limbs, add dramatic movement,
 add camera movement that was not specified, add dialogue, sound, music, ambience, cuts, or secondary actions.
 
+Each prompt is rendered on its own and the model forgets everything else, so every prompt names the fixed
+appearance from the continuity that is in view, in the continuity's exact words (black feathered wings, not just
+wings), even mid-transformation: words like devil, demon or monster must never change a fixed feature.
 The video model does not know "Person A" or "Person B": write each person as their visible descriptor from the
 continuity ("the winged man", "the blond man"), the same words every time. Translate anatomy-textbook or internal terms
 into what is visible (hair follicles retract -> the hair gets shorter; chest wall expands -> the chest grows broader).
@@ -334,6 +345,8 @@ breathing, impacts, vibration, humming, ambience, or music. No throbbing, twitch
 trembling, or shaking.
 Everyone is an adult (20s or older); never write young-looking, boyish, teen, boy, girl or child, and never family words.
 Graphic anatomy when the spec names it (penis, glans, shaft, foreskin, testicles, anus, mouth, vagina, vulva, clitoris, breasts) — use explicit terms when the scene calls for it. Female anatomy only when the user explicitly requests it. Slang from the director (gooner, edging, bate bros, etc.) should be translated to anatomical descriptions for LTX-2.5.
+End the paragraph with the continuity's STYLE line, word for word. The look never drifts toward illustration,
+concept art, painting or CGI, however fantastical the action.
 70-130 words, present tense, one paragraph. Reply with that paragraph only."""
 
 MEN = """
@@ -501,10 +514,32 @@ def plan_name(continuity, spec_raw, men=True):
     return (text[:57].rsplit(" ", 1)[0] + "…") if len(text) > 60 else (text or "chain")
 
 
+STYLE_LINE = re.compile(r"(?im)^\s*STYLE:\s*(.+?)\s*$")
+PHOTOREAL = "Photorealistic live-action footage, natural skin texture, real camera."
+STYLED = re.compile(r"\b(cartoon|anime|illustrat|painting|painted|comic|pixel art|claymation|3d render|cgi)", re.I)
+
+
+def style_of(continuity, spec_raw=""):
+    """The run's look: the director's STYLE line, else photoreal unless the plan itself asks for another look."""
+    m = STYLE_LINE.search(continuity or "")
+    if m:
+        return m.group(1).rstrip(".") + "."
+    return "" if STYLED.search(f"{continuity or ''} {spec_raw or ''}") else PHOTOREAL
+
+
+def with_style(text, style):
+    """Every clip ends on the same style words: each clip is rendered alone, and without them the look drifted
+    from photo to concept art over a transformation (job 8c09dff6c180)."""
+    if not text or not style or style.rstrip(".").lower() in text.lower():
+        return text
+    return text.rstrip() + " " + style
+
+
 def compile_clip(key, continuity, spec, frame, image, men):
     """Gemma compiles exactly one clip. It does not see the rest of the story."""
     text, model = _compile_clip(key, continuity, spec, frame, image, men)
-    return (relabel(text, continuity, spec.get("raw") or "", men) if text else text), model
+    raw = spec.get("raw") or ""
+    return (with_style(relabel(text, continuity, raw, men), style_of(continuity, raw)) if text else text), model
 
 
 def _compile_clip(key, continuity, spec, frame, image, men):

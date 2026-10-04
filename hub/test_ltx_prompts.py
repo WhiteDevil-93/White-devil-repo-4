@@ -77,7 +77,7 @@ def test_compile_clip_relabels_whatever_the_model_writes(monkeypatch):
 
     monkeypatch.setattr(ltx, "ask", fake_ask)
     text, model = ltx.compile_clip("k", "sole actor Person A adult male", {"raw": "ACTION: Person A lifts his head"}, "", None, True)
-    assert text == "The man lifts his head. The camera does not move." and model == "fake-model"
+    assert text == "The man lifts his head. The camera does not move. " + ltx.PHOTOREAL and model == "fake-model"
     assert "Write this clip only." in seen["system"]
 
 
@@ -107,3 +107,32 @@ def test_a_planned_run_is_named_after_what_happens():
     assert ltx.plan_name("", "DURATION: 5 seconds", True) == "chain"
     assert ltx.plan_name("Person A = the blond man; Person B = the dark-haired man",
                          "ACTION: Person A kisses Person B", True) == "The blond man kisses the dark-haired man"
+
+
+def test_fixed_features_are_repeated_word_for_word_in_every_clip():
+    d = ltx.DIRECTOR.replace("\n", " ")
+    assert "Every START STATE repeats each fixed feature in the continuity's exact words" in d
+    assert "black feathered wings" in d and "No throbbing, twitching, pulsing" in d
+    c = ltx.COMPILER.replace("\n", " ")
+    assert "in the continuity's exact words (black feathered wings, not just wings)" in c
+    assert "must never change a fixed feature" in c
+
+
+def test_every_clip_ends_on_the_same_style_words():
+    cont = "Person A = the dark-haired winged man\nblack feathered wings\nSTYLE: photorealistic live-action footage, natural skin texture"
+    assert ltx.style_of(cont) == "photorealistic live-action footage, natural skin texture."
+    assert ltx.with_style("He rises.", ltx.style_of(cont)) == "He rises. photorealistic live-action footage, natural skin texture."
+    already = "He rises. Photorealistic live-action footage, natural skin texture."
+    assert ltx.with_style(already, ltx.style_of(cont)) == already, "not added twice"
+    assert ltx.style_of("Person A = the man") == ltx.PHOTOREAL, "no style line: photoreal by default"
+    assert ltx.style_of("Person A = the man", "ACTION: an anime girl waves") == "", "unless the plan asks for another look"
+
+
+def test_the_negative_pushes_against_the_drift_we_saw():
+    for w in ("illustration", "concept art", "digital painting", "fantasy art", "plastic skin"):
+        assert w in ltx.NEGATIVE
+
+
+def test_director_and_compiler_carry_a_style_line():
+    assert "STYLE: <the look, in a few words>" in ltx.DIRECTOR
+    assert "End the paragraph with the continuity's STYLE line, word for word." in ltx.COMPILER.replace("\n", " ")
