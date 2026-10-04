@@ -111,6 +111,7 @@ def norm_opts(o):
         i2v = 0.55
     return {"transformer": o.get("transformer") or None, "loras": loras, "distill": distill, "i2v": i2v,
             "prompt_style": o.get("prompt_style") if o.get("prompt_style") in PROMPT_STYLES else "auto",
+            "two_stage": o.get("two_stage") is not False,
             "vae": "fast" if o.get("vae") == "fast" else "quality", "clip": o.get("clip") or None,
             "writer": o.get("writer") if MODEL_ID.match(str(o.get("writer") or "")) else None}
 
@@ -217,7 +218,13 @@ def gay_reinforce(prompt, opts=None):
     return stamp + ". " + prompt
 
 
-def graph(image, prompt, frames, width, height, seed, opts, prefix, compression=18, tail=False):
+STAGE2_SIGMAS = "0.909375, 0.725, 0.421875, 0.0"
+
+
+def graph(image, prompt, frames, width, height, seed, opts, prefix, compression=18, tail=False, two_stage=None):
+    """Render graph. Two-stage (default, the official LTX-2.5 and Stubelius beta 2 recipe): 8 distilled steps at half
+    size, x2 latent upscale, then the last 3 distilled steps at full size with the start image re-applied at 1.0.
+    Falls back to one full-size stage when the spatial upscaler is not installed or opts["two_stage"] is off."""
     prompt = gay_reinforce(with_triggers(prompt, opts), opts)
     unets = choices("UNETLoader", "unet_name")
     loras = choices("LoraLoaderModelOnly", "lora_name")
@@ -279,7 +286,33 @@ def graph(image, prompt, frames, width, height, seed, opts, prefix, compression=
             model = [str(50 + n), 0]
     g["17"] = {"class_type": "LTXVDualCFGGuider", "inputs": {"model": model, "positive": ["7", 0], "negative": ["7", 1],
                                                            "video_cfg": 1.0, "audio_cfg": 0.0}}
+    if two_stage is None:
+        two_stage = opts.get("two_stage", True)
+    if two_stage and UPSCALER in choices("LatentUpscaleModelLoader", "model_name"):
+        add_stage2(g, width, height, seed, image is not None)
     return g, unet
+
+
+def add_stage2(g, width, height, seed, i2v):
+    """Stage 1 renders at half size (every size stays a multiple of 32); stage 2 upsamples x2 and refines."""
+    g["13"]["inputs"].update(width=width // 2, height=height // 2)
+    g.update({
+        "60": {"class_type": "LatentUpscaleModelLoader", "inputs": {"model_name": UPSCALER}},
+        "61": {"class_type": "LTXVLatentUpsampler", "inputs": {"samples": ["22", 0], "upscale_model": ["60", 0], "vae": ["8", 0]}},
+        "63": {"class_type": "LTXVConcatAVLatent", "inputs": {"video_latent": ["62", 0] if i2v else ["61", 0],
+                                                            "audio_latent": ["22", 1]}},
+        "64": {"class_type": "RandomNoise", "inputs": {"noise_seed": seed}},
+        "65": {"class_type": "ManualSigmas", "inputs": {"sigmas": STAGE2_SIGMAS}},
+        "66": {"class_type": "SamplerCustomAdvanced", "inputs": {"noise": ["64", 0], "guider": ["17", 0], "sampler": ["18", 0],
+                                                               "sigmas": ["65", 0], "latent_image": ["63", 0]}},
+        "67": {"class_type": "LTXVSeparateAVLatent", "inputs": {"av_latent": ["66", 0]}},
+    })
+    if i2v:
+        # Official templates re-apply the start image at full strength on the upscaled latent.
+        g["62"] = {"class_type": "LTXVImgToVideoInplace", "inputs": {"vae": ["8", 0], "image": ["12", 0], "latent": ["61", 0],
+                                                                   "strength": 1.0, "bypass": False}}
+    g["23"]["inputs"]["samples"] = ["67", 0]
+    g["24"]["inputs"]["samples"] = ["67", 1]
 
 
 WRITERS = ["x-ai/grok-4.5", "x-ai/grok-4.3"]
@@ -792,7 +825,7 @@ def has_audio(path):
 def sharpen_graph(video, prompt, frames, seed, opts, prefix, audio=True):
     """Finished clip -> latents -> x2 latent upscale -> last 3 distilled steps at full size -> decode, original sound kept.
     A silent clip (audio=False) gets the empty audio latent a normal render starts from, and comes back silent."""
-    g, unet = graph("unused.png", prompt, frames, 768, 512, seed, opts, prefix)
+    g, unet = graph("unused.png", prompt, frames, 768, 512, seed, opts, prefix, two_stage=False)
     empty_audio = json.loads(json.dumps(g["15"]))
     for k in ("10", "11", "12", "13", "14", "15", "16", "19", "20", "21", "22", "23", "24", "25", "26"):
         g.pop(k, None)

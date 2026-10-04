@@ -17,6 +17,7 @@ FAKE = {
     "LoraLoaderModelOnly": [],
     "CLIPLoader": ["gemma4-12b-with-proj-ltx-2.5-bf16.safetensors"],
     "VAELoader": ["ltx-2.5-video-vae.safetensors", "ltx-2.5-audio-vae.safetensors"],
+    "LatentUpscaleModelLoader": [ltx.UPSCALER],
 }
 
 
@@ -52,8 +53,38 @@ def test_default_is_the_old_behaviour():
 
 
 def test_the_base_render_graph_is_untouched():
-    g, _ = ltx.graph("unused.png", "x", 121, 768, 512, 1, ltx.job_opts({}), "p")
+    g, _ = ltx.graph("unused.png", "x", 121, 768, 512, 1, ltx.job_opts({}), "p", two_stage=False)
     assert g["15"]["class_type"] == "LTXVEmptyLatentAudio" and g["25"]["inputs"]["audio"] == ["24", 0]
+    assert "60" not in g and g["13"]["inputs"]["width"] == 768
+
+
+def test_two_stage_is_the_default_render():
+    g, _ = ltx.graph("in.png", "x", 121, 768, 512, 1, ltx.job_opts({}), "p")
+    assert (g["13"]["inputs"]["width"], g["13"]["inputs"]["height"]) == (384, 256), "stage 1 at half size"
+    assert g["61"]["inputs"]["samples"] == ["22", 0] and g["60"]["inputs"]["model_name"] == ltx.UPSCALER
+    assert g["62"]["inputs"]["strength"] == 1.0 and g["62"]["inputs"]["latent"] == ["61", 0]
+    assert g["63"]["inputs"]["audio_latent"] == ["22", 1]
+    assert g["65"]["inputs"]["sigmas"] == "0.909375, 0.725, 0.421875, 0.0"
+    assert g["23"]["inputs"]["samples"] == ["67", 0] and g["24"]["inputs"]["samples"] == ["67", 1]
+    for w, h in ltx.SIZES.values():
+        assert (w // 2) % 32 == 0 and (h // 2) % 32 == 0
+
+
+def test_two_stage_text_to_video_has_no_image_node():
+    g, _ = ltx.graph(None, "x", 121, 768, 512, 1, ltx.job_opts({}), "p")
+    assert "62" not in g and g["63"]["inputs"]["video_latent"] == ["61", 0]
+
+
+def test_one_stage_when_the_upscaler_is_missing_or_turned_off(monkeypatch):
+    g, _ = ltx.graph("in.png", "x", 121, 768, 512, 1, ltx.norm_opts({"two_stage": False}), "p")
+    assert "60" not in g
+    monkeypatch.setattr(ltx, "choices", lambda node, field: [] if node == "LatentUpscaleModelLoader" else FAKE.get(node, []))
+    g, _ = ltx.graph("in.png", "x", 121, 768, 512, 1, ltx.job_opts({}), "p")
+    assert "60" not in g and g["13"]["inputs"]["width"] == 768
+
+
+def test_sharpen_never_gets_a_second_stage():
+    assert "61" not in build(audio=False) or build(audio=False)["61"]["class_type"] != "LTXVLatentUpsampler"
 
 
 @pytest.mark.skipif(shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None, reason="needs ffmpeg and ffprobe")
