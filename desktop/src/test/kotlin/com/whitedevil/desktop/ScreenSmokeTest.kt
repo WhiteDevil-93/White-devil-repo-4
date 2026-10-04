@@ -95,8 +95,8 @@ class ScreenSmokeTest {
         show { LoraTrainScreen(offline) }
         onAllNodesWithText("New dataset")[0].assertExists()
         onAllNodesWithText("No datasets yet.")[0].assertExists()
-        press("Kind: Character / identity  ▾"); press("Motion / concept")
-        onAllNodesWithText("Kind: Motion / concept  ▾")[0].assertExists()
+        press("Kind: Character / identity  ▾"); press("Anatomy / pose")
+        onAllNodesWithText("Kind: Anatomy / pose  ▾")[0].assertExists()
     }
 
     @Test fun `venice and settings draw`() {

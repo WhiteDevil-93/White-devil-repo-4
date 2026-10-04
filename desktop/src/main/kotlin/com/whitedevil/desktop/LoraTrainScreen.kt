@@ -45,7 +45,7 @@ import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
 
-private val KIND_LABELS = linkedMapOf("character" to "Character / identity", "motion" to "Motion / concept")
+private val KIND_LABELS = linkedMapOf("character" to "Character / identity", "motion" to "Motion / movement", "concept" to "Anatomy / pose")
 
 /**
  * Train LoRA: make a dataset, drop in pictures and clips (any file type: the hub converts them, .txt files become
@@ -194,7 +194,8 @@ private fun NewDatasetCard(enabled: Boolean, onCreate: (String, String, String) 
     var trigger by remember { mutableStateOf("") }
     SectionCard("New dataset") {
         Note("Character: 25-40 pictures and short clips of one person (varied angles, light, outfits, backgrounds) plus a made-up trigger word. " +
-            "Motion: 30-50 clips of the movement with different people. A real person needs their consent (LTX licence).")
+            "Motion: 30-50 clips of the movement with different people. Anatomy / pose: 30-60 pictures and some clips of ONE body part " +
+            "or ONE position across many different people. A real person needs their consent (LTX licence).")
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(name, { name = it }, Modifier.weight(1f), singleLine = true, label = { Text("LoRA name") })
             Picker("Kind", KIND_LABELS.values.toList(), KIND_LABELS[kind] ?: kind, { label -> kind = KIND_LABELS.entries.first { it.value == label }.key })
