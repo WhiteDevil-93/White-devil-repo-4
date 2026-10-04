@@ -40,12 +40,21 @@ class VeniceClient(
         }
     }
 
+    /**
+     * The exact request body [chatCompletion] sends. Public so a test can assert on the
+     * real bytes: this encoder runs with encodeDefaults = false, which drops any field
+     * equal to its default, and one of those (tool_calls[].type) turned out to be
+     * required by the API.
+     */
+    fun encodeRequest(request: ChatCompletionRequest): String =
+        json.encodeToString(ChatCompletionRequest.serializer(), request)
+
     suspend fun chatCompletion(request: ChatCompletionRequest): ChatCompletionResponse {
         val cleanBase = baseUrl.trimEnd('/')
         val response = http.post("$cleanBase/chat/completions") {
             header("Authorization", "Bearer $apiKey")
             contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(ChatCompletionRequest.serializer(), request))
+            setBody(encodeRequest(request))
         }
 
         val bodyText = response.bodyAsText()
