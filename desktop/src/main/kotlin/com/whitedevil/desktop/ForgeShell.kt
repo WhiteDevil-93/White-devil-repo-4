@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Memory
@@ -57,6 +58,7 @@ enum class Screen(val label: String, val icon: ImageVector, val group: NavGroup)
     Vast("Vast", Icons.Outlined.Dns, NavGroup.Laptop),
     Setup("Setup", Icons.Outlined.Tune, NavGroup.Laptop),
     Agent("Venice", Icons.Outlined.AutoAwesome, NavGroup.Laptop),
+    Caretaker("Caretaker", Icons.Outlined.HealthAndSafety, NavGroup.Laptop),
     Settings("Settings", Icons.Outlined.Settings, NavGroup.None),
 }
 
