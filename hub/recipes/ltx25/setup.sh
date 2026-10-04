@@ -102,7 +102,11 @@ else git clone --depth 1 https://github.com/Lightricks/ComfyUI-LTXVideo custom_n
 mkdir -p models/diffusion_models models/text_encoders models/vae models/loras models/latent_upscale_models models/model_patches
 if [ -s "${COACH_KEEP:-}" ]; then
   cp -f "$COACH_KEEP" "models/loras/$COACH_NAME" && echo "GOT: models/loras/$COACH_NAME (local CoachBate)"
-elif [ -n "${RELAY_USER:-}" ] && [ -n "${RELAY_PASS:-}" ]; then
+elif [ -n "${HF_TOKEN:-}" ] && wget -q --header="Authorization: Bearer $HF_TOKEN" -O "models/loras/$COACH_NAME" \
+    "https://huggingface.co/${COACH_REPO:-WhiteDevil6969/forge-loras}/resolve/main/$COACH_NAME" && [ -s "models/loras/$COACH_NAME" ]; then
+  # A private copy on the owner's Hugging Face account: Colab pulls 1.3 GB from there in seconds.
+  echo "GOT: models/loras/$COACH_NAME (private Hugging Face copy)"
+elif rm -f "models/loras/$COACH_NAME"; [ -n "${RELAY_USER:-}" ] && [ -n "${RELAY_PASS:-}" ]; then
   wget -c -q --user="$RELAY_USER" --password="$RELAY_PASS" \
     -O "models/loras/$COACH_NAME" "https://84-12-112-249.sslip.io/api/ltx/stage/$COACH_NAME" \
     && echo "GOT: models/loras/$COACH_NAME" || { rm -f "models/loras/$COACH_NAME"; echo "FAILED: models/loras/$COACH_NAME"; }

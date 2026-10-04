@@ -686,16 +686,11 @@ def ensure_coachbate_on_colab(step):
     if remote_sz == want:
         step("uploading", "CoachBate 2.3 already on Colab keep")
         return True
-    step("uploading", "Uploading CoachBate 2.3 LoRA to Colab (about 1.3 GB)")
-    subprocess.run(
-        ["flock", "/tmp/colab.lock", COLAB, "upload", "-s", "colab", str(src), remote],
-        check=True, capture_output=True, text=True, timeout=3600,
-    )
-    verify = colab(f"stat -c%s {remote} 2>/dev/null || echo 0")
-    got = (verify.stdout or "").strip().splitlines()[-1:] or ["0"]
-    if got[0].strip() != want:
-        raise RuntimeError(f"CoachBate upload size mismatch: remote={got[0]!r} want={want}")
-    return True
+    # Not pushed: `colab upload` goes through the runtime's file API, which fails on a 1.3 GB file ("Max retries
+    # exceeded") and used to fail the whole install. setup.sh pulls it instead, from the owner's private Hugging Face
+    # copy (seconds) or, failing that, from this relay.
+    step("uploading", "CoachBate 2.3 will be pulled by the setup script (private Hugging Face copy)")
+    return False
 
 
 def poll_cmd(rdir, base, log):
