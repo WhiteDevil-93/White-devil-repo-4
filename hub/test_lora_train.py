@@ -60,7 +60,7 @@ def test_character_ready_with_20_captioned_items(env):
     ds = client.get(f"/api/loratrain/datasets/{ds['id']}").json()
     assert ds["ready"], ds["problems"]
     assert ds["estimate"]["label"] == "ESTIMATE" and ds["estimate"]["steps"] == 2000
-    assert ds["estimate"]["cost_usd"] > 0
+    assert ds["estimate"]["cost_units"] > 0 and "cost_usd" not in ds["estimate"]
 
 
 def test_character_needs_a_trigger(env):

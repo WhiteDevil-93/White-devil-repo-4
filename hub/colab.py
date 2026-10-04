@@ -101,7 +101,8 @@ def status_summary(runner_online: bool, paused, u, sess):
     """Human status that never hides a billing VM behind 'Stopped'/'Offline'."""
     billing = billing_active(u, sess)
     rate = u.get("rate_per_hr")
-    rate_s = f"${rate:.2f}/h" if isinstance(rate, (int, float)) else "credits/h"
+    # `colab usage` reports compute units per hour, not dollars.
+    rate_s = f"{rate:.2f} compute units/h" if isinstance(rate, (int, float)) else "compute units/h"
     if billing and runner_online:
         return {"label": "Running", "kind": "ok", "billing": True,
                 "detail": f"G4 billing {rate_s} · wanbot up"}
@@ -181,10 +182,10 @@ def state():
     if billing and not health:
         if comfy_up:
             summ = {"label": "BILLING · LTX up", "kind": "warn", "billing": True,
-                    "detail": f"Colab VM charging (~${(u.get('rate_per_hr') or 0):.2f}/h). Comfy/LTX tunnel is up; wanbot pack runner is down."}
+                    "detail": f"Colab VM charging (~{(u.get('rate_per_hr') or 0):.2f} compute units/h). Comfy/LTX tunnel is up; wanbot pack runner is down."}
         else:
             summ = {"label": "BILLING · runner down", "kind": "warn", "billing": True,
-                    "detail": f"Colab VM is charging (~${(u.get('rate_per_hr') or 0):.2f}/h)" + (f" (app marked stop at {paused_for_ui})" if paused_for_ui else "") + ". Hit Stop to kill the bill, or Start/restart to bring services back."}
+                    "detail": f"Colab VM is charging (~{(u.get('rate_per_hr') or 0):.2f} compute units/h)" + (f" (app marked stop at {paused_for_ui})" if paused_for_ui else "") + ". Hit Stop to kill the bill, or Start/restart to bring services back."}
     gpu = (health or {}).get("gpu") or (f"NVIDIA {sess['accelerator']}" if sess.get("accelerator") else None)
     return {
         "runner_mode": (WAN / "runner_mode").read_text().strip() if (WAN / "runner_mode").exists() else None,

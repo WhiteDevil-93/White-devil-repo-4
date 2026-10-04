@@ -143,17 +143,32 @@ def estimate(ds, rate_per_hr=None, dev_on_colab=False):
     minutes = (SETUP_MIN["install"] + (0 if dev_on_colab else SETUP_MIN["dev_download"])
                + n * SETUP_MIN["per_item_encode_s"] / 60 + steps * s_step / 60)
     out = {"minutes": round(minutes), "steps": steps, "seconds_per_step": round(s_step, 2), "label": "ESTIMATE"}
-    if isinstance(rate_per_hr, (int, float)):
-        out["cost_usd"] = round(minutes / 60 * rate_per_hr, 2)
-        out["rate_per_hr"] = rate_per_hr
+    if isinstance(rate_per_hr, (int, float)) and rate_per_hr > 0:
+        # Colab reports compute units, not dollars.
+        out["cost_units"] = round(minutes / 60 * rate_per_hr, 1)
+        out["units_per_hr"] = rate_per_hr
     return out
 
 
+RATE_FILE = Path.home() / "wan" / "colab_last_rate.txt"
+
+
 def colab_rate():
+    """The live Colab compute units/h; while the runtime is off it reads 0, so fall back to the last rate seen running."""
     try:
         import colab as colab_api
-        return colab_api.usage().get("rate_per_hr")
+        rate = colab_api.usage().get("rate_per_hr")
     except Exception:
+        rate = None
+    if isinstance(rate, (int, float)) and rate > 0:
+        try:
+            RATE_FILE.write_text(str(rate))
+        except OSError:
+            pass
+        return rate
+    try:
+        return float(RATE_FILE.read_text().strip())
+    except (OSError, ValueError):
         return None
 
 

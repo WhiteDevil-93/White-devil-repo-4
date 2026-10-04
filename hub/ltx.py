@@ -136,7 +136,7 @@ def _colab_billing_note():
         u, sess = usage(), session_info()
         if billing_active(u, sess):
             rate = u.get("rate_per_hr")
-            rate_s = f"${rate:.2f}/h" if isinstance(rate, (int, float)) else "credits/h"
+            rate_s = f"{rate:.2f} compute units/h" if isinstance(rate, (int, float)) else "compute units/h"
             return True, f"Colab G4 is BILLING ({rate_s}) but ComfyUI tunnel is down. Stop the runtime on the Colab screen to stop charges, or Start/restart / wait for the tunnel."
         return False, None
     except Exception:
