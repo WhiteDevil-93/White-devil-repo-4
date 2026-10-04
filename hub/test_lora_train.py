@@ -154,6 +154,8 @@ def test_settings_patch(env):
     out = client.patch(f"/api/loratrain/datasets/{ds['id']}", json={"steps": 50, "rank": 64, "trigger": "zz man"}).json()
     assert out["settings"] == {"steps": 250, "rank": 64} and out["trigger"] == "zz_man"
     assert client.patch(f"/api/loratrain/datasets/{ds['id']}", json={"rank": 7}).status_code == 400
+    out = client.post(f"/api/loratrain/datasets/{ds['id']}/settings", json={"steps": 1200}).json()
+    assert out["settings"]["steps"] == 1200, "POST alias for clients without PATCH"
 
 
 def test_progress_parsing():

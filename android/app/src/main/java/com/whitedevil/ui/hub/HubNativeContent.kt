@@ -43,6 +43,7 @@ fun HubNativeContent(host: MainActivity, screenId: String?) {
             "colab" -> HubColabBody(json, host)
             "hypno" -> HubHypnoBody(json, host)
             "ltx" -> HubRelayWebBody(host, "/app/ltx/")
+            "loratrain" -> HubLoraTrainBody(host)
             "vast" -> HubVastBody(json, host)
             "files" -> HubFilesBody(json, host)
             "shotwriter" -> HubShotwriterBody(json, host)

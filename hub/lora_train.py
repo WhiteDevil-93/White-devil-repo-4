@@ -321,6 +321,7 @@ class DatasetPatch(BaseModel):
 
 
 @router.patch("/datasets/{did}")
+@router.post("/datasets/{did}/settings")  # Android's HttpURLConnection cannot send PATCH
 def patch_dataset(did: str, p: DatasetPatch):
     with _lock:
         ds = load_ds(did)
