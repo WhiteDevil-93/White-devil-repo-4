@@ -288,6 +288,7 @@ class McpStdioClientTest {
             requestTimeoutMillis = 10_000,
         )
         try {
+            client.definitions() // finish the handshake first: cancelling mid-handshake would retire the connection
             val job = launch { client.execute("fake__hang_forever", "{}") }
             delay(200) // let the call actually reach the server and register in `pending`
             job.cancelAndJoin()

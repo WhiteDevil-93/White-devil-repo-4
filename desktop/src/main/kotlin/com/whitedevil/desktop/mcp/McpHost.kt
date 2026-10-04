@@ -106,6 +106,11 @@ class McpHost(private val file: File) : ToolExtension, AutoCloseable {
         } finally { lock.unlock() }
     }
 
+    /** The server names in the config file (for @mentions); does not start anything. */
+    fun serverNames(): List<String> = runCatching {
+        ((Json.parseToJsonElement(file.readText()) as JsonObject)["mcpServers"] as JsonObject).keys.toList()
+    }.getOrDefault(emptyList())
+
     fun reload() { close() }
 
     override fun close() {
