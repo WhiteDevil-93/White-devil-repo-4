@@ -40,6 +40,10 @@ private const val MAX_TOOLS_LIST_PAGES = 1000
  * namespaced as `<serverName>__<toolName>` (sanitized to be a valid function name) to avoid
  * collisions with other providers.
  */
+/** Marks an image inside a tool's text result (see McpStdioClient.renderContentItem, McpHost.split). */
+const val IMAGE_START = "\u0000[[image:"
+const val IMAGE_END = "]]\u0000"
+
 class McpStdioClient(
     val serverName: String,
     config: McpServerConfig,
@@ -376,7 +380,7 @@ class McpStdioClient(
                 function = ToolFunctionSpec(
                     name = namespacedName(name, newExposedToOriginal),
                     description = description,
-                    parameters = schema,
+                    parameters = functionSchema(schema),
                 ),
             )
         }
@@ -431,7 +435,11 @@ class McpStdioClient(
         val obj = item as? JsonObject ?: return "[malformed content item]"
         return when ((obj["type"] as? JsonPrimitive)?.contentOrNull) {
             "text" -> (obj["text"] as? JsonPrimitive)?.contentOrNull ?: ""
-            "image" -> "[image content: ${mimeTypeOf(obj)}, omitted]"
+            // Carried inside the text so ToolProvider stays a String API; McpHost lifts it out into the images the
+            // agent sends to a vision model (and drops it for a model that cannot see).
+            "image" -> (obj["data"] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+                ?.let { IMAGE_START + "data:${mimeTypeOf(obj)};base64,$it" + IMAGE_END }
+                ?: "[image content: ${mimeTypeOf(obj)}, omitted]"
             "audio" -> "[audio content: ${mimeTypeOf(obj)}, omitted]"
             "resource" -> renderResourceContent(obj)
             else -> "[unsupported content type]"
@@ -447,6 +455,17 @@ class McpStdioClient(
         val resource = obj["resource"] as? JsonObject ?: return "[resource content, omitted]"
         val text = (resource["text"] as? JsonPrimitive)?.contentOrNull
         return text ?: "[resource content: ${mimeTypeOf(resource)}, omitted]"
+    }
+
+    /**
+     * OpenAI-style function APIs (Venice included) want a plain object schema at the top: a top-level oneOf/anyOf/
+     * allOf/not (Kimi CU uses oneOf for "exactly one of pid, app, window_id") gets the whole request rejected. The
+     * properties stay; the "exactly one of" rule is left to the server, which reports a bad call itself.
+     */
+    private fun functionSchema(schema: JsonObject): JsonObject {
+        if (listOf("oneOf", "anyOf", "allOf", "not").none { it in schema } && schema["type"] != null) return schema
+        return JsonObject(schema.filterKeys { it !in setOf("oneOf", "anyOf", "allOf", "not") } +
+            ("type" to JsonPrimitive("object")))
     }
 
     private fun mimeTypeOf(obj: JsonObject): String =

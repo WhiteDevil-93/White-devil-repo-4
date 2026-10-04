@@ -234,12 +234,15 @@ fun AgentScreen(
         }
     }
 
-    // The model's context size for the token meter, from Venice's own model list.
-    val contextTokens by produceState<Int?>(null, settings.veniceApiKey, settings.model) {
+    // The model's context size for the token meter and whether it can see images, from Venice's own model list.
+    val modelInfo by produceState<VeniceModel?>(null, settings.veniceApiKey, settings.model) {
         value = if (settings.veniceApiKey.isBlank()) null else withContext(Dispatchers.IO) {
-            (fetchVeniceModels(settings.veniceApiKey) as? MediaResult.Ok)?.value?.firstOrNull { it.id == settings.model }?.contextTokens
+            (fetchVeniceModels(settings.veniceApiKey) as? MediaResult.Ok)?.value?.firstOrNull { it.id == settings.model }
         }
     }
+    val contextTokens = modelInfo?.contextTokens
+    // Screenshots from the desktop and browser connectors only go to a model that can see them.
+    LaunchedEffect(mcp, modelInfo) { mcp?.visionEnabled = { modelInfo?.vision == true } }
     val usedTokens = estimateTokens(session.history.sumOf { it.textContent().length } + lines.size * 0 + input.length + attachments.sumOf { it.text?.length ?: 0 })
     var workspaceWide by rememberSaveable { mutableStateOf(true) }
     var workspaceNarrow by rememberSaveable { mutableStateOf(false) }
@@ -256,7 +259,7 @@ fun AgentScreen(
                 model = settings.model,
                 apiKey = settings.veniceApiKey,
                 onModelChange = onModelChange,
-                onNewChat = { if (!busy) session.newChat() },
+                onNewChat = { if (!busy) { session.newChat(); mcp?.gate?.reset() } },
                 onChats = { chatsOpen = true },
                 onSkills = if (skills != null) ({ skillsOpen = true }) else null,
                 onOpenSettings = onOpenSettings,
@@ -307,7 +310,7 @@ fun AgentScreen(
                             onDismiss = { dismissedFor = input },
                             tokens = tokenLabel(usedTokens, contextTokens),
                             nearFull = contextTokens?.let { usedTokens > it * 0.8 } == true,
-                            onInterrupt = { job?.cancel() },
+                            onInterrupt = { mcp?.gate?.denyPending(); job?.cancel() },
                             showTools = showTools,
                             onToggleTools = { showTools = !showTools },
                             webSearch = settings.enableWebSearch,
@@ -325,6 +328,40 @@ fun AgentScreen(
     if (chatsOpen) ChatsPanel(session, busy, onClose = { chatsOpen = false }, initialQuery = chatsQuery)
     if (skillsOpen && skills != null) SkillsPanel(skills, onClose = { skillsOpen = false })
     if (connectorsOpen && mcp != null) ConnectorsPanel(mcp, onClose = { connectorsOpen = false })
+    mcp?.gate?.pending?.let { ActionApprovalDialog(it, mcp.gate) }
+}
+
+/**
+ * Venice wants to act on this computer or in the browser. Nothing happens until you answer; Interrupt also refuses.
+ * The arguments are shown as sent, so you see exactly what it would click or type.
+ */
+@Composable
+private fun ActionApprovalDialog(p: com.whitedevil.desktop.mcp.ApprovalGate.Pending, gate: com.whitedevil.desktop.mcp.ApprovalGate) {
+    val what = when (p.server) {
+        "kimi-cu" -> "on your desktop"
+        "playwright" -> "in your browser"
+        else -> "with ${p.server}"
+    }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { gate.answer(com.whitedevil.desktop.mcp.ApprovalGate.Answer.Deny) },
+        title = { Text("Venice wants to act $what") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Action: ${p.tool}", fontWeight = FontWeight.Bold)
+                Text(p.argumentsJson.take(1200), fontSize = 12.sp, color = Forge.Dim)
+                Text("Every decision is logged in venice-actions.log next to the app's settings.", fontSize = 11.sp, color = Forge.Dim)
+            }
+        },
+        confirmButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                androidx.compose.material3.TextButton(onClick = { gate.answer(com.whitedevil.desktop.mcp.ApprovalGate.Answer.ForChat) }) { Text("Allow for this chat") }
+                androidx.compose.material3.Button(onClick = { gate.answer(com.whitedevil.desktop.mcp.ApprovalGate.Answer.Once) }) { Text("Allow once") }
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = { gate.answer(com.whitedevil.desktop.mcp.ApprovalGate.Answer.Deny) }) { Text("Deny") }
+        },
+    )
 }
 
 /** One quiet line for a run of tool calls ("Used 3 tools: hub_request x2, remember"); click it to see the details. */

@@ -2,6 +2,7 @@
 choose-render-backend
 colab-ops
 daily-ops-briefing
+desktop-control
 disk-space-triage
 failure-triage
 gcp-compute-ops
@@ -41,4 +42,5 @@ wan-14b-prompting
 wan-chain-planning
 wan-lora-and-settings-tuning
 web-research
+web-scraping
 windows-shell-ops

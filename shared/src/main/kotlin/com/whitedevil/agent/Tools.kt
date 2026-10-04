@@ -39,6 +39,9 @@ interface ToolExtension {
     fun definitions(): List<ToolDefinition>
     fun handles(name: String): Boolean
     fun execute(name: String, argumentsJson: String): String
+
+    /** Text plus any images (screenshots) for a vision model. Text-only extensions need not override it. */
+    fun executeDetailed(name: String, argumentsJson: String): ToolExecution = ToolExecution(execute(name, argumentsJson))
 }
 
 class ToolBox(
@@ -325,7 +328,7 @@ class ToolBox(
                 "hub_request" -> ToolExecution(hubRequest(argumentsJson))
                 "remember" -> ToolExecution(remember(argumentsJson))
                 "queue_gpu_render" -> ToolExecution(queueGpuRender(argumentsJson))
-                else -> if (extension?.handles(name) == true) ToolExecution(extension.execute(name, argumentsJson))
+                else -> if (extension?.handles(name) == true) extension.executeDetailed(name, argumentsJson)
                 else ToolExecution("Error: unknown tool '$name'.")
             }
             result
