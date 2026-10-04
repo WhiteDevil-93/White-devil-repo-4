@@ -136,3 +136,23 @@ def test_the_negative_pushes_against_the_drift_we_saw():
 def test_director_and_compiler_carry_a_style_line():
     assert "STYLE: <the look, in a few words>" in ltx.DIRECTOR
     assert "End the paragraph with the continuity's STYLE line, word for word." in ltx.COMPILER.replace("\n", " ")
+
+
+def test_the_sulphur_penis_lora_gets_its_trigger():
+    assert ltx.trigger("plora_sulfter_i2v-step00008500.comfy.safetensors") == "PENISLORA"
+
+
+def test_a_solo_transformation_gets_no_sex_stamp_and_keeps_its_light():
+    out = ltx.gay_reinforce("The man's muscles grow as red lava light floods the cracked floor.", {"loras": []})
+    assert out.startswith("adult man, male anatomy only")
+    assert "gay male sex" not in out and "anus" not in out and "hips and legs keep moving" not in out
+    assert "soft diffused" not in out, "the scene's red light is not overridden"
+
+
+def test_a_sex_scene_still_gets_the_full_stamp():
+    out = ltx.gay_reinforce("Two men kiss and he strokes the other man's penis.", {"loras": []})
+    assert out.startswith("g@ys3x, gay male sex") and "soft diffused light" in out
+
+
+def test_the_director_keeps_faces_consistent():
+    assert "once the camera leaves it, never" in ltx.DIRECTOR.replace("\n", " ")

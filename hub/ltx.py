@@ -161,7 +161,9 @@ def status():
 TRIGGERS = {"ltx_BEANFLK_V1.safetensors": "BEANFLK", "ltx_gay-sex-sulphur-10eros.safetensors": "g@ys3x",
             "ltx-2-19b-bwc-lora-35000.safetensors": "bwc", "ltx-2.5_penis_coachbate_preview1.safetensors": "p3n15", "penis-lora-by-coachbate-ltx-2.3.safetensors": "p3n15",
             "ltx-2.5_uncut_penis_coachbate_v1.safetensors": "CBUNCT", "cumsplash_LTX2_v1.safetensors": "cumsplash",
-            "ltx_plora_sulfter_i2v-step00008500.comfy.safetensors": "PENISLORA"}
+            "ltx_plora_sulfter_i2v-step00008500.comfy.safetensors": "PENISLORA",
+            "plora_sulfter_i2v-step00008500.comfy.safetensors": "PENISLORA",
+            "ltx_sexgod_nudity_v2_LTXNUDES.safetensors": "LTXNUDES"}
 
 
 def trigger(name):
@@ -182,11 +184,21 @@ def gay_reinforce(prompt, opts=None):
     if not men_only(prompt) and not any("gay-sex" in n or "sulphur" in n for n, s in (opts.get("loras") or []) if s > 0):
         return prompt
     prompt = fix_men(prompt)
-    stamp = ("g@ys3x, gay male sex, adult men only, flat muscular male pecs, defined male fingers with short nails, "
-             "stable thick erect penis, heavy testicles, tight male anus and perineum, hips and legs keep moving, "
-             "no breasts no vagina no labia no gender swap, soft diffused indoor light with controlled highlights, "
-             "no blowout no washed-out whites, smooth deliberate motion without jitter")
-    if "male anus and perineum" in prompt.lower() or prompt.lower().startswith("g@ys3x"):
+    lower = prompt.lower()
+    sex = bool(re.search(r"\b(sex|fuck|thrust|penetrat|anal|blowjob|suck|rides?|riding|kiss|stroke|strokes|stroking|"
+                         r"handjob|masturbat|jerk|cum|orgasm|edging|goon)\w*", lower))
+    if sex:
+        stamp = ("g@ys3x, gay male sex, adult men only, flat muscular male pecs, defined male fingers with short nails, "
+                 "stable thick erect penis, heavy testicles, tight male anus and perineum, hips and legs keep moving, "
+                 "no breasts no vagina no labia no gender swap, smooth deliberate motion without jitter")
+    else:
+        # A solo scene that is not sex (a pose, a transformation): keep it male, but do not inject sex acts,
+        # an erection, hip motion or a lighting style the scene did not ask for (job 8c09dff6c180).
+        stamp = ("adult man, male anatomy only, flat male chest, defined male fingers with short nails, "
+                 "no breasts no vagina no labia no gender swap, smooth deliberate motion without jitter")
+    if "soft diffused" not in lower and not re.search(r"\b(red|orange|lava|fire|neon|dark|night|glow)\b", lower):
+        stamp += ", soft diffused light with controlled highlights, no blowout"
+    if "male anus and perineum" in lower or lower.startswith(("g@ys3x", "adult man, male anatomy only")):
         return prompt
     return stamp + ". " + prompt
 
@@ -286,6 +298,9 @@ The END STATE of clip N must be a valid START STATE for clip N+1. Every START ST
 the continuity's exact words, because each clip is rendered on its own. A transformation changes only what the user
 asked to change; everything else (wing type and colour, hair, face) stays as the continuity says.
 No throbbing, twitching, pulsing, shuddering, vibrating or trembling: describe the movement itself (rises, swings, flexes).
+Faces: each clip starts from the previous clip's last frame, so a face that has left the frame is lost and the model
+invents a new one when it returns. Either keep the face in frame across clips, or once the camera leaves it, never
+bring it back.
 If the user did not ask for camera movement, the camera stays stable. A camera move that runs across several clips is
 written per clip: where it starts and where it ends in that clip.
 When the cast is male, the plan is gay male sex: men, penises, anus, mouths — never a woman or female anatomy unless the user explicitly asks for female anatomy.
