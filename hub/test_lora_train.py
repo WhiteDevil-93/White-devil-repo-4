@@ -257,3 +257,18 @@ def test_train_script_parses_and_has_the_markers():
                    "--video-vae-path", "--lora-trigger", "type: first_frame", "ltx-2.5-22b-dev-transformer-bf16"):
         assert marker in text, marker
     assert "\r\n" not in text
+
+
+def test_concept_kind_for_anatomy_or_positions(env):
+    client, _ = env
+    ds = make(client, kind="concept", n_img=15, trigger="")
+    ds = client.get(f"/api/loratrain/datasets/{ds['id']}").json()
+    assert any("trigger word" in p and "zxc_pose" in p for p in ds["problems"])
+    assert any("at least 20" in p for p in ds["problems"])
+    assert any("many different people" in w for w in ds["warnings"])
+    ds = caption_all(client, make(client, kind="concept", n_img=18, n_vid=2, trigger="zxc_pose"))
+    ds = client.get(f"/api/loratrain/datasets/{ds['id']}").json()
+    assert ds["ready"], ds["problems"]
+    assert ds["estimate"]["steps"] == 2500 and ds["kind_info"]["label"] == "Anatomy / pose"
+    assert lt.KINDS["concept"]["ff"] and "x1" in lt.KINDS["concept"]["buckets"], "stills allowed, shape layers on"
+    assert "ONE body part or ONE position" in lt.CAPTION_RULES["concept"]

@@ -63,10 +63,17 @@ KINDS = {
                   "min_items": 20, "recommended": "25-40 items: stills and short clips of the same person, "
                   "varied angles, lighting, outfits and backgrounds"},
     # Motion must be video; longer clips for motion (Lightricks: "longer clips (e.g. 121 frames)").
-    "motion": {"label": "Motion / concept", "steps": 3000, "rank": 32, "lr": "1e-4", "ff": False,
+    "motion": {"label": "Motion / movement", "steps": 3000, "rank": 32, "lr": "1e-4", "ff": False,
                "buckets": "768x448x49;448x768x49;768x448x89;448x768x89",
                "min_items": 15, "recommended": "30-50 clips of 4-5 seconds showing the motion, with different "
                "people so no single face is learned"},
+    # One body part or one position. Stills carry shape; some clips keep it intact in motion. Many different people,
+    # so the LoRA learns the concept and not a face. Counts beyond Lightricks' general 20-30 minimum are an ESTIMATE
+    # from community guides. Feed-forward layers on: they carry shape.
+    "concept": {"label": "Anatomy / pose", "steps": 2500, "rank": 32, "lr": "1e-4", "ff": True,
+                "buckets": "768x448x1;448x768x1;768x448x49;448x768x49",
+                "min_items": 20, "recommended": "30-60 items of ONE body part or ONE position, across many different "
+                "people, angles, sizes and lighting; mostly stills plus some short clips so it holds while moving"},
 }
 # ESTIMATE, not measured on the G4: community figures are 0.67 s/step (L40S, 512px) and ~1.1 s/step (RTX 5090,
 # images). 768x448 clips cost more per step. Replace with the first real run's numbers.
@@ -210,13 +217,19 @@ def checks(ds):
     missing = [i["file"] for i in items if not (i.get("caption") or "").strip()]
     if missing:
         problems.append(f"{len(missing)} items have no caption (run Auto-caption or write them).")
-    if ds["kind"] == "character" and not (ds.get("trigger") or "").strip():
-        problems.append("A character LoRA needs a trigger word (a made-up word such as ohwx_man).")
+    if ds["kind"] in ("character", "concept") and not (ds.get("trigger") or "").strip():
+        problems.append(f"A {k['label'].lower()} LoRA needs a trigger word (a made-up word such as "
+                        f"{'ohwx_man' if ds['kind'] == 'character' else 'zxc_pose'}).")
     if ds["kind"] == "character":
         warnings.append("A LoRA of a real person needs that person's consent (LTX-2.x licence: no impersonation "
                         "without consent).")
         if items and not vids:
             warnings.append("Stills only: identity trains, but adding 5+ short clips helps it hold in motion.")
+    if ds["kind"] == "concept":
+        warnings.append("Use many different people: if most items show the same person, the LoRA learns that "
+                        "person instead of the body part or position. Keep it to one concept per LoRA.")
+        if items and not vids:
+            warnings.append("Stills only: the shape trains, but 5+ short clips help it stay intact while moving.")
     return not problems, problems, warnings
 
 
@@ -296,7 +309,7 @@ def list_datasets():
 @router.post("/datasets")
 def create_dataset(n: NewDataset):
     if n.kind not in KINDS:
-        raise HTTPException(400, "Kind must be character or motion.")
+        raise HTTPException(400, "Kind must be character, motion or concept.")
     if not n.name.strip():
         raise HTTPException(400, "Give the LoRA a name.")
     did = secrets.token_hex(6)
@@ -444,6 +457,11 @@ LoRA.""",
     "motion": """This is a MOTION LoRA: it must learn the movement. Describe the motion completely, in order: who moves,
 which body part, the direction, speed and contact, and the result; then the camera (static, pan, push-in). Describe
 the people only briefly and generically (an adult man, a muscular man) since the subjects vary.""",
+    "concept": """This is a CONCEPT LoRA for ONE body part or ONE position, shown on many different people. Name the
+concept plainly and the same way every time (plain anatomical words for a body part, a short fixed phrase for a
+position). Then describe everything that varies around it: who it is (briefly and generically: an adult man, a
+slim man), the rest of the pose, the setting, lighting, framing and camera angle, and any movement. Do not describe a
+person's face or identity in detail.""",
 }
 
 
@@ -474,7 +492,7 @@ def caption_one(key, ds, item):
     images = frames_of(path, item["type"])
     if not images:
         return "", "couldn't read frames"
-    words = "40-80" if ds["kind"] == "character" else "60-120"
+    words = "60-120" if ds["kind"] == "motion" else "40-80"
     system = CAPTION_SYSTEM.format(words=words, rules=CAPTION_RULES[ds["kind"]])
     lead = "Caption this image." if item["type"] == "image" else \
         "These are three frames (start, middle, end) of one clip. Caption the clip, including the motion between them."

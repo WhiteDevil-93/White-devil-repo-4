@@ -20,8 +20,8 @@ android {
         applicationId = "com.whitedevil"
         minSdk = 31
         targetSdk = 35
-        versionCode = 24
-        versionName = "9.14"
+        versionCode = 25
+        versionName = "9.15"
     }
 
     signingConfigs {

@@ -25,9 +25,10 @@ pre.log{white-space:pre-wrap;font-size:11px;max-height:220px;overflow:auto;backg
 <div class="card" id="newcard">
   <div style="font-weight:700">New dataset</div>
   <div class="tip">Character: 25-40 pictures and short clips of one person (different angles, light, outfits, backgrounds) and a made-up trigger word.
-    Motion: 30-50 clips of the movement with different people. A real person needs their consent (LTX licence).</div>
+    Motion: 30-50 clips of the movement with different people. Anatomy / pose: 30-60 pictures and some clips of ONE body part or ONE position across many different people.
+    A real person needs their consent (LTX licence).</div>
   <input class="input" id="nname" placeholder="LoRA name" style="margin-top:10px">
-  <div class="seg" id="nkind"><button class="btn sm on" data-v="character">Character</button><button class="btn sm" data-v="motion">Motion</button></div>
+  <div class="seg" id="nkind"><button class="btn sm on" data-v="character">Character</button><button class="btn sm" data-v="motion">Motion</button><button class="btn sm" data-v="concept">Anatomy / pose</button></div>
   <input class="input" id="ntrig" placeholder="Trigger word (e.g. ohwx_man)" style="margin-top:8px">
   <button class="btn" style="margin-top:10px;width:100%" onclick="create()">Create</button>
 </div>

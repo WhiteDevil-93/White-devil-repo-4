@@ -274,12 +274,14 @@ private fun NewDatasetCard(enabled: Boolean, onCreate: (String, String, String) 
     HubCard {
         HubSectionTitle("New dataset", null)
         Text("Character: 25-40 pictures and short clips of one person (different angles, light, outfits, backgrounds) and a made-up trigger word. " +
-            "Motion: 30-50 clips of the movement with different people. A real person needs their consent (LTX licence).",
+            "Motion: 30-50 clips of the movement with different people. Anatomy / pose: 30-60 pictures and some clips of ONE body part " +
+            "or ONE position across many different people. A real person needs their consent (LTX licence).",
             style = MaterialTheme.typography.labelSmall, color = WdPalette.textSecondary)
         OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("LoRA name") })
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             HubPill("Character", ok = kind == "character") { kind = "character" }
             HubPill("Motion", ok = kind == "motion") { kind = "motion" }
+            HubPill("Anatomy / pose", ok = kind == "concept") { kind = "concept" }
         }
         OutlinedTextField(trigger, { trigger = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("Trigger word (e.g. ohwx_man)") })
         Box(Modifier.padding(top = 10.dp)) {
