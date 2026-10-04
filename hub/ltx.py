@@ -77,11 +77,17 @@ WRITER_CHOICES = {"x-ai/grok-4.5": "Grok 4.5 uncensored", "x-ai/grok-4.20": "Gro
 MODEL_ID = re.compile(r"^~?[\w.-]+/[\w.:-]+$")
 
 
+def is_ic_lora(name):
+    return "ic-lora" in str(name or "").lower()
+
+
 def norm_opts(o):
     """Model choices: {transformer, loras (max 4 content adapters), distill, vae, clip, writer, i2v}.
     Distilled 450 is separate (default 1.0). Content stack is anatomy then motion; camera/lighting only if chosen."""
     loras = []
-    for it in (o.get("loras") or [])[:4]:
+    # Official IC-LoRAs (ltx-2.5-22b-ic-lora-*) need their own reference/control workflow at strength 1.0; loaded
+    # as an ordinary content LoRA at 0.65 they only distort the render.
+    for it in [x for x in (o.get("loras") or []) if not is_ic_lora(x[0] if isinstance(x, (list, tuple)) and x else "")][:4]:
         try:
             name, s = str(it[0] or ""), float(it[1])
         except (TypeError, ValueError, IndexError):
@@ -142,7 +148,7 @@ def status():
         return {"online": False, "billing": billing, "detail": detail, "installs": INSTALLS}
     ltx = [u for u in unets if "ltx" in u.lower()]
     return {"online": bool(ltx), "billing": True, "detail": None if ltx else "ComfyUI is up but has no LTX-2.5 model; install the LTX kit from Setup.",
-            "transformers": ltx, "loras": [l for l in loras if "distilled-lora" not in l.lower()
+            "transformers": ltx, "loras": [l for l in loras if "distilled-lora" not in l.lower() and not is_ic_lora(l)
                                           and ( "ltx" in l.lower()
                                                 or l in ("CGS23.safetensors", "Defined_Muscle.safetensors",
                                                          "plora_sulfter_i2v-step00008500.comfy.safetensors",
@@ -283,6 +289,9 @@ the other clips, so each clip must stand on its own.
 Produce exactly {n} clips. Each clip is {seconds} seconds. Do not put more physical action into a clip than can
 plausibly occur in that time, and never less: every clip shows a clear, visible movement or change. Never plan a clip
 where nothing happens unless the user explicitly asks for a still hold.
+One primary action per clip, with minimal secondary motion. Never stack in one clip several of: complex body
+interaction, a large camera move, a major facial change, a large environment change, a dramatic lighting change,
+several independent limb actions. Spread them across clips, one at a time.
 
 Preserve the user's intent exactly. Do not introduce new characters, actions, story events, objects, dialogue,
 camera movements, sounds, or environmental events unless required for physical continuity.
@@ -303,7 +312,9 @@ invents a new one when it returns. Either keep the face in frame across clips, o
 bring it back.
 If the user did not ask for camera movement, the camera stays stable. A camera move that runs across several clips is
 written per clip: where it starts and where it ends in that clip.
-When the cast is male, the plan is gay male sex: men, penises, anus, mouths — never a woman or female anatomy unless the user explicitly asks for female anatomy.
+When the cast is male, it stays male: never a woman or female anatomy unless the user explicitly asks for it. When
+two or more men have sex, the plan is gay male sex (men, penises, anus, mouths). A solo man, or a scene that is not
+sex, is planned as exactly what the user asked, with nothing sexual added.
 Use plain anatomical words. Slang dictionary: gooner = someone who edges/goons (prolonged edging session), edging = bringing close to orgasm then stopping repeatedly, bate bros = men who masturbate together, petite = small/slender adult build, fresh = an adult in his 20s, daddy/son = roleplay labels between unrelated adult men (an older adult and a younger adult, both 20s or older), gooning = extended edging/orgasm control session. Use these terms when the user uses them; translate to anatomical descriptions for the video model.
 
 Reply in EXACTLY this layout, no markdown, no commentary:
@@ -320,9 +331,10 @@ asks for another look. The style never changes, however fantastical the story.
 
 CLIP 1
 DURATION: {seconds} seconds
-START STATE: ...
+START STATE: ACTORS: A: position; facing; pose; clothing; limb state (B, C the same) | CAMERA: position; angle |
+  ENVIRONMENT: ... | OBJECTS: who holds what, where
 ACTION: chronological, visible physical action for this clip only
-END STATE: state handed to the next clip
+END STATE: the same fields as START STATE, as they are when this clip ends (the next clip's START STATE)
 ACTOR/LIMB OWNERSHIP: who moves which limb
 CAMERA: this clip's framing and movement (stable if none was requested)
 CONTINUITY: what must not change
@@ -345,14 +357,17 @@ add camera movement that was not specified, add dialogue, sound, music, ambience
 Each prompt is rendered on its own and the model forgets everything else, so every prompt names the fixed
 appearance from the continuity that is in view, in the continuity's exact words (black feathered wings, not just
 wings), even mid-transformation: words like devil, demon or monster must never change a fixed feature.
-The video model does not know "Person A" or "Person B": write each person as their visible descriptor from the
-continuity ("the winged man", "the blond man"), the same words every time. Translate anatomy-textbook or internal terms
+With two or more people, keep the labels Person A, Person B and define each once at first mention with the
+continuity's descriptor ("Person A, the blond man, ..."); then always the label, with ownership repeated
+("Person B's right hand"). With one person, write "the man" (or "the person"), never a label. Translate anatomy-textbook or internal terms
 into what is visible (hair follicles retract -> the hair gets shorter; chest wall expands -> the chest grows broader).
 
 Priority: reference-image geometry, actor identity, spatial position, limb ownership, starting pose, the one primary
 action, chronological movement, end state, camera, lighting. No audio words: the video is saved silent.
-Open with the starting pose in one sentence, then the motion in order (initiation, movement, contact, immediate
-result), ending in the end state. Do not describe the start or end as a separate static picture a second time.
+Order (guide §54): open with the primary action; then who does it and their starting pose; the movement in order
+(initiation, movement, contact, result); important anatomy and object relationships; environment; camera; lighting;
+end on the end state. It reads as natural sentences, not a list. Do not describe the start or end as a separate static
+picture a second time. Never put durations or seconds in the prompt: length is set by the frame count.
 When two or more people are present, repeat whose limb it is wherever a hand or arm could be confused.
 One primary action. If a limb is only partly in frame, it still belongs to its actor — do not borrow the other person's visible limb.
 If the camera is not specified, say the viewpoint stays stable. Use the lighting the spec gives. Do not invent speech,
@@ -506,16 +521,19 @@ def short_descriptor(d, words=6):
 
 
 def relabel(text, continuity, spec, men):
-    """The video model does not know "Person A". With one person: "the man" (or "the person"); the prompt already
-    describes him. With several: each person's short visible descriptor from the director's continuity
-    ("Person A = the dark-haired winged man"). A label with no descriptor among several people stays as it is,
-    rather than guessing who is who."""
-    labels = set(LABEL.findall(f"{continuity or ''} {spec or ''} {text or ''}"))
+    """One person: "the man" (or "the person"); the prompt already describes him and a label adds nothing.
+    Several people: keep Person A / Person B (the guide's actor binding) but make sure each label is defined once,
+    with its short descriptor from the director's continuity, before it is used."""
+    labels = sorted(set(LABEL.findall(f"{continuity or ''} {spec or ''} {text or ''}")))
+    out = text or ""
     if len(labels) <= 1:
-        names = {l: ("the man" if men else "the person") for l in labels}
+        out = LABEL.sub(lambda m: "the man" if men else "the person", out)
     else:
         names = {m.group(1): short_descriptor(m.group(2)) for m in DESCRIPTOR.finditer(continuity or "")}
-    out = LABEL.sub(lambda m: names.get(m.group(1), m.group(0)), text or "")
+        missing = [f"Person {l} is {names[l]}" for l in labels if l in names and names[l].lower() not in out.lower()
+                   and f"Person {l}" in out]
+        if missing:
+            out = "; ".join(missing) + ". " + out
     # "the man's" at the start of a sentence reads as "The man's".
     return re.sub(r"(^|[.!?]\s+)the\b", lambda m: m.group(1) + "The", out)
 
@@ -1001,6 +1019,15 @@ def cast_of(key, job, writer):
                250, writer)[0]
 
 
+LOWER_BODY = re.compile(r"\b(thrust|hips?|pelvis|ride|riding|rides|straddl|bounc|grind|squat|kneel|legs? (spread|open|lift|wrap)|"
+                        r"penetrat|fuck|sex)\w*", re.I)
+
+
+def needs_loose_i2v(text):
+    """A continuation clip whose action moves the lower body gets the looser start-image grip."""
+    return bool(LOWER_BODY.search(text or ""))
+
+
 def part_name(job, i):
     return job["out"][:-4] + f"_c{i + 1:02d}.mp4"
 
@@ -1026,8 +1053,9 @@ def run_chain(jid):
             if job["status"] == "failed":
                 return
             o = dict(job_opts(job))
-            # Continuations: slightly looser I2V so hips/legs can move (Omni: ~0.40 moving lower body).
-            if i > 0:
+            # Continuations: looser I2V only when the clip needs the lower body to move (Omni: ~0.40 moving lower
+            # body). Otherwise it stays at the job's value: lowering it everywhere let faces and wings drift.
+            if i > 0 and needs_loose_i2v((job["parts"][i].get("spec") or {}).get("raw") or part.get("prompt") or ""):
                 o["i2v"] = min(float(o.get("i2v", 0.55)), 0.45)
             pid, unet = submit(start and start.read_bytes(), f"ltx_{jid}_{i + 1:02d}{start.suffix if start else ''}", part["prompt"], job["frames"],
                                job["size"], job["seed"] + i, o, f"ltx/chain_{jid}_{i + 1:02d}",

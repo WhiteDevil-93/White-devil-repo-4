@@ -57,15 +57,18 @@ def test_long_descriptors_are_cut_at_a_word_boundary():
     assert ltx.short_descriptor("the very tall broad heavily tattooed bearded older man") == "the very tall broad heavily tattooed"
 
 
-def test_descriptors_from_the_continuity_are_used():
+def test_several_people_keep_labels_defined_once():
     cont = "Person A = the dark-haired winged man; Person B = a blond muscular man, nude"
     out = ltx.relabel("Person B's right hand rests on Person A's shoulder.", cont, "", True)
-    assert out == "The blond muscular man's right hand rests on the dark-haired winged man's shoulder."
+    assert out == ("Person A is the dark-haired winged man; Person B is the blond muscular man. "
+                   "Person B's right hand rests on Person A's shoulder.")
+    already = "Person A, the dark-haired winged man, and Person B, the blond muscular man, stand. Person B waves."
+    assert ltx.relabel(already, cont, "", True) == already, "not defined twice"
 
 
 def test_unknown_labels_among_several_people_are_left_alone():
     out = ltx.relabel("Person A kisses Person B.", "two men", "Person A and Person B", True)
-    assert out == "Person A kisses Person B."
+    assert out == "Person A kisses Person B.", "no descriptor: labels stay as they are"
 
 
 def test_compile_clip_relabels_whatever_the_model_writes(monkeypatch):
@@ -106,7 +109,7 @@ def test_a_planned_run_is_named_after_what_happens():
     assert "DURATION" not in name and "\r" not in name
     assert ltx.plan_name("", "DURATION: 5 seconds", True) == "chain"
     assert ltx.plan_name("Person A = the blond man; Person B = the dark-haired man",
-                         "ACTION: Person A kisses Person B", True) == "The blond man kisses the dark-haired man"
+                         "ACTION: Person A kisses Person B", True).startswith("Person A is the blond man")
 
 
 def test_fixed_features_are_repeated_word_for_word_in_every_clip():
@@ -156,3 +159,33 @@ def test_a_sex_scene_still_gets_the_full_stamp():
 
 def test_the_director_keeps_faces_consistent():
     assert "once the camera leaves it, never" in ltx.DIRECTOR.replace("\n", " ")
+
+
+def test_director_follows_the_guide():
+    d = ltx.DIRECTOR.replace("\n", " ")
+    assert "One primary action per clip, with minimal secondary motion." in d
+    assert "A solo man, or a scene that is not sex, is planned as exactly what the user asked" in d
+    assert "When the cast is male, the plan is gay male sex" not in d
+    assert "START STATE: ACTORS: A: position; facing; pose; clothing; limb state" in ltx.DIRECTOR
+    assert "END STATE: the same fields as START STATE" in ltx.DIRECTOR
+
+
+def test_compiler_follows_the_guide_order():
+    c = ltx.COMPILER.replace("\n", " ")
+    assert "open with the primary action" in c
+    assert "keep the labels Person A, Person B and define each once" in c
+    assert "Never put durations or seconds in the prompt" in c
+    assert "Open with the starting pose in one sentence" not in c
+
+
+def test_continuations_keep_the_image_grip_unless_the_lower_body_moves():
+    assert not ltx.needs_loose_i2v("ACTION: the man's wings spread wide and his chest broadens")
+    assert ltx.needs_loose_i2v("ACTION: Person B thrusts his hips forward")
+    assert ltx.needs_loose_i2v("ACTION: Person A rides Person B")
+
+
+def test_official_ic_loras_never_join_the_content_stack():
+    o = ltx.norm_opts({"loras": [["ltx-2.5-22b-ic-lora-ingredients-0.9.safetensors", 0.65],
+                                 ["penis-lora-by-coachbate-ltx-2.3.safetensors", 0.65]]})
+    assert [n for n, s in o["loras"]] == ["penis-lora-by-coachbate-ltx-2.3.safetensors"]
+    assert ltx.is_ic_lora("ltx-2.5-22b-ic-lora-deblur-0.9.safetensors") and not ltx.is_ic_lora("CGS23.safetensors")
