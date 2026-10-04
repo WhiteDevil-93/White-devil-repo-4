@@ -91,6 +91,14 @@ class ScreenSmokeTest {
         onAllNodesWithText("Ask")[0]            // present; disabled while the box is empty
     }
 
+    @Test fun `the train lora screen draws offline with its new-dataset form`() = runComposeUiTest {
+        show { LoraTrainScreen(offline) }
+        onAllNodesWithText("New dataset")[0].assertExists()
+        onAllNodesWithText("No datasets yet.")[0].assertExists()
+        press("Kind: Character / identity  ▾"); press("Motion / concept")
+        onAllNodesWithText("Kind: Motion / concept  ▾")[0].assertExists()
+    }
+
     @Test fun `venice and settings draw`() {
         runComposeUiTest { show { AgentScreen(offline, onOpenSettings = {}) } }
         runComposeUiTest { show { SettingsScreen(offline, onSave = {}, onBack = {}) } }

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.ModelTraining
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Settings
@@ -57,6 +58,7 @@ enum class Screen(val label: String, val icon: ImageVector, val group: NavGroup)
     Thunder("Thunder", Icons.Outlined.Cloud, NavGroup.Laptop),
     Vast("Vast", Icons.Outlined.Dns, NavGroup.Laptop),
     Setup("Setup", Icons.Outlined.Tune, NavGroup.Laptop),
+    LoraTrain("Train LoRA", Icons.Outlined.ModelTraining, NavGroup.Laptop),
     Agent("Venice", Icons.Outlined.AutoAwesome, NavGroup.Laptop),
     Caretaker("Caretaker", Icons.Outlined.HealthAndSafety, NavGroup.Laptop),
     Settings("Settings", Icons.Outlined.Settings, NavGroup.None),

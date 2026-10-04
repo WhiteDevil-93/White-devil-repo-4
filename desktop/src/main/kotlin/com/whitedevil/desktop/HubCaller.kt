@@ -6,8 +6,10 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -51,7 +53,7 @@ class HubCaller(
 
     fun <T> bad(message: String): MediaResult<T> = MediaResult.Failure(MediaError(MediaErrorKind.BadResponse, message))
 
-    /** GET when [post] is null, otherwise POST with [post] as the body ([json] sets the content type). */
+    /** GET when [post] is null, otherwise POST with [post] as the body ([json] sets the content type); [method] PUT, PATCH or DELETE overrides. */
     suspend fun <T> call(
         path: String,
         timeoutMs: Long,
@@ -70,10 +72,11 @@ class HubCaller(
                     setBody(post)
                 }
             }
-            val response: HttpResponse = when {
-                post == null -> http.get(root + path, configure)
-                method == "PUT" -> http.put(root + path, configure)
-                else -> http.post(root + path, configure)
+            val response: HttpResponse = when (method) {
+                "PUT" -> http.put(root + path, configure)
+                "PATCH" -> http.patch(root + path, configure)
+                "DELETE" -> http.delete(root + path, configure)
+                else -> if (post == null) http.get(root + path, configure) else http.post(root + path, configure)
             }
             val text = response.bodyAsText()
             val status = response.status.value
