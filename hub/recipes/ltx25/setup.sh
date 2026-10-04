@@ -125,8 +125,16 @@ dl() { # dl <url> <out> [auth header]
     code=$(curl -s -o /dev/null -w '%{http_code}' -I "$1" || echo err)
   fi
   # 401/403 on Lightricks IC repos = accept that repo's licence on Hugging Face (separate from LTX-2.5).
-  echo "FAILED: $2 (HTTP $code)" >> "$BASE/downloads/failed.txt"
-  echo "FAILED: $2 (HTTP $code)"
+  # Say which page, so the fix is one click. Never print a Civitai URL: it carries the token.
+  hint=""
+  case "$code" in 401|403)
+    case "$1" in
+      https://huggingface.co/*) r="${1#https://huggingface.co/}"; hint=" -> accept the licence while logged in as the token's owner: https://huggingface.co/${r%%/resolve/*}" ;;
+      https://civitai.com/*) hint=" -> Civitai refuses this file for your token (its creator restricted downloads, or it needs a login on civitai.com)" ;;
+    esac ;;
+  esac
+  echo "FAILED: $2 (HTTP $code)$hint" >> "$BASE/downloads/failed.txt"
+  echo "FAILED: $2 (HTTP $code)$hint"
   return 1
 }
 LTX=https://huggingface.co/Lightricks/LTX-2.5/resolve/main
