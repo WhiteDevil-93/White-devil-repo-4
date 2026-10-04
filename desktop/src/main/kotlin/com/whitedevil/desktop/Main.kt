@@ -113,6 +113,10 @@ private fun runApp() = application {
                                     session = agentSession,
                                     mcp = mcpHost,
                                     skills = skillStore,
+                                    library = library.state,
+                                    media = client,
+                                    onOpen = { screen = it },
+                                    onSettingsChange = { s -> settings = s.also { Settings.save(it) } },
                                 )
                                 // Kept alive across tab switches: restarting the shell
                                 // on every switch would discard the session and any

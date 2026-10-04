@@ -184,13 +184,18 @@ class AgentSessionTest {
         assertTrue(onAllNodesWithText("put the 14B remix on a new L40").fetchSemanticsNodes().isNotEmpty(), "the earlier conversation is on screen")
         assertTrue(onAllNodesWithText("TOOL · HUB_REQUEST").fetchSemanticsNodes().isEmpty(), "tool calls are not shown as bubbles")
         assertTrue(onAllNodesWithText("Used 2 tools", substring = true).fetchSemanticsNodes().isNotEmpty(), "one quiet summary line instead")
-        onNodeWithText("SHOW TOOLS").performClick(); waitForIdle()
+        onNodeWithText("TOOL DETAILS").performClick(); waitForIdle()
         assertTrue(onAllNodesWithText("TOOL · HUB_REQUEST").fetchSemanticsNodes().isNotEmpty(), "the toggle brings the details back")
-        onNodeWithText("HIDE TOOLS").performClick()
-        onNodeWithText("MEMORY").performClick()                              // opens the panel; the hub is unreachable, so it explains
-        mainClock.advanceTimeBy(1_500)
-        waitUntil(timeoutMillis = 8_000) { onAllNodesWithText("Venice's memory").fetchSemanticsNodes().isNotEmpty() }
-        onNodeWithText("CLOSE").performClick(); waitForIdle()
+        onNodeWithText("TOOL DETAILS").performClick(); waitForIdle()
+        assertTrue(onAllNodesWithText("TOOL · HUB_REQUEST").fetchSemanticsNodes().isEmpty(), "and hides them again")
+        // The Pipeline tab has a live clock, so step time by hand while it is on screen.
+        mainClock.autoAdvance = false
+        onNodeWithText("WORKSPACE").performClick(); mainClock.advanceTimeByFrame()   // a narrow window shows one pane at a time
+        assertTrue(onAllNodesWithText("HUB SITREP").fetchSemanticsNodes().isNotEmpty(), "the workspace opens on the pipeline")
+        onNodeWithText("MEMORY").performClick(); mainClock.advanceTimeByFrame()      // the memory tab; the hub is unreachable, so it explains
+        mainClock.autoAdvance = true
+        waitUntil(timeoutMillis = 8_000) { onAllNodesWithText("Shared with the phone", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        onNodeWithText("WORKSPACE").performClick(); waitForIdle()
         onNodeWithText("NEW CHAT").performClick(); waitForIdle()
         assertTrue(session.lines.isEmpty() && session.history.isEmpty(), "new chat clears it")
     }
