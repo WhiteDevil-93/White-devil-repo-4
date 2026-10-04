@@ -1,5 +1,7 @@
 package com.whitedevil.agent
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -98,10 +100,17 @@ fun stripBlobs(content: JsonElement?): JsonElement? = when (content) {
     else -> content
 }
 
+// `type` is @EncodeDefault on both tool classes because VeniceClient encodes with
+// encodeDefaults = false, which silently omits any field equal to its default. For
+// `ToolCall` that meant every assistant tool call replayed to Venice went out as
+// {"id":..,"function":{..}} with no "type", and GLM answers that with
+// 500 {"error":"Inference processing failed"} on every follow-up request, so any
+// turn that used a tool failed and the history it left behind kept failing.
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class ToolCall(
     val id: String,
-    val type: String = "function",
+    @EncodeDefault val type: String = "function",
     val function: ToolCallFunction,
 )
 
@@ -111,9 +120,10 @@ data class ToolCallFunction(
     val arguments: String,
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class ToolDefinition(
-    val type: String = "function",
+    @EncodeDefault val type: String = "function",
     val function: ToolFunctionSpec,
 )
 
