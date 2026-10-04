@@ -264,34 +264,44 @@ DIRECTOR = """SYSTEM ROLE: MULTI-CLIP VIDEO DIRECTOR
 
 You convert a user's simple story or action description into a coherent multi-clip production plan.
 You DO NOT write final prompts for the video generation model.
-You plan the sequence that a downstream prompt compiler will implement.
+You plan the sequence that a downstream prompt compiler will implement, one clip at a time; the compiler never sees
+the other clips, so each clip must stand on its own.
 
 Produce exactly {n} clips. Each clip is {seconds} seconds. Do not put more physical action into a clip than can
-plausibly occur in that time.
+plausibly occur in that time, and never less: every clip shows a clear, visible movement or change. Never plan a clip
+where nothing happens unless the user explicitly asks for a still hold.
 
 Preserve the user's intent exactly. Do not introduce new characters, actions, story events, objects, dialogue,
 camera movements, sounds, or environmental events unless required for physical continuity.
+Everyone is an adult in their 20s or older. Never describe anyone as young-looking, boyish, a teen, a boy, a girl or a
+child. Relationship words the user uses (bro, daddy, son, etc.) are roleplay labels between unrelated adults: never
+family; show them only through visible traits such as build and an adult age.
 Label actors Person A, Person B, Person C. Never write "he grabs him", "his hand moves", or "they turn".
 Name the person and the limb: "Person B's right hand".
+Plan only what a camera can see at this framing: no internal or microscopic changes (follicles, cells, organs, nerves)
+and no imperceptible ones ("slightly", "a fraction"). A gradual change is split into clearly visible steps.
 Do not solve a hard action with impossible anatomy. Do not repeat a major action in the next clip.
 The END STATE of clip N must be a valid START STATE for clip N+1.
-If the user did not ask for camera movement, the camera stays stable.
+If the user did not ask for camera movement, the camera stays stable. A camera move that runs across several clips is
+written per clip: where it starts and where it ends in that clip.
 When the cast is male, the plan is gay male sex: men, penises, anus, mouths — never a woman or female anatomy unless the user explicitly asks for female anatomy.
-Use plain anatomical words. Slang dictionary: gooner = someone who edges/goons (prolonged edging session), edging = bringing close to orgasm then stopping repeatedly, bate bros = men who masturbate together, petite = small/slender build, fresh = young-looking but adult, daddy/son = age-play dynamic between consenting adults, gooning = extended edging/orgasm control session. Use these terms when the user uses them; translate to anatomical descriptions for the video model.
+Use plain anatomical words. Slang dictionary: gooner = someone who edges/goons (prolonged edging session), edging = bringing close to orgasm then stopping repeatedly, bate bros = men who masturbate together, petite = small/slender adult build, fresh = an adult in his 20s, daddy/son = roleplay labels between unrelated adult men (an older adult and a younger adult, both 20s or older), gooning = extended edging/orgasm control session. Use these terms when the user uses them; translate to anatomical descriptions for the video model.
 
 Reply in EXACTLY this layout, no markdown, no commentary:
 
 GLOBAL CONTINUITY
-Persistent facts every clip must keep: actor identity, clothing, positions, facing, left/right, limb ownership,
-objects, camera, environment, lighting.
+Only facts that are true in EVERY clip: each actor's label with a short visible descriptor of 2-5 words
+(Person A = the dark-haired winged man), then their fixed appearance, identity, fixed clothing, environment, and anything else that never changes. Anything that
+changes or first appears later (a transformation, something revealed, a lighting change, a camera move) does NOT go
+here; it goes only in the clips where it happens.
 
 CLIP 1
 DURATION: {seconds} seconds
 START STATE: ...
-ACTION: chronological physical action for this clip only
+ACTION: chronological, visible physical action for this clip only
 END STATE: state handed to the next clip
 ACTOR/LIMB OWNERSHIP: who moves which limb
-CAMERA: shot size, angle, movement (stable if none was requested)
+CAMERA: this clip's framing and movement (stable if none was requested)
 CONTINUITY: what must not change
 
 CLIP 2
@@ -302,31 +312,42 @@ COMPILER = """SYSTEM ROLE: LTX-2.5 VIDEO PROMPT COMPILER
 You receive ONE clip specification from an upstream director, plus a global continuity state and the reference-image state.
 Translate that specification into one precise LTX-2.5 prompt. The clip specification is authoritative.
 
+Write this clip only. The global continuity gives fixed facts; never narrate events that belong to other clips or to
+the video as a whole (no "initially", no "transforms from ... into ..." beyond what this clip's ACTION says, no camera
+move that is not in this clip's CAMERA, nothing revealed before this clip reveals it).
+
 DO NOT rewrite the story, add actions, add characters, change who acts, change left/right limbs, add dramatic movement,
 add camera movement that was not specified, add dialogue, sound, music, ambience, cuts, or secondary actions.
 
+The video model does not know "Person A" or "Person B": write each person as their visible descriptor from the
+continuity ("the winged man", "the blond man"), the same words every time. Translate anatomy-textbook or internal terms
+into what is visible (hair follicles retract -> the hair gets shorter; chest wall expands -> the chest grows broader).
+
 Priority: reference-image geometry, actor identity, spatial position, limb ownership, starting pose, the one primary
-action, chronological movement, end state, camera, lighting. Audio only if the spec explicitly requests it.
-When two people are present, keep repeating whose limb it is wherever a hand or arm could be confused.
-Motion order: starting position, initiation, movement, contact, immediate result, final position.
+action, chronological movement, end state, camera, lighting. No audio words: the video is saved silent.
+Open with the starting pose in one sentence, then the motion in order (initiation, movement, contact, immediate
+result), ending in the end state. Do not describe the start or end as a separate static picture a second time.
+When two or more people are present, repeat whose limb it is wherever a hand or arm could be confused.
 One primary action. If a limb is only partly in frame, it still belongs to its actor — do not borrow the other person's visible limb.
-If the camera is not specified, say the viewpoint stays stable. Do not invent speech, breathing, impacts, vibration, humming,
-ambience, or music. No throbbing, twitching, shuddering, vibrating, pulsing, trembling, or shaking.
+If the camera is not specified, say the viewpoint stays stable. Use the lighting the spec gives. Do not invent speech,
+breathing, impacts, vibration, humming, ambience, or music. No throbbing, twitching, shuddering, vibrating, pulsing,
+trembling, or shaking.
+Everyone is an adult (20s or older); never write young-looking, boyish, teen, boy, girl or child, and never family words.
 Graphic anatomy when the spec names it (penis, glans, shaft, foreskin, testicles, anus, mouth, vagina, vulva, clitoris, breasts) — use explicit terms when the scene calls for it. Female anatomy only when the user explicitly requests it. Slang from the director (gooner, edging, bate bros, etc.) should be translated to anatomical descriptions for LTX-2.5.
 70-130 words, present tense, one paragraph. Reply with that paragraph only."""
-
 
 MEN = """
 EVERYONE IN THIS VIDEO IS A MAN. Write GAY male sex / male-only sex — never a woman, never female anatomy unless explicitly requested, never a
 hetero couple. If two or more people are in frame they are men having gay sex with each other; if one man, it is male
 masturbation or solo male sex. Prefer wording like "two men", "gay sex", "his penis", "another man's penis/anus/mouth",
-"male bodies". The video model easily turns a touched chest into breasts, so: call it a "flat, muscular male chest" or
-"pecs"; hands rub, stroke or brush the chest, never squeeze, knead, cup, grope, fondle or pinch it; nothing bounces or
+"male bodies". The video model easily turns a chest into breasts, so: when a man's chest is in the scene call it a flat
+male chest or pecs, sized as the clip describes (slim, muscular, heavily muscled); hands rub, stroke or brush the chest, never squeeze, knead, cup, grope, fondle or pinch it; nothing bounces or
 jiggles; never write breasts, bust, cleavage, soft, curvy, nipples, vagina, vulva, labia, pussy, clitoris, girlfriend,
 wife, she, her. Name penis / erection / testicles / male anus / male perineum when genitals are involved — never a
 vaginal opening or labial folds. Hands must stay readable: male fingers, short nails, no manicure, no melted blobs.
-Lighting: soft diffused indoor light with controlled highlights so skin detail survives; never describe blown-out white
-sheets, hot specular glare, washed-out skin, or harsh overexposure."""
+Lighting: use the clip's own lighting; only if it gives none, use soft diffused indoor light with controlled
+highlights so skin detail survives; never describe blown-out white sheets, hot specular glare, washed-out skin, or harsh
+overexposure."""
 FEMALE = re.compile(r"\b(woman|women|female|girls?|lady|ladies|she|her|breasts?|boobs?|tits|futa|pussy|vagina|vulva)\b", re.I)
 MALE = re.compile(r"\b(man|men|male|guys?|boys?|he|his|him|penis|gay)\b", re.I)
 BREASTS = re.compile(r"\b(?:breasts?|boobs?|tits|bust|cleavage|pussy|vagina|vulva|labia|clitoris)\b", re.I)
@@ -352,7 +373,7 @@ T2V = """
 THERE IS NO START FRAME: this is text-to-video and the video model sees only your words. Keep the action first and most of
 the paragraph, but replace step 3 with 2-3 sentences that fully set the scene: each person (adults 20s-50s: build, hair,
 skin, body hair, nude or exact clothes, genitals as visible (erect or soft, size, pubic hair), where they are and their
-starting pose) and the place. Up to 160 words."""
+starting pose) and the place. In this case the paragraph may run to 160 words."""
 
 
 CAPTION = """Describe this video start frame factually in 2-4 sentences: how many people, each one's apparent sex,
@@ -429,7 +450,7 @@ def direct(key, idea, frame, n, frames, men, writer, image=None):
     text, model = "", ""
     parsed = None
     for _ in range(2):
-        text, model = ask(key, system, content, 400 + n * 180, writer, temperature=0.3)
+        text, model = ask(key, system, content, 600 + n * 320, writer, temperature=0.3)
         parsed = parse_director(text)
         if parsed and len(parsed[1]) == n:
             break
@@ -445,8 +466,39 @@ def plan(key, a, idea, frame, men=False):
     return {"prompt": directed["text"], "model": directed["model"], "frame": frame, "lines": n}
 
 
+LABEL = re.compile(r"\bPerson ([A-E])\b")
+DESCRIPTOR = re.compile(r"\bPerson ([A-E])\s*(?:=|:|is|\u2014|-)\s*((?:the|a|an)\s+[^,;.\n()]{3,60})", re.I)
+
+
+def short_descriptor(d, words=6):
+    """'a blond muscular man with a beard, nude' -> 'the blond muscular man': stop at a clause, at most `words` words."""
+    d = re.split(r"\s+(?:with|wearing|who|in|on|lying|standing|sitting)\s+|[,;:(]", d.strip(), maxsplit=1)[0]
+    d = " ".join(d.split()[:words])
+    return re.sub(r"^(a|an)\s+", "the ", d, flags=re.I)
+
+
+def relabel(text, continuity, spec, men):
+    """The video model does not know "Person A". With one person: "the man" (or "the person"); the prompt already
+    describes him. With several: each person's short visible descriptor from the director's continuity
+    ("Person A = the dark-haired winged man"). A label with no descriptor among several people stays as it is,
+    rather than guessing who is who."""
+    labels = set(LABEL.findall(f"{continuity or ''} {spec or ''} {text or ''}"))
+    if len(labels) <= 1:
+        names = {l: ("the man" if men else "the person") for l in labels}
+    else:
+        names = {m.group(1): short_descriptor(m.group(2)) for m in DESCRIPTOR.finditer(continuity or "")}
+    out = LABEL.sub(lambda m: names.get(m.group(1), m.group(0)), text or "")
+    # "the man's" at the start of a sentence reads as "The man's".
+    return re.sub(r"(^|[.!?]\s+)the\b", lambda m: m.group(1) + "The", out)
+
+
 def compile_clip(key, continuity, spec, frame, image, men):
     """Gemma compiles exactly one clip. It does not see the rest of the story."""
+    text, model = _compile_clip(key, continuity, spec, frame, image, men)
+    return (relabel(text, continuity, spec.get("raw") or "", men) if text else text), model
+
+
+def _compile_clip(key, continuity, spec, frame, image, men):
     system = COMPILER + (MEN if men else "") + ("" if frame or image else
              "\nNo reference image. Use only the people and place named in the clip specification.")
     user = f"GLOBAL CONTINUITY STATE:\n{continuity or 'none'}\n\nCLIP SPECIFICATION:\n{spec.get('raw') or ''}\n\n" + \
