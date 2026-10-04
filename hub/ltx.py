@@ -611,9 +611,22 @@ def submit(data, fname, prompt, frames, size, seed, opts, prefix, compression=18
 UPSCALER = "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors"
 
 
-def sharpen_graph(video, prompt, frames, seed, opts, prefix):
-    """Finished clip -> latents -> x2 latent upscale -> last 3 distilled steps at full size -> decode, original sound kept."""
+def has_audio(path):
+    """True if the file has an audio stream. Renders are saved picture-only (see strip_audio), so most have none.
+    If ffprobe cannot tell, assume there is sound: that is the old behaviour."""
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=index", "-of", "csv=p=0",
+                            str(path)], capture_output=True, text=True, timeout=30)
+        return r.returncode != 0 or bool(r.stdout.strip())
+    except Exception:
+        return True
+
+
+def sharpen_graph(video, prompt, frames, seed, opts, prefix, audio=True):
+    """Finished clip -> latents -> x2 latent upscale -> last 3 distilled steps at full size -> decode, original sound kept.
+    A silent clip (audio=False) gets the empty audio latent a normal render starts from, and comes back silent."""
     g, unet = graph("unused.png", prompt, frames, 768, 512, seed, opts, prefix)
+    empty_audio = json.loads(json.dumps(g["15"]))
     for k in ("10", "11", "12", "13", "14", "15", "16", "19", "20", "21", "22", "23", "24", "25", "26"):
         g.pop(k, None)
     g.update({
@@ -635,13 +648,18 @@ def sharpen_graph(video, prompt, frames, seed, opts, prefix):
         "42": {"class_type": "CreateVideo", "inputs": {"images": ["41", 0], "audio": ["31", 1], "fps": 24.0}},
         "43": {"class_type": "SaveVideo", "inputs": {"video": ["42", 0], "filename_prefix": prefix, "format": "auto", "codec": "auto"}},
     })
+    if not audio:
+        # GetVideoComponents yields no audio for a silent clip, and encoding None fails ("input audio is None").
+        empty_audio["inputs"]["frames_number"] = frames
+        g["35"] = empty_audio
+        del g["42"]["inputs"]["audio"]
     return g
 
 
 def sharpen_clip(src, prompt, frames, seed, job, prefix, on_state):
     up = comfy("POST", "/upload/image", files={"image": (f"{Path(prefix).name}.mp4", src.read_bytes(), "video/mp4")},
                data={"overwrite": "true"}).json()
-    g = sharpen_graph(up["name"], prompt, frames, seed, job_opts(job), prefix)
+    g = sharpen_graph(up["name"], prompt, frames, seed, job_opts(job), prefix, audio=has_audio(src))
     res = comfy("POST", "/prompt", json={"prompt": g, "client_id": str(uuid.uuid4())}).json()
     if res.get("node_errors"):
         raise RuntimeError("ComfyUI rejected the sharpen graph: " + json.dumps(res["node_errors"])[:300])
