@@ -160,7 +160,7 @@ class AgentSession(private val dir: File?) {
             val out = mutableListOf<ChatLine>()
             for (m in history) {
                 when (m.role) {
-                    "user" -> m.textContent().takeIf { it.isNotBlank() }?.let { out += ChatLine(ROLE_USER, "You", Attachments.forDisplay(it)) }
+                    "user" -> m.textContent().takeIf { it.isNotBlank() }?.let { out += ChatLine(ROLE_USER, "You", Commands.stripHints(Attachments.forDisplay(it))) }
                     "assistant" -> {
                         m.textContent().takeIf { it.isNotBlank() }?.let { out += ChatLine(ROLE_VENICE, "Venice", it) }
                         m.toolCalls.orEmpty().forEach { c ->

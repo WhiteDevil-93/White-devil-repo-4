@@ -14,6 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -64,7 +70,67 @@ fun AgentScreen(
     var chatsOpen by remember { mutableStateOf(false) }
     var attachments by remember { mutableStateOf<List<Attachment>>(emptyList()) }
     var attachNote by remember { mutableStateOf<String?>(null) }
+    var chatsQuery by remember { mutableStateOf("") }
+    var menuIndex by remember { mutableStateOf(0) }
+    var dismissedFor by remember { mutableStateOf<String?>(null) }
+    var clips by remember { mutableStateOf<List<ClipRef>>(emptyList()) }
+    var clipsLoaded by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val skillList = remember(skillsOpen, skills) { skills?.list().orEmpty() }
+    val connectors = remember(connectorsOpen, mcp) { mcp?.serverNames().orEmpty() }
+    val menu = if (dismissedFor == input) emptyList() else Commands.suggestions(input, skillList, connectors, clips)
+    LaunchedEffect(input) { menuIndex = 0 }
+    // @clip: needs the hub's render list; fetch it the first time it is wanted.
+    LaunchedEffect(input.contains("@clip")) {
+        if (input.contains("@clip") && !clipsLoaded) {
+            clipsLoaded = true
+            withContext(Dispatchers.IO) {
+                MediaClient(settings.hubUrl, settings.relayUser, settings.relayPass).use { c ->
+                    (c.library() as? MediaResult.Ok)?.value?.groups?.flatMap { it.clips }?.sortedByDescending { it.mtime ?: 0.0 }?.take(60)
+                        ?.let { list -> clips = list.map { ClipRef(it.name, prettyClipName(it.name)) } }
+                }
+            }
+        }
+    }
+
+    fun attachFiles() {
+        scope.launch(Dispatchers.IO) {
+            val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Attach to Venice", java.awt.FileDialog.LOAD).apply { isMultipleMode = true; isVisible = true }
+            val (list, problems) = Attachments.addAll(attachments, dialog.files.toList())
+            attachments = list; attachNote = problems
+        }
+    }
+
+    fun runLocal(name: String, args: String) {
+        when (name) {
+            "help" -> lines += ChatLine(ROLE_VENICE, "Venice", Commands.helpText(skillList))
+            "new" -> session.newChat()
+            "chats" -> { chatsQuery = args; chatsOpen = true }
+            "skills" -> if (skills != null) skillsOpen = true else lines += ChatLine(ROLE_ERROR, "Skills", "Skills are not available here.")
+            "connectors" -> if (mcp != null) connectorsOpen = true else lines += ChatLine(ROLE_ERROR, "Connectors", "Connectors are not available here.")
+            "memory" -> memoryOpen = true
+            "attach" -> attachFiles()
+            "tools" -> showTools = !showTools
+            "settings" -> onOpenSettings()
+            "remember" -> {
+                if (args.isBlank()) { lines += ChatLine(ROLE_ERROR, "/remember", "Write the note after it: /remember I prefer 5 s clips."); return }
+                scope.launch(Dispatchers.IO) {
+                    HubMemoryClient(settings.hubUrl, settings.relayUser, settings.relayPass).use { m ->
+                        lines += when (val r = m.addNote(args)) {
+                            is MediaResult.Ok -> ChatLine(ROLE_VENICE, "Memory", "Saved to the Hub's memory: ${args.take(160)}")
+                            is MediaResult.Failure -> ChatLine(ROLE_ERROR, "Memory", r.error.message)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun pick(sug: Suggestion) {
+        if (sug.attachFile) { input = Commands.complete(input, sug.copy(insert = "")).trimEnd(); attachFiles() }
+        else input = Commands.complete(input, sug)
+        dismissedFor = null
+    }
     val items = groupChat(lines)
 
     // Keep the newest line in view as the agent works (and on coming back to a saved conversation).
@@ -73,8 +139,21 @@ fun AgentScreen(
     }
 
     fun send() {
-        val text = input.trim()
-        if ((text.isEmpty() && attachments.isEmpty()) || busy) return
+        val raw = input.trim()
+        if ((raw.isEmpty() && attachments.isEmpty()) || busy) return
+        val resolved = Commands.resolve(raw, skillList)
+        when (resolved) {
+            is Commands.Resolved.Local -> { input = ""; runLocal(resolved.name, resolved.args); return }
+            is Commands.Resolved.Unknown -> {
+                input = ""
+                lines += ChatLine(ROLE_ERROR, "Unknown command", "${resolved.typed} is not a command." + (if (resolved.close.isNotEmpty()) " Did you mean ${resolved.close.joinToString(", ")}?" else "") + " Type /help for the list.")
+                return
+            }
+            else -> {}
+        }
+        val shownRaw = (resolved as? Commands.Resolved.Rewrite)?.shown ?: raw
+        val text = Commands.expandMentions((resolved as? Commands.Resolved.Rewrite)?.forAgent ?: raw, skillList, connectors)
+        val display = Attachments.forDisplay(Attachments.compose(shownRaw, attachments).first)
         val blocked = settings.blockedReason()
         if (blocked != null) {
             lines += ChatLine(ROLE_ERROR, "Not configured", blocked)
@@ -110,7 +189,7 @@ fun AgentScreen(
                                 // Compose snapshot state is thread-safe to mutate;
                                 // recomposition is dispatched to the UI thread.
                                 lines += when (event) {
-                                    is AgentEvent.User -> ChatLine(ROLE_USER, "You", Attachments.forDisplay(event.text))
+                                    is AgentEvent.User -> ChatLine(ROLE_USER, "You", display.ifBlank { Attachments.forDisplay(event.text) })
                                     is AgentEvent.Venice -> ChatLine(ROLE_VENICE, "Venice", event.text)
                                     is AgentEvent.ToolCall -> ChatLine(ROLE_TOOL_CALL, "Tool · ${event.name}", event.arguments)
                                     is AgentEvent.ToolOutput -> ChatLine(ROLE_TOOL_OUT, "Output · ${event.name}", event.output)
@@ -183,18 +262,17 @@ fun AgentScreen(
             onSend = ::send,
             attachments = attachments,
             note = attachNote,
-            onAttach = {
-                scope.launch(Dispatchers.IO) {
-                    val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Attach to Venice", java.awt.FileDialog.LOAD).apply { isMultipleMode = true; isVisible = true }
-                    val (list, problems) = Attachments.addAll(attachments, dialog.files.toList())
-                    attachments = list; attachNote = problems
-                }
-            },
+            onAttach = ::attachFiles,
             onRemove = { i -> attachments = attachments.filterIndexed { n, _ -> n != i } },
+            suggestions = menu,
+            selected = menuIndex.coerceIn(0, (menu.size - 1).coerceAtLeast(0)),
+            onPick = ::pick,
+            onMove = { d -> if (menu.isNotEmpty()) menuIndex = (menuIndex + d + menu.size) % menu.size },
+            onDismiss = { dismissedFor = input },
         )
     }
     if (memoryOpen) MemoryPanel(settings, onClose = { memoryOpen = false })
-    if (chatsOpen) ChatsPanel(session, busy, onClose = { chatsOpen = false })
+    if (chatsOpen) ChatsPanel(session, busy, onClose = { chatsOpen = false }, initialQuery = chatsQuery)
     if (skillsOpen && skills != null) SkillsPanel(skills, onClose = { skillsOpen = false })
     if (connectorsOpen && mcp != null) ConnectorsPanel(mcp, onClose = { connectorsOpen = false })
 }
@@ -303,52 +381,83 @@ private fun Bubble(line: ChatLine) {
 private fun Composer(
     value: String, busy: Boolean, onValueChange: (String) -> Unit, onSend: () -> Unit,
     attachments: List<Attachment> = emptyList(), note: String? = null, onAttach: () -> Unit = {}, onRemove: (Int) -> Unit = {},
+    suggestions: List<Suggestion> = emptyList(), selected: Int = 0, onPick: (Suggestion) -> Unit = {}, onMove: (Int) -> Unit = {}, onDismiss: () -> Unit = {},
 ) {
     Column(Modifier.fillMaxWidth().background(Forge.Bg)) {
-    if (attachments.isNotEmpty() || note != null) {
-        Column(Modifier.fillMaxWidth().widthIn(max = 1100.dp).align(Alignment.CenterHorizontally).padding(horizontal = 28.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                attachments.forEachIndexed { i, a ->
-                    Text(
-                        (if (a.isImage) "\uD83D\uDDBC " else "\uD83D\uDCCE ") + a.name + "  \u2715", color = Forge.Fg, fontSize = 12.sp,
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Forge.Panel2).clickable { onRemove(i) }.padding(horizontal = 10.dp, vertical = 5.dp),
-                    )
+        if (suggestions.isNotEmpty() && !busy) {
+            Column(
+                Modifier.fillMaxWidth().widthIn(max = 1100.dp).align(Alignment.CenterHorizontally).padding(horizontal = 28.dp).padding(top = 8.dp)
+                    .clip(RoundedCornerShape(12.dp)).background(Forge.Panel).border(1.dp, Forge.Line, RoundedCornerShape(12.dp)).padding(vertical = 4.dp),
+            ) {
+                suggestions.forEachIndexed { i, sug ->
+                    Row(
+                        Modifier.fillMaxWidth().background(if (i == selected) Forge.Panel2 else Color.Transparent).clickable { onPick(sug) }.padding(horizontal = 14.dp, vertical = 7.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(sug.label, color = if (i == selected) Forge.Acc else Forge.Fg, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace, maxLines = 1, modifier = Modifier.widthIn(max = 380.dp))
+                        Text(sug.detail, color = Forge.Dim, fontSize = 12.sp, maxLines = 1, modifier = Modifier.weight(1f))
+                    }
                 }
+                Text("↑↓ choose · Tab or Enter to insert · Esc to close", color = Forge.Dim, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 14.dp, vertical = 3.dp))
             }
-            note?.let { Text(it, color = Forge.Bad, fontSize = 12.sp) }
         }
-    }
-    Box(Modifier.fillMaxWidth()) {
-        Row(
-            Modifier.fillMaxWidth().widthIn(max = 1100.dp).align(Alignment.Center).padding(horizontal = 28.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            OutlinedTextField(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                placeholder = { Text("Give Venice a goal or feedback…", color = Forge.Dim) },
-                enabled = !busy,
-                maxLines = 6,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Forge.Well, unfocusedContainerColor = Forge.Well, disabledContainerColor = Forge.Well,
-                    focusedBorderColor = Forge.Acc, unfocusedBorderColor = Forge.Line, disabledBorderColor = Forge.Line,
-                    focusedTextColor = Forge.Fg, unfocusedTextColor = Forge.Fg, cursorColor = Forge.Acc,
-                ),
-                keyboardActions = KeyboardActions(onSend = { onSend() }),
-            )
-            Spacer(Modifier.width(8.dp))
-            TextButton(onClick = onAttach, enabled = !busy, modifier = Modifier.height(56.dp)) { Text("ATTACH", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
-            Spacer(Modifier.width(4.dp))
-            Button(
-                onClick = onSend, enabled = !busy && (value.isNotBlank() || attachments.isNotEmpty()),
-                modifier = Modifier.height(56.dp), shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Forge.Acc2, contentColor = Color.White,
-                    disabledContainerColor = Forge.Panel2, disabledContentColor = Forge.Dim),
-            ) { Text(if (busy) "Working" else "Send", fontWeight = FontWeight.SemiBold) }
+        if (attachments.isNotEmpty() || note != null) {
+            Column(Modifier.fillMaxWidth().widthIn(max = 1100.dp).align(Alignment.CenterHorizontally).padding(horizontal = 28.dp).padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    attachments.forEachIndexed { i, a ->
+                        Text(
+                            (if (a.isImage) "\uD83D\uDDBC " else "\uD83D\uDCCE ") + a.name + "  \u2715", color = Forge.Fg, fontSize = 12.sp,
+                            modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Forge.Panel2).clickable { onRemove(i) }.padding(horizontal = 10.dp, vertical = 5.dp),
+                        )
+                    }
+                }
+                note?.let { Text(it, color = Forge.Bad, fontSize = 12.sp) }
+            }
         }
-    }
+        Box(Modifier.fillMaxWidth()) {
+            Row(
+                Modifier.fillMaxWidth().widthIn(max = 1100.dp).align(Alignment.Center).padding(horizontal = 28.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = Modifier.weight(1f).onPreviewKeyEvent { e ->
+                        if (e.type != KeyEventType.KeyDown || busy) return@onPreviewKeyEvent false
+                        val open = suggestions.isNotEmpty()
+                        val chosen = suggestions.getOrNull(selected)
+                        when {
+                            open && e.key == Key.DirectionDown -> { onMove(1); true }
+                            open && e.key == Key.DirectionUp -> { onMove(-1); true }
+                            open && e.key == Key.Escape -> { onDismiss(); true }
+                            // Enter picks from the menu, unless the box already says exactly that (then it runs).
+                            open && chosen != null && (e.key == Key.Tab || (e.key == Key.Enter && !e.isShiftPressed && Commands.complete(value, chosen).trim() != value.trim())) -> { onPick(chosen); true }
+                            e.key == Key.Enter && !e.isShiftPressed -> { onSend(); true }
+                            else -> false
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    placeholder = { Text("Give Venice a goal or feedback…   /  for commands   @  to mention", color = Forge.Dim) },
+                    enabled = !busy,
+                    maxLines = 6,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Forge.Well, unfocusedContainerColor = Forge.Well, disabledContainerColor = Forge.Well,
+                        focusedBorderColor = Forge.Acc, unfocusedBorderColor = Forge.Line, disabledBorderColor = Forge.Line,
+                        focusedTextColor = Forge.Fg, unfocusedTextColor = Forge.Fg, cursorColor = Forge.Acc,
+                    ),
+                    keyboardActions = KeyboardActions(onSend = { onSend() }),
+                )
+                Spacer(Modifier.width(8.dp))
+                TextButton(onClick = onAttach, enabled = !busy, modifier = Modifier.height(56.dp)) { Text("ATTACH", color = Forge.Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp) }
+                Spacer(Modifier.width(4.dp))
+                Button(
+                    onClick = onSend, enabled = !busy && (value.isNotBlank() || attachments.isNotEmpty()),
+                    modifier = Modifier.height(56.dp), shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Forge.Acc2, contentColor = Color.White,
+                        disabledContainerColor = Forge.Panel2, disabledContentColor = Forge.Dim),
+                ) { Text(if (busy) "Working" else "Send", fontWeight = FontWeight.SemiBold) }
+            }
+        }
     }
 }
 

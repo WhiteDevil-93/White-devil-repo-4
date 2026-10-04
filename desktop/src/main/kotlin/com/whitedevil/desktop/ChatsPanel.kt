@@ -36,8 +36,8 @@ private val whenFmt = DateTimeFormatter.ofPattern("d MMM, HH:mm").withZone(ZoneI
 
 /** Past Venice chats: search across all of them, open one, or delete it. */
 @Composable
-fun ChatsPanel(session: AgentSession, busy: Boolean, onClose: () -> Unit) {
-    var query by remember { mutableStateOf("") }
+fun ChatsPanel(session: AgentSession, busy: Boolean, onClose: () -> Unit, initialQuery: String = "") {
+    var query by remember { mutableStateOf(initialQuery) }
     var version by remember { mutableStateOf(0) }
     val shown = remember(query, version) { session.search(query) }
 
