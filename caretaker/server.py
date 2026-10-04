@@ -2,7 +2,9 @@
 
 Serves /caretaker/ (page) and /caretaker/api/* behind Caddy's renders_auth (same login as the app).
 Binds 127.0.0.1 only. Chat is READ-ONLY: the model sees facts + audit log and can explain; it cannot act.
-POSTs require the header X-Requested-With: caretaker so a cross-site form cannot trigger them.
+POSTs need either the header X-Requested-With: caretaker (the web page) or Content-Type: application/json
+(the desktop and other API clients). A cross-site HTML form can send neither, and a cross-site fetch with
+either one triggers a CORS preflight that this server never answers, so a malicious page cannot trigger them.
 """
 import json, threading, time, re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -94,8 +96,9 @@ class H(BaseHTTPRequestHandler):
         self._send(404, {"error": "not found"})
 
     def do_POST(self):
-        if self.headers.get("X-Requested-With") != "caretaker":
-            return self._send(403, {"error": "missing X-Requested-With"})
+        json_type = self.headers.get("Content-Type", "").split(";")[0].strip().lower() == "application/json"
+        if self.headers.get("X-Requested-With") != "caretaker" and not json_type:
+            return self._send(403, {"error": "send Content-Type: application/json (or X-Requested-With: caretaker)"})
         try:
             body = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length", 0)), 20000)) or b"{}")
         except Exception:
