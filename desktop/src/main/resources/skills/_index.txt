@@ -18,6 +18,7 @@ investigate-stalls
 last-copy-check
 lora-management
 ltx-prompting
+ltx-render-debugging
 mcp-connectors
 media-library-curation
 memory-curation
