@@ -492,6 +492,15 @@ def relabel(text, continuity, spec, men):
     return re.sub(r"(^|[.!?]\s+)the\b", lambda m: m.group(1) + "The", out)
 
 
+def plan_name(continuity, spec_raw, men=True):
+    """A run's name from its plan: clip 1's ACTION in words ("The man's shoulders broaden ..."), not the raw
+    "DURATION: 5 seconds" header that used to become the job name."""
+    m = re.search(r"(?im)^ACTION:\s*(.+)$", (spec_raw or "").replace("\r", ""))
+    text = relabel(m.group(1), continuity, spec_raw, men) if m else ""
+    text = re.sub(r"\s+", " ", text).strip().rstrip(".;,")
+    return (text[:57].rsplit(" ", 1)[0] + "…") if len(text) > 60 else (text or "chain")
+
+
 def compile_clip(key, continuity, spec, frame, image, men):
     """Gemma compiles exactly one clip. It does not see the rest of the story."""
     text, model = _compile_clip(key, continuity, spec, frame, image, men)
@@ -908,6 +917,7 @@ def write_part(key, job, i, frame_path):
                 raise RuntimeError(e.detail)
             job = load(job["id"])
             job["continuity"] = directed["continuity"]
+            job["brief"] = job.get("brief") or job.get("idea") or job.get("prompt") or ""
             job["idea"] = ""
             for p, spec in zip(job["parts"], directed["specs"]):
                 p["spec"] = spec
@@ -1045,9 +1055,12 @@ async def chain(image: Optional[UploadFile] = File(None), from_job: Optional[str
         raw.write_bytes(data)
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(raw), "-frames:v", "1", "-q:v", "2", str(d / "start.jpg")],
                        check=True, timeout=60)
-    name = ("more: " + src["name"]) if src else ((directed[1][0]["raw"][:60] if directed else lines[0]) if (directed or lines) else "chain")
+    name = ("more: " + src["name"]) if src else (
+        (plan_name(directed[0], directed[1][0]["raw"], men_only(directed[0])) if directed else lines[0]) if (directed or lines) else "chain")
     job = {"id": jid, "kind": "chain", "created": time.time(), "status": "queued",
            "idea": "" if directed else (idea.strip() if len(lines) <= 1 else ""),
+           # What was typed, kept for good: "idea" is cleared once a plan exists, and that lost the brief.
+           "brief": idea.strip()[:6000],
            "continuity": directed[0] if directed else "",
            "lines": lines if len(lines) > 1 else [], "parts": [{} for _ in range(parts)], "frames": frames, "size": size,
            "seed": seed if seed is not None else random.randint(1, 2**48), "opts": o,

@@ -97,3 +97,13 @@ def test_director_gets_room_for_seven_fields_per_clip(monkeypatch):
     monkeypatch.setattr(ltx, "ask", fake_ask)
     out = ltx.direct("k", "idea", "", 6, 121, True, None)
     assert len(out["specs"]) == 6 and budgets[0] >= 600 + 6 * 320
+
+
+def test_a_planned_run_is_named_after_what_happens():
+    raw = "DURATION: 5 seconds\r\nSTART STATE: Person A lies supine\r\nACTION: Person A's shoulders and upper chest visibly broaden with new muscle while cracks spread across the marble\r\nEND STATE: x"
+    name = ltx.plan_name("sole actor Person A adult male", raw, True)
+    assert name.startswith("The man's shoulders and upper chest visibly broaden") and name.endswith("…") and len(name) <= 60
+    assert "DURATION" not in name and "\r" not in name
+    assert ltx.plan_name("", "DURATION: 5 seconds", True) == "chain"
+    assert ltx.plan_name("Person A = the blond man; Person B = the dark-haired man",
+                         "ACTION: Person A kisses Person B", True) == "The blond man kisses the dark-haired man"
