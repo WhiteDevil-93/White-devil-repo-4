@@ -61,6 +61,13 @@ def choices(node, field):
     return spec[1].get("options", []) if spec[0] == "COMBO" else spec[0]
 
 
+def has_distill_built_in(unet):
+    """The distilled checkpoint and Stubelius beta 2 (distilled LoRA merged in, per its model card) must not get
+    LoRA 450 on top: that applies the distillation twice."""
+    u = (unet or "").lower()
+    return "distilled" in u or "beta2" in u
+
+
 def pick(options, *prefer):
     for p in prefer:
         for o in options:
@@ -215,7 +222,7 @@ def graph(image, prompt, frames, width, height, seed, opts, prefix, compression=
     loras = choices("LoraLoaderModelOnly", "lora_name")
     clips = choices("CLIPLoader", "clip_name")
     vaes = choices("VAELoader", "vae_name")
-    unet = opts["transformer"] if opts["transformer"] in unets else pick(unets, "Stubelius", "distilled")
+    unet = opts["transformer"] if opts["transformer"] in unets else pick(unets, "Stubelius_remix_beta2", "Stubelius", "distilled")
     clip = opts["clip"] if opts["clip"] in clips else pick(clips, "gemma4-12b-with-proj-ltx-2.5-bf16", "gemma4-12b")
     quality = [v for v in vaes if "video-vae" in v and "conv" not in v]
     vae = pick(vaes, "video-vae-conv") if opts["vae"] == "fast" else (quality[0] if quality else None)
@@ -258,7 +265,7 @@ def graph(image, prompt, frames, width, height, seed, opts, prefix, compression=
         g["27"] = {"class_type": "ImageFromBatch", "inputs": {"image": ["23", 0], "batch_index": frames - TAIL, "length": TAIL}}
         g["28"] = {"class_type": "SaveImage", "inputs": {"images": ["27", 0], "filename_prefix": prefix + "_tail"}}
     model = ["1", 0]
-    if "distilled" not in unet.lower() and opts["distill"] > 0:
+    if not has_distill_built_in(unet) and opts["distill"] > 0:
         lora450 = pick(loras, "distilled-lora-450")
         if lora450 and "distilled-lora" in lora450:
             g["2"] = {"class_type": "LoraLoaderModelOnly", "inputs": {"model": model, "lora_name": lora450,

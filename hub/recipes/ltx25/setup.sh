@@ -3,7 +3,7 @@
 # From the operator notes 2026-09-25: one transformer, LTX Gemma 4, 2.5 VAEs, distilled LoRA 450
 # on Stubelius, one sex LoRA, plus the full Lightricks Setup pack (8 IC + 2 control LoRAs).
 #
-#   TRANSFORMER=stubelius_b1 GEMMA=bf16 SEX_LORA=mylo \
+#   TRANSFORMER=stubelius_b2 GEMMA=bf16 SEX_LORA=mylo \
 #     setsid nohup bash setup.sh > logs/setup.log 2>&1 < /dev/null &
 #
 # Env:
@@ -25,7 +25,7 @@
 set -uo pipefail
 
 BASE="${BASE_DIR:-/workspace}"
-TRANSFORMER="${TRANSFORMER:-stubelius_b1}"
+TRANSFORMER="${TRANSFORMER:-stubelius_b2}"
 GEMMA="${GEMMA:-bf16}"
 SEX_LORA="${SEX_LORA:-all}"
 PACK_LORAS="${PACK_LORAS:-1}"
@@ -162,7 +162,8 @@ esac
 dl_ltx vae/ltx-2.5-video-vae-conv-bf16.safetensors vae &
 dl_ltx vae/ltx-2.5-video-vae-bf16.safetensors vae &
 dl_ltx vae/ltx-2.5-audio-vae-bf16.safetensors vae &
-[[ "$TRANSFORMER" == stubelius* ]] && dl_ltx loras/ltx-2.5-22b-distilled-lora-450-bf16.safetensors loras &
+# Beta 2 has the distilled LoRA merged in; only beta 1 needs it separately.
+[[ "$TRANSFORMER" == stubelius_b1 ]] && dl_ltx loras/ltx-2.5-22b-distilled-lora-450-bf16.safetensors loras &
 case "$SEX_LORA" in
   mylo)   dl "https://civitai.com/api/download/models/2774472${CIVITAI_TOKEN:+?token=$CIVITAI_TOKEN}" models/loras/ltx_mylo1337_i2v_nsfw_v2.safetensors & ;;
   sexgod) if [ -n "${CIVITAI_TOKEN:-}" ]; then

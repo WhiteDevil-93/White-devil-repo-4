@@ -189,3 +189,11 @@ def test_official_ic_loras_never_join_the_content_stack():
                                  ["penis-lora-by-coachbate-ltx-2.3.safetensors", 0.65]]})
     assert [n for n, s in o["loras"]] == ["penis-lora-by-coachbate-ltx-2.3.safetensors"]
     assert ltx.is_ic_lora("ltx-2.5-22b-ic-lora-deblur-0.9.safetensors") and not ltx.is_ic_lora("CGS23.safetensors")
+
+
+def test_beta2_is_preferred_and_gets_no_second_distilled_lora():
+    unets = ["ltx2.5-Stubelius_remix_beta1.safetensors", "ltx2.5-Stubelius_remix_beta2_bf16.safetensors"]
+    assert ltx.pick(unets, "Stubelius_remix_beta2", "Stubelius", "distilled") == unets[1]
+    assert ltx.has_distill_built_in("ltx2.5-Stubelius_remix_beta2_int8_convrot.safetensors")
+    assert ltx.has_distill_built_in("ltx-2.5-22b-distilled-transformer-bf16.safetensors")
+    assert not ltx.has_distill_built_in("ltx2.5-Stubelius_remix_beta1.safetensors")

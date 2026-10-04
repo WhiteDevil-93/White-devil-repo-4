@@ -44,15 +44,15 @@
       "key": "TRANSFORMER",
       "label": "Transformer",
       "type": "choice",
-      "default": "stubelius_b1",
+      "default": "stubelius_b2",
       "choices": [
         [
           "stubelius_b1",
-          "Stubelius Remix NSFW beta1 (recommended start)"
+          "Stubelius Remix beta1 (2D/anime-styled; needs distilled LoRA 450)"
         ],
         [
           "stubelius_b2",
-          "Stubelius Remix beta2 bf16 (newer)"
+          "Stubelius Remix beta2 bf16 (recommended: photoreal i2v, distilled LoRA built in)"
         ],
         [
           "stubelius_b2_int8",
