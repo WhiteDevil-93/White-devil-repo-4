@@ -14,6 +14,7 @@ Numbers (dataset sizes, steps, rank) follow Lightricks' LTX-2.5 character LoRA g
 time estimate is an ESTIMATE until a real run on the G4 measures it (see ESTIMATE_S_PER_STEP).
 Datasets live in ~/hub/lora_datasets/<id>/, runs in ~/hub/lora_runs/<rid>.json, trained LoRAs in ~/wan/lora_trained/.
 """
+import asyncio
 import base64
 import json
 import re
@@ -41,10 +42,15 @@ COLAB = str(Path.home() / ".local/bin/colab")
 REMOTE_BASE = "/content/workspace"
 HF_REPO = "WhiteDevil6969/forge-loras"
 
-IMAGE = {".jpg", ".jpeg", ".png", ".webp"}
-VIDEO = {".mp4", ".mov", ".webm", ".mkv"}
-MAX_FILE = 300 * 1024 * 1024
-MAX_FILES = 200
+# Any file is accepted. Media ffmpeg can read is normalised on the relay (clips -> 24 fps H.264 mp4 at most 1024 px
+# wide and 30 s, images -> JPEG at most 1536 px, animated GIF/WebP -> clips), .txt files are captions for the item
+# with the same name, .zip files are unpacked. Normalised files are small, so the upload to Colab stays reliable
+# (`colab upload` failed on a 1.3 GB file), and 24 fps matches the renders: Lightricks warns a LoRA trained at another
+# frame spacing ghosts.
+MAX_FILE = 25 * 1024 ** 3         # per uploaded file (a zip may hold many items); the relay's free disk is the real cap
+MAX_FILES = 300                   # items per dataset
+KEEP_FREE = 10 * 1024 ** 3        # relay disk left free
+CLIP_MAX_S = 30
 ID = re.compile(r"^[0-9a-f]{12}$")
 SAFE = re.compile(r"[^A-Za-z0-9_.-]+")
 ACTIVE = {"queued", "uploading", "training"}
@@ -105,9 +111,89 @@ def lora_name(name):
     return n or "my_lora"
 
 
-def media_kind(fname):
-    ext = Path(fname).suffix.lower()
-    return "image" if ext in IMAGE else "video" if ext in VIDEO else None
+def probe(path: Path):
+    """("image" | "video" | None, why). Decides by content, not by the file name."""
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=format_name,duration:stream=codec_type,nb_frames",
+                            "-of", "json", str(path)], capture_output=True, text=True, timeout=60)
+        info = json.loads(r.stdout or "{}")
+    except (subprocess.SubprocessError, OSError, ValueError):
+        return None, "ffprobe failed"
+    vids = [x for x in info.get("streams", []) if x.get("codec_type") == "video"]
+    if not vids:
+        return None, "not an image or video ffmpeg can read"
+    fmt = (info.get("format") or {}).get("format_name", "")
+    try:
+        frames = int(vids[0].get("nb_frames") or 0)
+    except ValueError:
+        frames = 0
+    try:
+        dur = float((info.get("format") or {}).get("duration") or 0)
+    except ValueError:
+        dur = 0.0
+    still_fmt = "_pipe" in fmt or "image2" in fmt or fmt in ("png", "bmp", "tiff")
+    if (still_fmt and frames <= 1) or (not still_fmt and dur < 0.3 and frames <= 1):
+        return "image", ""
+    return "video", ""
+
+
+def normalise(src: Path, out_stem: Path):
+    """Converts src into the training format next to out_stem. Returns (path, kind) or (None, why)."""
+    kind, why = probe(src)
+    if not kind:
+        return None, why
+    if kind == "image":
+        dst = out_stem.with_suffix(".jpg")
+        cmd = ["ffmpeg", "-v", "error", "-y", "-i", str(src), "-frames:v", "1",
+               "-vf", "scale='min(1536,iw)':-2:flags=lanczos,format=yuvj420p", "-q:v", "2", str(dst)]
+    else:
+        dst = out_stem.with_suffix(".mp4")
+        cmd = ["ffmpeg", "-v", "error", "-y", "-i", str(src), "-t", str(CLIP_MAX_S), "-an",
+               "-vf", "scale='min(1024,iw)':-2:flags=lanczos,fps=24,format=yuv420p",
+               "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-movflags", "+faststart", str(dst)]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+    except (subprocess.SubprocessError, OSError) as e:
+        return None, f"conversion failed ({e})"
+    if r.returncode != 0 or not dst.is_file() or dst.stat().st_size < 100:
+        dst.unlink(missing_ok=True)
+        return None, "conversion failed: " + ((r.stderr or "").strip().splitlines() or ["?"])[-1][:160]
+    return dst, kind
+
+
+def ingest(path: Path, name: str, media: Path, added, captions, skipped, depth=0):
+    """One uploaded file (already on disk) -> dataset items, captions or skips. Unpacks zips (one level of nesting)."""
+    ext = Path(name).suffix.lower()
+    stem = Path(name).stem
+    if ext == ".zip" and depth < 2:
+        import zipfile
+        try:
+            with zipfile.ZipFile(path) as z, tempfile.TemporaryDirectory(dir=media) as td:
+                for info in z.infolist():
+                    if info.is_dir() or "__MACOSX" in info.filename or Path(info.filename).name.startswith("."):
+                        continue
+                    if info.file_size > MAX_FILE:
+                        skipped.append(f"{info.filename}: over {MAX_FILE // 1024 ** 3} GB")
+                        continue
+                    out = Path(td) / secrets.token_hex(8)
+                    with z.open(info) as zf, out.open("wb") as fh:
+                        shutil.copyfileobj(zf, fh, 1024 * 1024)
+                    ingest(out, Path(info.filename).name, media, added, captions, skipped, depth + 1)
+                    out.unlink(missing_ok=True)
+        except zipfile.BadZipFile:
+            skipped.append(f"{name}: not a readable zip")
+        return
+    if ext in (".txt", ".caption"):
+        text = " ".join(path.read_text(encoding="utf-8", errors="replace").split())[:2000]
+        if text:
+            captions[stem.lower()] = text
+        return
+    base = SAFE.sub("_", stem)[:50] or "item"
+    out, kind = normalise(path, media / f"{base}_{secrets.token_hex(3)}")
+    if not out:
+        skipped.append(f"{name}: {kind}")
+        return
+    added.append({"file": out.name, "type": kind, "size": out.stat().st_size, "caption": "", "source": name})
 
 
 def checks(ds):
@@ -263,37 +349,52 @@ def delete_dataset(did: str):
 
 @router.post("/datasets/{did}/files")
 async def add_files(did: str, files: List[UploadFile] = File(...)):
+    """Any file type. See MAX_FILE / normalise() / ingest() for what happens to each."""
     d = ds_dir(did)
-    added, skipped = [], []
+    media = d / "media"
+    added, skipped, captions = [], [], {}
     for up in files:
-        kind = media_kind(up.filename or "")
-        if not kind:
-            skipped.append(f"{up.filename}: not an image (jpg/png/webp) or clip (mp4/mov/webm/mkv)")
+        name = Path(up.filename or "file").name
+        if shutil.disk_usage(media).free < KEEP_FREE:
+            skipped.append(f"{name}: the relay is low on disk space")
             continue
-        base = SAFE.sub("_", Path(up.filename).stem)[:50] or "item"
-        fname = f"{base}_{secrets.token_hex(3)}{Path(up.filename).suffix.lower()}"
-        dst = d / "media" / fname
+        raw = media / f".upload_{secrets.token_hex(6)}"
         size = 0
-        with dst.open("wb") as fh:
+        with raw.open("wb") as fh:
             while chunk := await up.read(1024 * 1024):
                 size += len(chunk)
-                if size > MAX_FILE:
+                if size > MAX_FILE or (size % (256 * 1024 ** 2) < len(chunk)
+                                       and shutil.disk_usage(media).free < KEEP_FREE):
                     break
                 fh.write(chunk)
-        if size > MAX_FILE:
-            dst.unlink(missing_ok=True)
-            skipped.append(f"{up.filename}: over {MAX_FILE // (1024 * 1024)} MB")
-            continue
-        added.append({"file": fname, "type": kind, "size": size, "caption": "", "source": up.filename})
+        try:
+            if size > MAX_FILE:
+                skipped.append(f"{name}: over {MAX_FILE // 1024 ** 3} GB")
+                continue
+            if shutil.disk_usage(media).free < KEEP_FREE:
+                skipped.append(f"{name}: the relay ran low on disk space during the upload")
+                continue
+            await asyncio.to_thread(ingest, raw, name, media, added, captions, skipped)
+        finally:
+            raw.unlink(missing_ok=True)
     with _lock:
         ds = load_ds(did)
         room = max(0, MAX_FILES - len(ds["items"]))
         for a in added[room:]:
-            (d / "media" / a["file"]).unlink(missing_ok=True)
+            (media / a["file"]).unlink(missing_ok=True)
             skipped.append(f"{a['source']}: the dataset is full ({MAX_FILES} items)")
-        ds["items"].extend(added[:max(0, room)])
+        ds["items"].extend(added[:room])
+        # .txt captions match items by the original file name, in this upload or an earlier one.
+        pending = {**ds.get("pending_captions", {}), **captions}
+        used = 0
+        for i in ds["items"]:
+            key = Path(i.get("source") or "").stem.lower()
+            if key in pending and not (i.get("caption") or "").strip():
+                i["caption"], i["caption_by"] = pending.pop(key), "caption file"
+                used += 1
+        ds["pending_captions"] = pending
         save_ds(ds)
-    return {"added": len(added[:max(0, room)]), "skipped": skipped, "dataset": view(ds)}
+    return {"added": len(added[:room]), "captions": used, "skipped": skipped, "dataset": view(ds)}
 
 
 @router.get("/datasets/{did}/files/{fname}")

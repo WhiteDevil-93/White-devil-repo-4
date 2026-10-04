@@ -15,6 +15,27 @@ from fastapi.testclient import TestClient
 import lora_train as lt
 import ltx
 
+pytestmark = pytest.mark.skipif(shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None,
+                                reason="uploads are converted with ffmpeg")
+
+
+def _media(args, suffix):
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / f"x{suffix}"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", *args, str(out)], check=True)
+        return out.read_bytes()
+
+
+if shutil.which("ffmpeg"):
+    JPG = _media(["-f", "lavfi", "-i", "color=c=red:s=64x48", "-frames:v", "1"], ".jpg")
+    PNG = _media(["-f", "lavfi", "-i", "color=c=blue:s=64x48", "-frames:v", "1"], ".png")
+    MP4 = _media(["-f", "lavfi", "-i", "testsrc=s=64x48:d=1:r=30", "-pix_fmt", "yuv420p"], ".mp4")
+    GIF = _media(["-f", "lavfi", "-i", "testsrc=s=64x48:d=1:r=10"], ".gif")
+    AVI = _media(["-f", "lavfi", "-i", "testsrc=s=64x48:d=1:r=25"], ".avi")
+else:
+    JPG = PNG = MP4 = GIF = AVI = b""
+
 
 @pytest.fixture()
 def env(tmp_path, monkeypatch):
@@ -31,11 +52,12 @@ def env(tmp_path, monkeypatch):
 
 def make(client, kind="character", n_img=0, n_vid=0, trigger="ohwx_man"):
     ds = client.post("/api/loratrain/datasets", json={"name": "Test Man", "kind": kind, "trigger": trigger}).json()
-    files = [("files", (f"pic{i}.jpg", b"\xff\xd8jpeg", "image/jpeg")) for i in range(n_img)]
-    files += [("files", (f"clip{i}.mp4", b"mp4data", "video/mp4")) for i in range(n_vid)]
+    files = [("files", (f"pic{i}.jpg", JPG, "image/jpeg")) for i in range(n_img)]
+    files += [("files", (f"clip{i}.mp4", MP4, "video/mp4")) for i in range(n_vid)]
     if files:
         r = client.post(f"/api/loratrain/datasets/{ds['id']}/files", files=files)
         assert r.status_code == 200, r.text
+        assert r.json()["added"] == n_img + n_vid, r.json()["skipped"]
     return client.get(f"/api/loratrain/datasets/{ds['id']}").json()
 
 
@@ -78,15 +100,45 @@ def test_motion_needs_video(env):
     assert ds["estimate"]["steps"] == 3000
 
 
-def test_upload_rejects_other_files_and_names_are_safe(env):
+def test_any_file_type_is_converted_or_explained(env):
     client, _ = env
     ds = make(client)
-    r = client.post(f"/api/loratrain/datasets/{ds['id']}/files",
-                    files=[("files", ("notes.txt", b"x", "text/plain")), ("files", ("my pic (1).PNG", b"png", "image/png"))]).json()
-    assert r["added"] == 1 and "notes.txt" in r["skipped"][0]
-    f = r["dataset"]["items"][0]["file"]
-    assert f.startswith("my_pic_1_") and f.endswith(".png")
-    assert client.get(f"/api/loratrain/datasets/{ds['id']}/files/{f}").content == b"png"
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("inside/frame.png", PNG)
+        z.writestr("inside/frame.txt", "the man waves, close-up")
+    r = client.post(f"/api/loratrain/datasets/{ds['id']}/files", files=[
+        ("files", ("notes.txt", b"orphan caption", "text/plain")),
+        ("files", ("my pic (1).PNG", PNG, "image/png")),
+        ("files", ("anim.gif", GIF, "image/gif")),
+        ("files", ("old.avi", AVI, "video/x-msvideo")),
+        ("files", ("junk.bin", b"\x00\x01 not media", "application/octet-stream")),
+        ("files", ("pack.zip", buf.getvalue(), "application/zip")),
+    ]).json()
+    assert r["added"] == 4, r
+    assert any("junk.bin" in m for m in r["skipped"])
+    items = {Path(i["source"]).name: i for i in r["dataset"]["items"]}
+    assert items["my pic (1).PNG"]["file"].startswith("my_pic_1_") and items["my pic (1).PNG"]["file"].endswith(".jpg")
+    assert items["anim.gif"]["type"] == "video" and items["anim.gif"]["file"].endswith(".mp4"), "animated gif -> clip"
+    assert items["old.avi"]["type"] == "video" and items["old.avi"]["file"].endswith(".mp4")
+    assert items["frame.png"]["caption"] == "the man waves, close-up", "a .txt is the caption of the same-named item"
+    assert r["captions"] == 1
+    fps = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v", "-show_entries", "stream=r_frame_rate",
+                          "-of", "csv=p=0", str(lt.DATASETS / ds["id"] / "media" / items["old.avi"]["file"])],
+                         capture_output=True, text=True).stdout.strip()
+    assert fps == "24/1", "clips are converted to the renders' 24 fps"
+    f = items["my pic (1).PNG"]["file"]
+    assert client.get(f"/api/loratrain/datasets/{ds['id']}/files/{f}").content[:2] == b"\xff\xd8"
+
+
+def test_a_caption_file_can_come_before_its_item(env):
+    client, _ = env
+    ds = make(client)
+    client.post(f"/api/loratrain/datasets/{ds['id']}/files", files=[("files", ("a1.txt", b"the man sits", "text/plain"))])
+    r = client.post(f"/api/loratrain/datasets/{ds['id']}/files", files=[("files", ("a1.jpg", JPG, "image/jpeg"))]).json()
+    assert r["dataset"]["items"][0]["caption"] == "the man sits"
 
 
 def test_train_refuses_an_unready_dataset(env):
@@ -164,6 +216,7 @@ def test_full_run_against_a_fake_colab(env, monkeypatch):
     assert names.count("train.sh") == 1 and names.count("env") == 1 and sum(n.endswith(".jpg") for n in names) == 20
     entries = next(u[1] for u in uploads if u[0] == "__json__")
     assert len(entries) == 20 and all(e["caption"] and e["video"].startswith("/content/workspace/train/runs/") for e in entries)
+    assert all(e["video"].endswith(".jpg") for e in entries)
     envtxt = next(u[1] for u in uploads if u[0] == "__env__")
     assert "export TRIGGER=ohwx_man" in envtxt and "export STEPS=2000" in envtxt and "export FF=1" in envtxt
     assert "HF_TOKEN=hf_fake" in envtxt
