@@ -197,3 +197,24 @@ def test_beta2_is_preferred_and_gets_no_second_distilled_lora():
     assert ltx.has_distill_built_in("ltx2.5-Stubelius_remix_beta2_int8_convrot.safetensors")
     assert ltx.has_distill_built_in("ltx-2.5-22b-distilled-transformer-bf16.safetensors")
     assert not ltx.has_distill_built_in("ltx2.5-Stubelius_remix_beta1.safetensors")
+
+
+def test_each_model_gets_its_own_prompt_order():
+    assert ltx.prompt_style("ltx-2.5-22b-distilled-transformer-bf16.safetensors") == "distilled"
+    assert ltx.prompt_style("ltx2.5-Stubelius_remix_beta2_bf16.safetensors") == "stubelius"
+    assert ltx.prompt_style(None) == "stubelius", "beta 2 is the default model"
+    assert ltx.prompt_style("ltx2.5-Stubelius_remix_beta2_bf16.safetensors", "distilled") == "distilled", "A/B override"
+    assert "open with the primary action" in ltx.COMPILER.replace("\n", " ")
+    sf = ltx.COMPILER_SCENE_FIRST.replace("\n", " ")
+    assert "first describe the starting scene" in sf and "open with the primary action" not in sf
+    assert "120-200 words" in sf and "No audio words" in sf
+    assert ltx.norm_opts({"prompt_style": "stubelius"})["prompt_style"] == "stubelius"
+    assert ltx.norm_opts({"prompt_style": "bogus"})["prompt_style"] == "auto"
+
+
+def test_the_compiler_is_picked_by_style(monkeypatch):
+    seen = []
+    monkeypatch.setattr(ltx, "ask", lambda key, system, *a, **k: (seen.append(system), ("ok", "m"))[1])
+    ltx._compile_clip("k", "", {"raw": ""}, "", None, False, "stubelius")
+    ltx._compile_clip("k", "", {"raw": ""}, "", None, False, "distilled")
+    assert seen[0].startswith(ltx.COMPILER_SCENE_FIRST[:40]) and "10Eros" in seen[0] and "10Eros" not in seen[1]

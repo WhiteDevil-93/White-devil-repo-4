@@ -110,6 +110,7 @@ def norm_opts(o):
     except (TypeError, ValueError):
         i2v = 0.55
     return {"transformer": o.get("transformer") or None, "loras": loras, "distill": distill, "i2v": i2v,
+            "prompt_style": o.get("prompt_style") if o.get("prompt_style") in PROMPT_STYLES else "auto",
             "vae": "fast" if o.get("vae") == "fast" else "quality", "clip": o.get("clip") or None,
             "writer": o.get("writer") if MODEL_ID.match(str(o.get("writer") or "")) else None}
 
@@ -386,6 +387,31 @@ End the paragraph with the continuity's STYLE line, word for word. The look neve
 concept art, painting or CGI, however fantastical the action.
 70-130 words, present tense, one paragraph. Reply with that paragraph only."""
 
+# Stubelius beta 2's model card points to the 10Eros / Sulphur 2 prompting guides (LTX 2.3 lineage): describe the
+# start image first (people, look, pose and composition, background, context), then every moving body part in order,
+# as a long directive script. The distilled checkpoint keeps the official / guide §54 order (primary action first).
+COMPILER_SCENE_FIRST = COMPILER.replace(
+    """Order (guide §54): open with the primary action; then who does it and their starting pose; the movement in order
+(initiation, movement, contact, result); important anatomy and object relationships; environment; camera; lighting;
+end on the end state.""",
+    """Order (10Eros / Sulphur guide, for Stubelius beta 2): first describe the starting scene in concise natural language:
+each person, their appearance, their composition and pose, the background and context. Then the scene evolves: describe
+every moving body part, composition change and manipulation in order (initiation, movement, contact, result), the
+camera, the lighting, and end on the end state. LTX has very little self-reasoning: anything not commanded will not
+happen.""").replace("70-130 words, present tense", "120-200 words, present tense")
+assert COMPILER_SCENE_FIRST != COMPILER and "10Eros" in COMPILER_SCENE_FIRST and "120-200 words" in COMPILER_SCENE_FIRST
+PROMPT_STYLES = {"distilled": "Action first (official distilled / LTX guide)",
+                 "stubelius": "Scene first (Stubelius beta 2 / 10Eros guide)"}
+
+
+def prompt_style(transformer, override=None):
+    """Which compiler a render gets: an explicit choice wins; else the official distilled checkpoint gets the
+    action-first order and everything else (Stubelius beta 2, the default) the scene-first order."""
+    if override in PROMPT_STYLES:
+        return override
+    return "distilled" if "distilled" in str(transformer or "").lower() else "stubelius"
+
+
 MEN = """
 EVERYONE IN THIS VIDEO IS A MAN. Write GAY male sex / male-only sex — never a woman, never female anatomy unless explicitly requested, never a
 hetero couple. If two or more people are in frame they are men having gay sex with each other; if one man, it is male
@@ -438,6 +464,8 @@ class Assist(BaseModel):
     parts: int = 1
     from_job: Optional[str] = None
     writer: Optional[str] = None
+    transformer: Optional[str] = None
+    prompt_style: Optional[str] = None
 
 
 CLIP_HEAD = re.compile(r"(?im)^CLIP\s+\d+\s*$")
@@ -483,10 +511,12 @@ def assist(a: Assist):
     if a.parts > 1 or a.from_job:
         return plan(key, a, idea, frame, men)
     directed = direct(key, idea, frame, 1, a.frames, men, a.writer, a.image)
-    text, model = compile_clip(key, directed["continuity"], directed["specs"][0], frame, a.image if a.image else None, men)
+    style = prompt_style(a.transformer, a.prompt_style)
+    text, model = compile_clip(key, directed["continuity"], directed["specs"][0], frame, a.image if a.image else None, men,
+                               style)
     if not text:
         raise HTTPException(502, f"Couldn't compile the prompt ({model}). Try different words.")
-    return {"prompt": fix_men(text) if men else text, "model": model, "frame": frame}
+    return {"prompt": fix_men(text) if men else text, "model": model, "frame": frame, "style": style}
 
 
 def direct(key, idea, frame, n, frames, men, writer, image=None):
@@ -575,15 +605,16 @@ def with_style(text, style):
     return text.rstrip() + " " + style
 
 
-def compile_clip(key, continuity, spec, frame, image, men):
-    """Gemma compiles exactly one clip. It does not see the rest of the story."""
-    text, model = _compile_clip(key, continuity, spec, frame, image, men)
+def compile_clip(key, continuity, spec, frame, image, men, style="distilled"):
+    """Gemma compiles exactly one clip. It does not see the rest of the story. style picks the prompt order
+    (prompt_style): "distilled" action first, "stubelius" scene first."""
+    text, model = _compile_clip(key, continuity, spec, frame, image, men, style)
     raw = spec.get("raw") or ""
     return (with_style(relabel(text, continuity, raw, men), style_of(continuity, raw)) if text else text), model
 
 
-def _compile_clip(key, continuity, spec, frame, image, men):
-    system = COMPILER + (MEN if men else "") + ("" if frame or image else
+def _compile_clip(key, continuity, spec, frame, image, men, style="distilled"):
+    system = (COMPILER_SCENE_FIRST if style == "stubelius" else COMPILER) + (MEN if men else "") + ("" if frame or image else
              "\nNo reference image. Use only the people and place named in the clip specification.")
     user = f"GLOBAL CONTINUITY STATE:\n{continuity or 'none'}\n\nCLIP SPECIFICATION:\n{spec.get('raw') or ''}\n\n" + \
         (f"REFERENCE IMAGE STATE:\n{frame}\n" if frame else "REFERENCE IMAGE STATE:\nnone\n")
@@ -1007,7 +1038,9 @@ def write_part(key, job, i, frame_path):
     if not spec:
         raise RuntimeError(f"No clip specification for part {i + 1}.")
     men = men_only(job.get("cast") or frame, spec.get("raw") or "")
-    text, model = compile_clip(key, job.get("continuity") or "", spec, frame, url or None, men)
+    o = job_opts(job)
+    text, model = compile_clip(key, job.get("continuity") or "", spec, frame, url or None, men,
+                               prompt_style(o.get("transformer") or job.get("transformer"), o.get("prompt_style")))
     if not text:
         raise RuntimeError(f"Couldn't compile part {i + 1} ({model}).")
     job = load(job["id"])

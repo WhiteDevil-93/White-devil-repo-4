@@ -279,7 +279,8 @@ async function assist(){
   try {
     // OpenRouter caption+plan can take well over the default 15s API timeout.
     const r = await F.post('/api/ltx/assist', {idea, frames, image: f ? await shrink(f) : null,
-      parts: chain ? parts : 1, from_job: cont ? cont.id : null, writer: O?.writer}, {timeout: 240000});
+      parts: chain ? parts : 1, from_job: cont ? cont.id : null, writer: O?.writer,
+      transformer: O?.transformer || null, prompt_style: O?.prompt_style || null}, {timeout: 240000});
     $('prompt').value = r.prompt; saveDraft(); $('prompt').style.height = 'auto'; $('prompt').style.height = $('prompt').scrollHeight + 'px';
   } catch (e) { F.toast(e.message); }
   b.disabled = false; b.textContent = label;
