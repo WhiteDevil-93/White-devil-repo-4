@@ -58,11 +58,55 @@ Permissions/budget gates share `agentic.store.permission_block` / `CONFIRM_TOOLS
 - Auth env: `HUB_FORWARD_AUTH_MODE`, `HUB_REQUIRE_ENROL_CODE`, `HUB_BASIC_AUTH_*`
 - Ports: hub 9000, Comfy tunnels 18288/18188, wanbot 18900/18901, laptop agent 18765
 
+## Cross-group consumers (inventory 2026-10-08)
+
+### Who talks to hub how
+
+| Client | Chat / tool loop | Hub transport |
+|--------|------------------|---------------|
+| `hub/static/venice/` | Browser loop: `POST /api/venice/chat` + `POST /api/venice/tool`; tools from `GET /api/venice/tools`; `run_in_terminal` → gate then `POST /api/term/paste` | same-origin Basic via Caddy |
+| `shared` ToolBox (Android Agent, Desktop Agent, venice-agent tools) | Chat goes to **api.venice.ai** directly; tools hit hub `/api/*` via Basic `relayHttp` | definitions **local** in Tools.kt — not `/api/venice/tools` |
+| `venice-agent` | Same shared pattern + local shell tools | env `RELAY_BASE_URL` / `RELAY_PASS` |
+| `laptop-app` | Embeds hub pages; probes `http://127.0.0.1:43173/api/manifest` | injects Basic on hub host |
+| `android` native hub screens | Direct GETs to status/colab/media/setup/thunder/ltx/hypno/vast/… | `RelayHttp` Basic user `wan` |
+| `desktop` ops screens | Typed models for colab/thunder/ltx/vast/setup/media + device auth | `OpsHttp` / `HubAuthClient` |
+| `tools/deploy_hub.sh` | `GET /api/manifest` only (checks `failed_modules`, `apk_version`, `web_rev`) | local curl on relay |
+
+### Verified contracts (OK)
+
+- Shared LTX queue uses `POST /api/ltx/render` with `Content-Type: application/x-www-form-urlencoded` (Tools.kt ~618–623) — matches hub Form endpoint.
+- Hub also exposes `POST /api/ltx/render-json` for JSON clients.
+- Setup UI uses `/api/setup/*` (catalog/preview/chat/runs) — matches setup.py + setupbot.py dual mount under prefix `/api/setup`.
+- Static colab only calls `recover` and `stop-runtime` (no dead pause/resume buttons in current HTML).
+- Deploy script only **GETs** manifest (does not POST).
+
+### Defects / mismatches still open
+
+| PRODUCER | CONTRACT | CONSUMER | MISMATCH | OWNER |
+|----------|----------|----------|----------|-------|
+| hub AGENT_TOOLS (19) | full catalog via `/api/venice/tools` | shared Tools.kt (~13 names) | no `run_in_terminal`, `upload_to_colab`, `remember`, subagents, `transcribe_audio` on native | shared/ |
+| hub `run_in_terminal` | `{paste:true}` + term paste | shared / venice-agent | never paste; no `/api/term/paste` | shared/ |
+| hub chat tools | server execute | native agents | tools run on-device; chat bypasses hub | by design; document |
+| Android “vast” native screen | labeled Vast | MainActivity fetch | uses **`GET /api/thunder/queue`** for vast tab data | android/ |
+| Android skill markdown | documents `/api/colab/pause\|resume` etc. | skills → hub_request | several skill paths not real routes | android assets |
+| hub `hub_request` | loopback `:9000` | hub tools under TestClient | fails without live uvicorn | hub/ (design) |
+| laptop-app preload | `window.whiteDevil.pickMedia` | hub venice page | not exposed → file input fallback | laptop-app/ |
+| Auth | device tokens | product routes | `require_device` unused; Basic still edge | hub auth migration |
+
+### Agent architecture note
+
+There are **two** agent runtimes against the same hub:
+
+1. **Hub web Venice** — definitions and execution on the relay (`/api/venice/tools` + `/tool`).
+2. **Native/shared** — definitions in Kotlin; execution on device with hub used only as an HTTP tool backend for studio ops.
+
+Parity work must treat these as separate catalogs unless intentionally unified.
+
 ## Refactor guidance
 
 - Targeted: shared OpenRouter client; optional in-process hub calls instead of loopback HTTP for tools.
 - No major rewrite required for auth/mount/agentic gates.
-- Cross-group: align Android tool catalog with hub if native parity is required.
+- Cross-group: align Android/shared tool catalog with hub if native parity is required; fix Android vast-tab data source; scrub skill path fiction.
 
 ## Verification commands
 
