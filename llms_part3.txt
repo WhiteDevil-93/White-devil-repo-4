@@ -1,0 +1,3056 @@
+# a:\New folder (4)\white-devil-repo-4\llms - Part 3 of 3
+
+### laptop-app\node_modules\lodash\flattenDeep.js
+Functions: flattenDeep
+
+### laptop-app\node_modules\lodash\flattenDepth.js
+Functions: flattenDepth
+
+### laptop-app\node_modules\lodash\flip.js
+Functions: flip
+
+### laptop-app\node_modules\lodash\flow.js
+Functions: square
+
+### laptop-app\node_modules\lodash\flowRight.js
+Functions: square
+
+### laptop-app\node_modules\lodash\forEach.js
+Functions: forEach
+
+### laptop-app\node_modules\lodash\forEachRight.js
+Functions: forEachRight
+
+### laptop-app\node_modules\lodash\forIn.js
+Functions: Foo, forIn
+
+### laptop-app\node_modules\lodash\forInRight.js
+Functions: Foo, forInRight
+
+### laptop-app\node_modules\lodash\forOwn.js
+Functions: Foo, forOwn
+
+### laptop-app\node_modules\lodash\forOwnRight.js
+Functions: Foo, forOwnRight
+
+### laptop-app\node_modules\lodash\fp\_baseConvert.js
+Functions: baseArity, baseAry, cloneArray, createCloner, flatSpread, wrapImmutable, baseConvert, castCap, castCurry, castFixed, castRearg, cloneByPath, convertLib, createConverter, iterateeAry, iterateeRearg, overArg, wrap
+
+### laptop-app\node_modules\lodash\fp\_convertBrowser.js
+Functions: browserConvert
+
+### laptop-app\node_modules\lodash\fp\convert.js
+Functions: convert
+
+### laptop-app\node_modules\lodash\fromPairs.js
+Functions: fromPairs
+
+### laptop-app\node_modules\lodash\functions.js
+Functions: Foo, functions
+
+### laptop-app\node_modules\lodash\functionsIn.js
+Functions: Foo, functionsIn
+
+### laptop-app\node_modules\lodash\get.js
+Functions: get
+
+### laptop-app\node_modules\lodash\has.js
+Functions: has
+
+### laptop-app\node_modules\lodash\hasIn.js
+Functions: hasIn
+
+### laptop-app\node_modules\lodash\head.js
+Functions: head
+
+### laptop-app\node_modules\lodash\identity.js
+Functions: identity
+
+### laptop-app\node_modules\lodash\inRange.js
+Functions: inRange
+
+### laptop-app\node_modules\lodash\includes.js
+Functions: includes
+
+### laptop-app\node_modules\lodash\indexOf.js
+Functions: indexOf
+
+### laptop-app\node_modules\lodash\initial.js
+Functions: initial
+
+### laptop-app\node_modules\lodash\isArrayLike.js
+Functions: isArrayLike
+
+### laptop-app\node_modules\lodash\isArrayLikeObject.js
+Functions: isArrayLikeObject
+
+### laptop-app\node_modules\lodash\isBoolean.js
+Functions: isBoolean
+
+### laptop-app\node_modules\lodash\isElement.js
+Functions: isElement
+
+### laptop-app\node_modules\lodash\isEmpty.js
+Functions: isEmpty
+
+### laptop-app\node_modules\lodash\isEqual.js
+Functions: isEqual
+
+### laptop-app\node_modules\lodash\isEqualWith.js
+Functions: isGreeting, customizer, isEqualWith
+
+### laptop-app\node_modules\lodash\isError.js
+Functions: isError
+
+### laptop-app\node_modules\lodash\isFinite.js
+Functions: isFinite
+
+### laptop-app\node_modules\lodash\isFunction.js
+Functions: isFunction
+
+### laptop-app\node_modules\lodash\isInteger.js
+Functions: isInteger
+
+### laptop-app\node_modules\lodash\isLength.js
+Functions: isLength
+
+### laptop-app\node_modules\lodash\isMatch.js
+Functions: isMatch
+
+### laptop-app\node_modules\lodash\isMatchWith.js
+Functions: isGreeting, customizer, isMatchWith
+
+### laptop-app\node_modules\lodash\isNaN.js
+Functions: isNaN
+
+### laptop-app\node_modules\lodash\isNative.js
+Functions: isNative
+
+### laptop-app\node_modules\lodash\isNil.js
+Functions: isNil
+
+### laptop-app\node_modules\lodash\isNull.js
+Functions: isNull
+
+### laptop-app\node_modules\lodash\isNumber.js
+Functions: isNumber
+
+### laptop-app\node_modules\lodash\isObject.js
+Functions: isObject
+
+### laptop-app\node_modules\lodash\isObjectLike.js
+Functions: isObjectLike
+
+### laptop-app\node_modules\lodash\isPlainObject.js
+Functions: Foo, isPlainObject
+
+### laptop-app\node_modules\lodash\isSafeInteger.js
+Functions: isSafeInteger
+
+### laptop-app\node_modules\lodash\isString.js
+Functions: isString
+
+### laptop-app\node_modules\lodash\isSymbol.js
+Functions: isSymbol
+
+### laptop-app\node_modules\lodash\isUndefined.js
+Functions: isUndefined
+
+### laptop-app\node_modules\lodash\isWeakMap.js
+Functions: isWeakMap
+
+### laptop-app\node_modules\lodash\isWeakSet.js
+Functions: isWeakSet
+
+### laptop-app\node_modules\lodash\iteratee.js
+Functions: iteratee
+
+### laptop-app\node_modules\lodash\join.js
+Functions: join
+
+### laptop-app\node_modules\lodash\keys.js
+Functions: Foo, keys
+
+### laptop-app\node_modules\lodash\keysIn.js
+Functions: Foo, keysIn
+
+### laptop-app\node_modules\lodash\last.js
+Functions: last
+
+### laptop-app\node_modules\lodash\lastIndexOf.js
+Functions: lastIndexOf
+
+### laptop-app\node_modules\lodash\lodash.js
+Functions: apply, arrayAggregator, arrayEach, arrayEachRight, arrayEvery, arrayFilter, arrayIncludes, arrayIncludesWith, arrayMap, arrayPush, arrayReduce, arrayReduceRight, arraySome, asciiToArray, asciiWords, baseFindKey, baseFindIndex, baseIndexOf, baseIndexOfWith, baseIsNaN, baseMean, baseProperty, basePropertyOf, baseReduce, baseSortBy, baseSum, baseTimes, baseToPairs, baseTrim, baseUnary, baseValues, cacheHas, charsStartIndex, charsEndIndex, countHolders, escapeStringChar, getValue, hasUnicode, hasUnicodeWord, iteratorToArray, mapToArray, overArg, replaceHolders, setToArray, setToPairs, strictIndexOf, strictLastIndexOf, stringSize, stringToArray, trimmedEndIndex, unicodeSize, unicodeToArray, unicodeWords, runInContext, square, lodash, object, baseLodash, LodashWrapper, LazyWrapper, lazyClone, lazyReverse, lazyValue, Hash, hashClear, hashDelete, hashGet, hashHas, hashSet, ListCache, listCacheClear, listCacheDelete, listCacheGet, listCacheHas, listCacheSet, MapCache, mapCacheClear, mapCacheDelete, mapCacheGet, mapCacheHas, mapCacheSet, SetCache, setCacheAdd, setCacheHas, Stack, stackClear, stackDelete, stackGet, stackHas, stackSet, arrayLikeKeys, arraySample, arraySampleSize, arrayShuffle, assignMergeValue, assignValue, assocIndexOf, baseAggregator, baseAssign, baseAssignIn, baseAssignValue, baseAt, baseClamp, baseClone, baseConforms, baseConformsTo, baseDelay, baseDifference, baseEvery, baseExtremum, baseFill, baseFilter, baseFlatten, baseForOwn, baseForOwnRight, baseFunctions, baseGet, baseGetAllKeys, baseGetTag, baseGt, baseHas, baseHasIn, baseInRange, baseIntersection, baseInverter, baseInvoke, baseIsArguments, baseIsArrayBuffer, baseIsDate, baseIsEqual, baseIsEqualDeep, baseIsMap, baseIsMatch, baseIsNative, baseIsRegExp, baseIsSet, baseIsTypedArray, baseIteratee, baseKeys, baseKeysIn, baseLt, baseMap, baseMatches, baseMatchesProperty, baseMerge, baseMergeDeep, baseNth, baseOrderBy, basePick, basePickBy, basePropertyDeep, basePullAll, basePullAt, baseRandom, baseRange, baseRepeat, baseRest, baseSample, baseSampleSize, baseSet, baseShuffle, baseSlice, baseSome, baseSortedIndex, baseSortedIndexBy, baseSortedUniq, baseToNumber, baseToString, baseUniq, baseUnset, baseUpdate, baseWhile, baseWrapperValue, baseXor, baseZipObject, castArrayLikeObject, castFunction, castPath, castSlice, cloneBuffer, cloneArrayBuffer, cloneDataView, cloneRegExp, cloneSymbol, cloneTypedArray, compareAscending, compareMultiple, composeArgs, composeArgsRight, copyArray, copyObject, copySymbols, copySymbolsIn, createAggregator, createAssigner, createBaseEach, createBaseFor, createBind, wrapper, createCaseFirst, createCompounder, createCtor, createCurry, wrapper, createFind, createFlow, createHybrid, wrapper, createInverter, createMathOperation, createOver, createPadding, createPartial, wrapper, createRange, createRelationalOperation, createRecurry, createRound, createToPairs, createWrap, customDefaultsAssignIn, customDefaultsMerge, customOmitClone, equalArrays, equalByTag, equalObjects, flatRest, getAllKeys, getAllKeysIn, getFuncName, getHolder, getIteratee, getMapData, getMatchData, getNative, getRawTag, getView, getWrapDetails, hasPath, initCloneArray, initCloneObject, initCloneByTag, insertWrapDetails, isFlattenable, isIndex, isIterateeCall, isKey, isKeyable, isLaziable, isMasked, isPrototype, isStrictComparable, matchesStrictComparable, memoizeCapped, mergeData, nativeKeysIn, objectToString, overRest, parent, reorder, safeGet, setWrapToString, shortOut, shuffleSelf, toKey, toSource, updateWrapDetails, wrapperClone, chunk, compact, concat, drop, dropRight, dropRightWhile, dropWhile, fill, findIndex, findLastIndex, flatten, flattenDeep, flattenDepth, fromPairs, head, indexOf, initial, join, last, lastIndexOf, nth, pullAll, pullAllBy, pullAllWith, remove, reverse, slice, sortedIndex, sortedIndexBy, sortedIndexOf, sortedLastIndex, sortedLastIndexBy, sortedLastIndexOf, sortedUniq, sortedUniqBy, tail, take, takeRight, takeRightWhile, takeWhile, uniq, uniqBy, uniqWith, unzip, unzipWith, zipObject, zipObjectDeep, chain, tap, thru, wrapperChain, wrapperCommit, wrapperNext, wrapperToIterator, square, wrapperPlant, wrapperReverse, wrapperValue, every, filter, duplicate, flatMap, duplicate, flatMapDeep, duplicate, flatMapDepth, forEach, forEachRight, includes, square, map, orderBy, reduce, reduceRight, reject, sample, sampleSize, shuffle, size, some, after, ary, before, greet, curry, curryRight, debounce, invokeFunc, leadingEdge, remainingWait, shouldInvoke, timerExpired, trailingEdge, cancel, flush, debounced, flip, memoize, isEven, negate, once, doubled, square, greet, greet, rest, spread, throttle, unary, wrap, castArray, clone, customizer, cloneWith, cloneDeep, customizer, cloneDeepWith, conformsTo, eq, isArrayLike, isArrayLikeObject, isBoolean, isElement, isEmpty, isEqual, isGreeting, customizer, isEqualWith, isError, isFinite, isFunction, isInteger, isLength, isObject, isObjectLike, isMatch, isGreeting, customizer, isMatchWith, isNaN, isNative, isNull, isNil, isNumber, Foo, isPlainObject, isSafeInteger, isString, isSymbol, isUndefined, isWeakMap, isWeakSet, toArray, toFinite, toInteger, toLength, toNumber, Foo, toPlainObject, toSafeInteger, toString, Foo, Bar, Foo, Bar, customizer, customizer, Shape, Circle, create, findKey, findLastKey, Foo, forIn, Foo, forInRight, Foo, forOwn, Foo, forOwnRight, Foo, functions, Foo, functionsIn, get, has, hasIn, Foo, keys, Foo, keysIn, mapKeys, mapValues, customizer, omitBy, pickBy, result, set, setWith, Foo, Foo, transform, unset, update, updateWith, Foo, values, Foo, valuesIn, clamp, inRange, random, capitalize, deburr, endsWith, escape, escapeRegExp, pad, padEnd, padStart, parseInt, repeat, replace, split, startsWith, template, print, toLower, toUpper, trim, trimEnd, trimStart, truncate, unescape, words, cond, conforms, constant, defaultTo, square, square, identity, iteratee, matches, matchesProperty, vowels, mixin, noConflict, noop, nthArg, property, propertyOf, stubArray, stubFalse, stubObject, stubString, stubTrue, times, toPath, uniqueId, max, maxBy, mean, meanBy, min, minBy, sum, sumBy
+
+### laptop-app\node_modules\lodash\lodash.min.js
+Functions: n, t, r, e, u, i, o, f, c, a, l, s, h, p, _, v, g, y, d, b, w, m, x, j, A, k, I, O, R, z, E, S, W, L, C, U, B, T, D, M, F, N, P, q, Z, K, V, G, H, J, Y, Q, p, Z, J, Y, Ut, Dt, Qt, Xt, nr, tr, rr, er, ur, ir, or, fr, cr, ar, lr, sr, hr, pr, _r, vr, gr, yr, dr, br, wr, mr, xr, jr, Ar, kr, Ir, Or, Rr, zr, Er, Sr, Wr, Lr, Cr, Ur, Br, Tr, Fr, Nr, Pr, qr, Gr, Hr, Jr, Yr, ne, te, ee, ue, oe, fe, _e, de, we, me, xe, je, Ae, ke, Ie, Oe, Re, ze, Ee, Se, We, Le, Ce, Ue, Be, Te, De, Me, Fe, Ne, Pe, qe, Ze, Ke, Ve, Ge, He, Je, Ye, Qe, Xe, nu, tu, ru, eu, uu, iu, ou, fu, cu, au, lu, su, hu, pu, _u, vu, gu, yu, du, bu, wu, mu, xu, ju, Au, ku, Iu, Ou, Ru, zu, Eu, Su, Wu, Lu, Cu, Uu, Bu, Tu, Du, Mu, Fu, Nu, Pu, qu, Zu, e, Ku, Vu, Gu, Hu, u, Ju, Yu, Qu, l, Xu, ni, ti, ri, ei, i, ui, ii, oi, fi, ci, ai, li, si, hi, pi, _i, vi, gi, yi, di, bi, wi, mi, xi, ji, Ai, ki, Ii, Oi, Ri, zi, Ei, Si, Wi, Li, Ci, Ui, Bi, Ti, Di, Mi, Fi, Ni, Pi, qi, Zi, Ki, Vi, Gi, Hi, Ji, Yi, Qi, Xi, no, to, ro, eo, uo, io, oo, fo, co, ao, lo, so, ho, po, _o, vo, go, yo, bo, wo, mo, xo, jo, Ao, ko, Io, Oo, Ro, zo, Eo, So, Wo, Lo, Co, Uo, Bo, To, Do, Mo, Fo, No, Po, qo, Zo, Ko, Vo, Go, Ho, Jo, Yo, Qo, Xo, nf, tf, rf, ef, uf, of, ff, cf, af, lf, sf, hf, pf, _f, vf, gf, yf, df, bf, wf, mf, xf, jf, Af, kf, If, Of, Rf, zf, Ef, Sf, Wf, e, u, i, o, f, c, a, l, s, Lf, Cf, Uf, Bf, Tf, Df, Mf, Ff, Nf, Pf, qf, Zf, Kf, Vf, Gf, Hf, Jf, Yf, Qf, Xf, nc, tc, rc, ec, uc, ic, oc, fc, cc, ac, lc, sc, hc, pc, _c, vc, gc, yc, dc, bc, wc, mc, xc, jc, Ac, kc, Ic, Oc, Rc, zc, Ec, Sc, Wc, Lc, Cc, Uc, Bc, Tc, Dc, Mc, Fc, Nc, Pc, qc, Zc, Kc, Vc, Gc, Hc, Jc, Yc, Qc, Xc, na, ta, ra, ea, ua, ia, oa, fa, ca, aa, la, sa, ha, pa, _a, va, ga, ya, da, ba, wa, print, ma, xa, ja, Aa, ka, Ia, Oa, Ra, za, Ea, Sa, Wa, La, Ca, Ua, Ba, Ta, Da, Ma, Fa, Na, Pa, qa, Za, Ka, Va, Ga, Ha, Ja, Ya, Qa, Xa, nl, tl, rl, el, ul, n
+
+### laptop-app\node_modules\lodash\map.js
+Functions: square, map
+
+### laptop-app\node_modules\lodash\mapKeys.js
+Functions: mapKeys
+
+### laptop-app\node_modules\lodash\mapValues.js
+Functions: mapValues
+
+### laptop-app\node_modules\lodash\matches.js
+Functions: matches
+
+### laptop-app\node_modules\lodash\matchesProperty.js
+Functions: matchesProperty
+
+### laptop-app\node_modules\lodash\max.js
+Functions: max
+
+### laptop-app\node_modules\lodash\maxBy.js
+Functions: maxBy
+
+### laptop-app\node_modules\lodash\mean.js
+Functions: mean
+
+### laptop-app\node_modules\lodash\meanBy.js
+Functions: meanBy
+
+### laptop-app\node_modules\lodash\memoize.js
+Functions: memoize
+
+### laptop-app\node_modules\lodash\mergeWith.js
+Functions: customizer
+
+### laptop-app\node_modules\lodash\min.js
+Functions: min
+
+### laptop-app\node_modules\lodash\minBy.js
+Functions: minBy
+
+### laptop-app\node_modules\lodash\mixin.js
+Functions: vowels, mixin
+
+### laptop-app\node_modules\lodash\negate.js
+Functions: isEven, negate
+
+### laptop-app\node_modules\lodash\next.js
+Functions: wrapperNext
+
+### laptop-app\node_modules\lodash\noop.js
+Functions: noop
+
+### laptop-app\node_modules\lodash\nth.js
+Functions: nth
+
+### laptop-app\node_modules\lodash\nthArg.js
+Functions: nthArg
+
+### laptop-app\node_modules\lodash\omitBy.js
+Functions: omitBy
+
+### laptop-app\node_modules\lodash\once.js
+Functions: once
+
+### laptop-app\node_modules\lodash\orderBy.js
+Functions: orderBy
+
+### laptop-app\node_modules\lodash\overArgs.js
+Functions: doubled, square
+
+### laptop-app\node_modules\lodash\pad.js
+Functions: pad
+
+### laptop-app\node_modules\lodash\padEnd.js
+Functions: padEnd
+
+### laptop-app\node_modules\lodash\padStart.js
+Functions: padStart
+
+### laptop-app\node_modules\lodash\parseInt.js
+Functions: parseInt
+
+### laptop-app\node_modules\lodash\partial.js
+Functions: greet
+
+### laptop-app\node_modules\lodash\partialRight.js
+Functions: greet
+
+### laptop-app\node_modules\lodash\pickBy.js
+Functions: pickBy
+
+### laptop-app\node_modules\lodash\plant.js
+Functions: square, wrapperPlant
+
+### laptop-app\node_modules\lodash\property.js
+Functions: property
+
+### laptop-app\node_modules\lodash\propertyOf.js
+Functions: propertyOf
+
+### laptop-app\node_modules\lodash\pullAll.js
+Functions: pullAll
+
+### laptop-app\node_modules\lodash\pullAllBy.js
+Functions: pullAllBy
+
+### laptop-app\node_modules\lodash\pullAllWith.js
+Functions: pullAllWith
+
+### laptop-app\node_modules\lodash\random.js
+Functions: random
+
+### laptop-app\node_modules\lodash\reduce.js
+Functions: reduce
+
+### laptop-app\node_modules\lodash\reduceRight.js
+Functions: reduceRight
+
+### laptop-app\node_modules\lodash\reject.js
+Functions: reject
+
+### laptop-app\node_modules\lodash\remove.js
+Functions: remove
+
+### laptop-app\node_modules\lodash\repeat.js
+Functions: repeat
+
+### laptop-app\node_modules\lodash\replace.js
+Functions: replace
+
+### laptop-app\node_modules\lodash\rest.js
+Functions: rest
+
+### laptop-app\node_modules\lodash\result.js
+Functions: result
+
+### laptop-app\node_modules\lodash\reverse.js
+Functions: reverse
+
+### laptop-app\node_modules\lodash\sample.js
+Functions: sample
+
+### laptop-app\node_modules\lodash\sampleSize.js
+Functions: sampleSize
+
+### laptop-app\node_modules\lodash\set.js
+Functions: set
+
+### laptop-app\node_modules\lodash\setWith.js
+Functions: setWith
+
+### laptop-app\node_modules\lodash\shuffle.js
+Functions: shuffle
+
+### laptop-app\node_modules\lodash\size.js
+Functions: size
+
+### laptop-app\node_modules\lodash\slice.js
+Functions: slice
+
+### laptop-app\node_modules\lodash\some.js
+Functions: some
+
+### laptop-app\node_modules\lodash\sortedIndex.js
+Functions: sortedIndex
+
+### laptop-app\node_modules\lodash\sortedIndexBy.js
+Functions: sortedIndexBy
+
+### laptop-app\node_modules\lodash\sortedIndexOf.js
+Functions: sortedIndexOf
+
+### laptop-app\node_modules\lodash\sortedLastIndex.js
+Functions: sortedLastIndex
+
+### laptop-app\node_modules\lodash\sortedLastIndexBy.js
+Functions: sortedLastIndexBy
+
+### laptop-app\node_modules\lodash\sortedLastIndexOf.js
+Functions: sortedLastIndexOf
+
+### laptop-app\node_modules\lodash\sortedUniq.js
+Functions: sortedUniq
+
+### laptop-app\node_modules\lodash\sortedUniqBy.js
+Functions: sortedUniqBy
+
+### laptop-app\node_modules\lodash\split.js
+Functions: split
+
+### laptop-app\node_modules\lodash\spread.js
+Functions: spread
+
+### laptop-app\node_modules\lodash\startsWith.js
+Functions: startsWith
+
+### laptop-app\node_modules\lodash\stubArray.js
+Functions: stubArray
+
+### laptop-app\node_modules\lodash\stubFalse.js
+Functions: stubFalse
+
+### laptop-app\node_modules\lodash\stubObject.js
+Functions: stubObject
+
+### laptop-app\node_modules\lodash\stubString.js
+Functions: stubString
+
+### laptop-app\node_modules\lodash\stubTrue.js
+Functions: stubTrue
+
+### laptop-app\node_modules\lodash\sum.js
+Functions: sum
+
+### laptop-app\node_modules\lodash\sumBy.js
+Functions: sumBy
+
+### laptop-app\node_modules\lodash\tail.js
+Functions: tail
+
+### laptop-app\node_modules\lodash\take.js
+Functions: take
+
+### laptop-app\node_modules\lodash\takeRight.js
+Functions: takeRight
+
+### laptop-app\node_modules\lodash\takeRightWhile.js
+Functions: takeRightWhile
+
+### laptop-app\node_modules\lodash\takeWhile.js
+Functions: takeWhile
+
+### laptop-app\node_modules\lodash\tap.js
+Functions: tap
+
+### laptop-app\node_modules\lodash\template.js
+Functions: template, print
+
+### laptop-app\node_modules\lodash\throttle.js
+Functions: throttle
+
+### laptop-app\node_modules\lodash\thru.js
+Functions: thru
+
+### laptop-app\node_modules\lodash\times.js
+Functions: times
+
+### laptop-app\node_modules\lodash\toArray.js
+Functions: toArray
+
+### laptop-app\node_modules\lodash\toFinite.js
+Functions: toFinite
+
+### laptop-app\node_modules\lodash\toInteger.js
+Functions: toInteger
+
+### laptop-app\node_modules\lodash\toIterator.js
+Functions: wrapperToIterator
+
+### laptop-app\node_modules\lodash\toLength.js
+Functions: toLength
+
+### laptop-app\node_modules\lodash\toLower.js
+Functions: toLower
+
+### laptop-app\node_modules\lodash\toNumber.js
+Functions: toNumber
+
+### laptop-app\node_modules\lodash\toPairs.js
+Functions: Foo
+
+### laptop-app\node_modules\lodash\toPairsIn.js
+Functions: Foo
+
+### laptop-app\node_modules\lodash\toPath.js
+Functions: toPath
+
+### laptop-app\node_modules\lodash\toPlainObject.js
+Functions: Foo, toPlainObject
+
+### laptop-app\node_modules\lodash\toSafeInteger.js
+Functions: toSafeInteger
+
+### laptop-app\node_modules\lodash\toString.js
+Functions: toString
+
+### laptop-app\node_modules\lodash\toUpper.js
+Functions: toUpper
+
+### laptop-app\node_modules\lodash\transform.js
+Functions: transform
+
+### laptop-app\node_modules\lodash\trim.js
+Functions: trim
+
+### laptop-app\node_modules\lodash\trimEnd.js
+Functions: trimEnd
+
+### laptop-app\node_modules\lodash\trimStart.js
+Functions: trimStart
+
+### laptop-app\node_modules\lodash\truncate.js
+Functions: truncate
+
+### laptop-app\node_modules\lodash\unary.js
+Functions: unary
+
+### laptop-app\node_modules\lodash\unescape.js
+Functions: unescape
+
+### laptop-app\node_modules\lodash\uniq.js
+Functions: uniq
+
+### laptop-app\node_modules\lodash\uniqBy.js
+Functions: uniqBy
+
+### laptop-app\node_modules\lodash\uniqWith.js
+Functions: uniqWith
+
+### laptop-app\node_modules\lodash\uniqueId.js
+Functions: uniqueId
+
+### laptop-app\node_modules\lodash\unset.js
+Functions: unset
+
+### laptop-app\node_modules\lodash\unzip.js
+Functions: unzip
+
+### laptop-app\node_modules\lodash\unzipWith.js
+Functions: unzipWith
+
+### laptop-app\node_modules\lodash\update.js
+Functions: update
+
+### laptop-app\node_modules\lodash\updateWith.js
+Functions: updateWith
+
+### laptop-app\node_modules\lodash\values.js
+Functions: Foo, values
+
+### laptop-app\node_modules\lodash\valuesIn.js
+Functions: Foo, valuesIn
+
+### laptop-app\node_modules\lodash\words.js
+Functions: words
+
+### laptop-app\node_modules\lodash\wrap.js
+Functions: wrap
+
+### laptop-app\node_modules\lodash\wrapperChain.js
+Functions: wrapperChain
+
+### laptop-app\node_modules\lodash\wrapperLodash.js
+Functions: square, lodash
+
+### laptop-app\node_modules\lodash\wrapperReverse.js
+Functions: wrapperReverse
+
+### laptop-app\node_modules\lodash\wrapperValue.js
+Functions: wrapperValue
+
+### laptop-app\node_modules\lodash\zipObject.js
+Functions: zipObject
+
+### laptop-app\node_modules\lodash\zipObjectDeep.js
+Functions: zipObjectDeep
+
+### laptop-app\node_modules\lru-cache\index.js
+Functions: naiveLength, get, isStale, trim, del, forEachStep
+
+### laptop-app\node_modules\matcher\index.js
+Functions: makeRegexp
+
+### laptop-app\node_modules\math-intrinsics\isFinite.d.ts
+Functions: isFinite
+
+### laptop-app\node_modules\math-intrinsics\isFinite.js
+Functions: isFinite
+
+### laptop-app\node_modules\math-intrinsics\isInteger.d.ts
+Functions: isInteger
+
+### laptop-app\node_modules\math-intrinsics\isInteger.js
+Functions: isInteger
+
+### laptop-app\node_modules\math-intrinsics\isNaN.js
+Functions: isNaN
+
+### laptop-app\node_modules\math-intrinsics\isNegativeZero.d.ts
+Functions: isNegativeZero
+
+### laptop-app\node_modules\math-intrinsics\isNegativeZero.js
+Functions: isNegativeZero
+
+### laptop-app\node_modules\math-intrinsics\mod.d.ts
+Functions: mod
+
+### laptop-app\node_modules\math-intrinsics\mod.js
+Functions: mod
+
+### laptop-app\node_modules\math-intrinsics\sign.d.ts
+Functions: sign
+
+### laptop-app\node_modules\math-intrinsics\sign.js
+Functions: sign
+
+### laptop-app\node_modules\mime-types\index.js
+Functions: charset, contentType, extension, lookup, populateMaps, forEachMimeType
+
+### laptop-app\node_modules\mime\Mime.js
+Functions: Mime
+
+### laptop-app\node_modules\minimatch\dist\commonjs\assert-valid-pattern.js
+Functions: assertValidPattern
+
+### laptop-app\node_modules\minimatch\dist\commonjs\ast.js
+Functions: isExtglobType, isExtglobAST, regExpEscape, deslash
+
+### laptop-app\node_modules\minimatch\dist\commonjs\brace-expressions.js
+Functions: braceEscape, regexpEscape, rangesToString, parseClass
+
+### laptop-app\node_modules\minimatch\dist\commonjs\escape.js
+Functions: escape
+
+### laptop-app\node_modules\minimatch\dist\commonjs\index.js
+Functions: minimatch, starDotExtTest, starDotExtTestDot, starDotExtTestNocase, starDotExtTestNocaseDot, starDotStarTest, starDotStarTestDot, dotStarTest, starTest, starTestDot, qmarksTestNocase, qmarksTestNocaseDot, qmarksTestDot, qmarksTest, qmarksTestNoExt, qmarksTestNoExtDot, filter, ext, defaults, m, braceExpand, makeRe, match, regExpEscape
+
+### laptop-app\node_modules\minimatch\dist\commonjs\unescape.js
+Functions: unescape
+
+### laptop-app\node_modules\minimatch\dist\esm\assert-valid-pattern.js
+Functions: assertValidPattern
+
+### laptop-app\node_modules\minimatch\dist\esm\ast.js
+Functions: isExtglobType, isExtglobAST, regExpEscape, deslash
+
+### laptop-app\node_modules\minimatch\dist\esm\brace-expressions.js
+Functions: braceEscape, regexpEscape, rangesToString, parseClass
+
+### laptop-app\node_modules\minimatch\dist\esm\escape.js
+Functions: escape
+
+### laptop-app\node_modules\minimatch\dist\esm\index.js
+Functions: minimatch, starDotExtTest, starDotExtTestDot, starDotExtTestNocase, starDotExtTestNocaseDot, starDotStarTest, starDotStarTestDot, dotStarTest, starTest, starTestDot, qmarksTestNocase, qmarksTestNocaseDot, qmarksTestDot, qmarksTest, qmarksTestNoExt, qmarksTestNoExtDot, filter, ext, defaults, m, braceExpand, makeRe, match, regExpEscape
+
+### laptop-app\node_modules\minimatch\dist\esm\unescape.js
+Functions: unescape
+
+### laptop-app\node_modules\minimist\index.js
+Functions: hasKey, isNumber, isConstructorOrProto, aliasIsBoolean, argDefined, setKey, setArg
+
+### laptop-app\node_modules\minimist\test\proto.js
+Functions: fnToBeTested
+
+### laptop-app\node_modules\minimist\test\unknown.js
+Functions: unknownFn, unknownFn, unknownFn, unknownFn, unknownFn
+
+### laptop-app\node_modules\minipass\dist\commonjs\index.js
+Functions: isStream, isReadable, isWritable, defer, nodefer, isEndish, isArrayBufferLike, isArrayBufferView, isObjectModeOptions, isEncodingOptions, stop, next, onerr, ondata, onend, ondestroy, stop, next
+
+### laptop-app\node_modules\minipass\dist\esm\index.js
+Functions: isStream, isReadable, isWritable, defer, nodefer, isEndish, isArrayBufferLike, isArrayBufferView, isObjectModeOptions, isEncodingOptions, stop, next, onerr, ondata, onend, ondestroy, stop, next
+
+### laptop-app\node_modules\minizlib\dist\commonjs\index.js
+Functions: noop
+
+### laptop-app\node_modules\minizlib\dist\esm\index.js
+Functions: noop
+
+### laptop-app\node_modules\mkdirp\bin\cmd.js
+Functions: next, cb
+
+### laptop-app\node_modules\mkdirp\index.js
+Functions: mkdirP, sync
+
+### laptop-app\node_modules\ms\index.js
+Functions: parse, fmtShort, fmtLong, plural
+
+### laptop-app\node_modules\node-abi\getNextTarget.js
+Functions: getNextTarget
+
+### laptop-app\node_modules\node-abi\index.js
+Functions: getAbi, getTarget, sortByTargetFn, loadGeneratedTargets
+
+### laptop-app\node_modules\node-abi\node_modules\semver\bin\semver.js
+Functions: main, failInc, fail, help
+
+### laptop-app\node_modules\node-abi\node_modules\semver\classes\range.js
+Functions: isNullSet, isAny, isSatisfiable, parseComparator, isX, invalidXRangeOrder, replaceTildes, replaceTilde, replaceCarets, replaceCaret, replaceXRanges, replaceXRange, replaceStars, replaceGTE0, hyphenReplace, testSet
+
+### laptop-app\node_modules\node-abi\node_modules\semver\classes\semver.js
+Functions: isPrereleaseIdentifier
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\clean.js
+Functions: clean
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\cmp.js
+Functions: cmp
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\coerce.js
+Functions: coerce
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\compare-build.js
+Functions: compareBuild
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\compare-loose.js
+Functions: compareLoose
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\compare.js
+Functions: compare
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\diff.js
+Functions: diff
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\eq.js
+Functions: eq
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\gt.js
+Functions: gt
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\gte.js
+Functions: gte
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\inc.js
+Functions: inc
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\lt.js
+Functions: lt
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\lte.js
+Functions: lte
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\major.js
+Functions: major
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\minor.js
+Functions: minor
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\neq.js
+Functions: neq
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\parse.js
+Functions: parse
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\patch.js
+Functions: patch
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\prerelease.js
+Functions: prerelease
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\rcompare.js
+Functions: rcompare
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\rsort.js
+Functions: rsort
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\satisfies.js
+Functions: satisfies
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\sort.js
+Functions: sort
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\truncate.js
+Functions: truncate, cloneInputVersion, doTruncation, isPrerelease
+
+### laptop-app\node_modules\node-abi\node_modules\semver\functions\valid.js
+Functions: valid
+
+### laptop-app\node_modules\node-abi\node_modules\semver\internal\identifiers.js
+Functions: compareIdentifiers, rcompareIdentifiers
+
+### laptop-app\node_modules\node-abi\node_modules\semver\internal\parse-options.js
+Functions: parseOptions
+
+### laptop-app\node_modules\node-abi\node_modules\semver\internal\re.js
+Functions: makeSafeRegex, createToken
+
+### laptop-app\node_modules\node-abi\node_modules\semver\ranges\gtr.js
+Functions: gtr
+
+### laptop-app\node_modules\node-abi\node_modules\semver\ranges\intersects.js
+Functions: intersects
+
+### laptop-app\node_modules\node-abi\node_modules\semver\ranges\ltr.js
+Functions: ltr
+
+### laptop-app\node_modules\node-abi\node_modules\semver\ranges\max-satisfying.js
+Functions: maxSatisfying
+
+### laptop-app\node_modules\node-abi\node_modules\semver\ranges\min-satisfying.js
+Functions: minSatisfying
+
+### laptop-app\node_modules\node-abi\node_modules\semver\ranges\min-version.js
+Functions: minVersion
+
+### laptop-app\node_modules\node-abi\node_modules\semver\ranges\outside.js
+Functions: outside
+
+### laptop-app\node_modules\node-abi\node_modules\semver\ranges\subset.js
+Functions: subset, simpleSubset, higherGT, lowerLT
+
+### laptop-app\node_modules\node-abi\node_modules\semver\ranges\to-comparators.js
+Functions: toComparators
+
+### laptop-app\node_modules\node-abi\node_modules\semver\ranges\valid.js
+Functions: validRange
+
+### laptop-app\node_modules\node-api-version\index.js
+Functions: fromNodeVersion, fromElectronVersion
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\bin\semver.js
+Functions: main, failInc, fail, help
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\classes\range.js
+Functions: isNullSet, isAny, isSatisfiable, parseComparator, isX, invalidXRangeOrder, replaceTildes, replaceTilde, replaceCarets, replaceCaret, replaceXRanges, replaceXRange, replaceStars, replaceGTE0, hyphenReplace, testSet
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\classes\semver.js
+Functions: isPrereleaseIdentifier
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\clean.js
+Functions: clean
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\cmp.js
+Functions: cmp
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\coerce.js
+Functions: coerce
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\compare-build.js
+Functions: compareBuild
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\compare-loose.js
+Functions: compareLoose
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\compare.js
+Functions: compare
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\diff.js
+Functions: diff
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\eq.js
+Functions: eq
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\gt.js
+Functions: gt
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\gte.js
+Functions: gte
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\inc.js
+Functions: inc
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\lt.js
+Functions: lt
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\lte.js
+Functions: lte
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\major.js
+Functions: major
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\minor.js
+Functions: minor
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\neq.js
+Functions: neq
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\parse.js
+Functions: parse
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\patch.js
+Functions: patch
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\prerelease.js
+Functions: prerelease
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\rcompare.js
+Functions: rcompare
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\rsort.js
+Functions: rsort
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\satisfies.js
+Functions: satisfies
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\sort.js
+Functions: sort
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\truncate.js
+Functions: truncate, cloneInputVersion, doTruncation, isPrerelease
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\functions\valid.js
+Functions: valid
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\internal\identifiers.js
+Functions: compareIdentifiers, rcompareIdentifiers
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\internal\parse-options.js
+Functions: parseOptions
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\internal\re.js
+Functions: makeSafeRegex, createToken
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\ranges\gtr.js
+Functions: gtr
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\ranges\intersects.js
+Functions: intersects
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\ranges\ltr.js
+Functions: ltr
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\ranges\max-satisfying.js
+Functions: maxSatisfying
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\ranges\min-satisfying.js
+Functions: minSatisfying
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\ranges\min-version.js
+Functions: minVersion
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\ranges\outside.js
+Functions: outside
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\ranges\subset.js
+Functions: subset, simpleSubset, higherGT, lowerLT
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\ranges\to-comparators.js
+Functions: toComparators
+
+### laptop-app\node_modules\node-api-version\node_modules\semver\ranges\valid.js
+Functions: validRange
+
+### laptop-app\node_modules\node-api-version\types.d.ts
+Functions: fromNodeVersion, fromElectronVersion
+
+### laptop-app\node_modules\node-gyp\bin\node-gyp.js
+Functions: run, errorMessage, issueMessage
+
+### laptop-app\node_modules\node-gyp\gyp\gyp_main.py
+Functions: IsCygwin, UnixifyPath
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\MSVSNew.py
+Functions: cmp, MakeGuid, __cmp__, __init__, get_guid, __init__, set_dependencies, get_guid, set_msbuild_toolset, __init__, Write
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\MSVSProject.py
+Functions: __init__, _GetSpecification, __init__, __init__, AddToolFile, _GetSpecForConfiguration, AddConfig, _AddFilesToNode, AddFiles, AddFileConfig, WriteIfChanged
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\MSVSSettings.py
+Functions: _AddTool, _GetMSBuildToolSettings, _Same, _Renamed, _Moved, _MovedAndRenamed, _MSVSOnly, _MSBuildOnly, _ConvertedToAdditionalOption, _CustomGeneratePreprocessedFile, _ValidateExclusionSetting, FixVCMacroSlashes, ConvertVCMacrosToMSBuild, ConvertToMSBuildSettings, ValidateMSVSSettings, ValidateMSBuildSettings, _ValidateSettings, __init__, ValidateMSVS, ValidateMSBuild, ConvertToMSBuild, ValidateMSVS, ValidateMSBuild, ConvertToMSBuild, ValidateMSVS, ValidateMSBuild, ConvertToMSBuild, _Validate, ValidateMSVS, ValidateMSBuild, ConvertToMSBuild, __init__, ValidateMSVS, ValidateMSBuild, ConvertToMSBuild, __init__, ValidateMSVS, ValidateMSBuild, ConvertToMSBuild, _Translate, _Translate, _Translate, _Translate, _Translate, _Translate
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\MSVSSettings_test.py
+Functions: setUp, _ExpectedWarnings, testValidateMSVSSettings_tool_names, testValidateMSVSSettings_settings, testValidateMSBuildSettings_settings, testConvertToMSBuildSettings_empty, testConvertToMSBuildSettings_minimal, testConvertToMSBuildSettings_warnings, testConvertToMSBuildSettings_full_synthetic, testConvertToMSBuildSettings_actual
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\MSVSToolFile.py
+Functions: __init__, AddCustomBuildRule, WriteIfChanged
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\MSVSUserFile.py
+Functions: _FindCommandInPath, _QuoteWin32CommandLineArgs, __init__, AddConfig, AddDebugSettings, WriteIfChanged
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\MSVSUtil.py
+Functions: _GetLargePdbShimCcPath, _DeepCopySomeKeys, _SuffixName, _ShardName, ShardTargets, _GetPdbPath, InsertLargePdbShims
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\MSVSVersion.py
+Functions: JoinPath, _RegistryQueryBase, _RegistryQuery, _RegistryGetValueUsingWinReg, _RegistryGetValue, _CreateVersion, _ConvertToCygpath, _DetectVisualStudioVersions, SelectVisualStudioVersion, __init__, ShortName, Description, SolutionVersion, ProjectVersion, FlatSolution, UsesVcxproj, ProjectExtension, Path, ToolPath, DefaultToolset, _SetupScriptInternal, SetupScript
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\__init__.py
+Functions: EscapeForCString, DebugOutput, FindBuildFiles, Load, NameValueListToDict, ShlexEnv, FormatOpt, RegenerateAppendFlag, RegenerateFlags, gyp_main, main, script_main, FixPath, Noop, __init__, add_argument, parse_args
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\common.py
+Functions: ExceptionAppend, FindQualifiedTargets, ParseQualifiedTarget, ResolveTarget, BuildFile, GetEnvironFallback, QualifiedTarget, RelativePath, InvertRelativePath, FixIfRelativePath, UnrelativePath, EncodePOSIXShellArgument, EncodePOSIXShellList, DeepDependencyTargets, BuildFileTargets, AllTargets, WriteOnDiff, EnsureDirExists, GetCompilerPredefines, GetFlavorByPlatform, GetFlavor, CopyTool, uniquer, TopologicallySorted, CrossCompileRequested, IsCygwin, __init__, __call__, replace_sep, __init__, __len__, __contains__, add, discard, __iter__, __reversed__, pop, __repr__, __eq__, update, __init__, __str__, Visit, __init__, __getattr__, close, write
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\common_test.py
+Functions: test_Valid, test_Cycle, setUp, tearDown, assertFlavor, test_platform_default, test_param, test_GetCompilerPredefines, GetEdge, GetEdge, __init__, decode, mock_run
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\easy_xml.py
+Functions: XmlToString, _ConstructContentList, WriteXmlIfChanged, _XmlEscape, replace
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\easy_xml_test.py
+Functions: setUp, test_EasyXml_simple, test_EasyXml_simple_with_attributes, test_EasyXml_escaping, test_EasyXml_pretty, test_EasyXml_complex
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\flock_tool.py
+Functions: main, Dispatch, _CommandifyName, ExecFlock
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\analyzer.py
+Functions: _ToGypPath, _ResolveParent, _AddSources, _ExtractSourcesFromAction, _ToLocalPath, _ExtractSources, _WasBuildFileModified, _GetOrCreateTargetByName, _DoesTargetTypeRequireBuild, _GenerateTargets, _GetUnqualifiedToTargetMapping, _DoesTargetDependOnMatchingTargets, _GetTargetsDependingOnMatchingTargets, _AddCompileTargets, _GetCompileTargets, _WriteOutput, _WasGypIncludeFileModified, _NamesNotIn, _LookupTargets, CalculateVariables, GenerateOutput, __init__, __init__, Init, __init__, _supplied_target_names, _supplied_target_names_no_all, is_build_impacted, find_matching_test_target_names, find_matching_compile_target_names
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\android.py
+Functions: IsCPPExtension, Sourceify, PerformBuild, GenerateOutput, __init__, Write, WriteActions, WriteRules, WriteCopies, WriteSourceFlags, WriteSources, ComputeAndroidModule, ComputeOutputParts, ComputeOutputBasename, ComputeOutput, NormalizeIncludePaths, ExtractIncludesFromCFlags, FilterLibraries, ComputeDeps, WriteTargetFlags, WriteTarget, WriteList, WriteLn, LocalPathify, ExpandInputRoot, CalculateMakefilePath
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\cmake.py
+Functions: RemovePrefix, CalculateVariables, Compilable, Linkable, NormjoinPathForceCMakeSource, NormjoinPath, CMakeStringEscape, SetFileProperty, SetFilesProperty, SetTargetProperty, SetVariable, SetVariableList, UnsetVariable, WriteVariable, StringToCMakeTargetName, WriteActions, NormjoinRulePathForceCMakeSource, WriteRules, WriteCopies, CreateCMakeTargetBaseName, CreateCMakeTargetFullName, WriteTarget, GenerateOutputForConfig, PerformBuild, CallGenerateOutputForConfig, GenerateOutput, __init__, __init__, CreateCMakeTargetName, __init__
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\compile_commands_json.py
+Functions: IsMac, CalculateVariables, AddCommandsForTarget, GenerateOutput, PerformBuild, resolve
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\dump_dependency_json.py
+Functions: CalculateVariables, CalculateGeneratorInputInfo, GenerateOutput
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\eclipse.py
+Functions: CalculateVariables, CalculateGeneratorInputInfo, GetAllIncludeDirectories, GetCompilerPath, GetAllDefines, WriteIncludePaths, WriteMacros, GenerateOutputForConfig, GenerateCdtSettingsFile, GenerateClasspathFile, GetJavaJars, GetJavaSourceDirs, GenerateOutput, AddElements
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\gypd.py
+Functions: GenerateOutput
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\gypsh.py
+Functions: GenerateOutput
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\make.py
+Functions: CalculateVariables, CalculateGeneratorInputInfo, WriteRootHeaderSuffixRules, Compilable, Linkable, Target, EscapeShellArgument, EscapeMakeVariableExpansion, EscapeCppDefine, QuoteIfNecessary, replace_sep, StringToMakefileVariable, Sourceify, QuoteSpaces, SourceifyAndQuoteSpaces, WriteAutoRegenerationRule, PerformBuild, GenerateOutput, __init__, Write, WriteSubMake, WriteActions, WriteRules, WriteCopies, WriteMacBundleResources, WriteMacInfoPlist, WriteSources, WritePchTargets, ComputeOutputBasename, _InstallImmediately, ComputeOutput, ComputeMacBundleOutput, ComputeMacBundleBinaryOutput, ComputeDeps, GetSharedObjectFromSidedeck, GetUnversionedSidedeckFromSidedeck, WriteDependencyOnExtraOutputs, WriteTarget, WriteList, WriteDoCmd, WriteMakeRule, WriteAndroidNdkModuleRule, WriteLn, GetSortedXcodeEnv, GetSortedXcodePostbuildEnv, WriteSortedXcodeEnv, Objectify, Pchify, Absolutify, ExpandInputRoot, _InstallableTargetInstallPath, CalculateMakefilePath, DepsToModules
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\msvs.py
+Functions: _GetDomainAndUserName, _NormalizedSource, _FixPath, _IsWindowsAbsPath, _FixPaths, _ConvertSourcesToFilterHierarchy, _ToolAppend, _ToolSetOrAppend, _ConfigTargetVersion, _ConfigPlatform, _ConfigBaseName, _ConfigFullName, _ConfigWindowsTargetPlatformVersion, _BuildCommandLineForRuleRaw, _BuildCommandLineForRule, _AddActionStep, _AddCustomBuildToolForMSVS, _AddAccumulatedActionsToMSVS, _RuleExpandPath, _FindRuleTriggerFiles, _RuleInputsAndOutputs, _GenerateNativeRulesForMSVS, _Cygwinify, _GenerateExternalRules, _EscapeEnvironmentVariableExpansion, _EscapeCommandLineArgumentForMSVS, _EscapeVCProjCommandLineArgListItem, _EscapeCppDefineForMSVS, _EscapeCommandLineArgumentForMSBuild, _EscapeMSBuildSpecialCharacters, _EscapeCppDefineForMSBuild, _GenerateRulesForMSVS, _AdjustSourcesForRules, _FilterActionsFromExcluded, _GetDefaultConfiguration, _GetGuidOfProject, _GetMsbuildToolsetOfProject, _GenerateProject, _GenerateMSVSProject, _GetUniquePlatforms, _CreateMSVSUserFile, _GetMSVSConfigurationType, _AddConfigurationToMSVSProject, _GetIncludeDirs, _GetLibraryDirs, _GetLibraries, _GetOutputFilePathAndTool, _GetOutputTargetExt, _GetDefines, _GetDisabledWarnings, _GetModuleDefinition, _ConvertToolsToExpectedForm, _AddConfigurationToMSVS, _GetMSVSAttributes, _AddNormalizedSources, _PrepareListOfSources, _AdjustSourcesAndConvertToFilterHierarchy, _IdlFilesHandledNonNatively, _GetPrecompileRelatedFiles, _ExcludeFilesFromBeingBuilt, _GetExcludedFilesFromBuild, _AddToolFilesToMSVS, _HandlePreCompiledHeaders, _AddActions, _WriteMSVSUserFile, _AddCopies, _GetCopies, _GetPathDict, _DictsToFolders, _CollapseSingles, _GatherSolutionFolders, _GetPathOfProject, _GetPlatformOverridesOfProject, _CreateProjectObjects, _InitNinjaFlavor, CalculateVariables, PerformBuild, CalculateGeneratorInputInfo, GenerateOutput, _GenerateMSBuildFiltersFile, _AppendFiltersForMSBuild, _MapFileToMsBuildSourceType, _GenerateRulesForMSBuild, _GenerateMSBuildRulePropsFile, _GenerateMSBuildRuleTargetsFile, _GenerateMSBuildRuleXmlFile, _GetConfigurationAndPlatform, _GetConfigurationCondition, _GetMSBuildProjectConfigurations, _GetMSBuildGlobalProperties, _GetMSBuildConfigurationDetails, _GetMSBuildLocalProperties, _GetMSBuildPropertySheets, _ConvertMSVSBuildAttributes, _ConvertMSVSCharacterSet, _ConvertMSVSConfigurationType, _GetMSBuildAttributes, _GetMSBuildConfigurationGlobalProperties, _AddConditionalProperty, _GetMSBuildPropertyGroup, _GetMSBuildToolSettingsSections, _FinalizeMSBuildSettings, _GetValueFormattedForMSBuild, _VerifySourcesExist, _GetMSBuildSources, _AddSources2, _GetMSBuildProjectReferences, _GenerateMSBuildProject, _GetMSBuildExternalBuilderTargets, _GetMSBuildExtensions, _GetMSBuildExtensionTargets, _GenerateActionsForMSBuild, _AddMSBuildAction, _Replace, _Replace, _Replace, DisableForSourceTree, __init__, GetEdges, fixup_host_exe
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\msvs_test.py
+Functions: setUp, test_GetLibraries
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\ninja.py
+Functions: StripPrefix, QuoteShellArgument, Define, AddArch, CalculateVariables, ComputeOutputDir, CalculateGeneratorInputInfo, OpenOutput, CommandWithWrapper, GetDefaultConcurrentLinks, _GetWinLinkRuleNameSuffix, _AddWinLinkRules, GenerateOutputForConfig, GenerateCompileDBWithNinja, PerformBuild, CallGenerateOutputForConfig, GenerateOutput, __init__, Linkable, UsesToc, PreActionInput, PreCompileInput, FinalOutput, __init__, ExpandSpecial, ExpandRuleVariables, GypPathToNinja, GypPathToUniqueOutput, WriteCollapsedDependencies, _SubninjaNameForArch, WriteSpec, _WinIdlRule, WriteWinIdlFiles, WriteActionsRulesCopies, GenerateDescription, WriteActions, WriteRules, WriteCopies, WriteiOSFrameworkHeaders, WriteMacBundleResources, WriteMacXCassets, WriteMacInfoPlist, WriteSources, WriteSourcesForArch, WritePchTargets, WriteLink, WriteLinkForArch, WriteTarget, WriteMacBundle, GetToolchainEnv, GetMsvsToolchainEnv, GetSortedXcodeEnv, GetSortedXcodePostbuildEnv, AppendPostbuildVariable, GetPostbuildCommand, ComputeExportEnvString, ComputeMacBundleOutput, ComputeOutputFileName, ComputeOutput, WriteVariableList, WriteNewNinjaRule, FullLinkCommand, fix_path, cygwin_munge
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\ninja_test.py
+Functions: _has_visual_studio, test_BinaryNamesWindows, test_BinaryNamesLinux, test_GenerateCompileDBWithNinja
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\xcode.py
+Functions: CreateXCConfigurationList, AddSourceToTarget, AddResourceToTarget, AddHeaderToTarget, ExpandXcodeVariables, EscapeXcodeDefine, PerformBuild, CalculateGeneratorInputInfo, GenerateOutput, __init__, Finalize1, Finalize2, Write
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\generator\xcode_test.py
+Functions: test_InheritedRemainsUnescaped, test_Escaping
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\input.py
+Functions: IsPathSection, GetIncludedBuildFiles, CheckedEval, CheckNode, LoadOneBuildFile, LoadBuildFileIncludesIntoDict, LoadBuildFileIncludesIntoList, ProcessToolsetsInDict, LoadTargetBuildFile, CallLoadTargetBuildFile, LoadTargetBuildFilesParallel, FindEnclosingBracketGroup, IsStrCanonicalInt, FixupPlatformCommand, ExpandVariables, EvalCondition, EvalSingleCondition, ProcessConditionsInDict, LoadAutomaticVariablesFromDict, LoadVariablesFromVariablesDict, ProcessVariablesAndConditionsInDict, ProcessVariablesAndConditionsInList, BuildTargetsDict, QualifyDependencies, ExpandWildcardDependencies, Unify, RemoveDuplicateDependencies, Filter, RemoveSelfDependencies, RemoveLinkDependenciesFromNoneTargets, BuildDependencyList, VerifyNoGYPFileCircularDependencies, DoDependentSettings, AdjustStaticLibraryDependencies, MakePathRelative, MergeLists, MergeDicts, MergeConfigWithInheritance, SetUpConfigurations, ProcessListFiltersInDict, ProcessListFiltersInList, ValidateTargetType, ValidateRulesInTarget, ValidateRunAsInTarget, ValidateActionsInTarget, TurnIntIntoStrInDict, TurnIntIntoStrInList, PruneUnwantedTargets, VerifyNoCollidingTargets, SetGeneratorGlobals, Load, __init__, LoadTargetBuildFileCallback, __init__, __repr__, FlattenToList, FindCycles, DirectDependencies, _AddImportedDependencies, DirectAndImportedDependencies, DeepDependencies, _LinkDependenciesInternal, DependenciesForLinkSettings, DependenciesToLinkAgainst, is_hashable, is_in_set_or_list, ExtractNodeRef, Visit
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\input_test.py
+Functions: setUp, _create_dependency, test_no_cycle_empty_graph, test_no_cycle_line, test_no_cycle_dag, test_cycle_self_reference, test_cycle_two_nodes, test_two_cycles, test_big_cycle
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\mac_tool.py
+Functions: main, NextGreaterPowerOf2, WriteHmap, Dispatch, _CommandifyName, ExecCopyBundleResource, _CopyXIBFile, _ConvertToBinary, _CopyStringsFile, _DetectInputEncoding, ExecCopyInfoPlist, _WritePkgInfo, ExecFlock, ExecFilterLibtool, ExecPackageIosFramework, ExecPackageFramework, _Relink, ExecCompileIosFrameworkHeaderMap, ExecCopyIosFrameworkHeaders, ExecCompileXcassets, ExecMergeInfoPlist, ExecCodeSignBundle, _InstallProvisioningProfile, _FindProvisioningProfile, _LoadProvisioningProfile, _MergePlist, _LoadPlistMaybeBinary, _GetSubstitutions, _GetCFBundleIdentifier, _InstallEntitlements, _ExpandVariables
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\msvs_emulation.py
+Functions: QuoteForRspFile, EncodeRspFileList, _GenericRetrieve, _AddPrefix, _DoRemapping, _AppendOrReturn, _FindDirectXInstallation, GetGlobalVSMacroEnv, ExtractSharedMSVSSystemIncludes, _LanguageMatchesForPch, GetVSVersion, _GetVsvarsSetupArgs, ExpandMacros, _ExtractImportantEnvironment, _FormatAsEnvironmentBlock, _ExtractCLPath, GenerateEnvironmentFiles, VerifyMissingSources, CalculateCommonVariables, __init__, GetExtension, GetVSMacroEnv, ConvertVSMacros, AdjustLibraries, _GetAndMunge, GetArch, _TargetConfig, _Setting, _ConfigAttrib, AdjustIncludeDirs, AdjustMidlIncludeDirs, GetComputedDefines, GetCompilerPdbName, GetMapFileName, GetOutputName, GetPDBName, GetNoImportLibrary, GetAsmflags, GetCflags, _GetPchFlags, GetCflagsC, GetCflagsCC, _GetAdditionalLibraryDirectories, GetLibFlags, GetDefFile, _GetDefFileAsLdflags, GetPGDName, GetLdflags, _GetLdManifestFlags, _GetAdditionalManifestFiles, IsUseLibraryDependencyInputs, IsEmbedManifest, IsLinkIncremental, GetRcflags, BuildCygwinBashCommandLine, GetRuleShellFlags, _HasExplicitRuleForExtension, _HasExplicitIdlActions, HasExplicitIdlRulesOrActions, HasExplicitAsmRules, GetIdlBuildData, __init__, _PchHeader, GetObjDependencies, GetPchBuildCommands, GetFlagsModifications, __init__, __call__, midl
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\ninja_syntax.py
+Functions: escape_path, escape, __init__, newline, comment, variable, pool, rule, build, include, subninja, default, _count_dollars_before_index, _line, _as_list
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\simple_copy.py
+Functions: deepcopy, _deepcopy_atomic, _deepcopy_list, _deepcopy_dict
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\win_tool.py
+Functions: main, _UseSeparateMspdbsrv, Dispatch, _CommandifyName, _GetEnv, ExecStamp, ExecRecursiveMirror, ExecLinkWrapper, ExecLinkWithManifests, ExecManifestWrapper, ExecManifestToRc, ExecMidlWrapper, ExecAsmWrapper, ExecRcWrapper, ExecActionWrapper, ExecClCompile, _on_error, dump
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\xcode_emulation.py
+Functions: XcodeArchsVariableMapping, GetXcodeArchsDefault, XcodeVersion, CLTVersion, GetStdoutQuiet, GetStdout, MergeGlobalXcodeSettingsToSpec, IsMacBundle, GetMacBundleResources, GetMacInfoPlist, _GetXcodeEnv, _NormalizeEnvVarReferences, ExpandEnvVars, _TopologicallySortedEnvVarKeys, GetSortedXcodeEnv, GetSpecPostbuildCommands, _HasIOSTarget, _AddIOSDeviceConfigurations, CloneConfigurationForDeviceAndEmulator, __init__, _VariableMapping, _ExpandArchs, ActiveArchs, __init__, _ConvertConditionalKeys, _Settings, _Test, _Appendf, _WarnUnimplemented, IsBinaryOutputFormat, IsIosFramework, _IsBundle, _IsXCTest, _IsXCUiTest, _IsIosAppExtension, _IsIosWatchKitExtension, _IsIosWatchApp, GetFrameworkVersion, GetWrapperExtension, GetProductName, GetFullProductName, GetWrapperName, GetBundleContentsFolderPath, GetBundleResourceFolder, GetBundleExecutableFolderPath, GetBundleJavaFolderPath, GetBundleFrameworksFolderPath, GetBundleSharedFrameworksFolderPath, GetBundleSharedSupportFolderPath, GetBundlePlugInsFolderPath, GetBundleXPCServicesFolderPath, GetBundlePlistPath, GetProductType, GetMachOType, _GetBundleBinaryPath, _GetStandaloneExecutableSuffix, _GetStandaloneExecutablePrefix, _GetStandaloneBinaryPath, GetExecutableName, GetExecutablePath, GetActiveArchs, _GetSdkVersionInfoItem, _SdkRoot, _XcodePlatformPath, _SdkPath, _XcodeSdkPath, _AppendPlatformVersionMinFlags, GetCflags, GetCflagsC, GetCflagsCC, _AddObjectiveCGarbageCollectionFlags, _AddObjectiveCARCFlags, _AddObjectiveCMissingPropertySynthesisFlags, GetCflagsObjC, GetCflagsObjCC, GetInstallNameBase, _StandardizePath, GetInstallName, _MapLinkerFlagFilename, GetLdflags, GetLibtoolflags, GetPerTargetSettings, GetPerConfigSetting, GetPerTargetSetting, _GetStripPostbuilds, _GetDebugInfoPostbuilds, _GetTargetPostbuilds, _GetIOSPostbuilds, _GetIOSCodeSignIdentityKey, AddImplicitPostbuilds, _AdjustLibrary, AdjustLibraries, _BuildMachineOSBuild, _XcodeIOSDeviceFamily, GetExtraPlistItems, _DefaultSdkRoot, __init__, _CompiledHeader, GetInclude, _Gch, GetObjDependencies, GetPchBuildCommands, GetEdges
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\xcode_emulation_test.py
+Functions: setUp, test_GetCflags, GypToBuildPath, test_GetLdflags
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\xcode_ninja.py
+Functions: _WriteWorkspace, _TargetFromSpec, IsValidTargetForWrapper, CreateWrapper
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\xcodeproj_file.py
+Functions: cmp, SourceTreeAndPathFromPath, ConvertVariablesToShellSyntax, __init__, __repr__, Copy, Name, Comment, Hashables, HashablesForChild, ComputeIDs, EnsureNoIDCollisions, Children, Descendants, PBXProjectAncestor, _EncodeComment, _EncodeTransform, _EncodeString, _XCPrint, _XCPrintableValue, _XCKVPrint, Print, UpdateProperties, HasProperty, GetProperty, SetProperty, DelProperty, AppendProperty, VerifyHasRequiredProperties, _SetDefaultsFromSchema, __init__, Name, Hashables, Compare, CompareRootGroup, PathFromSourceTreeAndPath, FullPath, __init__, Hashables, HashablesForChild, _AddChildToDicts, AppendChild, GetChildByName, GetChildByPath, GetChildByRemoteObject, AddOrGetFileByPath, AddOrGetVariantGroupByNameAndPath, TakeOverOnlyChild, SortGroup, PathHashables, __init__, HasBuildSetting, GetBuildSetting, SetBuildSetting, AppendBuildSetting, DelBuildSetting, SetBaseConfiguration, Name, ConfigurationNamed, DefaultConfiguration, HasBuildSetting, GetBuildSetting, SetBuildSetting, AppendBuildSetting, DelBuildSetting, SetBaseConfiguration, Name, Hashables, __init__, FileGroup, _AddPathToDict, _AddBuildFileToDicts, AppendBuildFile, AddFile, Name, FileGroup, Name, FileGroup, Name, FileGroup, Name, FileGroup, Name, Name, FileGroup, SetDestination, Name, Hashables, __repr__, Name, Hashables, __repr__, Name, Hashables, __init__, AddDependency, ConfigurationNamed, DefaultConfiguration, HasBuildSetting, GetBuildSetting, SetBuildSetting, AppendBuildSetting, DelBuildSetting, __init__, GetBuildPhaseByType, HeadersPhase, ResourcesPhase, SourcesPhase, FrameworksPhase, AddDependency, __init__, Name, Path, Comment, Children, PBXProjectAncestor, _GroupByName, SourceGroup, ProductsGroup, IntermediatesGroup, FrameworksGroup, ProjectsGroup, RootGroupForPath, AddOrGetFileInRootGroup, RootGroupsTakeOverOnlyChildren, SortGroups, AddOrGetProjectReference, _AllSymrootsUnique, _DefinedSymroots, _IsUniqueSymrootForTarget, _SetUpProductReferences, SortRemoteProductReferences, ComputeIDs, Print, _PrintObjects, _HashUpdate, CompareProducts
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\gyp\xml_fix.py
+Functions: _Replacement_write_data, _Replacement_writexml, __init__, Cleanup, __del__
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\_elffile.py
+Functions: __init__, _read, interpreter
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\_manylinux.py
+Functions: _parse_elf, _is_linux_armhf, _is_linux_i686, _have_compatible_abi, _glibc_version_string_confstr, _glibc_version_string_ctypes, _glibc_version_string, _parse_glibc_version, _get_glibc_version, _is_compatible, platform_tags
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\_musllinux.py
+Functions: _parse_musl_version, _get_musl_version, platform_tags
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\_parser.py
+Functions: parse_requirement, _parse_requirement, _parse_requirement_details, _parse_requirement_marker, _parse_extras, _parse_extras_list, _parse_specifier, _parse_version_many, parse_marker, _parse_full_marker, _parse_marker, _parse_marker_atom, _parse_marker_item, _parse_marker_var, process_env_var, process_python_str, _parse_marker_op, __init__, __str__, __repr__, serialize, serialize, serialize, serialize
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\_structures.py
+Functions: __repr__, __hash__, __lt__, __le__, __eq__, __gt__, __ge__, __neg__, __repr__, __hash__, __lt__, __le__, __eq__, __gt__, __ge__, __neg__
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\_tokenizer.py
+Functions: __init__, __str__, __init__, consume, check, expect, read, raise_syntax_error, enclosing_tokens
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\markers.py
+Functions: _normalize_extra_values, _format_marker, _eval_op, _normalize, _evaluate_markers, format_full_version, default_environment, __init__, __str__, __repr__, __hash__, __eq__, evaluate
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\metadata.py
+Functions: _parse_keywords, _parse_project_urls, _get_payload, parse_email, __init__, __init__, __set_name__, __get__, _invalid_metadata, _process_metadata_version, _process_name, _process_version, _process_summary, _process_description_content_type, _process_dynamic, _process_provides_extra, _process_requires_python, _process_requires_dist, from_raw, from_email, __init__, __repr__
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\requirements.py
+Functions: __init__, _iter_parts, __str__, __repr__, __hash__, __eq__
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\specifiers.py
+Functions: _coerce_version, _version_split, _version_join, _is_not_suffix, _pad_version, __str__, __hash__, __eq__, prereleases, prereleases, contains, filter, __init__, prereleases, prereleases, operator, version, __repr__, __str__, _canonical_spec, __hash__, __eq__, _get_operator, _compare_compatible, _compare_equal, _compare_not_equal, _compare_less_than_equal, _compare_greater_than_equal, _compare_less_than, _compare_greater_than, _compare_arbitrary, __contains__, contains, filter, __init__, prereleases, prereleases, __repr__, __str__, __hash__, __and__, __eq__, __len__, __iter__, __contains__, contains, filter
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\tags.py
+Functions: parse_tag, _get_config_var, _normalize_string, _abi3_applies, _cpython_abis, cpython_tags, _generic_abi, generic_tags, _py_interpreter_range, compatible_tags, _mac_arch, _mac_binary_formats, mac_platforms, _linux_platforms, _generic_platforms, platform_tags, interpreter_name, interpreter_version, _version_nodot, sys_tags, __init__, interpreter, abi, platform, __eq__, __hash__, __str__, __repr__
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\utils.py
+Functions: canonicalize_name, is_normalized_name, canonicalize_version, parse_wheel_filename, parse_sdist_filename
+
+### laptop-app\node_modules\node-gyp\gyp\pylib\packaging\version.py
+Functions: parse, _parse_letter_version, _parse_local_version, _cmpkey, __hash__, __lt__, __le__, __eq__, __ge__, __gt__, __ne__, __init__, __repr__, __str__, epoch, release, pre, post, dev, local, public, base_version, is_prerelease, is_postrelease, is_devrelease, major, minor, micro
+
+### laptop-app\node_modules\node-gyp\gyp\test_gyp.py
+Functions: is_test_name, find_all_gyptest_files, main, print_configuration_info, __init__, run, run_test, print_, erase_current_line, print_results
+
+### laptop-app\node_modules\node-gyp\lib\build.js
+Functions: build, loadConfigGypi, findSolutionFile, doWhich, doBuild
+
+### laptop-app\node_modules\node-gyp\lib\clean.js
+Functions: clean
+
+### laptop-app\node_modules\node-gyp\lib\configure.js
+Functions: configure, getNodeDir, createBuildDir, createConfigFile, findConfigs, runGyp
+
+### laptop-app\node_modules\node-gyp\lib\create-config-gypi.js
+Functions: parseConfigGypi, getBaseConfigGypi, getCurrentConfigGypi, createConfigGypi, boolsToString
+
+### laptop-app\node_modules\node-gyp\lib\download.js
+Functions: download, createDispatcher, readCAFile
+
+### laptop-app\node_modules\node-gyp\lib\find-node-directory.js
+Functions: findNodeDirectory
+
+### laptop-app\node_modules\node-gyp\lib\find-python.js
+Functions: getOsUserInfo, toCheck
+
+### laptop-app\node_modules\node-gyp\lib\find-visualstudio.js
+Functions: failPowershell
+
+### laptop-app\node_modules\node-gyp\lib\install.js
+Functions: install, copyDirectory, go, isValid, onwarn, downloadShasums, downloadNodeLib, valid, rollback, eaccesFallback
+
+### laptop-app\node_modules\node-gyp\lib\list.js
+Functions: list
+
+### laptop-app\node_modules\node-gyp\lib\log.js
+Functions: withPrefix
+
+### laptop-app\node_modules\node-gyp\lib\process-release.js
+Functions: processRelease, normalizePath, resolveLibUrl
+
+### laptop-app\node_modules\node-gyp\lib\rebuild.js
+Functions: rebuild
+
+### laptop-app\node_modules\node-gyp\lib\remove.js
+Functions: remove
+
+### laptop-app\node_modules\node-gyp\lib\util.js
+Functions: execFile, regGetValue, regSearchKeys, findAccessibleSync
+
+### laptop-app\node_modules\node-gyp\node_modules\isexe\dist\commonjs\posix.js
+Functions: isexe, sync, checkStat, checkMode
+
+### laptop-app\node_modules\node-gyp\node_modules\isexe\dist\commonjs\win32.js
+Functions: isexe, sync, checkPathExt, checkStat
+
+### laptop-app\node_modules\node-gyp\node_modules\isexe\dist\esm\posix.js
+Functions: isexe, sync, checkStat, checkMode
+
+### laptop-app\node_modules\node-gyp\node_modules\isexe\dist\esm\win32.js
+Functions: isexe, sync, checkPathExt, checkStat
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\bin\semver.js
+Functions: main, failInc, fail, help
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\classes\range.js
+Functions: isNullSet, isAny, isSatisfiable, parseComparator, isX, invalidXRangeOrder, replaceTildes, replaceTilde, replaceCarets, replaceCaret, replaceXRanges, replaceXRange, replaceStars, replaceGTE0, hyphenReplace, testSet
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\classes\semver.js
+Functions: isPrereleaseIdentifier
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\clean.js
+Functions: clean
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\cmp.js
+Functions: cmp
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\coerce.js
+Functions: coerce
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\compare-build.js
+Functions: compareBuild
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\compare-loose.js
+Functions: compareLoose
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\compare.js
+Functions: compare
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\diff.js
+Functions: diff
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\eq.js
+Functions: eq
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\gt.js
+Functions: gt
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\gte.js
+Functions: gte
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\inc.js
+Functions: inc
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\lt.js
+Functions: lt
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\lte.js
+Functions: lte
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\major.js
+Functions: major
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\minor.js
+Functions: minor
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\neq.js
+Functions: neq
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\parse.js
+Functions: parse
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\patch.js
+Functions: patch
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\prerelease.js
+Functions: prerelease
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\rcompare.js
+Functions: rcompare
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\rsort.js
+Functions: rsort
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\satisfies.js
+Functions: satisfies
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\sort.js
+Functions: sort
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\truncate.js
+Functions: truncate, cloneInputVersion, doTruncation, isPrerelease
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\functions\valid.js
+Functions: valid
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\internal\identifiers.js
+Functions: compareIdentifiers, rcompareIdentifiers
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\internal\parse-options.js
+Functions: parseOptions
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\internal\re.js
+Functions: makeSafeRegex, createToken
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\ranges\gtr.js
+Functions: gtr
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\ranges\intersects.js
+Functions: intersects
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\ranges\ltr.js
+Functions: ltr
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\ranges\max-satisfying.js
+Functions: maxSatisfying
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\ranges\min-satisfying.js
+Functions: minSatisfying
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\ranges\min-version.js
+Functions: minVersion
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\ranges\outside.js
+Functions: outside
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\ranges\subset.js
+Functions: subset, simpleSubset, higherGT, lowerLT
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\ranges\to-comparators.js
+Functions: toComparators
+
+### laptop-app\node_modules\node-gyp\node_modules\semver\ranges\valid.js
+Functions: validRange
+
+### laptop-app\node_modules\node-gyp\node_modules\which\bin\which.js
+Functions: usage
+
+### laptop-app\node_modules\node-gyp\node_modules\which\lib\index.js
+Functions: getNotFoundError, getPathInfo, getPathPart, which, whichSync
+
+### laptop-app\node_modules\nopt\lib\nopt-lib.js
+Functions: hasOwn, getType, isTypeDef, hasTypeDef, doesNotHaveTypeDef, nopt, clean, validate, parse, singleCharacters, resolveShort
+
+### laptop-app\node_modules\nopt\lib\nopt.js
+Functions: nopt, clean
+
+### laptop-app\node_modules\nopt\lib\type-defs.js
+Functions: validateString, validatePath, validateNumber, validateDate, validateBoolean, validateUrl, validateStream
+
+### laptop-app\node_modules\normalize-url\index.d.ts
+Functions: normalizeUrl
+
+### laptop-app\node_modules\normalize-url\index.js
+Functions: testParameter, normalizeDataURL, normalizeUrl
+
+### laptop-app\node_modules\object-keys\implementation.js
+Functions: keys
+
+### laptop-app\node_modules\object-keys\index.js
+Functions: keys, shimObjectKeys, keys
+
+### laptop-app\node_modules\object-keys\isArguments.js
+Functions: isArguments
+
+### laptop-app\node_modules\once\once.js
+Functions: once, onceStrict
+
+### laptop-app\node_modules\p-cancelable\index.js
+Functions: onResolve, onReject, onCancel
+
+### laptop-app\node_modules\p-limit\index.d.ts
+Functions: pLimit
+
+### laptop-app\node_modules\p-limit\index.js
+Functions: pLimit, next, run, result, enqueue, generator
+
+### laptop-app\node_modules\path-is-absolute\index.js
+Functions: posix, win32
+
+### laptop-app\node_modules\path-key\index.d.ts
+Functions: pathKey
+
+### laptop-app\node_modules\path-key\index.js
+Functions: pathKey
+
+### laptop-app\node_modules\pe-library\dist\NtExecutable.js
+Functions: NtExecutable
+
+### laptop-app\node_modules\pe-library\dist\NtExecutableResource.js
+Functions: removeDuplicates, readString, readLanguageTable, readNameTable, divideEntriesImplByID, divideEntriesImplByName, divideEntriesImplByType, calculateStringLengthForWrite, getStringOffset, writeString, writeLanguageTable, writeNameTable, writeTypeTable, NtExecutableResource
+
+### laptop-app\node_modules\pe-library\dist\_esm\NtExecutable.js
+Functions: NtExecutable
+
+### laptop-app\node_modules\pe-library\dist\_esm\NtExecutableResource.js
+Functions: removeDuplicates, readString, readLanguageTable, readNameTable, divideEntriesImplByID, divideEntriesImplByName, divideEntriesImplByType, calculateStringLengthForWrite, getStringOffset, writeString, writeLanguageTable, writeNameTable, writeTypeTable, NtExecutableResource
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\ArrayFormatBase.js
+Functions: __, ArrayFormatBase, class_1
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\FormatBase.js
+Functions: FormatBase
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\ImageDataDirectoryArray.js
+Functions: __, ImageDataDirectoryArray
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\ImageDosHeader.js
+Functions: __, ImageDosHeader
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\ImageFileHeader.js
+Functions: __, ImageFileHeader
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\ImageNtHeaders.js
+Functions: __, ImageNtHeaders
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\ImageOptionalHeader.js
+Functions: __, ImageOptionalHeader
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\ImageOptionalHeader64.js
+Functions: __, getUint64LE, setUint64LE, getUint64LEBigInt, setUint64LEBigInt, ImageOptionalHeader64
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\ImageSectionHeaderArray.js
+Functions: __, ImageSectionHeaderArray
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\index.d.ts
+Functions: getImageDosHeader, getImageNtHeadersByDosHeader, getImageSectionHeadersByNtHeaders, findImageSectionBlockByDirectoryEntry
+
+### laptop-app\node_modules\pe-library\dist\_esm\format\index.js
+Functions: getImageDosHeader, getImageNtHeadersByDosHeader, getImageSectionHeadersByNtHeaders, findImageSectionBlockByDirectoryEntry
+
+### laptop-app\node_modules\pe-library\dist\_esm\util\functions.d.ts
+Functions: createDataView, calculateCheckSumForPE, roundUp, copyBuffer, allocatePartialBinary, cloneToArrayBuffer, getFixedString, setFixedString, binaryToString, stringToBinary
+
+### laptop-app\node_modules\pe-library\dist\_esm\util\functions.js
+Functions: cloneObject, createDataView, calculateCheckSumForPE, roundUp, copyBuffer, allocatePartialBinary, cloneToArrayBuffer, getFixedString, setFixedString, binaryToString, stringToBinary
+
+### laptop-app\node_modules\pe-library\dist\_esm\util\generate.d.ts
+Functions: getDosStubDataSize, fillDosStubData, estimateNewHeaderSize, fillPeHeaderEmptyData, makeEmptyNtExecutableBinary
+
+### laptop-app\node_modules\pe-library\dist\_esm\util\generate.js
+Functions: getDosStubDataSize, fillDosStubData, estimateNewHeaderSize, fillPeHeaderEmptyData, makeEmptyNtExecutableBinary
+
+### laptop-app\node_modules\pe-library\dist\format\ArrayFormatBase.js
+Functions: __, ArrayFormatBase, class_1
+
+### laptop-app\node_modules\pe-library\dist\format\FormatBase.js
+Functions: FormatBase
+
+### laptop-app\node_modules\pe-library\dist\format\ImageDataDirectoryArray.js
+Functions: __, ImageDataDirectoryArray
+
+### laptop-app\node_modules\pe-library\dist\format\ImageDosHeader.js
+Functions: __, ImageDosHeader
+
+### laptop-app\node_modules\pe-library\dist\format\ImageFileHeader.js
+Functions: __, ImageFileHeader
+
+### laptop-app\node_modules\pe-library\dist\format\ImageNtHeaders.js
+Functions: __, ImageNtHeaders
+
+### laptop-app\node_modules\pe-library\dist\format\ImageOptionalHeader.js
+Functions: __, ImageOptionalHeader
+
+### laptop-app\node_modules\pe-library\dist\format\ImageOptionalHeader64.js
+Functions: __, getUint64LE, setUint64LE, getUint64LEBigInt, setUint64LEBigInt, ImageOptionalHeader64
+
+### laptop-app\node_modules\pe-library\dist\format\ImageSectionHeaderArray.js
+Functions: __, ImageSectionHeaderArray
+
+### laptop-app\node_modules\pe-library\dist\format\index.d.ts
+Functions: getImageDosHeader, getImageNtHeadersByDosHeader, getImageSectionHeadersByNtHeaders, findImageSectionBlockByDirectoryEntry
+
+### laptop-app\node_modules\pe-library\dist\format\index.js
+Functions: getImageDosHeader, getImageNtHeadersByDosHeader, getImageSectionHeadersByNtHeaders, findImageSectionBlockByDirectoryEntry
+
+### laptop-app\node_modules\pe-library\dist\util\functions.d.ts
+Functions: createDataView, calculateCheckSumForPE, roundUp, copyBuffer, allocatePartialBinary, cloneToArrayBuffer, getFixedString, setFixedString, binaryToString, stringToBinary
+
+### laptop-app\node_modules\pe-library\dist\util\functions.js
+Functions: cloneObject, createDataView, calculateCheckSumForPE, roundUp, copyBuffer, allocatePartialBinary, cloneToArrayBuffer, getFixedString, setFixedString, binaryToString, stringToBinary
+
+### laptop-app\node_modules\pe-library\dist\util\generate.d.ts
+Functions: getDosStubDataSize, fillDosStubData, estimateNewHeaderSize, fillPeHeaderEmptyData, makeEmptyNtExecutableBinary
+
+### laptop-app\node_modules\pe-library\dist\util\generate.js
+Functions: getDosStubDataSize, fillDosStubData, estimateNewHeaderSize, fillPeHeaderEmptyData, makeEmptyNtExecutableBinary
+
+### laptop-app\node_modules\pend\index.js
+Functions: Pend, pendHold, onCb, cbListener, pendGo
+
+### laptop-app\node_modules\pend\test.js
+Functions: doOneTest, testBasic, testWithMax, testCallbackTwice, testCallingWaitTwice, testHoldFn
+
+### laptop-app\node_modules\picomatch\index.js
+Functions: picomatch
+
+### laptop-app\node_modules\picomatch\lib\parse.js
+Functions: expandRange, syntaxError, splitTopLevel, isPlainBranch, normalizeSimpleBranch, hasRepeatedCharPrefixOverlap, parseRepeatedExtglob, buildCharClassStar, getStarExtglobSequenceChars, repeatedExtglobRecursion, analyzeRepeatedExtglob, parse, globstar, eos, remaining, consume, append, negate, increment, decrement, push, extglobOpen, extglobClose, globstar, create
+
+### laptop-app\node_modules\picomatch\lib\picomatch.js
+Functions: isObject, picomatch, arrayMatcher, matcher
+
+### laptop-app\node_modules\picomatch\lib\scan.js
+Functions: isPathSeparator, depth, scan, eos, peek, advance
+
+### laptop-app\node_modules\pkijs\build\index.d.ts
+Functions: setEngine, setEngine, getEngine, getCrypto, getCrypto, getRandomValues, getOIDByAlgorithm, getAlgorithmParameters, createCMSECDSASignature, createECDSASignatureFromCMS, getHashAlgorithm, kdf, checkCA, stringPrep, verifySCTsForCertificate
+
+### laptop-app\node_modules\pkijs\build\index.es.js
+Functions: stringPrep, builtInStandardAttributes, builtInDomainDefinedAttributes, extensionAttributes, makePKCS12B2Key, prepareAlgorithm, isCryptoEngine, getEngineGlobalKey, setEngine, getEngine, getCrypto, getRandomValues, getOIDByAlgorithm, getAlgorithmParameters, createCMSECDSASignature, createECDSASignatureFromCMS, getAlgorithmByOID, getHashAlgorithm, kdfWithCounter, kdf, verifySCTsForCertificate, tbsCertificate, checkCA, tbsCertList, SubKeyAgreeRecipientInfo, SubKeyTransRecipientInfo, SubKEKRecipientInfo, SubPasswordRecipientinfo, SubKeyAgreeRecipientInfo, applyKDF, importAesKwKey, unwrapSessionKey, SubKeyTransRecipientInfo, SubKEKRecipientInfo, SubPasswordRecipientinfo, isTrusted, checkCertificate, buildPath, checkUnique, findCRL, findOCSP, checkForCA, basicCheck, compareDNSName, compareRFC822Name, compareUniformResourceIdentifier, compareIPAddress, compareDirectoryName, addIfCa, CertificationRequestInfo, initCryptoEngine
+
+### laptop-app\node_modules\pkijs\build\index.js
+Functions: _interopNamespaceDefault, stringPrep, builtInStandardAttributes, builtInDomainDefinedAttributes, extensionAttributes, makePKCS12B2Key, prepareAlgorithm, isCryptoEngine, getEngineGlobalKey, setEngine, getEngine, getCrypto, getRandomValues, getOIDByAlgorithm, getAlgorithmParameters, createCMSECDSASignature, createECDSASignatureFromCMS, getAlgorithmByOID, getHashAlgorithm, kdfWithCounter, kdf, verifySCTsForCertificate, tbsCertificate, checkCA, tbsCertList, SubKeyAgreeRecipientInfo, SubKeyTransRecipientInfo, SubKEKRecipientInfo, SubPasswordRecipientinfo, SubKeyAgreeRecipientInfo, applyKDF, importAesKwKey, unwrapSessionKey, SubKeyTransRecipientInfo, SubKEKRecipientInfo, SubPasswordRecipientinfo, isTrusted, checkCertificate, buildPath, checkUnique, findCRL, findOCSP, checkForCA, basicCheck, compareDNSName, compareRFC822Name, compareUniformResourceIdentifier, compareIPAddress, compareDirectoryName, addIfCa, CertificationRequestInfo, initCryptoEngine
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\_blake.d.ts
+Functions: G1s, G2s
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\_blake.js
+Functions: G1s, G2s
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\_md.d.ts
+Functions: setBigUint64, Chi, Maj
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\_md.js
+Functions: setBigUint64, Chi, Maj
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\_u64.d.ts
+Functions: fromBig, split, add
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\_u64.js
+Functions: fromBig, split, toBig, shrSH, shrSL, rotrSH, rotrSL, rotrBH, rotrBL, rotr32H, rotr32L, rotlSH, rotlSL, rotlBH, rotlBL, add, add3L, add3H, add4L, add4H, add5L, add5H
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\argon2.js
+Functions: abytesOrZero, mul, mul2, blamka, G, P, block, Hp, indexAlpha, isU32, argon2Opts, argon2Init, argon2Output, processBlock, argon2, argon2d, argon2i, argon2id, argon2Async, argon2dAsync, argon2iAsync, argon2idAsync
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\blake1.js
+Functions: generateTBL256, generateTBL512, G1b, G2b
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\blake2.d.ts
+Functions: compress
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\blake2.js
+Functions: G1b, G2b, checkBlake2Opts, compress
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\blake3.js
+Functions: permute
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\eskdf.d.ts
+Functions: scrypt, pbkdf2, deriveMainSeed, eskdf
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\eskdf.js
+Functions: scrypt, pbkdf2, xor32, strHasLength, deriveMainSeed, getSaltInfo, countBytes, getKeyLength, modReduceKey, eskdf, deriveCK, expire
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\_blake.d.ts
+Functions: G1s, G2s
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\_blake.js
+Functions: G1s, G2s
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\_md.d.ts
+Functions: setBigUint64, Chi, Maj
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\_md.js
+Functions: setBigUint64, Chi, Maj
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\_u64.d.ts
+Functions: fromBig, split, add
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\_u64.js
+Functions: fromBig, split, toBig, shrSH, shrSL, rotrSH, rotrSL, rotrBH, rotrBL, rotr32H, rotr32L, rotlSH, rotlSL, rotlBH, rotlBL, add, add3L, add3H, add4L, add4H, add5L, add5H
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\argon2.js
+Functions: abytesOrZero, mul, mul2, blamka, G, P, block, Hp, indexAlpha, isU32, argon2Opts, argon2Init, argon2Output, processBlock, argon2, argon2d, argon2i, argon2id, argon2Async, argon2dAsync, argon2iAsync, argon2idAsync
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\blake1.js
+Functions: generateTBL256, generateTBL512, G1b, G2b
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\blake2.d.ts
+Functions: compress
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\blake2.js
+Functions: G1b, G2b, checkBlake2Opts, compress
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\blake3.js
+Functions: permute
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\eskdf.d.ts
+Functions: scrypt, pbkdf2, deriveMainSeed, eskdf
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\eskdf.js
+Functions: scrypt, pbkdf2, xor32, strHasLength, deriveMainSeed, getSaltInfo, countBytes, getKeyLength, modReduceKey, eskdf, deriveCK, expire
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\hkdf.d.ts
+Functions: extract, expand
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\hkdf.js
+Functions: extract, expand, hkdf
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\hmac.js
+Functions: hmac
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\legacy.js
+Functions: ripemd_f
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\pbkdf2.d.ts
+Functions: pbkdf2, pbkdf2Async
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\pbkdf2.js
+Functions: pbkdf2Init, pbkdf2Output, pbkdf2, pbkdf2Async
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\scrypt.d.ts
+Functions: scrypt, scryptAsync
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\scrypt.js
+Functions: XorAndSalsa, BlockMix, scryptInit, scryptOutput, scrypt, scryptAsync
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\sha3-addons.js
+Functions: leftEncode, rightEncode, chooseLen, abytesOrZero, getPadding, cshakePers, gencShake, genKmac, kmac, genTuple, tuple, genPrl, parallel, genTurboshake, rightEncodeK12, keccakprg
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\sha3.d.ts
+Functions: keccakP
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\sha3.js
+Functions: rotlH, rotlL, keccakP, gen, genShake
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\utils.d.ts
+Functions: isBytes, anumber, abytes, ahash, aexists, aoutput, u8, u32, clean, createView, rotr, rotl, byteSwap, byteSwap32, bytesToHex, hexToBytes, asyncLoop, utf8ToBytes, bytesToUtf8, toBytes, kdfInputToBytes, concatBytes, randomBytes
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\esm\utils.js
+Functions: isBytes, anumber, abytes, ahash, aexists, aoutput, u8, u32, clean, createView, rotr, rotl, byteSwap, byteSwap32, bytesToHex, asciiToBase16, hexToBytes, nextTick, asyncLoop, utf8ToBytes, bytesToUtf8, toBytes, kdfInputToBytes, concatBytes, checkOpts, createHasher, hashC, createOptHasher, hashC, createXOFer, hashC, randomBytes
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\hkdf.d.ts
+Functions: extract, expand
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\hkdf.js
+Functions: extract, expand, hkdf
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\hmac.js
+Functions: hmac
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\legacy.js
+Functions: ripemd_f
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\pbkdf2.d.ts
+Functions: pbkdf2, pbkdf2Async
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\pbkdf2.js
+Functions: pbkdf2Init, pbkdf2Output, pbkdf2, pbkdf2Async
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\scrypt.d.ts
+Functions: scrypt, scryptAsync
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\scrypt.js
+Functions: XorAndSalsa, BlockMix, scryptInit, scryptOutput, scrypt, scryptAsync
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\sha3-addons.js
+Functions: leftEncode, rightEncode, chooseLen, abytesOrZero, getPadding, cshakePers, gencShake, genKmac, kmac, genTuple, tuple, genPrl, parallel, genTurboshake, rightEncodeK12, keccakprg
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\sha3.d.ts
+Functions: keccakP
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\sha3.js
+Functions: rotlH, rotlL, keccakP, gen, genShake
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\_blake.ts
+Functions: G1s, G2s
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\_md.ts
+Functions: setBigUint64, Chi, Maj
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\_u64.ts
+Functions: fromBig, split, add
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\argon2.ts
+Functions: abytesOrZero, mul, mul2, blamka, G, P, block, Hp, indexAlpha, isU32, argon2Opts, argon2Init, argon2Output, processBlock, argon2, argon2Async
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\blake1.ts
+Functions: generateTBL256, generateTBL512, G1b, G2b
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\blake2.ts
+Functions: G1b, G2b, checkBlake2Opts, compress
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\blake3.ts
+Functions: permute
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\eskdf.ts
+Functions: scrypt, pbkdf2, xor32, strHasLength, deriveMainSeed, getSaltInfo, countBytes, getKeyLength, modReduceKey, eskdf, deriveCK, expire
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\hkdf.ts
+Functions: extract, expand
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\legacy.ts
+Functions: ripemd_f
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\pbkdf2.ts
+Functions: pbkdf2Init, pbkdf2, pbkdf2Async
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\scrypt.ts
+Functions: XorAndSalsa, BlockMix, scryptInit, scryptOutput, scrypt, scryptAsync
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\sha3-addons.ts
+Functions: leftEncode, rightEncode, chooseLen, abytesOrZero, getPadding, cshakePers, gencShake, genKmac, genTuple, genPrl, genTurboshake, rightEncodeK12
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\sha3.ts
+Functions: rotlH, rotlL, keccakP, gen, genShake
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\src\utils.ts
+Functions: isBytes, anumber, abytes, ahash, aexists, aoutput, u8, u32, clean, createView, rotr, rotl, byteSwap, byteSwap32, bytesToHex, asciiToBase16, hexToBytes, asyncLoop, utf8ToBytes, bytesToUtf8, toBytes, kdfInputToBytes, concatBytes, randomBytes
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\utils.d.ts
+Functions: isBytes, anumber, abytes, ahash, aexists, aoutput, u8, u32, clean, createView, rotr, rotl, byteSwap, byteSwap32, bytesToHex, hexToBytes, asyncLoop, utf8ToBytes, bytesToUtf8, toBytes, kdfInputToBytes, concatBytes, randomBytes
+
+### laptop-app\node_modules\pkijs\node_modules\@noble\hashes\utils.js
+Functions: isBytes, anumber, abytes, ahash, aexists, aoutput, u8, u32, clean, createView, rotr, rotl, byteSwap, byteSwap32, bytesToHex, asciiToBase16, hexToBytes, nextTick, asyncLoop, utf8ToBytes, bytesToUtf8, toBytes, kdfInputToBytes, concatBytes, checkOpts, createHasher, hashC, createOptHasher, hashC, createXOFer, hashC, randomBytes
+
+### laptop-app\node_modules\plist\dist\plist-build.js
+Functions: r, o, ISODateString, pad, type, build, walk_obj, getLens, byteLength, _byteLength, toByteArray, tripletToBase64, encodeChunk, fromByteArray, isBuffer, isSlowBuffer
+
+### laptop-app\node_modules\plist\dist\plist-parse.js
+Functions: r, o, shouldIgnoreNode, isEmptyNode, invariant, parse, parsePlistXML, find, freeze, assign, normalizeLineEndings, DOMParser, buildErrorHandler, build, DOMHandler, position, _locator, _toString, appendElement, notEmptyString, splitOnASCIIWhitespace, orderedSetReducer, toOrderedSet, arrayIncludes, copy, _extends, t, DOMException, NodeList, LiveNodeList, _updateLiveList, NamedNodeMap, _findNodeIndex, _addNamedNode, _removeNamedNode, DOMImplementation, Node, _xmlEncoder, _visitNode, Document, _onAddAttribute, _onRemoveAttribute, _onUpdateChild, _removeChild, hasValidParentNodeType, hasInsertableNodeType, isDocTypeNode, isElementNode, isTextNode, isElementInsertionPossible, isElementReplacementPossible, hasElementChildThatIsNotChild, assertPreInsertionValidity1to5, assertPreInsertionValidityInDocument, assertPreReplacementValidityInDocument, hasDoctypeChildThatIsNotChild, _insertBefore, _appendSingleChild, Element, Attr, CharacterData, Text, Comment, CDATASection, DocumentType, Notation, Entity, EntityReference, DocumentFragment, ProcessingInstruction, XMLSerializer, nodeSerializeToString, needNamespaceDefine, addSerializedAttribute, serializeToString, importNode, cloneNode, __set__, getTextContent, ParseError, XMLReader, parse, fixedFromCharCode, entityReplacer, appendText, position, copyLocator, parseElementStartPart, addAttribute, appendElement, parseHtmlSpecialContent, fixSelfClosed, _copy, parseDCC, parseInstruction, ElementAttributes, split, getLens, byteLength, _byteLength, toByteArray, tripletToBase64, encodeChunk, fromByteArray, typedArraySupport, createBuffer, Buffer, from, assertSize, alloc, allocUnsafe, fromString, fromArrayLike, fromArrayBuffer, fromObject, checked, SlowBuffer, isBuffer, compare, isEncoding, concat, byteLength, slowToString, swap, swap16, swap32, swap64, toString, equals, inspect, compare, bidirectionalIndexOf, arrayIndexOf, read, includes, indexOf, lastIndexOf, hexWrite, utf8Write, asciiWrite, latin1Write, base64Write, ucs2Write, write, toJSON, base64Slice, utf8Slice, decodeCodePointsArray, asciiSlice, latin1Slice, hexSlice, utf16leSlice, slice, checkOffset, readUIntLE, readUIntBE, readUInt8, readUInt16LE, readUInt16BE, readUInt32LE, readUInt32BE, readIntLE, readIntBE, readInt8, readInt16LE, readInt16BE, readInt32LE, readInt32BE, readFloatLE, readFloatBE, readDoubleLE, readDoubleBE, checkInt, writeUIntLE, writeUIntBE, writeUInt8, writeUInt16LE, writeUInt16BE, writeUInt32LE, writeUInt32BE, writeIntLE, writeIntBE, writeInt8, writeInt16LE, writeInt16BE, writeInt32LE, writeInt32BE, checkIEEE754, writeFloat, writeFloatLE, writeFloatBE, writeDouble, writeDoubleLE, writeDoubleBE, copy, fill, base64clean, toHex, utf8ToBytes, asciiToBytes, utf16leToBytes, base64ToBytes, blitBuffer, isInstance, numberIsNaN
+
+### laptop-app\node_modules\plist\dist\plist.js
+Functions: r, o, ISODateString, pad, type, build, walk_obj, shouldIgnoreNode, isEmptyNode, invariant, parse, parsePlistXML, DOMParser, buildErrorHandler, build, DOMHandler, position, _locator, _toString, appendElement, copy, _extends, t, DOMException, NodeList, LiveNodeList, _updateLiveList, NamedNodeMap, _findNodeIndex, _addNamedNode, _removeNamedNode, DOMImplementation, Node, _xmlEncoder, _visitNode, Document, _onAddAttribute, _onRemoveAttribute, _onUpdateChild, _removeChild, _insertBefore, _appendSingleChild, Element, Attr, CharacterData, Text, Comment, CDATASection, DocumentType, Notation, Entity, EntityReference, DocumentFragment, ProcessingInstruction, XMLSerializer, nodeSerializeToString, needNamespaceDefine, serializeToString, importNode, cloneNode, __set__, getTextContent, ParseError, XMLReader, parse, fixedFromCharCode, entityReplacer, appendText, position, copyLocator, parseElementStartPart, addAttribute, appendElement, parseHtmlSpecialContent, fixSelfClosed, _copy, parseDCC, parseInstruction, ElementAttributes, split, getLens, byteLength, _byteLength, toByteArray, tripletToBase64, encodeChunk, fromByteArray, typedArraySupport, createBuffer, Buffer, from, assertSize, alloc, allocUnsafe, fromString, fromArrayLike, fromArrayBuffer, fromObject, checked, SlowBuffer, isBuffer, compare, isEncoding, concat, byteLength, slowToString, swap, swap16, swap32, swap64, toString, equals, inspect, compare, bidirectionalIndexOf, arrayIndexOf, read, includes, indexOf, lastIndexOf, hexWrite, utf8Write, asciiWrite, latin1Write, base64Write, ucs2Write, write, toJSON, base64Slice, utf8Slice, decodeCodePointsArray, asciiSlice, latin1Slice, hexSlice, utf16leSlice, slice, checkOffset, readUIntLE, readUIntBE, readUInt8, readUInt16LE, readUInt16BE, readUInt32LE, readUInt32BE, readIntLE, readIntBE, readInt8, readInt16LE, readInt16BE, readInt32LE, readInt32BE, readFloatLE, readFloatBE, readDoubleLE, readDoubleBE, checkInt, writeUIntLE, writeUIntBE, writeUInt8, writeUInt16LE, writeUInt16BE, writeUInt32LE, writeUInt32BE, writeIntLE, writeIntBE, writeInt8, writeInt16LE, writeInt16BE, writeInt32LE, writeInt32BE, checkIEEE754, writeFloat, writeFloatLE, writeFloatBE, writeDouble, writeDoubleLE, writeDoubleBE, copy, fill, base64clean, toHex, utf8ToBytes, asciiToBytes, utf16leToBytes, base64ToBytes, blitBuffer, isInstance, numberIsNaN, isBuffer, isSlowBuffer
+
+### laptop-app\node_modules\plist\lib\build.js
+Functions: ISODateString, pad, type, build, walk_obj
+
+### laptop-app\node_modules\plist\lib\parse.js
+Functions: shouldIgnoreNode, isEmptyNode, invariant, parse, parsePlistXML
+
+### laptop-app\node_modules\postject\dist\api.js
+Functions: __require, locateFile, logExceptionOnExit, assert, UTF8ArrayToString, UTF8ToString, stringToUTF8Array, stringToUTF8, lengthBytesUTF8, updateGlobalBufferAndViews, keepRuntimeAlive, preRun, initRuntime, postRun, addOnPreRun, addOnInit, addOnPostRun, getUniqueRunDependency, addRunDependency, removeRunDependency, abort, isDataURI, isFileURI, getBinary, getBinaryPromise, createWasm, receiveInstance, receiveInstantiationResult, instantiateArrayBuffer, instantiateAsync, ExitStatus, callRuntimeCallbacks, intArrayToString, writeArrayToMemory, ___cxa_allocate_exception, exception_addRef, ___cxa_begin_catch, ExceptionInfo, ___cxa_free_exception, getWasmTableEntry, exception_decRef, ___cxa_end_catch, ___resumeException, ___cxa_find_matching_catch_2, ___cxa_find_matching_catch_3, ___cxa_find_matching_catch_4, ___cxa_rethrow, ___cxa_throw, setErrNo, getRandomDevice, trim, intArrayFromString, mmapAlloc, asyncLoad, doCallback, done, ErrnoError, LazyUint8Array, LazyUint8Array_get, LazyUint8Array_setDataGetter, LazyUint8Array_cacheLength, forceLoadLazyFile, writeChunks, processData, finish, finish, finish, ___syscall_fcntl64, ___syscall_ioctl, ___syscall_openat, __embind_register_bigint, getShiftFromSize, embind_init_charCodes, readLatin1String, makeLegalFunctionName, createNamedFunction, extendError, throwBindingError, throwInternalError, whenDependentTypesAreResolved, onComplete, registerType, __embind_register_bool, __emval_decref, count_emval_handles, get_first_emval, init_emval, simpleReadValueFromPointer, __embind_register_emval, ensureOverloadTable, exposePublicSymbol, enumReadValueFromPointer, __embind_register_enum, ctor, getTypeName, requireRegisteredType, __embind_register_enum_value, floatReadValueFromPointer, __embind_register_float, new_, runDestructors, craftInvokerFunction, heap32VectorToArray, replacePublicSymbol, dynCallLegacy, dynCall, getDynCaller, embind__requireFunction, makeDynCaller, throwUnboundTypeError, visit, __embind_register_function, integerReadValueFromPointer, readS8FromPointer, readU8FromPointer, readS16FromPointer, readU16FromPointer, readS32FromPointer, readU32FromPointer, __embind_register_integer, __embind_register_memory_view, decodeMemoryView, __embind_register_std_string, UTF16ToString, stringToUTF16, lengthBytesUTF16, UTF32ToString, stringToUTF32, lengthBytesUTF32, __embind_register_std_wstring, __embind_register_void, __emscripten_get_now_is_monotonic, __emval_as, getStringOrSymbol, __emval_call_void_method, emval_get_global, __emval_get_global, emval_addMethodCaller, emval_lookupTypes, __emval_get_method_caller, __emval_get_property, __emval_incref, craftEmvalAllocator, __emval_new, __emval_new_cstring, __emval_new_object, __emval_run_destructors, __emval_set_property, __emval_take_value, readI53FromI64, __gmtime_js, __localtime_js, allocateUTF8, _tzset_impl, extractZone, __tzset_js, _abort, _emscripten_date_now, _emscripten_memcpy_big, getHeapMax, emscripten_realloc_buffer, _emscripten_resize_heap, getExecutableName, getEnvStrings, writeAsciiToMemory, _environ_get, _environ_sizes_get, _fd_close, _fd_fdstat_get, doReadv, _fd_read, convertI32PairToI53Checked, _fd_seek, doWritev, _fd_write, _llvm_eh_typeid_for, __isLeapYear, __arraySum, __addDays, _strftime, leadingSomething, leadingNulls, compareByDay, sgn, getFirstWeekStartDate, getWeekBasedYear, _strftime_l, intArrayFromBase64, tryParseAsDataURI, invoke_vii, invoke_iiii, invoke_iii, invoke_ii, invoke_iiiiiii, invoke_vi, invoke_v, invoke_i, invoke_viiiiiii, invoke_viii, invoke_viiiiii, invoke_iiiii, invoke_iiiiii, invoke_idiii, invoke_viiii, invoke_viiiii, invoke_iid, invoke_viiiiiiii, invoke_di, invoke_viiiiiiiii, invoke_iiiiiiii, invoke_iidii, invoke_ji, invoke_viiijj, invoke_iijiii, invoke_ijjiii, invoke_iijjiii, invoke_iiji, invoke_iiij, invoke_jii, invoke_viij, invoke_vij, invoke_iijji, invoke_viijj, invoke_vijj, invoke_iij, invoke_vijii, invoke_iiiji, invoke_vijji, invoke_viiij, invoke_viiji, invoke_viijii, invoke_jj, invoke_jij, invoke_iijjj, invoke_viiijji, invoke_viiiiji, invoke_viiiiijiijiiij, invoke_iiiijjiiij, invoke_viiiiiji, invoke_viiiji, runCaller, run, doRun, inject
+
+### laptop-app\node_modules\postject\dist\cli.js
+Functions: main
+
+### laptop-app\node_modules\postject\node_modules\commander\lib\argument.js
+Functions: humanReadableArgName
+
+### laptop-app\node_modules\postject\node_modules\commander\lib\command.js
+Functions: listener, handleOptionValue, findFile, myParseArg, checkForUnknownOptions, maybeOption, hasCustomOptionValue, findBestOptionFromValue, getErrorMessage, outputHelpIfRequested, incrementNodeInspectorPort, getCommandAndParents
+
+### laptop-app\node_modules\postject\node_modules\commander\lib\help.js
+Functions: getSortKey, formatItem, formatList
+
+### laptop-app\node_modules\postject\node_modules\commander\lib\option.js
+Functions: camelcase, splitOptionFlags
+
+### laptop-app\node_modules\postject\node_modules\commander\lib\suggestSimilar.js
+Functions: editDistance, suggestSimilar
+
+### laptop-app\node_modules\postject\node_modules\commander\typings\index.d.ts
+Functions: createCommand, createOption, createArgument
+
+### laptop-app\node_modules\proc-log\lib\index.js
+Functions: end, end
+
+### laptop-app\node_modules\process-nextick-args\index.js
+Functions: nextTick, afterTickOne, afterTickTwo, afterTickThree, afterTick
+
+### laptop-app\node_modules\progress\lib\node-progress.js
+Functions: ProgressBar
+
+### laptop-app\node_modules\promise-retry\index.js
+Functions: isRetryError, promiseRetry
+
+### laptop-app\node_modules\proper-lockfile\index.js
+Functions: lock, lockSync, unlock, unlockSync, check, checkSync
+
+### laptop-app\node_modules\proper-lockfile\lib\adapter.js
+Functions: createSyncFs, toPromise, toSync, toSyncOptions
+
+### laptop-app\node_modules\proper-lockfile\lib\lockfile.js
+Functions: getLockFile, resolveCanonicalPath, acquireLock, isLockStale, removeLock, updateLock, setLockAsCompromised, lock, unlock, check, getLocks
+
+### laptop-app\node_modules\proper-lockfile\lib\mtime-precision.js
+Functions: probe, getMtime
+
+### laptop-app\node_modules\pvtsutils\build\index.d.ts
+Functions: assign, combine, isEqual
+
+### laptop-app\node_modules\pvtsutils\build\index.es.js
+Functions: assign, combine, isEqual
+
+### laptop-app\node_modules\pvtsutils\build\index.js
+Functions: assign, combine, isEqual
+
+### laptop-app\node_modules\pvutils\build\index.d.ts
+Functions: getUTCDate, bufferToHexCodes, checkBufferParams, utilFromBase, utilToBase, utilConcatBuf, utilConcatView, utilDecodeTC, utilEncodeTC, isEqualBuffer, padNumber, toBase64, fromBase64, arrayBufferToString, stringToArrayBuffer, nearestPowerOf2, clearProps
+
+### laptop-app\node_modules\pvutils\build\utils.es.js
+Functions: getUTCDate, getParametersValue, bufferToHexCodes, checkBufferParams, utilFromBase, utilToBase, utilConcatBuf, utilConcatView, utilDecodeTC, utilEncodeTC, isEqualBuffer, padNumber, toBase64, fromBase64, indexOf, test, arrayBufferToString, stringToArrayBuffer, nearestPowerOf2, clearProps
+
+### laptop-app\node_modules\pvutils\build\utils.js
+Functions: getUTCDate, getParametersValue, bufferToHexCodes, checkBufferParams, utilFromBase, utilToBase, utilConcatBuf, utilConcatView, utilDecodeTC, utilEncodeTC, isEqualBuffer, padNumber, toBase64, fromBase64, indexOf, test, arrayBufferToString, stringToArrayBuffer, nearestPowerOf2, clearProps
+
+### laptop-app\node_modules\read-binary-file-arch\cli.js
+Functions: main
+
+### laptop-app\node_modules\read-binary-file-arch\index.d.ts
+Functions: readBinaryFileArch
+
+### laptop-app\node_modules\read-binary-file-arch\index.js
+Functions: readPEArch, getArchUsingFileCommand, readBinaryFileArch
+
+### laptop-app\node_modules\read-binary-file-arch\test.js
+Functions: before, test
+
+### laptop-app\node_modules\readable-stream\lib\_stream_duplex.js
+Functions: Duplex, onend, onEndNT
+
+### laptop-app\node_modules\readable-stream\lib\_stream_passthrough.js
+Functions: PassThrough
+
+### laptop-app\node_modules\readable-stream\lib\_stream_readable.js
+Functions: _uint8ArrayToBuffer, _isUint8Array, prependListener, ReadableState, Readable, readableAddChunk, addChunk, chunkInvalid, needMoreData, computeNewHighWaterMark, howMuchToRead, onEofChunk, emitReadable, emitReadable_, maybeReadMore, maybeReadMore_, onunpipe, onend, cleanup, ondata, onerror, onclose, onfinish, unpipe, pipeOnDrain, nReadingNextTick, resume, resume_, flow, fromList, fromListPartial, copyFromBufferString, copyFromBuffer, endReadable, endReadableNT, indexOf
+
+### laptop-app\node_modules\readable-stream\lib\_stream_transform.js
+Functions: afterTransform, Transform, prefinish, done
+
+### laptop-app\node_modules\readable-stream\lib\_stream_writable.js
+Functions: WriteReq, CorkedRequest, _uint8ArrayToBuffer, _isUint8Array, nop, WritableState, getBuffer, Writable, writeAfterEnd, validChunk, setDefaultEncoding, decodeChunk, writeOrBuffer, doWrite, onwriteError, onwriteStateUpdate, onwrite, afterWrite, onwriteDrain, clearBuffer, needFinish, callFinal, prefinish, finishMaybe, endWritable, onCorkedFinish
+
+### laptop-app\node_modules\readable-stream\lib\internal\streams\BufferList.js
+Functions: _classCallCheck, copyBuffer, BufferList, push, unshift, shift, clear, join, concat
+
+### laptop-app\node_modules\readable-stream\lib\internal\streams\destroy.js
+Functions: destroy, undestroy, emitErrorNT
+
+### laptop-app\node_modules\require-directory\index.js
+Functions: checkFileInclusion, requireDirectory
+
+### laptop-app\node_modules\require-from-string\index.js
+Functions: requireFromString
+
+### laptop-app\node_modules\resedit\dist\_esm\data\IconFile.js
+Functions: generateEntryBinary, IconFile
+
+### laptop-app\node_modules\resedit\dist\_esm\data\IconItem.js
+Functions: calcMaskSize, IconItem
+
+### laptop-app\node_modules\resedit\dist\_esm\data\RawIconItem.js
+Functions: RawIconItem
+
+### laptop-app\node_modules\resedit\dist\_esm\resource\IconGroupEntry.js
+Functions: generateEntryBinary, findUnusedIconID, IconGroupEntry, isIconUsed
+
+### laptop-app\node_modules\resedit\dist\_esm\resource\StringTable.js
+Functions: StringTable
+
+### laptop-app\node_modules\resedit\dist\_esm\resource\StringTableItem.js
+Functions: StringTableItem
+
+### laptop-app\node_modules\resedit\dist\_esm\resource\VersionInfo.js
+Functions: readStringToNullChar, writeStringWithNullChar, createFixedInfo, parseStringTable, parseStringFileInfo, parseVarFileInfo, parseVersionEntry, generateStringTable, generateStringTableInfo, generateVarFileInfo, generateVersionEntryBinary, clampInt, parseVersionArguments, VersionInfo
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\certUtil.d.ts
+Functions: toUint8Array, calculateDERLength, pickIssuerAndSerialNumberDERFromCert, certBinToCertificatesDER
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\certUtil.js
+Functions: toUint8Array, calculateDERLength, skipField, pickCertificatesIfDERHasSignedData, pickIssuerAndSerialNumberDERFromCert, certBinToCertificatesDER
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\AlgorithmIdentifier.js
+Functions: AlgorithmIdentifier
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\Attribute.js
+Functions: Attribute
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\CertificateDataRoot.js
+Functions: __, CertificateDataRoot
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\ContentInfo.js
+Functions: ContentInfo
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\DERObject.js
+Functions: RawDERObject
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\DigestInfo.js
+Functions: DigestInfo
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\IssuerAndSerialNumber.js
+Functions: IssuerAndSerialNumber
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\ObjectIdentifier.js
+Functions: ObjectIdentifier
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\SignedData.js
+Functions: SignedData
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\SignerInfo.js
+Functions: SignerInfo
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\SpcIndirectDataContent.js
+Functions: __, SpcAttributeTypeAndOptionalValue, SpcIndirectDataContent, SpcIndirectDataContentInfo
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\SpcLink.js
+Functions: __, SpcLink, SpcLinkUrl, SpcLinkFile
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\SpcPeImageData.js
+Functions: __, SpcPeImageData, SpcPeImageAttributeTypeAndOptionalValue
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\derUtil.d.ts
+Functions: makeDERLength, makeDERIA5String, makeDERBMPString, makeDEROctetString, makeDERTaggedData, makeDERSequence, arrayToDERSet
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\data\derUtil.js
+Functions: makeDERLength, makeDERIA5String, makeDERBMPString, makeDEROctetString, makeDERTaggedData, makeDERSequence, arrayToDERSet
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\index.d.ts
+Functions: generateExecutableWithSign
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\index.js
+Functions: verb, step, makeSimpleIterator, validateSignerObject, calculateExecutableDigest, inner, getAlgorithmIdentifierObject, doSign, generateExecutableWithSign
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\timestamp.d.ts
+Functions: createTimestampRequest, pickSignedDataFromTimestampResponse
+
+### laptop-app\node_modules\resedit\dist\_esm\sign\timestamp.js
+Functions: createTimestampRequest, pickSignedDataFromTimestampResponse
+
+### laptop-app\node_modules\resedit\dist\_esm\util\functions.d.ts
+Functions: createDataView, roundUp, copyBuffer, allocatePartialBinary, cloneToArrayBuffer, readInt32WithLastOffset, readUint8WithLastOffset, readUint16WithLastOffset, readUint32WithLastOffset, binaryToString, stringToBinary, getFixedString, setFixedString
+
+### laptop-app\node_modules\resedit\dist\_esm\util\functions.js
+Functions: cloneObject, createDataView, roundUp, copyBuffer, allocatePartialBinary, cloneToArrayBuffer, readInt32WithLastOffset, readUint8WithLastOffset, readUint16WithLastOffset, readUint32WithLastOffset, binaryToString, stringToBinary, getFixedString, setFixedString
+
+### laptop-app\node_modules\resedit\dist\data\IconFile.js
+Functions: generateEntryBinary, IconFile
+
+### laptop-app\node_modules\resedit\dist\data\IconItem.js
+Functions: calcMaskSize, IconItem
+
+### laptop-app\node_modules\resedit\dist\data\RawIconItem.js
+Functions: RawIconItem
+
+### laptop-app\node_modules\resedit\dist\resource\IconGroupEntry.js
+Functions: generateEntryBinary, findUnusedIconID, IconGroupEntry, isIconUsed
+
+### laptop-app\node_modules\resedit\dist\resource\StringTable.js
+Functions: StringTable
+
+### laptop-app\node_modules\resedit\dist\resource\StringTableItem.js
+Functions: StringTableItem
+
+### laptop-app\node_modules\resedit\dist\resource\VersionInfo.js
+Functions: readStringToNullChar, writeStringWithNullChar, createFixedInfo, parseStringTable, parseStringFileInfo, parseVarFileInfo, parseVersionEntry, generateStringTable, generateStringTableInfo, generateVarFileInfo, generateVersionEntryBinary, clampInt, parseVersionArguments, VersionInfo
+
+### laptop-app\node_modules\resedit\dist\sign\certUtil.d.ts
+Functions: toUint8Array, calculateDERLength, pickIssuerAndSerialNumberDERFromCert, certBinToCertificatesDER
+
+### laptop-app\node_modules\resedit\dist\sign\certUtil.js
+Functions: toUint8Array, calculateDERLength, skipField, pickCertificatesIfDERHasSignedData, pickIssuerAndSerialNumberDERFromCert, certBinToCertificatesDER
+
+### laptop-app\node_modules\resedit\dist\sign\data\AlgorithmIdentifier.js
+Functions: AlgorithmIdentifier
+
+### laptop-app\node_modules\resedit\dist\sign\data\Attribute.js
+Functions: Attribute
+
+### laptop-app\node_modules\resedit\dist\sign\data\CertificateDataRoot.js
+Functions: __, CertificateDataRoot
+
+### laptop-app\node_modules\resedit\dist\sign\data\ContentInfo.js
+Functions: ContentInfo
+
+### laptop-app\node_modules\resedit\dist\sign\data\DERObject.js
+Functions: RawDERObject
+
+### laptop-app\node_modules\resedit\dist\sign\data\DigestInfo.js
+Functions: DigestInfo
+
+### laptop-app\node_modules\resedit\dist\sign\data\IssuerAndSerialNumber.js
+Functions: IssuerAndSerialNumber
+
+### laptop-app\node_modules\resedit\dist\sign\data\ObjectIdentifier.js
+Functions: ObjectIdentifier
+
+### laptop-app\node_modules\resedit\dist\sign\data\SignedData.js
+Functions: SignedData
+
+### laptop-app\node_modules\resedit\dist\sign\data\SignerInfo.js
+Functions: SignerInfo
+
+### laptop-app\node_modules\resedit\dist\sign\data\SpcIndirectDataContent.js
+Functions: __, SpcAttributeTypeAndOptionalValue, SpcIndirectDataContent, SpcIndirectDataContentInfo
+
+### laptop-app\node_modules\resedit\dist\sign\data\SpcLink.js
+Functions: __, SpcLink, SpcLinkUrl, SpcLinkFile
+
+### laptop-app\node_modules\resedit\dist\sign\data\SpcPeImageData.js
+Functions: __, SpcPeImageData, SpcPeImageAttributeTypeAndOptionalValue
+
+### laptop-app\node_modules\resedit\dist\sign\data\derUtil.d.ts
+Functions: makeDERLength, makeDERIA5String, makeDERBMPString, makeDEROctetString, makeDERTaggedData, makeDERSequence, arrayToDERSet
+
+### laptop-app\node_modules\resedit\dist\sign\data\derUtil.js
+Functions: makeDERLength, makeDERIA5String, makeDERBMPString, makeDEROctetString, makeDERTaggedData, makeDERSequence, arrayToDERSet
+
+### laptop-app\node_modules\resedit\dist\sign\index.d.ts
+Functions: generateExecutableWithSign
+
+### laptop-app\node_modules\resedit\dist\sign\index.js
+Functions: verb, step, makeSimpleIterator, validateSignerObject, calculateExecutableDigest, inner, getAlgorithmIdentifierObject, doSign, generateExecutableWithSign
+
+### laptop-app\node_modules\resedit\dist\sign\timestamp.d.ts
+Functions: createTimestampRequest, pickSignedDataFromTimestampResponse
+
+### laptop-app\node_modules\resedit\dist\sign\timestamp.js
+Functions: createTimestampRequest, pickSignedDataFromTimestampResponse
+
+### laptop-app\node_modules\resedit\dist\util\functions.d.ts
+Functions: createDataView, roundUp, copyBuffer, allocatePartialBinary, cloneToArrayBuffer, readInt32WithLastOffset, readUint8WithLastOffset, readUint16WithLastOffset, readUint32WithLastOffset, binaryToString, stringToBinary, getFixedString, setFixedString
+
+### laptop-app\node_modules\resedit\dist\util\functions.js
+Functions: cloneObject, createDataView, roundUp, copyBuffer, allocatePartialBinary, cloneToArrayBuffer, readInt32WithLastOffset, readUint8WithLastOffset, readUint16WithLastOffset, readUint32WithLastOffset, binaryToString, stringToBinary, getFixedString, setFixedString
+
+### laptop-app\node_modules\resolve-alpn\index.js
+Functions: callback, onTimeout, socketPromise
+
+### laptop-app\node_modules\retry\example\dns.js
+Functions: faultTolerantResolve
+
+### laptop-app\node_modules\retry\example\stop.js
+Functions: attemptAsyncOperation, failingAsyncOperation
+
+### laptop-app\node_modules\retry\lib\retry.js
+Functions: retryWrapper
+
+### laptop-app\node_modules\retry\lib\retry_operation.js
+Functions: RetryOperation
+
+### laptop-app\node_modules\retry\test\integration\test-forever.js
+Functions: testForeverUsesFirstTimeout
+
+### laptop-app\node_modules\retry\test\integration\test-retry-operation.js
+Functions: testReset, testErrors, testMainErrorReturnsMostFrequentError, testMainErrorReturnsLastErrorOnEqualCount, testAttempt, testRetry, testRetryForever, testRetryForeverNoRetries, testStop, testMaxRetryTime
+
+### laptop-app\node_modules\retry\test\integration\test-retry-wrap.js
+Functions: getLib, wrapAll, wrapAllPassOptions, wrapDefined, wrapDefinedAndPassOptions, runWrappedWithoutError, runWrappedSeveralWithoutError, runWrappedWithError
+
+### laptop-app\node_modules\retry\test\integration\test-timeouts.js
+Functions: testDefaultValues, testDefaultValuesWithRandomize, testPassedTimeoutsAreUsed, testTimeoutsAreWithinBoundaries, testTimeoutsAreIncremental, testTimeoutsAreIncrementalForFactorsLessThanOne, testRetries
+
+### laptop-app\node_modules\rimraf\bin.js
+Functions: go
+
+### laptop-app\node_modules\rimraf\rimraf.js
+Functions: defaults, rimraf, next, afterGlob, CB, rimraf_, fixWinEPERM, fixWinEPERMSync, rmdir, rmkids, rimrafSync, rmdirSync, rmkidsSync
+
+### laptop-app\node_modules\roarr\dist\factories\createLogger.js
+Functions: _interopRequireDefault, _extends, ownKeys, _objectSpread, _defineProperty, getParentDomainContext, getFirstParentDomainContext, createLogger, log
+
+### laptop-app\node_modules\roarr\dist\factories\createMockLogger.js
+Functions: createMockLogger, log
+
+### laptop-app\node_modules\roarr\dist\factories\createNodeWriter.js
+Functions: createBlockingWriter, createNodeWriter
+
+### laptop-app\node_modules\roarr\dist\factories\createRoarrInititialGlobalState.js
+Functions: _interopRequireDefault, ownKeys, _objectSpread, _defineProperty, createRoarrInititialGlobalState
+
+### laptop-app\node_modules\roarr\dist\factories\index.js
+Functions: _interopRequireDefault
+
+### laptop-app\node_modules\roarr\dist\log.js
+Functions: _interopRequireDefault
+
+### laptop-app\node_modules\safe-buffer\index.js
+Functions: copyProps, SafeBuffer
+
+### laptop-app\node_modules\sanitize-filename\index.d.ts
+Functions: sanitize
+
+### laptop-app\node_modules\sanitize-filename\index.js
+Functions: replaceTrailingDotsAndSpaces, sanitize
+
+### laptop-app\node_modules\sanitize-filename\test.js
+Functions: repeat, testStringUsingFS
+
+### laptop-app\node_modules\sax\lib\sax.js
+Functions: SAXParser, F, checkBufferLength, clearBuffers, flushBuffers, createStream, determineBufferEncoding, SAXStream, isWhitespace, isQuote, isAttribEnd, isMatch, notMatch, emit, getDeclaredEncoding, normalizeEncodingName, encodingsMatch, validateXmlDeclarationEncoding, emitNode, closeText, textopts, error, end, strictFail, newTag, qname, attrib, openTag, closeTag, parseEntity, isXmlChar, beginWhiteSpace, charAt, write
+
+### laptop-app\node_modules\semver-compare\index.js
+Functions: cmp
+
+### laptop-app\node_modules\semver\bin\semver.js
+Functions: main, failInc, fail, success, help
+
+### laptop-app\node_modules\semver\semver.js
+Functions: tok, makeSafeRe, parse, valid, clean, SemVer, inc, diff, compareIdentifiers, rcompareIdentifiers, major, minor, patch, compare, compareLoose, compareBuild, rcompare, sort, rsort, gt, lt, eq, neq, gte, lte, cmp, Comparator, Range, isSatisfiable, toComparators, parseComparator, isX, replaceTildes, replaceTilde, replaceCarets, replaceCaret, replaceXRanges, replaceXRange, replaceStars, hyphenReplace, testSet, satisfies, maxSatisfying, minSatisfying, minVersion, validRange, ltr, gtr, outside, prerelease, intersects, coerce
+
+### laptop-app\node_modules\serialize-error\index.d.ts
+Functions: deserializeError
+
+### laptop-app\node_modules\serialize-error\index.js
+Functions: destroyCircular, serializeError, deserializeError
+
+### laptop-app\node_modules\signal-exit\index.js
+Functions: unload, emit, listener, load, processReallyExit, processEmit
+
+### laptop-app\node_modules\simple-update-notifier\build\index.js
+Functions: __awaiter, adopt, fulfilled, rejected, step, __generator, verb, step
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\bin\semver.js
+Functions: main, failInc, fail, help
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\classes\range.js
+Functions: isNullSet, isAny, isSatisfiable, parseComparator, isX, invalidXRangeOrder, replaceTildes, replaceTilde, replaceCarets, replaceCaret, replaceXRanges, replaceXRange, replaceStars, replaceGTE0, hyphenReplace, testSet
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\classes\semver.js
+Functions: isPrereleaseIdentifier
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\clean.js
+Functions: clean
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\cmp.js
+Functions: cmp
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\coerce.js
+Functions: coerce
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\compare-build.js
+Functions: compareBuild
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\compare-loose.js
+Functions: compareLoose
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\compare.js
+Functions: compare
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\diff.js
+Functions: diff
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\eq.js
+Functions: eq
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\gt.js
+Functions: gt
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\gte.js
+Functions: gte
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\inc.js
+Functions: inc
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\lt.js
+Functions: lt
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\lte.js
+Functions: lte
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\major.js
+Functions: major
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\minor.js
+Functions: minor
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\neq.js
+Functions: neq
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\parse.js
+Functions: parse
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\patch.js
+Functions: patch
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\prerelease.js
+Functions: prerelease
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\rcompare.js
+Functions: rcompare
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\rsort.js
+Functions: rsort
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\satisfies.js
+Functions: satisfies
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\sort.js
+Functions: sort
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\truncate.js
+Functions: truncate, cloneInputVersion, doTruncation, isPrerelease
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\functions\valid.js
+Functions: valid
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\internal\identifiers.js
+Functions: compareIdentifiers, rcompareIdentifiers
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\internal\parse-options.js
+Functions: parseOptions
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\internal\re.js
+Functions: makeSafeRegex, createToken
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\ranges\gtr.js
+Functions: gtr
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\ranges\intersects.js
+Functions: intersects
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\ranges\ltr.js
+Functions: ltr
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\ranges\max-satisfying.js
+Functions: maxSatisfying
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\ranges\min-satisfying.js
+Functions: minSatisfying
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\ranges\min-version.js
+Functions: minVersion
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\ranges\outside.js
+Functions: outside
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\ranges\subset.js
+Functions: subset, simpleSubset, higherGT, lowerLT
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\ranges\to-comparators.js
+Functions: toComparators
+
+### laptop-app\node_modules\simple-update-notifier\node_modules\semver\ranges\valid.js
+Functions: validRange
+
+### laptop-app\node_modules\simple-update-notifier\src\borderedText.ts
+Functions: borderedText
+
+### laptop-app\node_modules\simple-update-notifier\src\cache.ts
+Functions: getConfigFile, createConfigDir, getLastUpdate, saveLastUpdate
+
+### laptop-app\node_modules\simple-update-notifier\src\getDistVersion.ts
+Functions: getDistVersion
+
+### laptop-app\node_modules\simple-update-notifier\src\hasNewVersion.ts
+Functions: hasNewVersion
+
+### laptop-app\node_modules\simple-update-notifier\src\index.ts
+Functions: simpleUpdateNotifier
+
+### laptop-app\node_modules\source-map-support\browser-source-map-support.js
+Functions: e, p, p, f, e, p, t, m, f, c, l, q, r, k, u, d, g, p, t, q, e, e, e, e, e, p, e, p, t, m, e, e, q, e, p, t, m, f, c, l, q, r, p, t, m, f, c, l, q, r, k, u, d
+
+### laptop-app\node_modules\source-map-support\source-map-support.js
+Functions: dynamicRequire, isInBrowser, hasGlobalProcessEventEmitter, globalProcessVersion, globalProcessStderr, globalProcessExit, handlerExec, supportRelativeURL, retrieveSourceMapURL, mapSourcePosition, mapEvalOrigin, CallSiteToString, cloneCallSite, wrapCallSite, prepareStackTrace, getErrorSource, printErrorAndExit, shimEmitUncaughtException
+
+### laptop-app\node_modules\source-map\dist\source-map.debug.js
+Functions: webpackUniversalModuleDefinition, __webpack_require__, SourceMapGenerator, SourceMapGenerator_fromSourceMap, SourceMapGenerator_addMapping, SourceMapGenerator_setSourceContent, SourceMapGenerator_applySourceMap, SourceMapGenerator_validateMapping, SourceMapGenerator_serializeMappings, SourceMapGenerator_generateSourcesContent, SourceMapGenerator_toJSON, SourceMapGenerator_toString, toVLQSigned, fromVLQSigned, base64VLQ_encode, base64VLQ_decode, getArg, urlParse, urlGenerate, normalize, join, relative, identity, toSetString, fromSetString, isProtoString, compareByOriginalPositions, compareByGeneratedPositionsDeflated, strcmp, compareByGeneratedPositionsInflated, parseSourceMapInput, computeSourceURL, ArraySet, ArraySet_fromArray, ArraySet_size, ArraySet_add, ArraySet_has, ArraySet_indexOf, ArraySet_at, ArraySet_toArray, generatedPositionAfter, MappingList, MappingList_forEach, MappingList_add, MappingList_toArray, SourceMapConsumer, SourceMapConsumer_charIsMappingSeparator, SourceMapConsumer_parseMappings, SourceMapConsumer_eachMapping, SourceMapConsumer_allGeneratedPositionsFor, BasicSourceMapConsumer, SourceMapConsumer_fromSourceMap, Mapping, SourceMapConsumer_parseMappings, SourceMapConsumer_findMapping, SourceMapConsumer_computeColumnSpans, SourceMapConsumer_originalPositionFor, BasicSourceMapConsumer_hasContentsOfAllSources, SourceMapConsumer_sourceContentFor, SourceMapConsumer_generatedPositionFor, IndexedSourceMapConsumer, IndexedSourceMapConsumer_originalPositionFor, IndexedSourceMapConsumer_hasContentsOfAllSources, IndexedSourceMapConsumer_sourceContentFor, IndexedSourceMapConsumer_generatedPositionFor, IndexedSourceMapConsumer_parseMappings, recursiveSearch, search, swap, randomIntInRange, doQuickSort, SourceNode, SourceNode_fromStringWithSourceMap, getNextLine, addMappingWithCode, SourceNode_add, SourceNode_prepend, SourceNode_walk, SourceNode_join, SourceNode_replaceRight, SourceNode_setSourceContent, SourceNode_walkSourceContents, SourceNode_toString, SourceNode_toStringWithSourceMap
+
+### laptop-app\node_modules\source-map\dist\source-map.js
+Functions: webpackUniversalModuleDefinition, __webpack_require__, SourceMapGenerator, SourceMapGenerator_fromSourceMap, SourceMapGenerator_addMapping, SourceMapGenerator_setSourceContent, SourceMapGenerator_applySourceMap, SourceMapGenerator_validateMapping, SourceMapGenerator_serializeMappings, SourceMapGenerator_generateSourcesContent, SourceMapGenerator_toJSON, SourceMapGenerator_toString, toVLQSigned, fromVLQSigned, base64VLQ_encode, base64VLQ_decode, getArg, urlParse, urlGenerate, normalize, join, relative, identity, toSetString, fromSetString, isProtoString, compareByOriginalPositions, compareByGeneratedPositionsDeflated, strcmp, compareByGeneratedPositionsInflated, parseSourceMapInput, computeSourceURL, ArraySet, ArraySet_fromArray, ArraySet_size, ArraySet_add, ArraySet_has, ArraySet_indexOf, ArraySet_at, ArraySet_toArray, generatedPositionAfter, MappingList, MappingList_forEach, MappingList_add, MappingList_toArray, SourceMapConsumer, SourceMapConsumer_charIsMappingSeparator, SourceMapConsumer_parseMappings, SourceMapConsumer_eachMapping, SourceMapConsumer_allGeneratedPositionsFor, BasicSourceMapConsumer, SourceMapConsumer_fromSourceMap, Mapping, SourceMapConsumer_parseMappings, SourceMapConsumer_findMapping, SourceMapConsumer_computeColumnSpans, SourceMapConsumer_originalPositionFor, BasicSourceMapConsumer_hasContentsOfAllSources, SourceMapConsumer_sourceContentFor, SourceMapConsumer_generatedPositionFor, IndexedSourceMapConsumer, IndexedSourceMapConsumer_originalPositionFor, IndexedSourceMapConsumer_hasContentsOfAllSources, IndexedSourceMapConsumer_sourceContentFor, IndexedSourceMapConsumer_generatedPositionFor, IndexedSourceMapConsumer_parseMappings, recursiveSearch, search, swap, randomIntInRange, doQuickSort, SourceNode, SourceNode_fromStringWithSourceMap, getNextLine, addMappingWithCode, SourceNode_add, SourceNode_prepend, SourceNode_walk, SourceNode_join, SourceNode_replaceRight, SourceNode_setSourceContent, SourceNode_walkSourceContents, SourceNode_toString, SourceNode_toStringWithSourceMap
+
+### laptop-app\node_modules\source-map\dist\source-map.min.js
+Functions: n, t, t, o, r, t, o, i, s, a, u, l, c, g, p, h, f, d, m, _, t, t, o, t, o, i, s, r, r, t, o, t, o, e
+
+### laptop-app\node_modules\source-map\lib\array-set.js
+Functions: ArraySet, ArraySet_fromArray, ArraySet_size, ArraySet_add, ArraySet_has, ArraySet_indexOf, ArraySet_at, ArraySet_toArray
+
+### laptop-app\node_modules\source-map\lib\base64-vlq.js
+Functions: toVLQSigned, fromVLQSigned, base64VLQ_encode, base64VLQ_decode
+
+### laptop-app\node_modules\source-map\lib\binary-search.js
+Functions: recursiveSearch, search
+
+### laptop-app\node_modules\source-map\lib\mapping-list.js
+Functions: generatedPositionAfter, MappingList, MappingList_forEach, MappingList_add, MappingList_toArray
+
+### laptop-app\node_modules\source-map\lib\quick-sort.js
+Functions: swap, randomIntInRange, doQuickSort
+
+### laptop-app\node_modules\source-map\lib\source-map-consumer.js
+Functions: SourceMapConsumer, SourceMapConsumer_charIsMappingSeparator, SourceMapConsumer_parseMappings, SourceMapConsumer_eachMapping, SourceMapConsumer_allGeneratedPositionsFor, BasicSourceMapConsumer, SourceMapConsumer_fromSourceMap, Mapping, SourceMapConsumer_parseMappings, SourceMapConsumer_findMapping, SourceMapConsumer_computeColumnSpans, SourceMapConsumer_originalPositionFor, BasicSourceMapConsumer_hasContentsOfAllSources, SourceMapConsumer_sourceContentFor, SourceMapConsumer_generatedPositionFor, IndexedSourceMapConsumer, IndexedSourceMapConsumer_originalPositionFor, IndexedSourceMapConsumer_hasContentsOfAllSources, IndexedSourceMapConsumer_sourceContentFor, IndexedSourceMapConsumer_generatedPositionFor, IndexedSourceMapConsumer_parseMappings
+
+### laptop-app\node_modules\source-map\lib\source-map-generator.js
+Functions: SourceMapGenerator, SourceMapGenerator_fromSourceMap, SourceMapGenerator_addMapping, SourceMapGenerator_setSourceContent, SourceMapGenerator_applySourceMap, SourceMapGenerator_validateMapping, SourceMapGenerator_serializeMappings, SourceMapGenerator_generateSourcesContent, SourceMapGenerator_toJSON, SourceMapGenerator_toString
+
+### laptop-app\node_modules\source-map\lib\source-node.js
+Functions: SourceNode, SourceNode_fromStringWithSourceMap, getNextLine, addMappingWithCode, SourceNode_add, SourceNode_prepend, SourceNode_walk, SourceNode_join, SourceNode_replaceRight, SourceNode_setSourceContent, SourceNode_walkSourceContents, SourceNode_toString, SourceNode_toStringWithSourceMap
+
+### laptop-app\node_modules\source-map\lib\util.js
+Functions: getArg, urlParse, urlGenerate, normalize, join, relative, identity, toSetString, fromSetString, isProtoString, compareByOriginalPositions, compareByGeneratedPositionsDeflated, strcmp, compareByGeneratedPositionsInflated, parseSourceMapInput, computeSourceURL
+
+### laptop-app\node_modules\sprintf-js\dist\sprintf.min.js
+Functions: y, e
+
+### laptop-app\node_modules\sprintf-js\src\sprintf.js
+Functions: sprintf, vsprintf, sprintf_format, sprintf_parse
+
+### laptop-app\node_modules\stat-mode\dist\src\index.d.ts
+Functions: createMode, isStatsMode
+
+### laptop-app\node_modules\stat-mode\dist\src\index.js
+Functions: createMode, isStatsMode
+
+### laptop-app\node_modules\string-width\index.d.ts
+Functions: stringWidth
+
+### laptop-app\node_modules\string-width\index.js
+Functions: stringWidth
+
+### laptop-app\node_modules\string_decoder\lib\string_decoder.js
+Functions: _normalizeEncoding, normalizeEncoding, StringDecoder, utf8CheckByte, utf8CheckIncomplete, utf8CheckExtraBytes, utf8FillLast, utf8Text, utf8End, utf16Text, utf16End, base64Text, base64End, simpleWrite, simpleEnd
+
+### laptop-app\node_modules\strip-ansi\index.d.ts
+Functions: stripAnsi
+
+### laptop-app\node_modules\sumchecker\index.d.ts
+Functions: sumchecker
+
+### laptop-app\node_modules\sumchecker\index.js
+Functions: sumchecker
+
+### laptop-app\node_modules\supports-color\index.js
+Functions: translateLevel, supportsColor, getSupportLevel
+
+### laptop-app\node_modules\tar\dist\commonjs\create.js
+Functions: createFileSync, createFile, addFilesSync, addFilesAsync, createSync, createAsync
+
+### laptop-app\node_modules\tar\dist\commonjs\extract.js
+Functions: extractFileSync, extractFile
+
+### laptop-app\node_modules\tar\dist\commonjs\header.js
+Functions: notNegative, splitPrefix, decString, decDate, numToDate, decNumber, nanUndef, decSmallNumber, encNumber, encSmallNumber, octalString, padOctal, encDate, encString
+
+### laptop-app\node_modules\tar\dist\commonjs\index.min.js
+Functions: wh, yh, Eh
+
+### laptop-app\node_modules\tar\dist\commonjs\large-numbers.js
+Functions: encode, encodePositive, encodeNegative, parse, twos, pos, onesComp, twosComp
+
+### laptop-app\node_modules\tar\dist\commonjs\list.js
+Functions: onReadEntryFunction, filesFilter, mapHas, listFileSync, listFile
+
+### laptop-app\node_modules\tar\dist\commonjs\make-command.js
+Functions: makeCommand
+
+### laptop-app\node_modules\tar\dist\commonjs\mkdir.js
+Functions: checkCwd, mkdir, done, mkdir_, onmkdir, checkCwdSync, mkdirSync, done
+
+### laptop-app\node_modules\tar\dist\commonjs\mode-fix.js
+Functions: modeFix
+
+### laptop-app\node_modules\tar\dist\commonjs\normalize-unicode.js
+Functions: normalizeUnicode
+
+### laptop-app\node_modules\tar\dist\commonjs\options.js
+Functions: isSyncFile, isAsyncFile, isSyncNoFile, isAsyncNoFile, isSync, isAsync, isFile, isNoFile, dealiasKey, dealias
+
+### laptop-app\node_modules\tar\dist\commonjs\parse.js
+Functions: noop, onend
+
+### laptop-app\node_modules\tar\dist\commonjs\path-reservations.js
+Functions: getDirs
+
+### laptop-app\node_modules\tar\dist\commonjs\pax.js
+Functions: merge, parseKV, parseKVLine
+
+### laptop-app\node_modules\tar\dist\commonjs\process-umask.js
+Functions: umask
+
+### laptop-app\node_modules\tar\dist\commonjs\replace.js
+Functions: replaceSync, streamSync, replaceAsync, getPos, cb, onread, onopen, addFilesSync, addFilesAsync
+
+### laptop-app\node_modules\tar\dist\commonjs\strip-absolute-path.js
+Functions: stripAbsolutePath
+
+### laptop-app\node_modules\tar\dist\commonjs\strip-trailing-slashes.js
+Functions: stripTrailingSlashes
+
+### laptop-app\node_modules\tar\dist\commonjs\types.js
+Functions: isCode, isName
+
+### laptop-app\node_modules\tar\dist\commonjs\unpack.js
+Functions: unlinkFile, unlinkFileSync, uint32, done, done, done, checkCwd, start, afterMakeParent, afterChmod, callSync, oner
+
+### laptop-app\node_modules\tar\dist\commonjs\update.js
+Functions: mtimeFilter
+
+### laptop-app\node_modules\tar\dist\commonjs\warn-method.js
+Functions: warnMethod
+
+### laptop-app\node_modules\tar\dist\commonjs\winchars.js
+Functions: encode, decode
+
+### laptop-app\node_modules\tar\dist\commonjs\write-entry.js
+Functions: prefixPath, getType
+
+### laptop-app\node_modules\tar\dist\esm\create.js
+Functions: createFileSync, createFile, addFilesSync, addFilesAsync, createSync, createAsync
+
+### laptop-app\node_modules\tar\dist\esm\extract.js
+Functions: extractFileSync, extractFile
+
+### laptop-app\node_modules\tar\dist\esm\header.js
+Functions: notNegative, splitPrefix, decString, decDate, numToDate, decNumber, nanUndef, decSmallNumber, encNumber, encSmallNumber, octalString, padOctal, encDate, encString
+
+### laptop-app\node_modules\tar\dist\esm\index.min.js
+Functions: Zn, Yn, Kn
+
+### laptop-app\node_modules\tar\dist\esm\large-numbers.js
+Functions: encode, encodePositive, encodeNegative, parse, twos, pos, onesComp, twosComp
+
+### laptop-app\node_modules\tar\dist\esm\list.js
+Functions: onReadEntryFunction, filesFilter, mapHas, listFileSync, listFile
+
+### laptop-app\node_modules\tar\dist\esm\make-command.js
+Functions: makeCommand
+
+### laptop-app\node_modules\tar\dist\esm\mkdir.js
+Functions: checkCwd, mkdir, done, mkdir_, onmkdir, checkCwdSync, mkdirSync, done
+
+### laptop-app\node_modules\tar\dist\esm\mode-fix.js
+Functions: modeFix
+
+### laptop-app\node_modules\tar\dist\esm\normalize-unicode.js
+Functions: normalizeUnicode
+
+### laptop-app\node_modules\tar\dist\esm\options.js
+Functions: isSyncFile, isAsyncFile, isSyncNoFile, isAsyncNoFile, isSync, isAsync, isFile, isNoFile, dealiasKey, dealias
+
+### laptop-app\node_modules\tar\dist\esm\parse.js
+Functions: noop, onend
+
+### laptop-app\node_modules\tar\dist\esm\path-reservations.js
+Functions: getDirs
+
+### laptop-app\node_modules\tar\dist\esm\pax.js
+Functions: merge, parseKV, parseKVLine
+
+### laptop-app\node_modules\tar\dist\esm\process-umask.js
+Functions: umask
+
+### laptop-app\node_modules\tar\dist\esm\replace.js
+Functions: replaceSync, streamSync, replaceAsync, getPos, cb, onread, onopen, addFilesSync, addFilesAsync
+
+### laptop-app\node_modules\tar\dist\esm\strip-absolute-path.js
+Functions: stripAbsolutePath
+
+### laptop-app\node_modules\tar\dist\esm\strip-trailing-slashes.js
+Functions: stripTrailingSlashes
+
+### laptop-app\node_modules\tar\dist\esm\types.js
+Functions: isCode, isName
+
+### laptop-app\node_modules\tar\dist\esm\unpack.js
+Functions: unlinkFile, unlinkFileSync, uint32, done, done, done, checkCwd, start, afterMakeParent, afterChmod, callSync, oner
+
+### laptop-app\node_modules\tar\dist\esm\update.js
+Functions: mtimeFilter
+
+### laptop-app\node_modules\tar\dist\esm\warn-method.js
+Functions: warnMethod
+
+### laptop-app\node_modules\tar\dist\esm\winchars.js
+Functions: encode, decode
+
+### laptop-app\node_modules\tar\dist\esm\write-entry.js
+Functions: prefixPath, getType
+
+### laptop-app\node_modules\tar\node_modules\yallist\dist\commonjs\index.js
+Functions: insertAfter, push, unshift
+
+### laptop-app\node_modules\tar\node_modules\yallist\dist\esm\index.js
+Functions: insertAfter, push, unshift
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\copy\copy-sync.js
+Functions: copySync, handleFilterAndCopy, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestamps, fileIsNotWritable, makeFileWritable, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\copy\copy.js
+Functions: copy, checkParentDir, handleFilter, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestampsAndMode, fileIsNotWritable, makeFileWritable, setDestTimestampsAndMode, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItems, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\empty\index.js
+Functions: emptyDir, emptyDirSync
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\ensure\file.js
+Functions: createFile, makeFile, createFileSync
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\ensure\link.js
+Functions: createLink, makeLink, createLinkSync
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\ensure\symlink-paths.js
+Functions: symlinkPaths, symlinkPathsSync
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\ensure\symlink-type.js
+Functions: symlinkType, symlinkTypeSync
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\ensure\symlink.js
+Functions: createSymlink, _createSymlink, createSymlinkSync
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\json\output-json-sync.js
+Functions: outputJsonSync
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\json\output-json.js
+Functions: outputJson
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\mkdirs\make-dir.js
+Functions: getMode
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\mkdirs\utils.js
+Functions: checkPath
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\move\move-sync.js
+Functions: moveSync, isParentRoot, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\move\move.js
+Functions: move, isParentRoot, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\output-file\index.js
+Functions: outputFile, outputFileSync
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\path-exists\index.js
+Functions: pathExists
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\remove\index.js
+Functions: remove, removeSync
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\remove\rimraf.js
+Functions: defaults, rimraf, CB, rimraf_, fixWinEPERM, fixWinEPERMSync, rmdir, rmkids, rimrafSync, rmdirSync, rmkidsSync
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\util\stat.js
+Functions: getStats, getStatsSync, checkPaths, checkPathsSync, checkParentPaths, checkParentPathsSync, areIdentical, isSrcSubdir, errMsg
+
+### laptop-app\node_modules\temp-file\node_modules\fs-extra\lib\util\utimes.js
+Functions: utimesMillis, utimesMillisSync
+
+### laptop-app\node_modules\temp-file\node_modules\jsonfile\index.js
+Functions: _readFile, readFileSync, _writeFile, writeFileSync
+
+### laptop-app\node_modules\temp-file\node_modules\jsonfile\utils.js
+Functions: stringify, stripBom
+
+### laptop-app\node_modules\temp-file\out\main.d.ts
+Functions: getTempName
+
+### laptop-app\node_modules\temp-file\out\main.js
+Functions: getTempName, getBaseTempDir, addExitHook, handleError, nullize
+
+### laptop-app\node_modules\temp\lib\temp.js
+Functions: deleteFileOnExit, deleteDirOnExit, attachExitListener, cleanupFilesSync, cleanupFiles, cleanupDirsSync, cleanupDirs, cleanupSync, cleanup, mkdir, mkdirSync, open, openSync, createWriteStream
+
+### laptop-app\node_modules\tiny-async-pool\lib\es6.js
+Functions: asyncPool, clean
+
+### laptop-app\node_modules\tiny-async-pool\lib\es7.js
+Functions: asyncPool, clean
+
+### laptop-app\node_modules\tiny-async-pool\node_modules\semver\semver.js
+Functions: makeSafeRe, parse, valid, clean, SemVer, inc, diff, compareIdentifiers, rcompareIdentifiers, major, minor, patch, compare, compareLoose, rcompare, sort, rsort, gt, lt, eq, neq, gte, lte, cmp, Comparator, Range, toComparators, parseComparator, isX, replaceTildes, replaceTilde, replaceCarets, replaceCaret, replaceXRanges, replaceXRange, replaceStars, hyphenReplace, testSet, satisfies, maxSatisfying, minSatisfying, minVersion, validRange, ltr, gtr, outside, prerelease, intersects, coerce
+
+### laptop-app\node_modules\tmp-promise\index.d.ts
+Functions: file, dir, tmpName
+
+### laptop-app\node_modules\tmp-promise\index.js
+Functions: withFile, withDir
+
+### laptop-app\node_modules\tmp-promise\index.test-d.ts
+Functions: fileExample, dirExample, tmpNameExample
+
+### laptop-app\node_modules\tmp-promise\test.js
+Functions: checkFileResult, checkDirResult
+
+### laptop-app\node_modules\tmp\lib\tmp.js
+Functions: rimraf, FN_RIMRAF_SYNC, tmpName, _getUniqueName, tmpNameSync, file, _tmpNameCreated, _fileCreated, _discardCallback, fileSync, dir, _tmpNameCreated, _dirCreated, dirSync, _removeFileAsync, _removeFileSync, _prepareTmpFileRemoveCallback, _prepareTmpDirRemoveCallback, _prepareRemoveCallback, _cleanupCallback, _garbageCollector, _randomChars, _isUndefined, _parseArguments, _resolvePath, _resolvePathSync, _generateTmpName, _assertPath, _assertOptionsBase, _getRelativePath, _getRelativePathSync, _assertAndSanitizeOptions, _assertAndSanitizeOptionsSync, _isEBADF, _isENOENT, _isExpectedError, setGracefulCleanup, _getTmpDir, _getTmpDirSync
+
+### laptop-app\node_modules\truncate-utf8-bytes\lib\truncate.js
+Functions: isHighSurrogate, isLowSurrogate, truncate
+
+### laptop-app\node_modules\truncate-utf8-bytes\test.js
+Functions: isHighSurrogate, repeat, assertLengths
+
+### laptop-app\node_modules\tslib\tslib.d.ts
+Functions: __extends, __assign, __rest, __decorate, __param, __esDecorate, __runInitializers, __propKey, __setFunctionName, __metadata, __awaiter, __generator, __exportStar, __values, __read, __spread, __spreadArrays, __spreadArray, __await, __asyncGenerator, __asyncDelegator, __asyncValues, __makeTemplateObject, __classPrivateFieldIn, __createBinding, __disposeResources, __rewriteRelativeImportExtension
+
+### laptop-app\node_modules\tslib\tslib.es6.js
+Functions: __extends, __, __assign, __rest, __decorate, __param, __esDecorate, accept, __runInitializers, __propKey, __setFunctionName, __metadata, __awaiter, adopt, fulfilled, rejected, step, __generator, verb, step, __exportStar, __values, __read, __spread, __spreadArrays, __spreadArray, __await, __asyncGenerator, awaitReturn, verb, resume, step, fulfill, reject, settle, __asyncDelegator, verb, __asyncValues, verb, settle, __makeTemplateObject, __importStar, __importDefault, __classPrivateFieldGet, __classPrivateFieldSet, __classPrivateFieldIn, __addDisposableResource, __disposeResources, fail, next, __rewriteRelativeImportExtension
+
+### laptop-app\node_modules\tslib\tslib.js
+Functions: createExporter, __, accept, adopt, fulfilled, rejected, step, verb, step, awaitReturn, verb, resume, step, fulfill, reject, settle, verb, verb, settle, fail, next
+
+### laptop-app\node_modules\type-fest\source\async-return-type.d.ts
+Functions: doSomething
+
+### laptop-app\node_modules\type-fest\source\opaque.d.ts
+Functions: createNewThingOne, createAccountNumber, getMoneyForAccount
+
+### laptop-app\node_modules\type-fest\source\partial-deep.d.ts
+Functions: applySavedSettings
+
+### laptop-app\node_modules\type-fest\source\promisable.d.ts
+Functions: logger
+
+### laptop-app\node_modules\type-fest\source\value-of.d.ts
+Functions: getData, onlyBar
+
+### laptop-app\node_modules\undici-types\api.d.ts
+Functions: request, stream, pipeline, connect, upgrade
+
+### laptop-app\node_modules\undici-types\connector.d.ts
+Functions: buildConnector
+
+### laptop-app\node_modules\undici-types\content-type.d.ts
+Functions: parseMIMEType, serializeAMimeType
+
+### laptop-app\node_modules\undici-types\cookies.d.ts
+Functions: deleteCookie, getCookies, getSetCookies, setCookie
+
+### laptop-app\node_modules\undici-types\fetch.d.ts
+Functions: fetch
+
+### laptop-app\node_modules\undici-types\global-dispatcher.d.ts
+Functions: getGlobalDispatcher
+
+### laptop-app\node_modules\undici-types\global-origin.d.ts
+Functions: setGlobalOrigin, getGlobalOrigin
+
+### laptop-app\node_modules\undici-types\interceptors.d.ts
+Functions: createRedirectInterceptor, dump, retry, redirect, responseError
+
+### laptop-app\node_modules\undici-types\util.d.ts
+Functions: headerNameToString, parseHeaders
+
+### laptop-app\node_modules\undici\index-fetch.js
+Functions: fetch
+
+### laptop-app\node_modules\undici\index.js
+Functions: makeDispatcher, fetch
+
+### laptop-app\node_modules\undici\lib\api\abort-signal.js
+Functions: abort, addSignal, removeSignal
+
+### laptop-app\node_modules\undici\lib\api\api-connect.js
+Functions: connect
+
+### laptop-app\node_modules\undici\lib\api\api-pipeline.js
+Functions: pipeline
+
+### laptop-app\node_modules\undici\lib\api\api-request.js
+Functions: request
+
+### laptop-app\node_modules\undici\lib\api\api-stream.js
+Functions: stream
+
+### laptop-app\node_modules\undici\lib\api\api-upgrade.js
+Functions: upgrade
+
+### laptop-app\node_modules\undici\lib\api\readable.js
+Functions: noop, onAbort, isLocked, isUnusable, consume, consumeStart, chunksDecode, chunksConcat, consumeEnd, consumePush, consumeFinish
+
+### laptop-app\node_modules\undici\lib\api\util.js
+Functions: getResolveErrorBodyCallback, isContentTypeApplicationJson, isContentTypeText
+
+### laptop-app\node_modules\undici\lib\core\connect.js
+Functions: noop, buildConnector, connect, onConnectTimeout
+
+### laptop-app\node_modules\undici\lib\core\request.js
+Functions: autoDestroy, processHeader
+
+### laptop-app\node_modules\undici\lib\core\util.js
+Functions: wrapRequestBody, nop, isStream, isBlobLike, buildURL, isValidPort, isHttpOrHttpsPrefixed, parseURL, parseOrigin, getHostname, getServerName, deepClone, isAsyncIterable, isIterable, bodyLength, isDestroyed, destroy, parseKeepAliveTimeout, headerNameToString, bufferToLowerCasedHeaderName, parseHeaders, parseRawHeaders, isBuffer, validateHandler, isDisturbed, isErrored, isReadable, getSocketInfo, ReadableStreamFrom, isFormDataLike, addAbortListener, toUSVString, isUSVString, isTokenCharCode, isValidHTTPToken, isValidHeaderValue, parseRangeHeader, addListener, removeAllListeners, errorRequest
+
+### laptop-app\node_modules\undici\lib\dispatcher\agent.js
+Functions: defaultFactory
+
+### laptop-app\node_modules\undici\lib\dispatcher\balanced-pool.js
+Functions: getGreatestCommonDivisor, defaultFactory
+
+### laptop-app\node_modules\undici\lib\dispatcher\client-h1.js
+Functions: lazyllhttp, onParserTimeout, connectH1, clearIdleSocketValidation, scheduleIdleSocketValidation, resumeH1, shouldSendContentLength, writeH1, abort, writeStream, writeBuffer, writeBlob, writeIterable, onDrain, waitForDrain
+
+### laptop-app\node_modules\undici\lib\dispatcher\client-h2.js
+Functions: parseH2Headers, parseH2ResponseHeaders, connectH2, resumeH2, onHttp2SessionError, onHttp2FrameError, onHttp2SessionEnd, onHTTP2GoAway, shouldSendContentLength, writeH2, abort, onResponse, onUpgradeError, onReady, writeBodyH2, writeBuffer, writeStream, onPipeData, writeBlob, writeIterable, onDrain, waitForDrain
+
+### laptop-app\node_modules\undici\lib\dispatcher\client.js
+Functions: noop, getPipelining, callback, onError, connect, emitDrain, resume, _resume
+
+### laptop-app\node_modules\undici\lib\dispatcher\dispatcher-base.js
+Functions: onClosed, onDestroyed
+
+### laptop-app\node_modules\undici\lib\dispatcher\pool-base.js
+Functions: onDrain
+
+### laptop-app\node_modules\undici\lib\dispatcher\pool.js
+Functions: defaultFactory
+
+### laptop-app\node_modules\undici\lib\dispatcher\proxy-agent.js
+Functions: defaultProtocolPort, defaultFactory, noop, defaultAgentFactory, factory, buildHeaders, throwIfProxyAuthIsSent
+
+### laptop-app\node_modules\undici\lib\global.js
+Functions: setGlobalDispatcher, getGlobalDispatcher
+
+### laptop-app\node_modules\undici\lib\handler\redirect-handler.js
+Functions: parseLocation, shouldRemoveHeader, cleanRequestHeaders
+
+### laptop-app\node_modules\undici\lib\handler\retry-handler.js
+Functions: calculateRetryAfterHeader, validatePartialResponseContentLength, onRetry
+
+### laptop-app\node_modules\undici\lib\interceptor\dns.js
+Functions: dnsInterceptor
+
+### laptop-app\node_modules\undici\lib\interceptor\dump.js
+Functions: createDumpInterceptor, Intercept
+
+### laptop-app\node_modules\undici\lib\interceptor\redirect-interceptor.js
+Functions: createRedirectInterceptor, Intercept
+
+### laptop-app\node_modules\undici\lib\interceptor\redirect.js
+Functions: redirectInterceptor
+
+### laptop-app\node_modules\undici\lib\interceptor\retry.js
+Functions: retryInterceptor
+
+### laptop-app\node_modules\undici\lib\llhttp\utils.js
+Functions: enumToMap
+
+### laptop-app\node_modules\undici\lib\mock\mock-interceptor.js
+Functions: wrappedDefaultsCallback
+
+### laptop-app\node_modules\undici\lib\mock\mock-utils.js
+Functions: matchValue, lowerCaseEntries, getHeaderByName, buildHeadersFromArray, matchHeaders, safeUrl, matchKey, getResponseData, getMockDispatch, addMockDispatch, deleteMockDispatch, buildKey, generateKeyValues, getStatusText, getResponse, mockDispatch, handleReply, resume, buildMockDispatch, dispatch, checkNetConnect, buildMockOptions
+
+### laptop-app\node_modules\undici\lib\util\timers.js
+Functions: onTick, refreshTimeout
+
+### laptop-app\node_modules\undici\lib\web\cache\util.js
+Functions: urlEquals, getFieldValues
+
+### laptop-app\node_modules\undici\lib\web\cookies\index.js
+Functions: getCookies, deleteCookie, getSetCookies, setCookie
+
+### laptop-app\node_modules\undici\lib\web\cookies\parse.js
+Functions: parseSetCookie, parseUnparsedAttributes
+
+### laptop-app\node_modules\undici\lib\web\cookies\util.js
+Functions: isCTLExcludingHtab, validateCookieName, validateCookieValue, validateCookiePath, isLetterOrDigit, validateCookieDomain, toIMFDate, validateCookieMaxAge, stringify
+
+### laptop-app\node_modules\undici\lib\web\eventsource\eventsource-stream.js
+Functions: isASCIINumberBytes, isValidLastEventIdBytes, isFieldName
+
+### laptop-app\node_modules\undici\lib\web\eventsource\eventsource.js
+Functions: processEventSourceEndOfBody
+
+### laptop-app\node_modules\undici\lib\web\eventsource\util.js
+Functions: isValidLastEventId, isASCIINumber, delay
+
+### laptop-app\node_modules\undici\lib\web\fetch\body.js
+Functions: noop, extractBody, escape, normalizeLinefeeds, safelyExtractBody, cloneBody, throwIfAborted, bodyMixinMethods, mixinBody, consumeBody, errorSteps, successSteps, bodyUnusable, parseJSONFromBytes, bodyMimeType
+
+### laptop-app\node_modules\undici\lib\web\fetch\data-url.js
+Functions: dataURLProcessor, URLSerializer, collectASequenceOfCodePoints, collectASequenceOfCodePointsFast, stringPercentDecode, isHexCharByte, hexByteToNumber, percentDecode, parseMIMEType, forgivingBase64, collectAnHTTPQuotedString, serializeAMimeType, isHTTPWhiteSpace, removeHTTPWhitespace, isASCIIWhitespace, removeASCIIWhitespace, removeChars, isomorphicDecode, minimizeSupportedMimeType
+
+### laptop-app\node_modules\undici\lib\web\fetch\file.js
+Functions: isFileLike
+
+### laptop-app\node_modules\undici\lib\web\fetch\formdata-parser.js
+Functions: isAsciiString, validateBoundary, multipartFormDataParser, parseMultipartFormDataHeaders, parseMultipartFormDataName, collectASequenceOfBytes, removeChars, bufferStartsWith
+
+### laptop-app\node_modules\undici\lib\web\fetch\formdata.js
+Functions: makeEntry
+
+### laptop-app\node_modules\undici\lib\web\fetch\global.js
+Functions: getGlobalOrigin, setGlobalOrigin
+
+### laptop-app\node_modules\undici\lib\web\fetch\headers.js
+Functions: isHTTPWhiteSpaceCharCode, headerValueNormalize, fill, appendHeader, compareHeaderName
+
+### laptop-app\node_modules\undici\lib\web\fetch\index.js
+Functions: handleFetchDone, fetch, processResponse, finalizeAndReportTiming, abortFetch, fetching, mainFetch, processBodyError, processBody, schemeFetch, finalizeResponse, fetchFinale, processResponseEndOfBody, processResponseEndOfBodyTask, httpFetch, httpRedirectFetch, httpNetworkOrCacheFetch, httpNetworkFetch, processEndOfBody, processBodyError, pullAlgorithm, cancelAlgorithm, onAborted, dispatch
+
+### laptop-app\node_modules\undici\lib\web\fetch\request.js
+Functions: buildAbort, abort, makeRequest, cloneRequest, fromInnerRequest
+
+### laptop-app\node_modules\undici\lib\web\fetch\response.js
+Functions: cloneResponse, makeResponse, makeNetworkError, isNetworkError, makeFilteredResponse, filterResponse, makeAppropriateNetworkError, initializeResponse, fromInnerResponse
+
+### laptop-app\node_modules\undici\lib\web\fetch\util.js
+Functions: responseURL, responseLocationURL, isValidEncodedURL, normalizeBinaryStringToUtf8, requestCurrentURL, requestBadPort, isErrorLike, isValidReasonPhrase, isValidHeaderValue, setRequestReferrerPolicyOnRedirect, crossOriginResourcePolicyCheck, corsCheck, TAOCheck, appendFetchMetadata, appendRequestOriginHeader, coarsenTime, clampAndCoarsenConnectionTimingInfo, coarsenedSharedCurrentTime, createOpaqueTimingInfo, makePolicyContainer, clonePolicyContainer, determineRequestsReferrer, stripURLForReferrer, isURLPotentiallyTrustworthy, isOriginPotentiallyTrustworthy, bytesMatch, parseMetadata, getStrongestMetadata, filterMetadataListByAlgorithm, compareBase64Mixed, tryUpgradeRequestToAPotentiallyTrustworthyURL, sameOrigin, createDeferredPromise, isAborted, isCancelled, normalizeMethod, serializeJavascriptValueToJSONString, createIterator, iteratorMixin, keys, values, entries, forEach, fullyReadBody, isReadableStreamLike, readableStreamClose, isomorphicEncode, readAllBytes, urlIsLocal, urlHasHttpsScheme, urlIsHttpHttpsScheme, simpleRangeHeaderValue, buildContentRange, createInflate, extractMimeType, gettingDecodingSplitting, getDecodeSplit, utf8DecodeBytes
+
+### laptop-app\node_modules\undici\lib\web\fileapi\encoding.js
+Functions: getEncoding
+
+### laptop-app\node_modules\undici\lib\web\fileapi\util.js
+Functions: readOperation, fireAProgressEvent, packageData, decode, BOMSniffing, combineByteSequences
+
+### laptop-app\node_modules\undici\lib\web\websocket\connection.js
+Functions: establishWebSocketConnection, closeWebSocketConnection, onSocketData, onSocketClose, onSocketError
+
+### laptop-app\node_modules\undici\lib\web\websocket\frame.js
+Functions: randomFillSync, generateMask
+
+### laptop-app\node_modules\undici\lib\web\websocket\receiver.js
+Functions: failWebsocketConnectionWithCode
+
+### laptop-app\node_modules\undici\lib\web\websocket\sender.js
+Functions: createFrame, toBuffer
+
+### laptop-app\node_modules\undici\lib\web\websocket\util.js
+Functions: isConnecting, isEstablished, isClosing, isClosed, fireEvent, websocketMessageReceived, toArrayBuffer, isValidSubprotocol, isValidStatusCode, failWebsocketConnection, isControlFrame, isContinuationFrame, isTextBinaryFrame, isValidOpcode, parseExtensions, isValidClientWindowBits
+
+### laptop-app\node_modules\undici\lib\web\websocket\websocket.js
+Functions: onParserDrain, onParserError
+
+### laptop-app\node_modules\undici\types\api.d.ts
+Functions: request, stream, pipeline, connect, upgrade
+
+### laptop-app\node_modules\undici\types\connector.d.ts
+Functions: buildConnector
+
+### laptop-app\node_modules\undici\types\content-type.d.ts
+Functions: parseMIMEType, serializeAMimeType
+
+### laptop-app\node_modules\undici\types\cookies.d.ts
+Functions: deleteCookie, getCookies, getSetCookies, setCookie
+
+### laptop-app\node_modules\undici\types\fetch.d.ts
+Functions: fetch
+
+### laptop-app\node_modules\undici\types\global-dispatcher.d.ts
+Functions: getGlobalDispatcher
+
+### laptop-app\node_modules\undici\types\global-origin.d.ts
+Functions: setGlobalOrigin, getGlobalOrigin
+
+### laptop-app\node_modules\undici\types\interceptors.d.ts
+Functions: createRedirectInterceptor, dump, retry, redirect, responseError, dns
+
+### laptop-app\node_modules\undici\types\util.d.ts
+Functions: headerNameToString, parseHeaders
+
+### laptop-app\node_modules\unzipper\lib\Decrypt.js
+Functions: generateTable, crc, multiply, Decrypt
+
+### laptop-app\node_modules\unzipper\lib\NoopStream.js
+Functions: NoopStream
+
+### laptop-app\node_modules\unzipper\lib\Open\directory.js
+Functions: getCrxHeader, getZip64CentralDirectory, parseZip64DirRecord, centralDirectory
+
+### laptop-app\node_modules\unzipper\lib\Open\unzip.js
+Functions: unzip
+
+### laptop-app\node_modules\unzipper\lib\PullStream.js
+Functions: PullStream, cb, pull
+
+### laptop-app\node_modules\unzipper\lib\extract.js
+Functions: Extract
+
+### laptop-app\node_modules\unzipper\lib\parse.js
+Functions: Parse
+
+### laptop-app\node_modules\unzipper\lib\parseDateTime.js
+Functions: parseDateTime
+
+### laptop-app\node_modules\unzipper\lib\parseOne.js
+Functions: parseOne
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\copy\copy-sync.js
+Functions: copySync, getStats, onFile, mayCopyFile, copyFile, handleTimestamps, fileIsNotWritable, makeFileWritable, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\copy\copy.js
+Functions: copy, runFilter, getStatsAndPerformCopy, onFile, copyFile, fileIsNotWritable, makeFileWritable, onDir, onLink
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\empty\index.js
+Functions: emptyDir, emptyDirSync
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\ensure\file.js
+Functions: createFile, createFileSync
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\ensure\link.js
+Functions: createLink, createLinkSync
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\ensure\symlink-paths.js
+Functions: symlinkPaths, symlinkPathsSync
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\ensure\symlink-type.js
+Functions: symlinkType, symlinkTypeSync
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\ensure\symlink.js
+Functions: createSymlink, createSymlinkSync
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\json\output-json-sync.js
+Functions: outputJsonSync
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\json\output-json.js
+Functions: outputJson
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\mkdirs\make-dir.js
+Functions: getMode
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\mkdirs\utils.js
+Functions: checkPath
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\move\move-sync.js
+Functions: moveSync, isParentRoot, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\move\move.js
+Functions: move, doRename, moveAcrossDevice
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\output-file\index.js
+Functions: outputFile, outputFileSync
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\path-exists\index.js
+Functions: pathExists
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\remove\index.js
+Functions: remove, removeSync
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\util\stat.js
+Functions: getStats, getStatsSync, checkPaths, checkPathsSync, checkParentPaths, checkParentPathsSync, areIdentical, isSrcSubdir, errMsg
+
+### laptop-app\node_modules\unzipper\node_modules\fs-extra\lib\util\utimes.js
+Functions: utimesMillis, utimesMillisSync
+
+### laptop-app\node_modules\unzipper\node_modules\jsonfile\index.js
+Functions: _readFile, readFileSync, _writeFile, writeFileSync
+
+### laptop-app\node_modules\unzipper\node_modules\jsonfile\utils.js
+Functions: stringify, stripBom
+
+### laptop-app\node_modules\utf8-byte-length\browser.js
+Functions: isHighSurrogate, isLowSurrogate, getByteLength
+
+### laptop-app\node_modules\utf8-byte-length\index.js
+Functions: getByteLength
+
+### laptop-app\node_modules\utf8-byte-length\test.js
+Functions: repeat
+
+### laptop-app\node_modules\util-deprecate\browser.js
+Functions: deprecate, deprecated, config
+
+### laptop-app\node_modules\webcrypto-core\build\index.d.ts
+Functions: isJWK
+
+### laptop-app\node_modules\webcrypto-core\build\webcrypto-core.es.js
+Functions: isJWK
+
+### laptop-app\node_modules\webcrypto-core\build\webcrypto-core.js
+Functions: _interopNamespaceDefault, isJWK
+
+### laptop-app\node_modules\which\bin\which.js
+Functions: usage
+
+### laptop-app\node_modules\which\lib\index.js
+Functions: getNotFoundError, getPathInfo, getPathPart, which, whichSync
+
+### laptop-app\node_modules\wrap-ansi\index.js
+Functions: wrapAnsi, wrapAnsiHyperlink, wordLengths, wrapWord, stringVisibleTrimSpacesRight, exec
+
+### laptop-app\node_modules\wrappy\wrappy.js
+Functions: wrappy, wrapper
+
+### laptop-app\node_modules\xmlbuilder\typings\index.d.ts
+Functions: create, begin, begin, stringWriter, streamWriter
+
+### laptop-app\node_modules\y18n\build\lib\cjs.js
+Functions: y18n
+
+### laptop-app\node_modules\y18n\build\lib\index.js
+Functions: y18n
+
+### laptop-app\node_modules\yallist\yallist.js
+Functions: Yallist, insert, push, unshift, Node
+
+### laptop-app\node_modules\yargs-parser\browser.js
+Functions: Parser
+
+### laptop-app\node_modules\yargs-parser\build\lib\index.js
+Functions: Parser
+
+### laptop-app\node_modules\yargs-parser\build\lib\string-utils.js
+Functions: camelCase, decamelize, looksLikeNumber
+
+### laptop-app\node_modules\yargs-parser\build\lib\tokenize-arg-string.js
+Functions: tokenizeArgString
+
+### laptop-app\node_modules\yargs-parser\build\lib\yargs-parser.js
+Functions: pushPositional, eatNargs, eatArray, setArg, addNewAlias, processValue, maybeCoerceNumber, setConfig, setConfigObject, setConfigObjects, applyEnvVars, applyCoercions, setPlaceholderKeys, applyDefaultsAndAliases, hasKey, setKey, extendAliases, checkAllAliases, hasAnyFlag, hasFlagsMatching, hasAllShortFlags, isUnknownOptionAsArg, isUnknownOption, defaultValue, defaultForType, guessType, isUndefined, checkConfiguration, combineAliases, increment, sanitizeKey, stripQuotes
+
+### laptop-app\node_modules\yargs\build\lib\argsert.js
+Functions: argsert, parseArgs, guessType, argumentTypeError
+
+### laptop-app\node_modules\yargs\build\lib\command.js
+Functions: command, isCommandBuilderDefinition, isCommandAndAliases, isCommandBuilderCallback, isCommandBuilderOptionDefinitions, isCommandHandlerDefinition
+
+### laptop-app\node_modules\yargs\build\lib\completion.js
+Functions: argsContains, startsByTwoDashes, isShortOption, completion, isSyncCompletionFunction, isFallbackCompletionFunction
+
+### laptop-app\node_modules\yargs\build\lib\middleware.js
+Functions: commandMiddlewareFactory, applyMiddleware
+
+### laptop-app\node_modules\yargs\build\lib\parse-command.js
+Functions: parseCommand
+
+### laptop-app\node_modules\yargs\build\lib\typings\common-types.js
+Functions: assertNotStrictEqual, assertSingleKey, objectKeys
+
+### laptop-app\node_modules\yargs\build\lib\usage.js
+Functions: isBoolean, usage, failFn, showHelpOnFailFn, fail, command, describe, help, isLongSwitch, deprecatedExtra, maxWidth, normalizeAliases, addUngroupedKeys, filterHiddenOptions, stringifiedValues, defaultString, windowWidth, reset, freeze, unfreeze, isIndentedText, addIndentation, getIndentation, getText
+
+### laptop-app\node_modules\yargs\build\lib\utils\apply-extends.js
+Functions: applyExtends, checkForCircularExtends, getPathToDefaultConfig, mergeDeep, isObject
+
+### laptop-app\node_modules\yargs\build\lib\utils\is-promise.js
+Functions: isPromise
+
+### laptop-app\node_modules\yargs\build\lib\utils\levenshtein.js
+Functions: levenshtein
+
+### laptop-app\node_modules\yargs\build\lib\utils\maybe-async-result.js
+Functions: maybeAsyncResult, isFunction
+
+### laptop-app\node_modules\yargs\build\lib\utils\obj-filter.js
+Functions: objFilter
+
+### laptop-app\node_modules\yargs\build\lib\utils\process-argv.js
+Functions: getProcessArgvBinIndex, isBundledElectronApp, isElectronApp, hideBin, getProcessArgvBin
+
+### laptop-app\node_modules\yargs\build\lib\utils\set-blocking.js
+Functions: setBlocking
+
+### laptop-app\node_modules\yargs\build\lib\utils\which-module.js
+Functions: whichModule
+
+### laptop-app\node_modules\yargs\build\lib\validation.js
+Functions: validation, nonOptionCount, positionalCount, requiredArguments, unknownArguments, unknownCommands, isValidAndSomeAliasIsNotNew, limitedChoices, implies, getImplied, keyExists, implications, conflicts, conflictingFn, recommendCommands, reset, freeze, unfreeze
+
+### laptop-app\node_modules\yargs\build\lib\yargs-factory.js
+Functions: YargsFactory, isYargsInstance
+
+### laptop-app\node_modules\yauzl\index.js
+Functions: open, fromFd, fromBuffer, fromRandomAccessReader, ZipFile, emitErrorAndAutoClose, emitError, Entry, dosDateTimeToDate, validateFileName, readAndAssertNoEof, AssertByteCountStream, RandomAccessReader, onCloseDone, RefUnrefFilter, decodeBuffer, readUInt64LE, defaultCallback
+
+### scratch_extract_functions.py
+Functions: extract_python_functions, extract_kotlin_functions, extract_js_functions, main
+
+### shared\src\main\kotlin\com\whitedevil\agent\Agent.kt
+Functions: parseSlash, reset, snapshot, restore, repairToolPairs, trimHistory, send
+
+### shared\src\main\kotlin\com\whitedevil\agent\Attachments.kt
+Functions: kindOf, extensionFor, formatSize, safeFileName, workspaceNote
+
+### shared\src\main\kotlin\com\whitedevil\agent\Models.kt
+Functions: textContent, text, multimodal, stripBlobs
+
+### shared\src\main\kotlin\com\whitedevil\agent\Tools.kt
+Functions: execute, executeDetailed, resolveWithinWorkspace, readFile, writeFile, deleteFile, listDirectory, relayHttp, relayBytes, getRenderStatus, reviewLatestRender, renderAssessAdjustCycle, listPromptPacks, runLaptopCommand, shellQuote, downloadCivitaiLora, queueGpuRender, hubOverview, hubRequest, objectSchema
+
+### shared\src\main\kotlin\com\whitedevil\agent\UiWorkflow.kt
+Functions: next, accepts, canSubmitGoal, toolOutputState, actionReplySummary, value
+
+### shared\src\main\kotlin\com\whitedevil\agent\VeniceClient.kt
+Functions: chatCompletion, close
+
+### tests\redteam\test_redteam_policies.py
+Functions: test_policy_scenarios_basic, test_policy_scenario_coverage, test_secrets_scanning_present, test_missing_tool_detected, test_parent_traversal_refused, test_absolute_path_refused, test_symlink_escape_refused, test_fifo_refused, test_hidden_secret_dir_refused, test_unsandboxed_tests_refused, test_malformed_arguments_raises, test_duplicate_calls_detected, test_bogus_done_no_evidence, test_stale_evidence_detection, test_oversized_context_refused, test_interrupted_intent_detected, test_new_file_detection, test_ignored_file_tracking, test_stale_hash_refusal, test_patch_export_consistency, test_no_network_flag_used, test_readonly_root_flag_used, test_resource_limits_applied, test_output_capapcity_enforced
+
+### tests\redteam\test_redteam_tooling.py
+Functions: test_redteam_tooling_api_present, test_redteam_docker_wrapper_exists, test_redteam_node_script_present, test_tooling_imports_and_exports, test_secret_scanner_integration, test_scenarios_parity_across_scenarios, test_docker_network_isolation, test_node_cli_wrapper_exists, test_python_api_match_cli_behavior, test_no_leaks_in_previous_fixes, test_cached_secrets_not_returned
+
+### tools\civitai_red_dl.py
+Functions: ensure_requests, token, headers, rewrite, mask, get, load_model, _is_weight_file, pick_files, download_url, looks_like_file, sha256_file, total_from, open_stream, save, parse_ids, dest_for, one_model, main
+
+### tools\test_civitai_red_dl.py
+Functions: test_parse_ids_urls_and_commas, test_pick_files_all_versions_not_just_ltx25, test_pick_files_skips_checkpoints_unless_weights, test_mask_hides_token, test_truncated_download_is_not_promoted_and_resumes, __init__, iter_content, close, first, second
+
+### tools\wan_ingest.py
+Functions: die, load_packs, save_packs, wsl_path, parse_file, normalize, cmd_add, cmd_scan, cmd_list, cmd_show, pack_to_chain, wanbot_conn, cmd_to_chain, cmd_send, refresh_colab, colab, upload, cmd_push, main
+
+### venice-agent\build\reports\tests\test\js\report.js
+Functions: changeElementClass, getClassAttribute, addClass, removeClass, getCheckBox, getLabelForCheckBox, findCodeBlocks, forAllCodeBlocks, toggleLineWrapping, initControls, getTabContainers, initTabs, createTab, findTabs, findHeaders, findTitles, findChildElements
+
+### venice-agent\build\resources\test\fake_mcp_server.py
+Functions: send
+
+### venice-agent\build\resources\test\fake_mcp_wrapper.py
+Functions: send
+
+### venice-agent\src\main\kotlin\com\whitedevil\veniceagent\Agent.kt
+Functions: repairToolPairs, trimHistory, send
+
+### venice-agent\src\main\kotlin\com\whitedevil\veniceagent\Main.kt
+Functions: main
+
+### venice-agent\src\main\kotlin\com\whitedevil\veniceagent\ToolProvider.kt
+Functions: definitions, execute, hasChanged, close
+
+### venice-agent\src\main\kotlin\com\whitedevil\veniceagent\ToolRegistry.kt
+Functions: definitions, sanitize, disambiguate, execute, close
+
+### venice-agent\src\main\kotlin\com\whitedevil\veniceagent\Tools.kt
+Functions: execute, runShellCommand, objectSchema
+
+### venice-agent\src\main\kotlin\com\whitedevil\veniceagent\mcp\McpServerLoader.kt
+Functions: load
+
+### venice-agent\src\main\kotlin\com\whitedevil\veniceagent\mcp\McpStdioClient.kt
+Functions: readLoop, handleIncomingRequest, drainStderr, call, sendCancelledNotification, notify, writeLineOrKill, writeLine, ensureInitialized, hasChanged, definitions, definitionsInternal, execute, executeInternal, renderContentItem, renderResourceContent, mimeTypeOf, namespacedName, originalName, close
+
+### venice-agent\src\test\kotlin\com\whitedevil\veniceagent\ToolBoxTest.kt
+Functions: testToolDefinitionsList, testFileReadWriteSandboxing
+
+### venice-agent\src\test\kotlin\com\whitedevil\veniceagent\ToolRegistryTest.kt
+Functions: emptyObjectSchema, definitions, execute, hasChanged, close, definitions, execute
+
+### venice-agent\src\test\kotlin\com\whitedevil\veniceagent\mcp\McpServerLoaderTest.kt
+Functions: launchableCommand
+
+### venice-agent\src\test\kotlin\com\whitedevil\veniceagent\mcp\McpStdioClientTest.kt
+Functions: python3Available, assertRejectsMalformedPage
+
+### venice-agent\src\test\resources\fake_mcp_server.py
+Functions: send
+
+### venice-agent\src\test\resources\fake_mcp_wrapper.py
+Functions: send
+

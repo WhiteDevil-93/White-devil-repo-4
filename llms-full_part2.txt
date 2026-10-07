@@ -1,0 +1,6421 @@
+# a:\New folder (4)\white-devil-repo-4\llms-full - Part 2 of 3
+
+## laptop-app\node_modules\argparse\lib\textwrap.js
+- wrap (line 351)
+- fill (line 367)
+- dedent (line 387)
+
+## laptop-app\node_modules\asn1js\build\index.d.ts
+- fromBER (line 1253)
+- compareSchema (line 1356)
+- verifySchema (line 1363)
+
+## laptop-app\node_modules\asn1js\build\index.es.js
+- assertBigInt (line 38)
+- concat (line 43)
+- checkBufferParams (line 58)
+- HexBlock (line 113)
+- prepareIndefiniteForm (line 559)
+- createFromBerContext (line 634)
+- createErrorResult (line 644)
+- checkNodesLimit (line 652)
+- checkContentLengthLimit (line 659)
+- localFromBERWithChildContext (line 665)
+- localChangeType (line 678)
+- localFromBER (line 689)
+- fromBER (line 903)
+- checkLen (line 915)
+- viewAdd (line 1433)
+- power2 (line 1465)
+- viewSub (line 1482)
+- compareSchema (line 2881)
+- verifySchema (line 3181)
+
+## laptop-app\node_modules\asn1js\build\index.js
+- _interopNamespaceDefault (line 40)
+- assertBigInt (line 60)
+- concat (line 65)
+- checkBufferParams (line 80)
+- HexBlock (line 135)
+- prepareIndefiniteForm (line 581)
+- createFromBerContext (line 656)
+- createErrorResult (line 666)
+- checkNodesLimit (line 674)
+- checkContentLengthLimit (line 681)
+- localFromBERWithChildContext (line 687)
+- localChangeType (line 700)
+- localFromBER (line 711)
+- fromBER (line 925)
+- checkLen (line 937)
+- viewAdd (line 1455)
+- power2 (line 1487)
+- viewSub (line 1504)
+- compareSchema (line 2903)
+- verifySchema (line 3203)
+
+## laptop-app\node_modules\async-exit-hook\index.js
+- exit (line 12)
+- doExit (line 16)
+- stepTowardExit (line 29)
+- runHook (line 38)
+- add (line 85)
+
+## laptop-app\node_modules\async\all.js
+- _interopRequireDefault (line 19)
+- fileExists (line 51)
+- every (line 115)
+
+## laptop-app\node_modules\async\allLimit.js
+- _interopRequireDefault (line 19)
+- everyLimit (line 42)
+
+## laptop-app\node_modules\async\allSeries.js
+- _interopRequireDefault (line 19)
+- everySeries (line 41)
+
+## laptop-app\node_modules\async\any.js
+- _interopRequireDefault (line 19)
+- fileExists (line 50)
+- some (line 118)
+
+## laptop-app\node_modules\async\anyLimit.js
+- _interopRequireDefault (line 19)
+- someLimit (line 43)
+
+## laptop-app\node_modules\async\anySeries.js
+- _interopRequireDefault (line 19)
+- someSeries (line 42)
+
+## laptop-app\node_modules\async\applyEach.js
+- _interopRequireDefault (line 15)
+
+## laptop-app\node_modules\async\applyEachSeries.js
+- _interopRequireDefault (line 15)
+
+## laptop-app\node_modules\async\asyncify.js
+- _interopRequireDefault (line 18)
+- asyncify (line 76)
+- handlePromise (line 101)
+- invokeCallback (line 109)
+
+## laptop-app\node_modules\async\auto.js
+- _interopRequireDefault (line 22)
+- auto (line 169)
+- enqueueTask (line 232)
+- processQueue (line 236)
+- addListener (line 247)
+- taskComplete (line 256)
+- runTask (line 262)
+- checkForDeadlocks (line 299)
+- getDependents (line 320)
+
+## laptop-app\node_modules\async\autoInject.js
+- _interopRequireDefault (line 16)
+- stripComments (line 23)
+- parseParams (line 50)
+- autoInject (line 144)
+- newTask (line 173)
+
+## laptop-app\node_modules\async\cargo.js
+- _interopRequireDefault (line 12)
+- cargo (line 60)
+
+## laptop-app\node_modules\async\cargoQueue.js
+- _interopRequireDefault (line 12)
+- cargo (line 68)
+
+## laptop-app\node_modules\async\compose.js
+- _interopRequireDefault (line 12)
+- add1 (line 35)
+- mul3 (line 41)
+- compose (line 52)
+
+## laptop-app\node_modules\async\concat.js
+- _interopRequireDefault (line 15)
+- concat (line 111)
+
+## laptop-app\node_modules\async\concatLimit.js
+- _interopRequireDefault (line 19)
+- concatLimit (line 41)
+
+## laptop-app\node_modules\async\concatSeries.js
+- _interopRequireDefault (line 15)
+- concatSeries (line 37)
+
+## laptop-app\node_modules\async\detect.js
+- _interopRequireDefault (line 19)
+- fileExists (line 54)
+- detect (line 92)
+
+## laptop-app\node_modules\async\detectLimit.js
+- _interopRequireDefault (line 19)
+- detectLimit (line 44)
+
+## laptop-app\node_modules\async\detectSeries.js
+- _interopRequireDefault (line 19)
+- detectSeries (line 42)
+
+## laptop-app\node_modules\async\dir.js
+- _interopRequireDefault (line 11)
+
+## laptop-app\node_modules\async\dist\async.js
+- apply (line 52)
+- initialParams (line 56)
+- fallback (line 69)
+- wrap (line 73)
+- asyncify (line 147)
+- handlePromise (line 172)
+- invokeCallback (line 180)
+- isAsync (line 188)
+- isAsyncGenerator (line 192)
+- isAsyncIterable (line 196)
+- wrapAsync (line 200)
+- awaitify (line 207)
+- awaitable (line 210)
+- applyEach (line 228)
+- _asyncMap (line 239)
+- isArrayLike (line 256)
+- once (line 267)
+- wrapper (line 268)
+- getIterator (line 278)
+- createArrayIterator (line 282)
+- next (line 285)
+- createES2015Iterator (line 290)
+- next (line 292)
+- createObjectIterator (line 301)
+- next (line 305)
+- createIterator (line 314)
+- onlyOnce (line 323)
+- asyncEachOfLimit (line 333)
+- replenish (line 340)
+- iterateeCallback (line 364)
+- handleError (line 384)
+- iterateeCallback (line 415)
+- replenish (line 435)
+- eachOfLimit (line 477)
+- eachOfArrayLike (line 484)
+- iteratorCallback (line 494)
+- eachOfGeneric (line 512)
+- parseFile (line 547)
+- eachOf (line 625)
+- getFileSizeInBytes (line 674)
+- map (line 749)
+- eachOfSeries (line 813)
+- mapSeries (line 837)
+- promiseCallback (line 865)
+- callback (line 867)
+- auto (line 1025)
+- enqueueTask (line 1091)
+- processQueue (line 1095)
+- addListener (line 1107)
+- taskComplete (line 1116)
+- runTask (line 1123)
+- checkForDeadlocks (line 1160)
+- getDependents (line 1183)
+- stripComments (line 1202)
+- parseParams (line 1229)
+- autoInject (line 1326)
+- newTask (line 1357)
+- setInitial (line 1454)
+- on (line 1478)
+- once (line 1482)
+- handleAndRemove (line 1483)
+- off (line 1490)
+- trigger (line 1496)
+- _insert (line 1501)
+- promiseCallback (line 1508)
+- _createCB (line 1544)
+- _maybeDrain (line 1576)
+- eventMethod (line 1585)
+- cargo (line 1835)
+- getFileSizeInBytes (line 1881)
+- reduce (line 1956)
+- seq (line 2006)
+- add1 (line 2050)
+- mul3 (line 2056)
+- compose (line 2067)
+- mapLimit (line 2091)
+- concatLimit (line 2116)
+- concat (line 2230)
+- concatSeries (line 2255)
+- _createTester (line 2309)
+- fileExists (line 2365)
+- detect (line 2403)
+- detectLimit (line 2431)
+- detectSeries (line 2457)
+- consoleFunc (line 2463)
+- doWhilst (line 2534)
+- next (line 2540)
+- check (line 2547)
+- doUntil (line 2580)
+- _withoutIndex (line 2588)
+- eachLimit (line 2718)
+- eachSeries (line 2746)
+- sometimesAsync (line 2771)
+- ensureAsync (line 2786)
+- fileExists (line 2833)
+- every (line 2897)
+- everyLimit (line 2923)
+- everySeries (line 2948)
+- filterArray (line 2953)
+- filterGeneric (line 2970)
+- _filter (line 2988)
+- fileExists (line 3020)
+- filter (line 3061)
+- filterLimit (line 3086)
+- filterSeries (line 3109)
+- forever (line 3145)
+- next (line 3149)
+- groupByLimit (line 3178)
+- detectFile (line 3244)
+- groupBy (line 3300)
+- groupBySeries (line 3323)
+- mapValuesLimit (line 3378)
+- getFileSizeInBytes (line 3441)
+- mapValues (line 3528)
+- mapValuesSeries (line 3552)
+- memoize (line 3596)
+- parallel (line 3844)
+- parallelLimit (line 3868)
+- queue (line 4014)
+- leftChi (line 4119)
+- parent (line 4123)
+- smaller (line 4127)
+- priorityQueue (line 4161)
+- createDataItems (line 4179)
+- race (line 4238)
+- reduceRight (line 4272)
+- reflect (line 4316)
+- reflectOn (line 4318)
+- reflectAll (line 4405)
+- fileExists (line 4453)
+- reject (line 4489)
+- rejectLimit (line 4514)
+- rejectSeries (line 4537)
+- constant (line 4542)
+- retry (line 4636)
+- retryAttempt (line 4657)
+- parseTimes (line 4674)
+- retryable (line 4719)
+- taskFn (line 4734)
+- series (line 4910)
+- fileExists (line 4943)
+- some (line 5011)
+- someLimit (line 5038)
+- someSeries (line 5064)
+- getFileSizeInBytes (line 5096)
+- sortBy (line 5219)
+- comparator (line 5231)
+- myFunction (line 5257)
+- timeout (line 5279)
+- timeoutCallback (line 5286)
+- range (line 5310)
+- timesLimit (line 5335)
+- times (line 5373)
+- timesSeries (line 5392)
+- formatBytes (line 5423)
+- transformFileSize (line 5432)
+- formatBytes (line 5480)
+- transformFileSize (line 5489)
+- transform (line 5531)
+- getDataFromFirstWebsite (line 5568)
+- getDataFromSecondWebsite (line 5572)
+- tryEach (line 5584)
+- unmemoize (line 5617)
+- test (line 5645)
+- iter (line 5646)
+- whilst (line 5657)
+- next (line 5663)
+- check (line 5670)
+- test (line 5707)
+- iter (line 5709)
+- done (line 5716)
+- until (line 5720)
+- myFirstFunction (line 5770)
+- mySecondFunction (line 5773)
+- myLastFunction (line 5777)
+- waterfall (line 5782)
+- nextTask (line 5788)
+- next (line 5793)
+
+## laptop-app\node_modules\async\dist\async.min.js
+- t (line 1)
+- n (line 1)
+- a (line 1)
+- i (line 1)
+- r (line 1)
+- s (line 1)
+- l (line 1)
+- d (line 1)
+- u (line 1)
+- p (line 1)
+- c (line 1)
+- o (line 1)
+- n (line 1)
+- h (line 1)
+- a (line 1)
+- f (line 1)
+- y (line 1)
+- m (line 1)
+- t (line 1)
+- g (line 1)
+- k (line 1)
+- a (line 1)
+- v (line 1)
+- n (line 1)
+- S (line 1)
+- i (line 1)
+- x (line 1)
+- L (line 1)
+- E (line 1)
+- i (line 1)
+- r (line 1)
+- s (line 1)
+- O (line 1)
+- a (line 1)
+- _ (line 1)
+- b (line 1)
+- e (line 1)
+- A (line 1)
+- a (line 1)
+- i (line 1)
+- r (line 1)
+- s (line 1)
+- l (line 1)
+- d (line 1)
+- u (line 1)
+- I (line 1)
+- M (line 1)
+- j (line 1)
+- a (line 1)
+- w (line 1)
+- B (line 1)
+- a (line 1)
+- i (line 1)
+- n (line 1)
+- r (line 1)
+- s (line 1)
+- l (line 1)
+- i (line 1)
+- d (line 1)
+- u (line 1)
+- m (line 1)
+- T (line 1)
+- F (line 1)
+- C (line 1)
+- P (line 1)
+- R (line 1)
+- z (line 1)
+- N (line 1)
+- V (line 1)
+- Y (line 1)
+- q (line 1)
+- D (line 1)
+- Q (line 1)
+- U (line 1)
+- G (line 1)
+- W (line 1)
+- H (line 1)
+- J (line 1)
+- K (line 1)
+- X (line 1)
+- Z (line 1)
+- ee (line 1)
+- te (line 1)
+- ne (line 1)
+- ae (line 1)
+- n (line 1)
+- ie (line 1)
+- re (line 1)
+- a (line 1)
+- se (line 1)
+- le (line 1)
+- de (line 1)
+- ue (line 1)
+- a (line 1)
+- pe (line 1)
+- ce (line 1)
+- r (line 1)
+- oe (line 1)
+- he (line 1)
+- s (line 1)
+- fe (line 1)
+- ye (line 1)
+- me (line 1)
+- ge (line 1)
+- ke (line 1)
+- ve (line 1)
+- Se (line 1)
+- i (line 1)
+- r (line 1)
+- i (line 1)
+- a (line 1)
+- a (line 1)
+- a (line 1)
+- a (line 1)
+- i (line 1)
+- i (line 1)
+- i (line 1)
+- a (line 1)
+- a (line 1)
+- a (line 1)
+- i (line 1)
+- a (line 1)
+- a (line 1)
+- i (line 1)
+- r (line 1)
+- a (line 1)
+- i (line 1)
+- a (line 1)
+- a (line 1)
+- i (line 1)
+- a (line 1)
+- a (line 1)
+- i (line 1)
+- a (line 1)
+- n (line 1)
+- a (line 1)
+- i (line 1)
+- i (line 1)
+- n (line 1)
+- a (line 1)
+- i (line 1)
+- a (line 1)
+- a (line 1)
+- i (line 1)
+- a (line 1)
+- a (line 1)
+- i (line 1)
+- n (line 1)
+- a (line 1)
+- i (line 1)
+- r (line 1)
+- n (line 1)
+- a (line 1)
+- i (line 1)
+
+## laptop-app\node_modules\async\doDuring.js
+- _interopRequireDefault (line 19)
+- doWhilst (line 44)
+- next (line 50)
+- check (line 57)
+
+## laptop-app\node_modules\async\doUntil.js
+- _interopRequireDefault (line 16)
+- doUntil (line 39)
+
+## laptop-app\node_modules\async\doWhilst.js
+- _interopRequireDefault (line 19)
+- doWhilst (line 44)
+- next (line 50)
+- check (line 57)
+
+## laptop-app\node_modules\async\during.js
+- _interopRequireDefault (line 19)
+- test (line 43)
+- iter (line 44)
+- whilst (line 55)
+- next (line 61)
+- check (line 68)
+
+## laptop-app\node_modules\async\each.js
+- _interopRequireDefault (line 23)
+- eachLimit (line 124)
+
+## laptop-app\node_modules\async\eachLimit.js
+- _interopRequireDefault (line 23)
+- eachLimit (line 46)
+
+## laptop-app\node_modules\async\eachOf.js
+- _interopRequireDefault (line 35)
+- eachOfArrayLike (line 38)
+- iteratorCallback (line 48)
+- eachOfGeneric (line 66)
+- parseFile (line 101)
+- eachOf (line 179)
+
+## laptop-app\node_modules\async\eachOfLimit.js
+- _interopRequireDefault (line 19)
+- eachOfLimit (line 42)
+
+## laptop-app\node_modules\async\eachOfSeries.js
+- _interopRequireDefault (line 15)
+- eachOfSeries (line 35)
+
+## laptop-app\node_modules\async\eachSeries.js
+- _interopRequireDefault (line 15)
+- eachSeries (line 40)
+
+## laptop-app\node_modules\async\ensureAsync.js
+- _interopRequireDefault (line 14)
+- sometimesAsync (line 36)
+- ensureAsync (line 51)
+
+## laptop-app\node_modules\async\every.js
+- _interopRequireDefault (line 19)
+- fileExists (line 51)
+- every (line 115)
+
+## laptop-app\node_modules\async\everyLimit.js
+- _interopRequireDefault (line 19)
+- everyLimit (line 42)
+
+## laptop-app\node_modules\async\everySeries.js
+- _interopRequireDefault (line 19)
+- everySeries (line 41)
+
+## laptop-app\node_modules\async\filter.js
+- _interopRequireDefault (line 19)
+- fileExists (line 48)
+- filter (line 89)
+
+## laptop-app\node_modules\async\filterLimit.js
+- _interopRequireDefault (line 19)
+- filterLimit (line 41)
+
+## laptop-app\node_modules\async\filterSeries.js
+- _interopRequireDefault (line 19)
+- filterSeries (line 39)
+
+## laptop-app\node_modules\async\find.js
+- _interopRequireDefault (line 19)
+- fileExists (line 54)
+- detect (line 92)
+
+## laptop-app\node_modules\async\findLimit.js
+- _interopRequireDefault (line 19)
+- detectLimit (line 44)
+
+## laptop-app\node_modules\async\findSeries.js
+- _interopRequireDefault (line 19)
+- detectSeries (line 42)
+
+## laptop-app\node_modules\async\flatMap.js
+- _interopRequireDefault (line 15)
+- concat (line 111)
+
+## laptop-app\node_modules\async\flatMapLimit.js
+- _interopRequireDefault (line 19)
+- concatLimit (line 41)
+
+## laptop-app\node_modules\async\flatMapSeries.js
+- _interopRequireDefault (line 15)
+- concatSeries (line 37)
+
+## laptop-app\node_modules\async\foldl.js
+- _interopRequireDefault (line 23)
+- getFileSizeInBytes (line 67)
+- reduce (line 142)
+
+## laptop-app\node_modules\async\foldr.js
+- _interopRequireDefault (line 12)
+- reduceRight (line 37)
+
+## laptop-app\node_modules\async\forEach.js
+- _interopRequireDefault (line 23)
+- eachLimit (line 124)
+
+## laptop-app\node_modules\async\forEachLimit.js
+- _interopRequireDefault (line 23)
+- eachLimit (line 46)
+
+## laptop-app\node_modules\async\forEachOf.js
+- _interopRequireDefault (line 35)
+- eachOfArrayLike (line 38)
+- iteratorCallback (line 48)
+- eachOfGeneric (line 66)
+- parseFile (line 101)
+- eachOf (line 179)
+
+## laptop-app\node_modules\async\forEachOfLimit.js
+- _interopRequireDefault (line 19)
+- eachOfLimit (line 42)
+
+## laptop-app\node_modules\async\forEachOfSeries.js
+- _interopRequireDefault (line 15)
+- eachOfSeries (line 35)
+
+## laptop-app\node_modules\async\forEachSeries.js
+- _interopRequireDefault (line 15)
+- eachSeries (line 40)
+
+## laptop-app\node_modules\async\forever.js
+- _interopRequireDefault (line 23)
+- forever (line 56)
+- next (line 60)
+
+## laptop-app\node_modules\async\groupBy.js
+- _interopRequireDefault (line 12)
+- detectFile (line 49)
+- groupBy (line 105)
+
+## laptop-app\node_modules\async\groupByLimit.js
+- _interopRequireDefault (line 19)
+- groupByLimit (line 41)
+
+## laptop-app\node_modules\async\groupBySeries.js
+- _interopRequireDefault (line 12)
+- groupBySeries (line 33)
+
+## laptop-app\node_modules\async\index.js
+- _interopRequireDefault (line 313)
+
+## laptop-app\node_modules\async\inject.js
+- _interopRequireDefault (line 23)
+- getFileSizeInBytes (line 67)
+- reduce (line 142)
+
+## laptop-app\node_modules\async\internal\DoublyLinkedList.js
+- setInitial (line 88)
+
+## laptop-app\node_modules\async\internal\Heap.js
+- leftChi (line 105)
+- parent (line 109)
+- smaller (line 113)
+
+## laptop-app\node_modules\async\internal\applyEach.js
+- applyEach (line 8)
+- _interopRequireDefault (line 27)
+
+## laptop-app\node_modules\async\internal\asyncEachOfLimit.js
+- _interopRequireDefault (line 12)
+- asyncEachOfLimit (line 15)
+- replenish (line 22)
+- iterateeCallback (line 46)
+- handleError (line 66)
+
+## laptop-app\node_modules\async\internal\awaitify.js
+- awaitify (line 9)
+- awaitable (line 12)
+
+## laptop-app\node_modules\async\internal\consoleFunc.js
+- _interopRequireDefault (line 12)
+- consoleFunc (line 14)
+
+## laptop-app\node_modules\async\internal\createTester.js
+- _interopRequireDefault (line 16)
+- _createTester (line 18)
+
+## laptop-app\node_modules\async\internal\eachOfLimit.js
+- _interopRequireDefault (line 29)
+- iterateeCallback (line 52)
+- replenish (line 69)
+
+## laptop-app\node_modules\async\internal\filter.js
+- _interopRequireDefault (line 16)
+- filterArray (line 18)
+- filterGeneric (line 35)
+- _filter (line 51)
+
+## laptop-app\node_modules\async\internal\isArrayLike.js
+- isArrayLike (line 7)
+
+## laptop-app\node_modules\async\internal\iterator.js
+- _interopRequireDefault (line 16)
+- createArrayIterator (line 18)
+- next (line 21)
+- createES2015Iterator (line 26)
+- next (line 28)
+- createObjectIterator (line 36)
+- next (line 40)
+- createIterator (line 49)
+
+## laptop-app\node_modules\async\internal\map.js
+- _interopRequireDefault (line 12)
+- _asyncMap (line 14)
+
+## laptop-app\node_modules\async\internal\once.js
+- once (line 7)
+- wrapper (line 8)
+
+## laptop-app\node_modules\async\internal\onlyOnce.js
+- onlyOnce (line 7)
+
+## laptop-app\node_modules\async\internal\parallel.js
+- _interopRequireDefault (line 19)
+
+## laptop-app\node_modules\async\internal\promiseCallback.js
+- promiseCallback (line 8)
+- callback (line 10)
+
+## laptop-app\node_modules\async\internal\queue.js
+- _interopRequireDefault (line 24)
+- queue (line 26)
+- on (line 44)
+- once (line 48)
+- handleAndRemove (line 49)
+- off (line 56)
+- trigger (line 62)
+- _insert (line 67)
+- promiseCallback (line 74)
+- _createCB (line 106)
+- _maybeDrain (line 138)
+- eventMethod (line 147)
+
+## laptop-app\node_modules\async\internal\range.js
+- range (line 7)
+
+## laptop-app\node_modules\async\internal\reject.js
+- _interopRequireDefault (line 16)
+- reject (line 18)
+
+## laptop-app\node_modules\async\internal\setImmediate.js
+- fallback (line 14)
+- wrap (line 18)
+
+## laptop-app\node_modules\async\internal\withoutIndex.js
+- _withoutIndex (line 7)
+
+## laptop-app\node_modules\async\internal\wrapAsync.js
+- _interopRequireDefault (line 12)
+- isAsync (line 14)
+- isAsyncGenerator (line 18)
+- isAsyncIterable (line 22)
+- wrapAsync (line 26)
+
+## laptop-app\node_modules\async\log.js
+- _interopRequireDefault (line 11)
+
+## laptop-app\node_modules\async\map.js
+- _interopRequireDefault (line 19)
+- getFileSizeInBytes (line 63)
+- map (line 138)
+
+## laptop-app\node_modules\async\mapLimit.js
+- _interopRequireDefault (line 19)
+- mapLimit (line 41)
+
+## laptop-app\node_modules\async\mapSeries.js
+- _interopRequireDefault (line 19)
+- mapSeries (line 40)
+
+## laptop-app\node_modules\async\mapValues.js
+- _interopRequireDefault (line 12)
+- getFileSizeInBytes (line 62)
+- mapValues (line 149)
+
+## laptop-app\node_modules\async\mapValuesLimit.js
+- _interopRequireDefault (line 23)
+- mapValuesLimit (line 47)
+
+## laptop-app\node_modules\async\mapValuesSeries.js
+- _interopRequireDefault (line 12)
+- mapValuesSeries (line 34)
+
+## laptop-app\node_modules\async\memoize.js
+- _interopRequireDefault (line 20)
+- memoize (line 62)
+
+## laptop-app\node_modules\async\parallel.js
+- _interopRequireDefault (line 16)
+- parallel (line 177)
+
+## laptop-app\node_modules\async\parallelLimit.js
+- _interopRequireDefault (line 16)
+- parallelLimit (line 38)
+
+## laptop-app\node_modules\async\priorityQueue.js
+- createDataItems (line 25)
+- _interopRequireDefault (line 58)
+
+## laptop-app\node_modules\async\queue.js
+- _interopRequireDefault (line 22)
+
+## laptop-app\node_modules\async\race.js
+- _interopRequireDefault (line 19)
+- race (line 57)
+
+## laptop-app\node_modules\async\reduce.js
+- _interopRequireDefault (line 23)
+- getFileSizeInBytes (line 67)
+- reduce (line 142)
+
+## laptop-app\node_modules\async\reduceRight.js
+- _interopRequireDefault (line 12)
+- reduceRight (line 37)
+
+## laptop-app\node_modules\async\reflect.js
+- _interopRequireDefault (line 16)
+- reflect (line 57)
+- reflectOn (line 59)
+
+## laptop-app\node_modules\async\reflectAll.js
+- _interopRequireDefault (line 12)
+- reflectAll (line 81)
+
+## laptop-app\node_modules\async\reject.js
+- _interopRequireDefault (line 19)
+- fileExists (line 47)
+- reject (line 83)
+
+## laptop-app\node_modules\async\rejectLimit.js
+- _interopRequireDefault (line 19)
+- rejectLimit (line 41)
+
+## laptop-app\node_modules\async\rejectSeries.js
+- _interopRequireDefault (line 19)
+- rejectSeries (line 39)
+
+## laptop-app\node_modules\async\retry.js
+- _interopRequireDefault (line 14)
+- constant (line 16)
+- retry (line 110)
+- retryAttempt (line 131)
+- parseTimes (line 146)
+
+## laptop-app\node_modules\async\retryable.js
+- _interopRequireDefault (line 22)
+- retryable (line 53)
+- taskFn (line 68)
+
+## laptop-app\node_modules\async\select.js
+- _interopRequireDefault (line 19)
+- fileExists (line 48)
+- filter (line 89)
+
+## laptop-app\node_modules\async\selectLimit.js
+- _interopRequireDefault (line 19)
+- filterLimit (line 41)
+
+## laptop-app\node_modules\async\selectSeries.js
+- _interopRequireDefault (line 19)
+- filterSeries (line 39)
+
+## laptop-app\node_modules\async\seq.js
+- _interopRequireDefault (line 18)
+- seq (line 58)
+
+## laptop-app\node_modules\async\series.js
+- _interopRequireDefault (line 16)
+- series (line 183)
+
+## laptop-app\node_modules\async\setImmediate.js
+- _interopRequireDefault (line 11)
+
+## laptop-app\node_modules\async\some.js
+- _interopRequireDefault (line 19)
+- fileExists (line 50)
+- some (line 118)
+
+## laptop-app\node_modules\async\someLimit.js
+- _interopRequireDefault (line 19)
+- someLimit (line 43)
+
+## laptop-app\node_modules\async\someSeries.js
+- _interopRequireDefault (line 19)
+- someSeries (line 42)
+
+## laptop-app\node_modules\async\sortBy.js
+- _interopRequireDefault (line 19)
+- getFileSizeInBytes (line 48)
+- sortBy (line 171)
+- comparator (line 183)
+
+## laptop-app\node_modules\async\timeout.js
+- _interopRequireDefault (line 16)
+- myFunction (line 37)
+- timeout (line 59)
+- timeoutCallback (line 66)
+
+## laptop-app\node_modules\async\times.js
+- _interopRequireDefault (line 12)
+- times (line 47)
+
+## laptop-app\node_modules\async\timesLimit.js
+- _interopRequireDefault (line 20)
+- timesLimit (line 39)
+
+## laptop-app\node_modules\async\timesSeries.js
+- _interopRequireDefault (line 12)
+- timesSeries (line 29)
+
+## laptop-app\node_modules\async\transform.js
+- _interopRequireDefault (line 22)
+- formatBytes (line 51)
+- transformFileSize (line 60)
+- formatBytes (line 108)
+- transformFileSize (line 117)
+- transform (line 159)
+
+## laptop-app\node_modules\async\tryEach.js
+- _interopRequireDefault (line 19)
+- getDataFromFirstWebsite (line 43)
+- getDataFromSecondWebsite (line 47)
+- tryEach (line 59)
+
+## laptop-app\node_modules\async\unmemoize.js
+- unmemoize (line 20)
+
+## laptop-app\node_modules\async\until.js
+- _interopRequireDefault (line 16)
+- test (line 44)
+- iter (line 46)
+- done (line 53)
+- until (line 57)
+
+## laptop-app\node_modules\async\waterfall.js
+- _interopRequireDefault (line 23)
+- myFirstFunction (line 70)
+- mySecondFunction (line 73)
+- myLastFunction (line 77)
+- waterfall (line 82)
+- nextTask (line 88)
+- next (line 93)
+
+## laptop-app\node_modules\async\whilst.js
+- _interopRequireDefault (line 19)
+- test (line 43)
+- iter (line 44)
+- whilst (line 55)
+- next (line 61)
+- check (line 68)
+
+## laptop-app\node_modules\async\wrapSync.js
+- _interopRequireDefault (line 18)
+- asyncify (line 76)
+- handlePromise (line 101)
+- invokeCallback (line 109)
+
+## laptop-app\node_modules\asynckit\lib\abort.js
+- abort (line 9)
+- clean (line 23)
+
+## laptop-app\node_modules\asynckit\lib\async.js
+- async (line 13)
+- async_callback (line 20)
+- nextTick_callback (line 28)
+
+## laptop-app\node_modules\asynckit\lib\defer.js
+- defer (line 8)
+
+## laptop-app\node_modules\asynckit\lib\iterate.js
+- iterate (line 16)
+- runJob (line 59)
+
+## laptop-app\node_modules\asynckit\lib\readable_asynckit.js
+- ReadableAsyncKit (line 12)
+- destroy (line 31)
+- _start (line 51)
+- _read (line 88)
+
+## laptop-app\node_modules\asynckit\lib\readable_parallel.js
+- ReadableParallel (line 14)
+
+## laptop-app\node_modules\asynckit\lib\readable_serial.js
+- ReadableSerial (line 14)
+
+## laptop-app\node_modules\asynckit\lib\readable_serial_ordered.js
+- ReadableSerialOrdered (line 18)
+
+## laptop-app\node_modules\asynckit\lib\state.js
+- state (line 13)
+
+## laptop-app\node_modules\asynckit\lib\streamify.js
+- wrapIterator (line 16)
+- wrapCallback (line 52)
+- wrapIteratorCallback (line 74)
+- streamer (line 102)
+- finisher (line 130)
+
+## laptop-app\node_modules\asynckit\lib\terminator.js
+- terminator (line 14)
+
+## laptop-app\node_modules\asynckit\parallel.js
+- parallel (line 17)
+
+## laptop-app\node_modules\asynckit\serial.js
+- serial (line 14)
+
+## laptop-app\node_modules\asynckit\serialOrdered.js
+- serialOrdered (line 21)
+- iteratorHandler (line 25)
+- ascending (line 60)
+- descending (line 72)
+
+## laptop-app\node_modules\aws4\aws4.js
+- hmac (line 10)
+- hash (line 14)
+- encodeRfc3986 (line 19)
+- encodeRfc3986Full (line 25)
+- RequestSigner (line 45)
+
+## laptop-app\node_modules\aws4\lru.js
+- LruCache (line 5)
+- DoublyLinkedList (line 46)
+- DoublyLinkedNode (line 91)
+
+## laptop-app\node_modules\balanced-match\dist\commonjs\index.js
+- balanced (line 4)
+- maybeMatch (line 17)
+- range (line 21)
+
+## laptop-app\node_modules\balanced-match\dist\esm\index.js
+- balanced (line 1)
+- maybeMatch (line 13)
+- range (line 17)
+
+## laptop-app\node_modules\base64-js\base64js.min.js
+- b (line 1)
+- a (line 1)
+- d (line 1)
+- e (line 1)
+- f (line 1)
+- g (line 1)
+- h (line 1)
+- j (line 1)
+
+## laptop-app\node_modules\base64-js\index.d.ts
+- byteLength (line 1)
+- toByteArray (line 2)
+- fromByteArray (line 3)
+
+## laptop-app\node_modules\base64-js\index.js
+- getLens (line 22)
+- byteLength (line 42)
+- _byteLength (line 49)
+- toByteArray (line 53)
+- tripletToBase64 (line 99)
+- encodeChunk (line 106)
+- fromByteArray (line 119)
+
+## laptop-app\node_modules\bluebird\js\browser\bluebird.core.js
+- e (line 30)
+- s (line 30)
+- Async (line 37)
+- AsyncInvokeLater (line 94)
+- AsyncInvoke (line 99)
+- AsyncSettlePromises (line 104)
+- _drainQueue (line 114)
+- _drainQueueStep (line 120)
+- noConflict (line 225)
+- catchFilter (line 373)
+- Context (line 420)
+- createContext (line 440)
+- peekContext (line 444)
+- unhandledRejectionCheck (line 517)
+- unhandledRejectionClear (line 524)
+- generatePromiseLifecycleEventObject (line 756)
+- defaultFireEvent (line 859)
+- cancellationExecute (line 883)
+- cancellationAttachCancellationCallback (line 898)
+- cancellationOnCancel (line 913)
+- cancellationSetOnCancel (line 917)
+- cancellationClearCancellationData (line 921)
+- cancellationPropagateFrom (line 926)
+- bindingPropagateFrom (line 940)
+- boundValueFunction (line 947)
+- longStackTracesCaptureStackTrace (line 961)
+- longStackTracesAttachExtraTrace (line 965)
+- longStackTracesDereferenceTrace (line 982)
+- checkForgottenReturns (line 986)
+- deprecated (line 1033)
+- warn (line 1040)
+- reconstructStack (line 1058)
+- removeDuplicateOrEmptyJumps (line 1069)
+- removeCommonRoots (line 1079)
+- cleanStack (line 1107)
+- stackFramesAsArray (line 1124)
+- parseStackAndMessage (line 1138)
+- formatAndLogError (line 1149)
+- fireRejectionEvent (line 1167)
+- formatNonError (line 1191)
+- snip (line 1217)
+- longStackTracesIsSupported (line 1225)
+- parseLineInfo (line 1231)
+- setBounds (line 1241)
+- CapturedTrace (line 1283)
+- stackDetection (line 1359)
+- captureStackTrace (line 1394)
+- captureStackTrace (line 1408)
+- returner (line 1494)
+- thrower (line 1497)
+- subError (line 1547)
+- SubError (line 1548)
+- OperationalError (line 1611)
+- PassThroughHandlerContext (line 1747)
+- FinallyHandlerCancelReaction (line 1759)
+- checkCancel (line 1767)
+- succeed (line 1780)
+- fail (line 1783)
+- finallyHandler (line 1788)
+- isUntypedError (line 2119)
+- wrapAsOperationalError (line 2125)
+- nodebackForPromise (line 2145)
+- Proxyable (line 2176)
+- check (line 2248)
+- Promise (line 2258)
+- deferResolve (line 2918)
+- deferReject (line 2919)
+- fillTypes (line 2948)
+- toResolutionValue (line 2977)
+- PromiseArray (line 2985)
+- init (line 3007)
+- arrayMove (line 3160)
+- Queue (line 3167)
+- schedule (line 3275)
+- PromiseInspection (line 3300)
+- tryConvertToPromise (line 3409)
+- doGetThen (line 3436)
+- getThen (line 3440)
+- isAnyBluebirdPromise (line 3450)
+- doThenable (line 3458)
+- resolve (line 3473)
+- reject (line 3479)
+- tryCatcher (line 3502)
+- tryCatch (line 3512)
+- T (line 3520)
+- isPrimitive (line 3537)
+- isObject (line 3543)
+- maybeWrapAsError (line 3548)
+- withAppended (line 3554)
+- getDataPropertyOrDefault (line 3565)
+- notEnumerableProp (line 3579)
+- thrower (line 3591)
+- isClass (line 3662)
+- toFastProperties (line 3684)
+- FakeConstructor (line 3686)
+- ic (line 3689)
+- isIdentifier (line 3699)
+- filledRange (line 3703)
+- safeToString (line 3711)
+- isError (line 3719)
+- markAsOriginatingFromRejection (line 3727)
+- originatesFromRejection (line 3734)
+- canAttachTrace (line 3740)
+- classString (line 3759)
+- copyDescriptors (line 3763)
+- env (line 3811)
+- getNativePromise (line 3815)
+- contextBind (line 3827)
+
+## laptop-app\node_modules\bluebird\js\browser\bluebird.core.min.js
+- r (line 30)
+- o (line 30)
+- r (line 30)
+- o (line 30)
+- i (line 30)
+- a (line 30)
+- s (line 30)
+- c (line 30)
+- r (line 30)
+- n (line 30)
+- e (line 30)
+- n (line 30)
+- r (line 30)
+- i (line 30)
+- a (line 30)
+- s (line 30)
+- c (line 30)
+- l (line 30)
+- u (line 30)
+- p (line 30)
+- f (line 30)
+- h (line 30)
+- d (line 30)
+- _ (line 30)
+- v (line 30)
+- y (line 30)
+- g (line 30)
+- m (line 30)
+- b (line 30)
+- C (line 30)
+- w (line 30)
+- k (line 30)
+- E (line 30)
+- j (line 30)
+- F (line 30)
+- T (line 30)
+- x (line 30)
+- R (line 30)
+- S (line 30)
+- P (line 30)
+- O (line 30)
+- A (line 30)
+- H (line 30)
+- t (line 30)
+- n (line 30)
+- e (line 30)
+- n (line 30)
+- r (line 30)
+- n (line 30)
+- o (line 30)
+- o (line 30)
+- i (line 30)
+- a (line 30)
+- s (line 30)
+- c (line 30)
+- l (line 30)
+- r (line 30)
+- o (line 30)
+- i (line 30)
+- n (line 30)
+- r (line 30)
+- o (line 30)
+- i (line 30)
+- a (line 30)
+- s (line 30)
+- a (line 31)
+- s (line 31)
+- l (line 31)
+- r (line 31)
+- o (line 31)
+- e (line 31)
+- r (line 31)
+- o (line 31)
+- i (line 31)
+- a (line 31)
+- s (line 31)
+- i (line 31)
+- a (line 31)
+- r (line 31)
+- o (line 31)
+- i (line 31)
+- a (line 31)
+- s (line 31)
+- c (line 31)
+- l (line 31)
+- u (line 31)
+- p (line 31)
+- f (line 31)
+- h (line 31)
+- e (line 31)
+- n (line 31)
+- d (line 31)
+- _ (line 31)
+- v (line 31)
+- y (line 31)
+- g (line 31)
+- m (line 31)
+- b (line 31)
+- C (line 31)
+- w (line 31)
+- k (line 31)
+- E (line 31)
+- j (line 31)
+- n (line 31)
+
+## laptop-app\node_modules\bluebird\js\browser\bluebird.js
+- e (line 29)
+- s (line 29)
+- any (line 33)
+- Async (line 59)
+- AsyncInvokeLater (line 116)
+- AsyncInvoke (line 121)
+- AsyncSettlePromises (line 126)
+- _drainQueue (line 136)
+- _drainQueueStep (line 142)
+- noConflict (line 247)
+- ensureMethod (line 325)
+- caller (line 336)
+- namedGetter (line 356)
+- indexedGetter (line 359)
+- catchFilter (line 520)
+- Context (line 567)
+- createContext (line 587)
+- peekContext (line 591)
+- unhandledRejectionCheck (line 664)
+- unhandledRejectionClear (line 671)
+- generatePromiseLifecycleEventObject (line 903)
+- defaultFireEvent (line 1006)
+- cancellationExecute (line 1030)
+- cancellationAttachCancellationCallback (line 1045)
+- cancellationOnCancel (line 1060)
+- cancellationSetOnCancel (line 1064)
+- cancellationClearCancellationData (line 1068)
+- cancellationPropagateFrom (line 1073)
+- bindingPropagateFrom (line 1087)
+- boundValueFunction (line 1094)
+- longStackTracesCaptureStackTrace (line 1108)
+- longStackTracesAttachExtraTrace (line 1112)
+- longStackTracesDereferenceTrace (line 1129)
+- checkForgottenReturns (line 1133)
+- deprecated (line 1180)
+- warn (line 1187)
+- reconstructStack (line 1205)
+- removeDuplicateOrEmptyJumps (line 1216)
+- removeCommonRoots (line 1226)
+- cleanStack (line 1254)
+- stackFramesAsArray (line 1271)
+- parseStackAndMessage (line 1285)
+- formatAndLogError (line 1296)
+- fireRejectionEvent (line 1314)
+- formatNonError (line 1338)
+- snip (line 1364)
+- longStackTracesIsSupported (line 1372)
+- parseLineInfo (line 1378)
+- setBounds (line 1388)
+- CapturedTrace (line 1430)
+- stackDetection (line 1506)
+- captureStackTrace (line 1541)
+- captureStackTrace (line 1555)
+- returner (line 1641)
+- thrower (line 1644)
+- promiseAllThis (line 1692)
+- PromiseMapSeries (line 1696)
+- subError (line 1726)
+- SubError (line 1727)
+- OperationalError (line 1790)
+- PassThroughHandlerContext (line 1940)
+- FinallyHandlerCancelReaction (line 1952)
+- checkCancel (line 1960)
+- succeed (line 1973)
+- fail (line 1976)
+- finallyHandler (line 1981)
+- promiseFromYieldHandler (line 2095)
+- PromiseSpawn (line 2112)
+- MappingPromiseArray (line 2485)
+- map (line 2613)
+- isUntypedError (line 2714)
+- wrapAsOperationalError (line 2720)
+- nodebackForPromise (line 2740)
+- spreadAdapter (line 2767)
+- successAdapter (line 2777)
+- errorAdapter (line 2787)
+- Proxyable (line 2831)
+- check (line 2903)
+- Promise (line 2913)
+- deferResolve (line 3573)
+- deferReject (line 3574)
+- fillTypes (line 3618)
+- toResolutionValue (line 3647)
+- PromiseArray (line 3655)
+- init (line 3677)
+- propsFilter (line 3857)
+- isPromisified (line 3861)
+- hasPromisified (line 3870)
+- checkValid (line 3875)
+- promisifiableMethods (line 3890)
+- generateCallForArgumentCount (line 3949)
+- generateArgumentSwitchCase (line 3963)
+- makeNodePromisifiedClosure (line 4036)
+- promisified (line 4042)
+- promisifyAll (line 4066)
+- promisify (line 4091)
+- extractEntry (line 4158)
+- mapToEntries (line 4164)
+- PropertiesPromiseArray (line 4184)
+- props (line 4236)
+- arrayMove (line 4266)
+- Queue (line 4273)
+- race (line 4351)
+- ReductionPromiseArray (line 4401)
+- completed (line 4521)
+- reduce (line 4529)
+- gotAccum (line 4537)
+- gotValue (line 4549)
+- schedule (line 4617)
+- SettledPromiseArray (line 4646)
+- SomePromiseArray (line 4699)
+- some (line 4816)
+- PromiseInspection (line 4841)
+- tryConvertToPromise (line 4950)
+- doGetThen (line 4977)
+- getThen (line 4981)
+- isAnyBluebirdPromise (line 4991)
+- doThenable (line 4999)
+- resolve (line 5014)
+- reject (line 5020)
+- HandleWrapper (line 5037)
+- successClear (line 5091)
+- failureClear (line 5096)
+- timeoutTimeout (line 5105)
+- thrower (line 5137)
+- castPreservingDisposable (line 5141)
+- dispose (line 5151)
+- iterator (line 5155)
+- Disposer (line 5178)
+- FunctionDisposer (line 5217)
+- maybeUnwrapDisposer (line 5227)
+- ResourceList (line 5235)
+- tryCatcher (line 5366)
+- tryCatch (line 5376)
+- T (line 5384)
+- isPrimitive (line 5401)
+- isObject (line 5407)
+- maybeWrapAsError (line 5412)
+- withAppended (line 5418)
+- getDataPropertyOrDefault (line 5429)
+- notEnumerableProp (line 5443)
+- thrower (line 5455)
+- isClass (line 5526)
+- toFastProperties (line 5548)
+- FakeConstructor (line 5550)
+- ic (line 5553)
+- isIdentifier (line 5563)
+- filledRange (line 5567)
+- safeToString (line 5575)
+- isError (line 5583)
+- markAsOriginatingFromRejection (line 5591)
+- originatesFromRejection (line 5598)
+- canAttachTrace (line 5604)
+- classString (line 5623)
+- copyDescriptors (line 5627)
+- env (line 5675)
+- getNativePromise (line 5679)
+- contextBind (line 5691)
+
+## laptop-app\node_modules\bluebird\js\browser\bluebird.min.js
+- r (line 29)
+- i (line 29)
+- e (line 29)
+- r (line 29)
+- i (line 29)
+- o (line 29)
+- s (line 29)
+- a (line 29)
+- c (line 29)
+- r (line 29)
+- n (line 29)
+- r (line 29)
+- i (line 29)
+- o (line 29)
+- n (line 29)
+- e (line 29)
+- n (line 29)
+- r (line 29)
+- o (line 29)
+- s (line 29)
+- a (line 29)
+- c (line 29)
+- u (line 29)
+- l (line 29)
+- p (line 29)
+- f (line 29)
+- h (line 29)
+- _ (line 29)
+- d (line 29)
+- v (line 29)
+- y (line 29)
+- g (line 29)
+- m (line 29)
+- b (line 29)
+- w (line 29)
+- C (line 29)
+- j (line 29)
+- k (line 29)
+- E (line 29)
+- F (line 29)
+- x (line 29)
+- T (line 29)
+- P (line 29)
+- R (line 29)
+- S (line 29)
+- O (line 29)
+- A (line 29)
+- V (line 29)
+- t (line 29)
+- n (line 29)
+- e (line 29)
+- n (line 29)
+- n (line 29)
+- r (line 29)
+- r (line 29)
+- n (line 29)
+- i (line 29)
+- i (line 29)
+- o (line 29)
+- s (line 29)
+- a (line 29)
+- c (line 29)
+- u (line 29)
+- a (line 29)
+- c (line 29)
+- a (line 30)
+- c (line 30)
+- r (line 30)
+- i (line 30)
+- o (line 30)
+- n (line 30)
+- r (line 30)
+- i (line 30)
+- n (line 30)
+- r (line 30)
+- i (line 30)
+- o (line 30)
+- s (line 30)
+- a (line 30)
+- s (line 30)
+- a (line 30)
+- u (line 30)
+- r (line 30)
+- i (line 30)
+- o (line 30)
+- s (line 30)
+- a (line 30)
+- c (line 30)
+- c (line 30)
+- u (line 30)
+- l (line 30)
+- o (line 30)
+- s (line 30)
+- t (line 30)
+- r (line 30)
+- i (line 30)
+- o (line 30)
+- a (line 30)
+- c (line 30)
+- u (line 30)
+- l (line 30)
+- p (line 30)
+- i (line 31)
+- i (line 31)
+- o (line 31)
+- e (line 31)
+- r (line 31)
+- i (line 31)
+- o (line 31)
+- s (line 31)
+- a (line 31)
+- o (line 31)
+- s (line 31)
+- i (line 31)
+- o (line 31)
+- s (line 31)
+- a (line 31)
+- c (line 31)
+- u (line 31)
+- i (line 31)
+- l (line 31)
+- p (line 31)
+- f (line 31)
+- h (line 31)
+- r (line 31)
+- i (line 31)
+- o (line 31)
+- s (line 31)
+- a (line 31)
+- c (line 31)
+- u (line 31)
+- l (line 31)
+- p (line 31)
+- f (line 31)
+- h (line 31)
+- e (line 31)
+- n (line 31)
+- _ (line 31)
+- d (line 31)
+- v (line 31)
+- y (line 31)
+- g (line 31)
+- m (line 31)
+- b (line 31)
+- w (line 31)
+- C (line 31)
+- j (line 31)
+- k (line 31)
+- E (line 31)
+- n (line 31)
+
+## laptop-app\node_modules\bluebird\js\release\any.js
+- any (line 4)
+
+## laptop-app\node_modules\bluebird\js\release\assert.js
+- AssertionError (line 4)
+- getParams (line 15)
+- nativeAssert (line 21)
+- assert (line 38)
+
+## laptop-app\node_modules\bluebird\js\release\async.js
+- Async (line 7)
+- AsyncInvokeLater (line 64)
+- AsyncInvoke (line 69)
+- AsyncSettlePromises (line 74)
+- _drainQueue (line 84)
+- _drainQueueStep (line 90)
+
+## laptop-app\node_modules\bluebird\js\release\bluebird.js
+- noConflict (line 4)
+
+## laptop-app\node_modules\bluebird\js\release\call_get.js
+- ensureMethod (line 69)
+- caller (line 80)
+- namedGetter (line 100)
+- indexedGetter (line 103)
+
+## laptop-app\node_modules\bluebird\js\release\catch_filter.js
+- catchFilter (line 8)
+
+## laptop-app\node_modules\bluebird\js\release\context.js
+- Context (line 11)
+- createContext (line 31)
+- peekContext (line 35)
+
+## laptop-app\node_modules\bluebird\js\release\debuggability.js
+- unhandledRejectionCheck (line 37)
+- unhandledRejectionClear (line 44)
+- generatePromiseLifecycleEventObject (line 276)
+- defaultFireEvent (line 379)
+- cancellationExecute (line 403)
+- cancellationAttachCancellationCallback (line 418)
+- cancellationOnCancel (line 433)
+- cancellationSetOnCancel (line 437)
+- cancellationClearCancellationData (line 441)
+- cancellationPropagateFrom (line 446)
+- bindingPropagateFrom (line 460)
+- boundValueFunction (line 467)
+- longStackTracesCaptureStackTrace (line 481)
+- longStackTracesAttachExtraTrace (line 485)
+- longStackTracesDereferenceTrace (line 502)
+- checkForgottenReturns (line 506)
+- deprecated (line 553)
+- warn (line 560)
+- reconstructStack (line 578)
+- removeDuplicateOrEmptyJumps (line 589)
+- removeCommonRoots (line 599)
+- cleanStack (line 627)
+- stackFramesAsArray (line 644)
+- parseStackAndMessage (line 658)
+- formatAndLogError (line 669)
+- fireRejectionEvent (line 687)
+- formatNonError (line 711)
+- snip (line 737)
+- longStackTracesIsSupported (line 745)
+- parseLineInfo (line 751)
+- setBounds (line 761)
+- CapturedTrace (line 803)
+- stackDetection (line 879)
+- captureStackTrace (line 914)
+- captureStackTrace (line 928)
+
+## laptop-app\node_modules\bluebird\js\release\direct_resolve.js
+- returner (line 3)
+- thrower (line 6)
+
+## laptop-app\node_modules\bluebird\js\release\each.js
+- promiseAllThis (line 6)
+- PromiseMapSeries (line 10)
+
+## laptop-app\node_modules\bluebird\js\release\errors.js
+- subError (line 8)
+- SubError (line 9)
+- OperationalError (line 72)
+
+## laptop-app\node_modules\bluebird\js\release\finally.js
+- PassThroughHandlerContext (line 8)
+- FinallyHandlerCancelReaction (line 20)
+- checkCancel (line 28)
+- succeed (line 41)
+- fail (line 44)
+- finallyHandler (line 49)
+
+## laptop-app\node_modules\bluebird\js\release\generators.js
+- promiseFromYieldHandler (line 15)
+- PromiseSpawn (line 32)
+
+## laptop-app\node_modules\bluebird\js\release\map.js
+- MappingPromiseArray (line 13)
+- map (line 141)
+
+## laptop-app\node_modules\bluebird\js\release\nodeback.js
+- isUntypedError (line 8)
+- wrapAsOperationalError (line 14)
+- nodebackForPromise (line 34)
+
+## laptop-app\node_modules\bluebird\js\release\nodeify.js
+- spreadAdapter (line 8)
+- successAdapter (line 18)
+- errorAdapter (line 28)
+
+## laptop-app\node_modules\bluebird\js\release\promise.js
+- Proxyable (line 12)
+- check (line 84)
+- Promise (line 94)
+- deferResolve (line 754)
+- deferReject (line 755)
+- fillTypes (line 799)
+
+## laptop-app\node_modules\bluebird\js\release\promise_array.js
+- toResolutionValue (line 7)
+- PromiseArray (line 15)
+- init (line 37)
+
+## laptop-app\node_modules\bluebird\js\release\promisify.js
+- propsFilter (line 29)
+- isPromisified (line 33)
+- hasPromisified (line 42)
+- checkValid (line 47)
+- promisifiableMethods (line 62)
+- generateCallForArgumentCount (line 121)
+- generateArgumentSwitchCase (line 135)
+- makeNodePromisifiedClosure (line 208)
+- promisified (line 214)
+- promisifyAll (line 238)
+- promisify (line 263)
+
+## laptop-app\node_modules\bluebird\js\release\props.js
+- extractEntry (line 14)
+- mapToEntries (line 20)
+- PropertiesPromiseArray (line 40)
+- props (line 92)
+
+## laptop-app\node_modules\bluebird\js\release\queue.js
+- arrayMove (line 2)
+- Queue (line 9)
+
+## laptop-app\node_modules\bluebird\js\release\race.js
+- race (line 12)
+
+## laptop-app\node_modules\bluebird\js\release\reduce.js
+- ReductionPromiseArray (line 11)
+- completed (line 131)
+- reduce (line 139)
+- gotAccum (line 147)
+- gotValue (line 159)
+
+## laptop-app\node_modules\bluebird\js\release\schedule.js
+- schedule (line 42)
+
+## laptop-app\node_modules\bluebird\js\release\settle.js
+- SettledPromiseArray (line 7)
+
+## laptop-app\node_modules\bluebird\js\release\some.js
+- SomePromiseArray (line 11)
+- some (line 128)
+
+## laptop-app\node_modules\bluebird\js\release\synchronous_inspection.js
+- PromiseInspection (line 3)
+
+## laptop-app\node_modules\bluebird\js\release\thenables.js
+- tryConvertToPromise (line 7)
+- doGetThen (line 34)
+- getThen (line 38)
+- isAnyBluebirdPromise (line 48)
+- doThenable (line 56)
+- resolve (line 71)
+- reject (line 77)
+
+## laptop-app\node_modules\bluebird\js\release\timers.js
+- HandleWrapper (line 6)
+- successClear (line 60)
+- failureClear (line 65)
+- timeoutTimeout (line 74)
+
+## laptop-app\node_modules\bluebird\js\release\using.js
+- thrower (line 11)
+- castPreservingDisposable (line 15)
+- dispose (line 25)
+- iterator (line 29)
+- Disposer (line 52)
+- FunctionDisposer (line 91)
+- maybeUnwrapDisposer (line 101)
+- ResourceList (line 109)
+
+## laptop-app\node_modules\bluebird\js\release\util.js
+- tryCatcher (line 12)
+- tryCatch (line 22)
+- T (line 30)
+- isPrimitive (line 47)
+- isObject (line 53)
+- maybeWrapAsError (line 58)
+- withAppended (line 64)
+- getDataPropertyOrDefault (line 75)
+- notEnumerableProp (line 89)
+- thrower (line 101)
+- isClass (line 172)
+- toFastProperties (line 194)
+- FakeConstructor (line 196)
+- ic (line 199)
+- isIdentifier (line 209)
+- filledRange (line 213)
+- safeToString (line 221)
+- isError (line 229)
+- markAsOriginatingFromRejection (line 237)
+- originatesFromRejection (line 244)
+- canAttachTrace (line 250)
+- classString (line 269)
+- copyDescriptors (line 273)
+- env (line 321)
+- getNativePromise (line 325)
+- contextBind (line 337)
+
+## laptop-app\node_modules\brace-expansion\dist\commonjs\index.d.ts
+- expand (line 11)
+
+## laptop-app\node_modules\brace-expansion\dist\commonjs\index.js
+- numeric (line 51)
+- escapeBraces (line 54)
+- unescapeBraces (line 62)
+- pushAll (line 71)
+- parseCommaParts (line 81)
+- expand (line 111)
+- embrace (line 127)
+- isPadded (line 130)
+- lte (line 133)
+- gte (line 136)
+- combine (line 144)
+- expandSequence (line 166)
+- expand_ (line 220)
+
+## laptop-app\node_modules\brace-expansion\dist\esm\index.d.ts
+- expand (line 11)
+
+## laptop-app\node_modules\brace-expansion\dist\esm\index.js
+- numeric (line 47)
+- escapeBraces (line 50)
+- unescapeBraces (line 58)
+- pushAll (line 67)
+- parseCommaParts (line 77)
+- expand (line 107)
+- embrace (line 123)
+- isPadded (line 126)
+- lte (line 129)
+- gte (line 132)
+- combine (line 140)
+- expandSequence (line 162)
+- expand_ (line 216)
+
+## laptop-app\node_modules\buffer-crc32\index.js
+- ensureBuffer (line 62)
+- bufferizeInt (line 83)
+- _crc32 (line 89)
+- crc32 (line 101)
+
+## laptop-app\node_modules\buffer-from\index.js
+- isArrayBuffer (line 12)
+- fromArrayBuffer (line 16)
+- fromString (line 40)
+- bufferFrom (line 54)
+
+## laptop-app\node_modules\builder-util-runtime\out\CancellationToken.js
+- finallyHandler (line 41)
+
+## laptop-app\node_modules\builder-util-runtime\out\MemoLazy.js
+- equals (line 30)
+
+## laptop-app\node_modules\builder-util-runtime\out\error.d.ts
+- newError (line 1)
+
+## laptop-app\node_modules\builder-util-runtime\out\error.js
+- newError (line 4)
+
+## laptop-app\node_modules\builder-util-runtime\out\httpExecutor.d.ts
+- addSensitiveRedirectHeader (line 11)
+- addSensitiveFieldPattern (line 17)
+- createHttpError (line 28)
+- parseJson (line 35)
+- configureRequestOptionsFromUrl (line 66)
+- configureRequestUrl (line 67)
+- safeGetHeader (line 81)
+- configureRequestOptions (line 82)
+- isSensitiveFieldName (line 83)
+- hashSensitiveValue (line 84)
+- safeStringifyJson (line 85)
+
+## laptop-app\node_modules\builder-util-runtime\out\httpExecutor.js
+- normalizeName (line 27)
+- addSensitiveRedirectHeader (line 41)
+- addSensitiveFieldPattern (line 49)
+- createHttpError (line 52)
+- parseJson (line 86)
+- parseUrl (line 362)
+- configureRequestOptionsFromUrl (line 376)
+- configureRequestUrl (line 382)
+- checkSha2 (line 437)
+- safeGetHeader (line 444)
+- configurePipes (line 457)
+- configureRequestOptions (line 492)
+- isSensitiveFieldName (line 514)
+- hashSensitiveValue (line 518)
+- safeStringifyJson (line 521)
+
+## laptop-app\node_modules\builder-util-runtime\out\objects.d.ts
+- mapToObject (line 3)
+- isValidKey (line 4)
+- objectToArgs (line 7)
+
+## laptop-app\node_modules\builder-util-runtime\out\objects.js
+- mapToObject (line 8)
+- isValidKey (line 23)
+- asArray (line 30)
+- isObject (line 41)
+- assignKey (line 48)
+- assign (line 68)
+- deepAssign (line 78)
+- objectToArgs (line 91)
+
+## laptop-app\node_modules\builder-util-runtime\out\publishOptions.d.ts
+- githubUrl (line 114)
+- githubTagPrefix (line 115)
+- getS3LikeProviderBaseUrl (line 396)
+
+## laptop-app\node_modules\builder-util-runtime\out\publishOptions.js
+- githubUrl (line 7)
+- githubTagPrefix (line 10)
+- getS3LikeProviderBaseUrl (line 20)
+- s3Url (line 30)
+- appendPath (line 58)
+- spacesUrl (line 67)
+
+## laptop-app\node_modules\builder-util-runtime\out\retry.js
+- retry (line 5)
+
+## laptop-app\node_modules\builder-util-runtime\out\rfc2253Parser.d.ts
+- parseDn (line 1)
+
+## laptop-app\node_modules\builder-util-runtime\out\rfc2253Parser.js
+- parseDn (line 4)
+
+## laptop-app\node_modules\builder-util-runtime\out\uuid.js
+- getVariant (line 102)
+- uuidNamed (line 124)
+- stringify (line 171)
+
+## laptop-app\node_modules\builder-util-runtime\out\xml.d.ts
+- parseXml (line 15)
+
+## laptop-app\node_modules\builder-util-runtime\out\xml.js
+- isValidName (line 64)
+- isNameEquals (line 67)
+- parseXml (line 71)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\copy\copy-sync.js
+- copySync (line 9)
+- handleFilterAndCopy (line 32)
+- startCopy (line 39)
+- getStats (line 44)
+- onFile (line 58)
+- mayCopyFile (line 63)
+- copyFile (line 72)
+- handleTimestamps (line 78)
+- fileIsNotWritable (line 86)
+- makeFileWritable (line 90)
+- setDestMode (line 94)
+- setDestTimestamps (line 98)
+- onDir (line 106)
+- mkDirAndCopy (line 111)
+- copyDir (line 117)
+- copyDirItem (line 121)
+- onLink (line 128)
+- copyLink (line 164)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\copy\copy.js
+- copy (line 10)
+- checkParentDir (line 44)
+- handleFilter (line 56)
+- startCopy (line 63)
+- getStats (line 68)
+- onFile (line 84)
+- mayCopyFile (line 89)
+- copyFile (line 100)
+- handleTimestampsAndMode (line 108)
+- fileIsNotWritable (line 121)
+- makeFileWritable (line 125)
+- setDestTimestampsAndMode (line 129)
+- setDestMode (line 136)
+- setDestTimestamps (line 140)
+- onDir (line 150)
+- mkDirAndCopy (line 155)
+- copyDir (line 165)
+- copyDirItems (line 172)
+- copyDirItem (line 178)
+- onLink (line 191)
+- copyLink (line 228)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\empty\index.js
+- emptyDir (line 9)
+- emptyDirSync (line 20)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\ensure\file.js
+- createFile (line 8)
+- makeFile (line 9)
+- createFileSync (line 43)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\ensure\link.js
+- createLink (line 10)
+- makeLink (line 11)
+- createLinkSync (line 39)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\ensure\symlink-paths.js
+- symlinkPaths (line 29)
+- symlinkPathsSync (line 67)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\ensure\symlink-type.js
+- symlinkType (line 5)
+- symlinkTypeSync (line 16)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\ensure\symlink.js
+- createSymlink (line 22)
+- _createSymlink (line 39)
+- createSymlinkSync (line 58)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\json\output-json-sync.js
+- outputJsonSync (line 6)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\json\output-json.js
+- outputJson (line 6)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\mkdirs\make-dir.js
+- getMode (line 5)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\mkdirs\utils.js
+- checkPath (line 11)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\move\move-sync.js
+- moveSync (line 10)
+- isParentRoot (line 20)
+- doRename (line 26)
+- rename (line 36)
+- moveAcrossDevice (line 45)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\move\move.js
+- move (line 11)
+- isParentRoot (line 35)
+- doRename (line 41)
+- rename (line 56)
+- moveAcrossDevice (line 64)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\output-file\index.js
+- outputFile (line 9)
+- outputFileSync (line 28)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\path-exists\index.js
+- pathExists (line 5)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\remove\index.js
+- remove (line 7)
+- removeSync (line 13)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\remove\rimraf.js
+- defaults (line 9)
+- rimraf (line 27)
+- CB (line 43)
+- rimraf_ (line 72)
+- fixWinEPERM (line 112)
+- fixWinEPERMSync (line 134)
+- rmdir (line 167)
+- rmkids (line 186)
+- rimrafSync (line 216)
+- rmdirSync (line 259)
+- rmkidsSync (line 276)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\util\stat.js
+- getStats (line 7)
+- getStatsSync (line 20)
+- checkPaths (line 35)
+- checkPathsSync (line 66)
+- checkParentPaths (line 98)
+- checkParentPathsSync (line 114)
+- areIdentical (line 131)
+- isSrcSubdir (line 137)
+- errMsg (line 143)
+
+## laptop-app\node_modules\builder-util\node_modules\fs-extra\lib\util\utimes.js
+- utimesMillis (line 5)
+- utimesMillisSync (line 17)
+
+## laptop-app\node_modules\builder-util\node_modules\jsonfile\index.js
+- _readFile (line 10)
+- readFileSync (line 40)
+- _writeFile (line 63)
+- writeFileSync (line 73)
+
+## laptop-app\node_modules\builder-util\node_modules\jsonfile\utils.js
+- stringify (line 1)
+- stripBom (line 12)
+
+## laptop-app\node_modules\builder-util\out\arch.d.ts
+- toLinuxArchString (line 9)
+- getArchCliNames (line 10)
+- getArchSuffix (line 11)
+- archFromString (line 12)
+- defaultArchFromString (line 13)
+- getArtifactArchName (line 14)
+
+## laptop-app\node_modules\builder-util\out\arch.js
+- toLinuxArchString (line 18)
+- getArchCliNames (line 32)
+- getArchSuffix (line 35)
+- archFromString (line 38)
+- defaultArchFromString (line 55)
+- getArtifactArchName (line 58)
+
+## laptop-app\node_modules\builder-util\out\asyncTaskManager.js
+- checkErrors (line 46)
+- throwError (line 78)
+
+## laptop-app\node_modules\builder-util\out\cscLink.d.ts
+- decodeCscLinkBase64 (line 2)
+- resolveCscLinkPath (line 4)
+- loadCscLink (line 12)
+
+## laptop-app\node_modules\builder-util\out\cscLink.js
+- decodeCscLinkBase64 (line 11)
+- resolveCscLinkPath (line 20)
+- loadCscLink (line 47)
+
+## laptop-app\node_modules\builder-util\out\envUtil.d.ts
+- resolveEnvShellValue (line 1)
+- resolveEnvToolsetPath (line 2)
+- parseValidEnvVarUrl (line 3)
+
+## laptop-app\node_modules\builder-util\out\envUtil.js
+- resolveEnvShellValue (line 11)
+- resolveEnvToolsetPath (line 24)
+- parseValidEnvVarUrl (line 45)
+
+## laptop-app\node_modules\builder-util\out\filename.d.ts
+- sanitizeFileName (line 1)
+- getCompleteExtname (line 2)
+
+## laptop-app\node_modules\builder-util\out\filename.js
+- sanitizeFileName (line 8)
+- getCompleteExtname (line 16)
+
+## laptop-app\node_modules\builder-util\out\fs.d.ts
+- unlinkIfExists (line 17)
+- statOrNull (line 18)
+- exists (line 19)
+- walk (line 30)
+- copyFile (line 31)
+- copyOrLinkFile (line 38)
+- copyDir (line 55)
+- dirSize (line 56)
+
+## laptop-app\node_modules\builder-util\out\fs.js
+- unlinkIfExists (line 27)
+- statOrNull (line 32)
+- exists (line 35)
+- walk (line 47)
+- copyFile (line 126)
+- copyOrLinkFile (line 135)
+- doCopyFile (line 180)
+- copyDir (line 240)
+- dirSize (line 265)
+- DO_NOT_USE_HARD_LINKS (line 281)
+- USE_HARD_LINKS (line 284)
+
+## laptop-app\node_modules\builder-util\out\ksuid.d.ts
+- generateKsuid (line 6)
+
+## laptop-app\node_modules\builder-util\out\ksuid.js
+- generateKsuid (line 14)
+- base62Encode (line 21)
+
+## laptop-app\node_modules\builder-util\out\log.d.ts
+- setPrinter (line 7)
+
+## laptop-app\node_modules\builder-util\out\log.js
+- setPrinter (line 9)
+
+## laptop-app\node_modules\builder-util\out\nodeHttpExecutor.d.ts
+- buildGotProxyAgent (line 9)
+
+## laptop-app\node_modules\builder-util\out\nodeHttpExecutor.js
+- buildGotProxyAgent (line 26)
+
+## laptop-app\node_modules\builder-util\out\promise.d.ts
+- printErrorAndExit (line 1)
+
+## laptop-app\node_modules\builder-util\out\promise.js
+- printErrorAndExit (line 9)
+- executeFinally (line 14)
+- orNullIfFileNotExist (line 43)
+- orIfFileNotExist (line 46)
+
+## laptop-app\node_modules\builder-util\out\stringUtil.d.ts
+- isEmptyOrSpaces (line 2)
+
+## laptop-app\node_modules\builder-util\out\stringUtil.js
+- isEmptyOrSpaces (line 4)
+
+## laptop-app\node_modules\builder-util\out\util.d.ts
+- serializeToYaml (line 21)
+- removePassword (line 22)
+- stripSensitiveEnvVars (line 28)
+- filterSensitiveEnv (line 29)
+- exec (line 30)
+- doSpawn (line 34)
+- spawnAndWrite (line 35)
+- spawnAndWriteWithOutput (line 36)
+- spawn (line 40)
+- isTokenCharValid (line 48)
+- getUserDefinedCacheDir (line 49)
+- isArrayEqualRegardlessOfSort (line 51)
+- replaceDefault (line 56)
+- getPlatformIconFileName (line 57)
+- isPullRequest (line 58)
+- isEnvTrue (line 59)
+- sanitizeDirPath (line 74)
+- to7zaOutputSwitch (line 86)
+
+## laptop-app\node_modules\builder-util\out\util.js
+- serializeToYaml (line 94)
+- removePassword (line 101)
+- stripSensitiveEnvVars (line 133)
+- filterSensitiveEnv (line 142)
+- getProcessEnv (line 149)
+- exec (line 168)
+- logSpawn (line 231)
+- doSpawn (line 245)
+- spawnAndWrite (line 263)
+- spawnAndWriteWithOutput (line 285)
+- spawn (line 327)
+- handleProcess (line 332)
+- formatOut (line 368)
+- use (line 381)
+- isTokenCharValid (line 384)
+- getUserDefinedCacheDir (line 387)
+- addValue (line 398)
+- isArrayEqualRegardlessOfSort (line 407)
+- removeNullish (line 417)
+- replaceDefault (line 432)
+- getPlatformIconFileName (line 447)
+- isPullRequest (line 459)
+- isSet (line 461)
+- isEnvTrue (line 471)
+- sanitizeDirPath (line 495)
+- to7zaOutputSwitch (line 522)
+
+## laptop-app\node_modules\bytestreamjs\build\cjs\helpers.js
+- parseByteMap (line 4)
+
+## laptop-app\node_modules\bytestreamjs\build\mjs\helpers.js
+- parseByteMap (line 1)
+
+## laptop-app\node_modules\bytestreamjs\build\types\helpers.d.ts
+- parseByteMap (line 23)
+
+## laptop-app\node_modules\cacheable-lookup\source\index.js
+- verifyAgent (line 20)
+- map4to6 (line 26)
+- getIfaceInfo (line 37)
+- isIterable (line 62)
+- wrap (line 225)
+
+## laptop-app\node_modules\cacheable-request\src\index.js
+- makeRequest (line 69)
+- handler (line 83)
+- get (line 163)
+- errorHandler (line 189)
+- urlObjectToRequestOptions (line 209)
+- normalizeUrlObject (line 217)
+
+## laptop-app\node_modules\call-bind-apply-helpers\applyBind.d.ts
+- applyBind (line 17)
+
+## laptop-app\node_modules\call-bind-apply-helpers\applyBind.js
+- applyBind (line 8)
+
+## laptop-app\node_modules\call-bind-apply-helpers\index.js
+- callBindBasic (line 10)
+
+## laptop-app\node_modules\chalk\source\index.js
+- applyOptions (line 21)
+- chalkFactory (line 38)
+- Chalk (line 56)
+- createStyler (line 118)
+- createBuilder (line 138)
+- builder (line 139)
+- applyStyle (line 161)
+- chalkTag (line 196)
+
+## laptop-app\node_modules\chalk\source\templates.js
+- unescape (line 20)
+- parseArguments (line 35)
+- parseStyle (line 54)
+- buildStyle (line 74)
+
+## laptop-app\node_modules\chalk\source\util.js
+- stringReplaceAll (line 3)
+- stringEncaseCRLFWithFirstIndex (line 22)
+
+## laptop-app\node_modules\chownr\dist\commonjs\index.js
+- lchownSync (line 9)
+- chown (line 18)
+- chownrKid (line 24)
+- chownr (line 38)
+- then (line 52)
+- chownrKidSync (line 68)
+- chownrSync (line 73)
+
+## laptop-app\node_modules\chownr\dist\esm\index.js
+- lchownSync (line 3)
+- chown (line 12)
+- chownrKid (line 18)
+- chownr (line 32)
+- then (line 46)
+- chownrKidSync (line 61)
+- chownrSync (line 66)
+
+## laptop-app\node_modules\chromium-pickle-js\lib\pickle.js
+- PickleIterator (line 23)
+- Pickle (line 110)
+
+## laptop-app\node_modules\ci-info\index.js
+- checkEnv (line 52)
+- checkPR (line 75)
+
+## laptop-app\node_modules\cliui\build\lib\index.js
+- addBorder (line 234)
+- _minWidth (line 248)
+- getWindowWidth (line 256)
+- alignRight (line 263)
+- alignCenter (line 271)
+- cliui (line 281)
+
+## laptop-app\node_modules\cliui\build\lib\string-utils.js
+- stripAnsi (line 10)
+- wrap (line 13)
+
+## laptop-app\node_modules\clone-response\src\index.js
+- cloneResponse (line 6)
+
+## laptop-app\node_modules\color-convert\conversions.js
+- comparativeDistance (line 166)
+
+## laptop-app\node_modules\color-convert\index.js
+- wrapRaw (line 8)
+- wrapRounded (line 30)
+
+## laptop-app\node_modules\color-convert\route.js
+- buildGraph (line 14)
+- deriveBFS (line 32)
+- link (line 57)
+- wrapConversion (line 63)
+
+## laptop-app\node_modules\combined-stream\lib\combined_stream.js
+- CombinedStream (line 6)
+
+## laptop-app\node_modules\commander\index.js
+- checkExplicitNames (line 229)
+- listener (line 399)
+- maybeOption (line 996)
+- padOptionDetails (line 1406)
+- camelcase (line 1615)
+- pad (line 1630)
+- wrap (line 1645)
+- optionalWrap (line 1667)
+- outputHelpIfRequested (line 1686)
+- humanReadableArgName (line 1703)
+- incrementNodeInspectorPort (line 1719)
+
+## laptop-app\node_modules\core-util-is\lib\util.js
+- isArray (line 25)
+- isBoolean (line 33)
+- isNull (line 38)
+- isNullOrUndefined (line 43)
+- isNumber (line 48)
+- isString (line 53)
+- isSymbol (line 58)
+- isUndefined (line 63)
+- isRegExp (line 68)
+- isObject (line 73)
+- isDate (line 78)
+- isError (line 83)
+- isFunction (line 88)
+- isPrimitive (line 93)
+- objectToString (line 105)
+
+## laptop-app\node_modules\cross-spawn\index.js
+- spawn (line 7)
+- spawnSync (line 21)
+
+## laptop-app\node_modules\cross-spawn\lib\enoent.js
+- notFoundError (line 5)
+- hookChildProcess (line 15)
+- verifyENOENT (line 38)
+- verifyENOENTSync (line 46)
+
+## laptop-app\node_modules\cross-spawn\lib\parse.js
+- detectShebang (line 12)
+- parseNonShell (line 27)
+- parse (line 65)
+
+## laptop-app\node_modules\cross-spawn\lib\util\escape.js
+- escapeCommand (line 6)
+- escapeArgument (line 13)
+
+## laptop-app\node_modules\cross-spawn\lib\util\readShebang.js
+- readShebang (line 6)
+
+## laptop-app\node_modules\cross-spawn\lib\util\resolveCommand.js
+- resolveCommandAttempt (line 7)
+- resolveCommand (line 48)
+
+## laptop-app\node_modules\cross-spawn\node_modules\isexe\index.js
+- isexe (line 12)
+- sync (line 46)
+
+## laptop-app\node_modules\cross-spawn\node_modules\isexe\mode.js
+- isexe (line 6)
+- sync (line 12)
+- checkStat (line 16)
+- checkMode (line 20)
+
+## laptop-app\node_modules\cross-spawn\node_modules\isexe\test\basic.js
+- reset (line 20)
+- runTest (line 118)
+
+## laptop-app\node_modules\cross-spawn\node_modules\isexe\windows.js
+- checkPathExt (line 6)
+- checkStat (line 27)
+- isexe (line 34)
+- sync (line 40)
+
+## laptop-app\node_modules\cross-spawn\node_modules\which\which.js
+- getNotFoundError (line 9)
+- getPathInfo (line 12)
+- which (line 43)
+- step (line 54)
+- subStep (line 69)
+- whichSync (line 87)
+
+## laptop-app\node_modules\debug\src\browser.js
+- useColors (line 115)
+- formatArgs (line 149)
+- save (line 200)
+- load (line 219)
+- localstorage (line 247)
+
+## laptop-app\node_modules\debug\src\common.js
+- setup (line 7)
+- selectColor (line 41)
+- createDebug (line 60)
+- debug (line 66)
+- extend (line 149)
+- enable (line 162)
+- matchesTemplate (line 192)
+- disable (line 233)
+- enabled (line 249)
+- coerce (line 272)
+- destroy (line 283)
+
+## laptop-app\node_modules\debug\src\node.js
+- useColors (line 155)
+- formatArgs (line 167)
+- getDate (line 182)
+- log (line 193)
+- save (line 203)
+- load (line 220)
+- init (line 231)
+
+## laptop-app\node_modules\decompress-response\index.d.ts
+- decompressResponse (line 20)
+
+## laptop-app\node_modules\defer-to-connect\dist\source\index.js
+- isTLSSocket (line 3)
+- deferToConnect (line 6)
+- onConnect (line 18)
+
+## laptop-app\node_modules\define-data-property\index.d.ts
+- defineDataProperty (line 2)
+
+## laptop-app\node_modules\define-data-property\index.js
+- defineDataProperty (line 11)
+
+## laptop-app\node_modules\delayed-stream\lib\delayed_stream.js
+- DelayedStream (line 5)
+
+## laptop-app\node_modules\dir-compare\build\src\Entry\EntryBuilder.js
+- hasPermissionDenied (line 53)
+- getStatIgnoreBrokenLink (line 65)
+- filterEntry (line 88)
+- isEmptyDir (line 97)
+
+## laptop-app\node_modules\dir-compare\build\src\Entry\EntryEquality.js
+- isFileEqualSync (line 37)
+- isFileEqualAsync (line 52)
+- isDirectoryEqual (line 96)
+- isBrokenLinkEqual (line 102)
+- isDateEqual (line 109)
+- isSymlinkEqual (line 115)
+- hasIdenticalLink (line 124)
+
+## laptop-app\node_modules\dir-compare\build\src\FileCompareHandler\default\defaultFileCompare.js
+- compareSync (line 23)
+- compareAsync (line 58)
+- compareAsyncInternal (line 75)
+- compareBuffers (line 103)
+- finalizeAsync (line 106)
+
+## laptop-app\node_modules\dir-compare\build\src\FileCompareHandler\lines\compare\compareLineBatches.d.ts
+- compareLineBatches (line 25)
+
+## laptop-app\node_modules\dir-compare\build\src\FileCompareHandler\lines\compare\compareLineBatches.js
+- compareLineBatches (line 13)
+- emptyRestLines (line 34)
+
+## laptop-app\node_modules\dir-compare\build\src\FileCompareHandler\lines\compare\compareLines.d.ts
+- compareLines (line 3)
+
+## laptop-app\node_modules\dir-compare\build\src\FileCompareHandler\lines\compare\compareLines.js
+- compareLines (line 7)
+- compareLine (line 27)
+- trimSpaces (line 43)
+- trimLineEnding (line 48)
+- removeSpaces (line 51)
+- removeEmptyLines (line 54)
+- isEmptyLine (line 57)
+- separateEol (line 60)
+
+## laptop-app\node_modules\dir-compare\build\src\FileCompareHandler\lines\lineBasedCompareAsync.js
+- adopt (line 3)
+- fulfilled (line 5)
+- rejected (line 6)
+- step (line 7)
+- lineBasedCompareAsync (line 24)
+- readLineBatchAsync (line 66)
+
+## laptop-app\node_modules\dir-compare\build\src\FileCompareHandler\lines\lineBasedCompareSync.js
+- lineBasedCompareSync (line 18)
+- readLineBatchSync (line 56)
+
+## laptop-app\node_modules\dir-compare\build\src\FileCompareHandler\lines\lineReader\readBufferedLines.d.ts
+- readBufferedLines (line 13)
+
+## laptop-app\node_modules\dir-compare\build\src\FileCompareHandler\lines\lineReader\readBufferedLines.js
+- readBufferedLines (line 15)
+- removeLastLine (line 39)
+
+## laptop-app\node_modules\dir-compare\build\src\FileSystem\FileCloser.d.ts
+- closeFilesSync (line 2)
+- closeFilesAsync (line 3)
+
+## laptop-app\node_modules\dir-compare\build\src\FileSystem\FileCloser.js
+- closeFilesSync (line 8)
+- closeFilesAsync (line 16)
+
+## laptop-app\node_modules\dir-compare\build\src\FilterHandler\defaultFilterHandler.js
+- defaultFilterHandler (line 12)
+- match (line 26)
+
+## laptop-app\node_modules\dir-compare\build\src\NameCompare\defaultNameCompare.js
+- defaultNameCompare (line 7)
+- strcmp (line 15)
+
+## laptop-app\node_modules\dir-compare\build\src\NameCompare\fileBasedNameCompare.d.ts
+- fileBasedNameCompare (line 8)
+
+## laptop-app\node_modules\dir-compare\build\src\NameCompare\fileBasedNameCompare.js
+- fileBasedNameCompare (line 9)
+
+## laptop-app\node_modules\dir-compare\build\src\ResultBuilder\defaultResultBuilderCallback.d.ts
+- defaultResultBuilderCallback (line 3)
+
+## laptop-app\node_modules\dir-compare\build\src\ResultBuilder\defaultResultBuilderCallback.js
+- defaultResultBuilderCallback (line 9)
+
+## laptop-app\node_modules\dir-compare\build\src\Symlink\LoopDetector.js
+- shallowClone (line 45)
+
+## laptop-app\node_modules\dir-compare\build\src\compareAsync.d.ts
+- compareAsync (line 13)
+
+## laptop-app\node_modules\dir-compare\build\src\compareAsync.js
+- getEntries (line 24)
+- compareAsync (line 40)
+
+## laptop-app\node_modules\dir-compare\build\src\compareSync.d.ts
+- compareSync (line 8)
+
+## laptop-app\node_modules\dir-compare\build\src\compareSync.js
+- getEntries (line 19)
+- compareSync (line 35)
+
+## laptop-app\node_modules\dir-compare\build\src\index.d.ts
+- compareSync (line 9)
+- compare (line 16)
+
+## laptop-app\node_modules\dir-compare\build\src\index.js
+- compareSync (line 42)
+- compare (line 70)
+- prepareOptions (line 148)
+- rebuildAsyncDiffSet (line 181)
+- getCompareInfo (line 191)
+- compareMixedEntries (line 230)
+
+## laptop-app\node_modules\dir-compare\node_modules\balanced-match\index.js
+- balanced (line 3)
+- maybeMatch (line 18)
+- range (line 24)
+
+## laptop-app\node_modules\dir-compare\node_modules\brace-expansion\index.js
+- numeric (line 46)
+- escapeBraces (line 52)
+- unescapeBraces (line 60)
+- pushAll (line 70)
+- parseCommaParts (line 79)
+- expandTop (line 119)
+- identity (line 142)
+- embrace (line 146)
+- isPadded (line 149)
+- lte (line 153)
+- gte (line 156)
+- combine (line 169)
+- expandSequence (line 200)
+- expand (line 259)
+
+## laptop-app\node_modules\dir-compare\node_modules\minimatch\minimatch.js
+- charSet (line 40)
+- filter (line 51)
+- ext (line 58)
+- minimatch (line 77)
+- Minimatch (line 81)
+- defaults (line 84)
+- filter (line 88)
+- defaults (line 92)
+- makeRe (line 96)
+- braceExpand (line 100)
+- minimatch (line 115)
+- Minimatch (line 128)
+- make (line 162)
+- debug (line 182)
+- parseNegate (line 215)
+- braceExpand (line 250)
+- parse (line 298)
+- clearStateChar (line 330)
+- makeRe (line 673)
+- match (line 730)
+- globUnescape (line 999)
+- regExpEscape (line 1003)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\copy\copy-sync.js
+- copySync (line 9)
+- handleFilterAndCopy (line 32)
+- startCopy (line 39)
+- getStats (line 44)
+- onFile (line 58)
+- mayCopyFile (line 63)
+- copyFile (line 72)
+- handleTimestamps (line 78)
+- fileIsNotWritable (line 86)
+- makeFileWritable (line 90)
+- setDestMode (line 94)
+- setDestTimestamps (line 98)
+- onDir (line 106)
+- mkDirAndCopy (line 111)
+- copyDir (line 117)
+- copyDirItem (line 121)
+- onLink (line 128)
+- copyLink (line 164)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\copy\copy.js
+- copy (line 10)
+- checkParentDir (line 44)
+- handleFilter (line 56)
+- startCopy (line 63)
+- getStats (line 68)
+- onFile (line 84)
+- mayCopyFile (line 89)
+- copyFile (line 100)
+- handleTimestampsAndMode (line 108)
+- fileIsNotWritable (line 121)
+- makeFileWritable (line 125)
+- setDestTimestampsAndMode (line 129)
+- setDestMode (line 136)
+- setDestTimestamps (line 140)
+- onDir (line 150)
+- mkDirAndCopy (line 155)
+- copyDir (line 165)
+- copyDirItems (line 172)
+- copyDirItem (line 178)
+- onLink (line 191)
+- copyLink (line 228)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\empty\index.js
+- emptyDir (line 9)
+- emptyDirSync (line 20)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\ensure\file.js
+- createFile (line 8)
+- makeFile (line 9)
+- createFileSync (line 43)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\ensure\link.js
+- createLink (line 10)
+- makeLink (line 11)
+- createLinkSync (line 39)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\ensure\symlink-paths.js
+- symlinkPaths (line 29)
+- symlinkPathsSync (line 67)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\ensure\symlink-type.js
+- symlinkType (line 5)
+- symlinkTypeSync (line 16)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\ensure\symlink.js
+- createSymlink (line 22)
+- _createSymlink (line 39)
+- createSymlinkSync (line 58)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\json\output-json-sync.js
+- outputJsonSync (line 6)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\json\output-json.js
+- outputJson (line 6)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\mkdirs\make-dir.js
+- getMode (line 5)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\mkdirs\utils.js
+- checkPath (line 11)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\move\move-sync.js
+- moveSync (line 10)
+- isParentRoot (line 20)
+- doRename (line 26)
+- rename (line 36)
+- moveAcrossDevice (line 45)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\move\move.js
+- move (line 11)
+- isParentRoot (line 35)
+- doRename (line 41)
+- rename (line 56)
+- moveAcrossDevice (line 64)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\output-file\index.js
+- outputFile (line 9)
+- outputFileSync (line 28)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\path-exists\index.js
+- pathExists (line 5)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\remove\index.js
+- remove (line 7)
+- removeSync (line 13)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\remove\rimraf.js
+- defaults (line 9)
+- rimraf (line 27)
+- CB (line 43)
+- rimraf_ (line 72)
+- fixWinEPERM (line 112)
+- fixWinEPERMSync (line 134)
+- rmdir (line 167)
+- rmkids (line 186)
+- rimrafSync (line 216)
+- rmdirSync (line 259)
+- rmkidsSync (line 276)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\util\stat.js
+- getStats (line 7)
+- getStatsSync (line 20)
+- checkPaths (line 35)
+- checkPathsSync (line 66)
+- checkParentPaths (line 98)
+- checkParentPathsSync (line 114)
+- areIdentical (line 131)
+- isSrcSubdir (line 137)
+- errMsg (line 143)
+
+## laptop-app\node_modules\dmg-builder\node_modules\fs-extra\lib\util\utimes.js
+- utimesMillis (line 5)
+- utimesMillisSync (line 17)
+
+## laptop-app\node_modules\dmg-builder\node_modules\jsonfile\index.js
+- _readFile (line 10)
+- readFileSync (line 40)
+- _writeFile (line 63)
+- writeFileSync (line 73)
+
+## laptop-app\node_modules\dmg-builder\node_modules\jsonfile\utils.js
+- stringify (line 1)
+- stripBom (line 12)
+
+## laptop-app\node_modules\dmg-builder\out\dmg.js
+- addLogLevel (line 154)
+
+## laptop-app\node_modules\dmg-builder\out\dmgLicense.d.ts
+- addLicenseToDmg (line 14)
+
+## laptop-app\node_modules\dmg-builder\out\dmgLicense.js
+- addLicenseToDmg (line 9)
+- buildExplicitLicenseConfig (line 21)
+- buildConventionLicenseConfig (line 46)
+
+## laptop-app\node_modules\dmg-builder\out\dmgUtil.d.ts
+- getDmgTemplatePath (line 5)
+- attachAndExecute (line 6)
+- detach (line 7)
+- computeBackground (line 8)
+- customizeDmg (line 17)
+- transformBackgroundFileIfNeed (line 18)
+- getImageSizeUsingSips (line 19)
+
+## laptop-app\node_modules\dmg-builder\out\dmgUtil.js
+- getDmgTemplatePath (line 22)
+- getDmgVendorPath (line 25)
+- attachAndExecute (line 58)
+- detach (line 91)
+- computeBackground (line 101)
+- serializeString (line 114)
+- customizeDmg (line 122)
+- transformBackgroundFileIfNeed (line 221)
+- getImageSizeUsingSips (line 233)
+
+## laptop-app\node_modules\dmg-builder\out\hdiuil.d.ts
+- explainHdiutilError (line 17)
+- hdiUtil (line 18)
+- hdiUtilWithStdin (line 19)
+
+## laptop-app\node_modules\dmg-builder\out\hdiuil.js
+- explainHdiutilError (line 24)
+- shouldRetry (line 45)
+- hdiUtil (line 55)
+- hdiUtilWithStdin (line 65)
+
+## laptop-app\node_modules\dmg-builder\out\licenseButtons.d.ts
+- getLicenseButtonsFile (line 8)
+
+## laptop-app\node_modules\dmg-builder\out\licenseButtons.js
+- getLicenseButtonsFile (line 5)
+
+## laptop-app\node_modules\dotenv-expand\lib\main.d.ts
+- expand (line 50)
+
+## laptop-app\node_modules\dotenv-expand\lib\main.js
+- _resolveEscapeSequences (line 15)
+- interpolate (line 19)
+- expand (line 53)
+
+## laptop-app\node_modules\dotenv\lib\cli-options.js
+- optionMatcher (line 3)
+
+## laptop-app\node_modules\dotenv\lib\main.d.ts
+- config (line 126)
+- configDotenv (line 137)
+- populate (line 150)
+- decrypt (line 162)
+
+## laptop-app\node_modules\dotenv\lib\main.js
+- parse (line 12)
+- _parseVault (line 50)
+- _warn (line 93)
+- _debug (line 97)
+- _log (line 101)
+- _dotenvKey (line 105)
+- _instructions (line 120)
+- _vaultPath (line 163)
+- _resolveHome (line 187)
+- _configVault (line 191)
+- configDotenv (line 211)
+- config (line 288)
+- decrypt (line 306)
+- populate (line 338)
+
+## laptop-app\node_modules\dunder-proto\get.d.ts
+- getDunderProto (line 1)
+
+## laptop-app\node_modules\dunder-proto\get.js
+- getDunder (line 26)
+
+## laptop-app\node_modules\dunder-proto\set.js
+- setDunder (line 26)
+
+## laptop-app\node_modules\duplexer2\index.js
+- DuplexWrapper (line 5)
+- _write (line 56)
+- _read (line 60)
+- duplex2 (line 72)
+
+## laptop-app\node_modules\ejs\bin\cli.js
+- run (line 121)
+
+## laptop-app\node_modules\ejs\ejs.js
+- r (line 1)
+- o (line 1)
+- resolvePaths (line 140)
+- getIncludePath (line 157)
+- handleCache (line 211)
+- tryHandleCache (line 255)
+- fileLoader (line 293)
+- includeFile (line 310)
+- rethrow (line 341)
+- stripSemi (line 365)
+- compile (line 382)
+- Template (line 510)
+- __append (line 591)
+- anonymous (line 696)
+- encode_char (line 1013)
+- encode_char (line 1035)
+- escapeXMLToString (line 1058)
+- normalizeArray (line 1239)
+- trim (line 1340)
+- basename (line 1409)
+- filter (line 1496)
+- defaultSetTimout (line 1527)
+- defaultClearTimeout (line 1530)
+- runTimeout (line 1553)
+- runClearTimeout (line 1578)
+- cleanUpNextTick (line 1610)
+- drainQueue (line 1625)
+- Item (line 1663)
+- noop (line 1677)
+
+## laptop-app\node_modules\ejs\ejs.min.js
+- r (line 1)
+- o (line 1)
+- resolvePaths (line 1)
+- getIncludePath (line 1)
+- handleCache (line 1)
+- tryHandleCache (line 1)
+- fileLoader (line 1)
+- includeFile (line 1)
+- rethrow (line 1)
+- stripSemi (line 1)
+- compile (line 1)
+- Template (line 1)
+- __append (line 1)
+- anonymous (line 1)
+- encode_char (line 1)
+- encode_char (line 1)
+- escapeXMLToString (line 1)
+- normalizeArray (line 1)
+- trim (line 1)
+- basename (line 1)
+- filter (line 1)
+- defaultSetTimout (line 1)
+- defaultClearTimeout (line 1)
+- runTimeout (line 1)
+- runClearTimeout (line 1)
+- cleanUpNextTick (line 1)
+- drainQueue (line 1)
+- Item (line 1)
+- noop (line 1)
+
+## laptop-app\node_modules\ejs\lib\ejs.js
+- resolvePaths (line 139)
+- getIncludePath (line 156)
+- handleCache (line 210)
+- tryHandleCache (line 254)
+- fileLoader (line 292)
+- includeFile (line 309)
+- rethrow (line 340)
+- stripSemi (line 364)
+- compile (line 381)
+- Template (line 509)
+- __append (line 590)
+- anonymous (line 695)
+
+## laptop-app\node_modules\ejs\lib\utils.js
+- encode_char (line 58)
+- encode_char (line 80)
+- escapeXMLToString (line 103)
+
+## laptop-app\node_modules\electron-builder-squirrel-windows\out\SquirrelWindowsTarget.js
+- safeArtifactName (line 137)
+- checkConflictingOptions (line 274)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\copy\copy-sync.js
+- copySync (line 9)
+- handleFilterAndCopy (line 32)
+- startCopy (line 39)
+- getStats (line 44)
+- onFile (line 58)
+- mayCopyFile (line 63)
+- copyFile (line 72)
+- handleTimestamps (line 78)
+- fileIsNotWritable (line 86)
+- makeFileWritable (line 90)
+- setDestMode (line 94)
+- setDestTimestamps (line 98)
+- onDir (line 106)
+- mkDirAndCopy (line 111)
+- copyDir (line 117)
+- copyDirItem (line 121)
+- onLink (line 128)
+- copyLink (line 164)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\copy\copy.js
+- copy (line 10)
+- checkParentDir (line 44)
+- handleFilter (line 56)
+- startCopy (line 63)
+- getStats (line 68)
+- onFile (line 84)
+- mayCopyFile (line 89)
+- copyFile (line 100)
+- handleTimestampsAndMode (line 108)
+- fileIsNotWritable (line 121)
+- makeFileWritable (line 125)
+- setDestTimestampsAndMode (line 129)
+- setDestMode (line 136)
+- setDestTimestamps (line 140)
+- onDir (line 150)
+- mkDirAndCopy (line 155)
+- copyDir (line 165)
+- copyDirItems (line 172)
+- copyDirItem (line 178)
+- onLink (line 191)
+- copyLink (line 228)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\empty\index.js
+- emptyDir (line 9)
+- emptyDirSync (line 20)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\ensure\file.js
+- createFile (line 8)
+- makeFile (line 9)
+- createFileSync (line 43)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\ensure\link.js
+- createLink (line 10)
+- makeLink (line 11)
+- createLinkSync (line 39)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\ensure\symlink-paths.js
+- symlinkPaths (line 29)
+- symlinkPathsSync (line 67)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\ensure\symlink-type.js
+- symlinkType (line 5)
+- symlinkTypeSync (line 16)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\ensure\symlink.js
+- createSymlink (line 22)
+- _createSymlink (line 39)
+- createSymlinkSync (line 58)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\json\output-json-sync.js
+- outputJsonSync (line 6)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\json\output-json.js
+- outputJson (line 6)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\mkdirs\make-dir.js
+- getMode (line 5)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\mkdirs\utils.js
+- checkPath (line 11)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\move\move-sync.js
+- moveSync (line 10)
+- isParentRoot (line 20)
+- doRename (line 26)
+- rename (line 36)
+- moveAcrossDevice (line 45)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\move\move.js
+- move (line 11)
+- isParentRoot (line 35)
+- doRename (line 41)
+- rename (line 56)
+- moveAcrossDevice (line 64)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\output-file\index.js
+- outputFile (line 9)
+- outputFileSync (line 28)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\path-exists\index.js
+- pathExists (line 5)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\remove\index.js
+- remove (line 7)
+- removeSync (line 13)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\remove\rimraf.js
+- defaults (line 9)
+- rimraf (line 27)
+- CB (line 43)
+- rimraf_ (line 72)
+- fixWinEPERM (line 112)
+- fixWinEPERMSync (line 134)
+- rmdir (line 167)
+- rmkids (line 186)
+- rimrafSync (line 216)
+- rmdirSync (line 259)
+- rmkidsSync (line 276)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\util\stat.js
+- getStats (line 7)
+- getStatsSync (line 20)
+- checkPaths (line 35)
+- checkPathsSync (line 66)
+- checkParentPaths (line 98)
+- checkParentPathsSync (line 114)
+- areIdentical (line 131)
+- isSrcSubdir (line 137)
+- errMsg (line 143)
+
+## laptop-app\node_modules\electron-builder\node_modules\fs-extra\lib\util\utimes.js
+- utimesMillis (line 5)
+- utimesMillisSync (line 17)
+
+## laptop-app\node_modules\electron-builder\node_modules\jsonfile\index.js
+- _readFile (line 10)
+- readFileSync (line 40)
+- _writeFile (line 63)
+- writeFileSync (line 73)
+
+## laptop-app\node_modules\electron-builder\node_modules\jsonfile\utils.js
+- stringify (line 1)
+- stripBom (line 12)
+
+## laptop-app\node_modules\electron-builder\out\builder.d.ts
+- createYargs (line 5)
+- normalizeOptions (line 17)
+- coerceTypes (line 19)
+- createTargets (line 20)
+- build (line 21)
+- configureBuildCommand (line 25)
+
+## laptop-app\node_modules\electron-builder\out\builder.js
+- createYargs (line 14)
+- normalizeOptions (line 20)
+- processTargets (line 25)
+- commonArch (line 26)
+- coerceValue (line 145)
+- coerceTypes (line 164)
+- createTargets (line 170)
+- build (line 182)
+- configureBuildCommand (line 189)
+
+## laptop-app\node_modules\electron-builder\out\cli\clear-cache.d.ts
+- clearCache (line 1)
+
+## laptop-app\node_modules\electron-builder\out\cli\clear-cache.js
+- clearCache (line 9)
+
+## laptop-app\node_modules\electron-builder\out\cli\cli-util.d.ts
+- checkIsOutdated (line 1)
+- wrap (line 2)
+
+## laptop-app\node_modules\electron-builder\out\cli\cli-util.js
+- checkIsOutdated (line 10)
+- wrap (line 21)
+
+## laptop-app\node_modules\electron-builder\out\cli\cli.js
+- rebuildAppNativeCode (line 34)
+
+## laptop-app\node_modules\electron-builder\out\cli\create-self-signed-cert.d.ts
+- quoteString (line 1)
+
+## laptop-app\node_modules\electron-builder\out\cli\create-self-signed-cert.js
+- createSelfSignedCert (line 12)
+- quoteString (line 35)
+
+## laptop-app\node_modules\electron-builder\out\cli\install-app-deps.js
+- configureInstallAppDepsCommand (line 18)
+- installAppDeps (line 37)
+- main (line 64)
+
+## laptop-app\node_modules\electron-builder\out\cli\start.js
+- start (line 5)
+
+## laptop-app\node_modules\electron-builder\out\publish.d.ts
+- publish (line 5)
+- publishArtifactsWithOptions (line 11)
+
+## laptop-app\node_modules\electron-builder\out\publish.js
+- configurePublishCommand (line 16)
+- publish (line 49)
+- publishArtifactsWithOptions (line 58)
+- publishPackageWithTasks (line 70)
+- sigIntHandler (line 74)
+- main (line 101)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\copy\copy-sync.js
+- copySync (line 9)
+- handleFilterAndCopy (line 32)
+- startCopy (line 39)
+- getStats (line 44)
+- onFile (line 58)
+- mayCopyFile (line 63)
+- copyFile (line 72)
+- handleTimestamps (line 78)
+- fileIsNotWritable (line 86)
+- makeFileWritable (line 90)
+- setDestMode (line 94)
+- setDestTimestamps (line 98)
+- onDir (line 106)
+- mkDirAndCopy (line 111)
+- copyDir (line 117)
+- copyDirItem (line 121)
+- onLink (line 128)
+- copyLink (line 164)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\copy\copy.js
+- copy (line 10)
+- checkParentDir (line 44)
+- handleFilter (line 56)
+- startCopy (line 63)
+- getStats (line 68)
+- onFile (line 84)
+- mayCopyFile (line 89)
+- copyFile (line 100)
+- handleTimestampsAndMode (line 108)
+- fileIsNotWritable (line 121)
+- makeFileWritable (line 125)
+- setDestTimestampsAndMode (line 129)
+- setDestMode (line 136)
+- setDestTimestamps (line 140)
+- onDir (line 150)
+- mkDirAndCopy (line 155)
+- copyDir (line 165)
+- copyDirItems (line 172)
+- copyDirItem (line 178)
+- onLink (line 191)
+- copyLink (line 228)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\empty\index.js
+- emptyDir (line 9)
+- emptyDirSync (line 20)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\ensure\file.js
+- createFile (line 8)
+- makeFile (line 9)
+- createFileSync (line 43)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\ensure\link.js
+- createLink (line 10)
+- makeLink (line 11)
+- createLinkSync (line 39)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\ensure\symlink-paths.js
+- symlinkPaths (line 29)
+- symlinkPathsSync (line 67)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\ensure\symlink-type.js
+- symlinkType (line 5)
+- symlinkTypeSync (line 16)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\ensure\symlink.js
+- createSymlink (line 22)
+- _createSymlink (line 39)
+- createSymlinkSync (line 58)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\json\output-json-sync.js
+- outputJsonSync (line 6)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\json\output-json.js
+- outputJson (line 6)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\mkdirs\make-dir.js
+- getMode (line 5)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\mkdirs\utils.js
+- checkPath (line 11)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\move\move-sync.js
+- moveSync (line 10)
+- isParentRoot (line 20)
+- doRename (line 26)
+- rename (line 36)
+- moveAcrossDevice (line 45)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\move\move.js
+- move (line 11)
+- isParentRoot (line 35)
+- doRename (line 41)
+- rename (line 56)
+- moveAcrossDevice (line 64)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\output-file\index.js
+- outputFile (line 9)
+- outputFileSync (line 28)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\path-exists\index.js
+- pathExists (line 5)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\remove\index.js
+- remove (line 7)
+- removeSync (line 13)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\remove\rimraf.js
+- defaults (line 9)
+- rimraf (line 27)
+- CB (line 43)
+- rimraf_ (line 72)
+- fixWinEPERM (line 112)
+- fixWinEPERMSync (line 134)
+- rmdir (line 167)
+- rmkids (line 186)
+- rimrafSync (line 216)
+- rmdirSync (line 259)
+- rmkidsSync (line 276)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\util\stat.js
+- getStats (line 7)
+- getStatsSync (line 20)
+- checkPaths (line 35)
+- checkPathsSync (line 66)
+- checkParentPaths (line 98)
+- checkParentPathsSync (line 114)
+- areIdentical (line 131)
+- isSrcSubdir (line 137)
+- errMsg (line 143)
+
+## laptop-app\node_modules\electron-publish\node_modules\fs-extra\lib\util\utimes.js
+- utimesMillis (line 5)
+- utimesMillisSync (line 17)
+
+## laptop-app\node_modules\electron-publish\node_modules\jsonfile\index.js
+- _readFile (line 10)
+- readFileSync (line 40)
+- _writeFile (line 63)
+- writeFileSync (line 73)
+
+## laptop-app\node_modules\electron-publish\node_modules\jsonfile\utils.js
+- stringify (line 1)
+- stripBom (line 12)
+
+## laptop-app\node_modules\electron-publish\out\publisher.d.ts
+- getCiTag (line 14)
+
+## laptop-app\node_modules\electron-publish\out\publisher.js
+- getCiTag (line 41)
+
+## laptop-app\node_modules\electron-publish\out\s3\awsCredentials.d.ts
+- resolveAwsCredentials (line 14)
+
+## laptop-app\node_modules\electron-publish\out\s3\awsCredentials.js
+- parseIniSection (line 7)
+- resolveAwsCredentials (line 37)
+
+## laptop-app\node_modules\electron-publish\out\s3\bucketLocation.d.ts
+- getBucketLocation (line 8)
+
+## laptop-app\node_modules\electron-publish\out\s3\bucketLocation.js
+- getBucketLocation (line 14)
+- settle (line 17)
+
+## laptop-app\node_modules\electron-publish\out\s3\s3UploadHelper.d.ts
+- startS3PutObject (line 22)
+- getS3ContentType (line 31)
+
+## laptop-app\node_modules\electron-publish\out\s3\s3UploadHelper.js
+- startS3PutObject (line 17)
+- getS3ContentType (line 107)
+
+## laptop-app\node_modules\electron-publish\out\snapStorePublisher.d.ts
+- resolveSnapCredentials (line 16)
+
+## laptop-app\node_modules\electron-publish\out\snapStorePublisher.js
+- resolveSnapCredentials (line 53)
+- checkSnapcraft (line 71)
+
+## laptop-app\node_modules\electron-publish\out\util.js
+- trimStringWithWarn (line 5)
+
+## laptop-app\node_modules\electron-winstaller\lib\index.d.ts
+- convertVersion (line 12)
+- createWindowsInstaller (line 20)
+
+## laptop-app\node_modules\electron-winstaller\lib\index.js
+- adopt (line 26)
+- fulfilled (line 28)
+- rejected (line 29)
+- step (line 30)
+- verb (line 37)
+- step (line 38)
+- convertVersion (line 84)
+- checkIfCommandExists (line 95)
+- createWindowsInstaller (line 110)
+
+## laptop-app\node_modules\electron-winstaller\lib\sign.d.ts
+- createSignTool (line 10)
+- resetSignTool (line 15)
+
+## laptop-app\node_modules\electron-winstaller\lib\sign.js
+- adopt (line 26)
+- fulfilled (line 28)
+- rejected (line 29)
+- step (line 30)
+- verb (line 37)
+- step (line 38)
+- createSignTool (line 81)
+- resetSignTool (line 126)
+- getCreateSeaSignTool (line 163)
+
+## laptop-app\node_modules\electron-winstaller\lib\spawn-promise.d.ts
+- spawn (line 3)
+
+## laptop-app\node_modules\electron-winstaller\lib\spawn-promise.js
+- spawn (line 13)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\copy-sync\copy-sync.js
+- copySync (line 10)
+- startCopy (line 34)
+- getStats (line 39)
+- onFile (line 50)
+- mayCopyFile (line 55)
+- copyFile (line 64)
+- copyFileFallback (line 76)
+- onDir (line 96)
+- mkDirAndCopy (line 104)
+- copyDir (line 110)
+- copyDirItem (line 114)
+- onLink (line 121)
+- copyLink (line 158)
+- isSrcSubdir (line 164)
+- checkStats (line 170)
+- checkPaths (line 182)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\copy\copy.js
+- copy (line 11)
+- checkParentDir (line 38)
+- handleFilter (line 50)
+- startCopy (line 60)
+- getStats (line 65)
+- onFile (line 78)
+- mayCopyFile (line 83)
+- copyFile (line 94)
+- copyFileFallback (line 104)
+- setDestModeAndTimestamps (line 114)
+- onDir (line 124)
+- mkDirAndCopy (line 132)
+- copyDir (line 142)
+- copyDirItems (line 149)
+- copyDirItem (line 155)
+- onLink (line 167)
+- copyLink (line 205)
+- isSrcSubdir (line 213)
+- checkStats (line 219)
+- checkPaths (line 232)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\empty\index.js
+- emptyDir (line 9)
+- deleteItem (line 18)
+- emptyDirSync (line 29)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\ensure\file.js
+- createFile (line 9)
+- makeFile (line 10)
+- createFileSync (line 31)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\ensure\link.js
+- createLink (line 9)
+- makeLink (line 10)
+- createLinkSync (line 39)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\ensure\symlink-paths.js
+- symlinkPaths (line 29)
+- symlinkPathsSync (line 67)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\ensure\symlink-type.js
+- symlinkType (line 5)
+- symlinkTypeSync (line 16)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\ensure\symlink.js
+- createSymlink (line 20)
+- createSymlinkSync (line 46)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\json\output-json-sync.js
+- outputJsonSync (line 8)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\json\output-json.js
+- outputJson (line 8)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\mkdirs\mkdirs-sync.js
+- mkdirsSync (line 9)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\mkdirs\mkdirs.js
+- mkdirs (line 9)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\mkdirs\win32.js
+- getRootPath (line 6)
+- invalidWin32Path (line 16)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\move-sync\index.js
+- moveSync (line 10)
+- tryRenameSync (line 24)
+- moveSyncAcrossDevice (line 52)
+- moveFileSyncAcrossDevice (line 62)
+- moveDirSyncAcrossDevice (line 84)
+- tryCopySync (line 96)
+- isSrcSubdir (line 104)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\move\index.js
+- move (line 11)
+- doRename (line 37)
+- rename (line 51)
+- moveAcrossDevice (line 59)
+- isSrcSubdir (line 71)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\output\index.js
+- outputFile (line 9)
+- outputFileSync (line 28)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\path-exists\index.js
+- pathExists (line 5)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\remove\rimraf.js
+- defaults (line 9)
+- rimraf (line 27)
+- CB (line 43)
+- rimraf_ (line 72)
+- fixWinEPERM (line 112)
+- fixWinEPERMSync (line 137)
+- rmdir (line 173)
+- rmkids (line 195)
+- rimrafSync (line 225)
+- rmdirSync (line 268)
+- rmkidsSync (line 288)
+
+## laptop-app\node_modules\electron-winstaller\node_modules\fs-extra\lib\util\utimes.js
+- hasMillisResSync (line 8)
+- hasMillisRes (line 21)
+- timeRemoveMillis (line 45)
+- utimesMillis (line 55)
+- utimesMillisSync (line 67)
+
+## laptop-app\node_modules\electron\cli.js
+- signalHandler (line 17)
+
+## laptop-app\node_modules\electron\index.js
+- getElectronPath (line 6)
+
+## laptop-app\node_modules\electron\install.js
+- isInstalled (line 55)
+- extractFile (line 74)
+- getPlatformPath (line 93)
+
+## laptop-app\node_modules\emoji-regex\index.d.ts
+- emojiRegex (line 2)
+- emojiRegex (line 8)
+- emojiRegex (line 14)
+- emojiRegex (line 20)
+
+## laptop-app\node_modules\env-paths\index.d.ts
+- envPaths (line 96)
+
+## laptop-app\node_modules\env-paths\index.js
+- macos (line 9)
+- windows (line 21)
+- linux (line 36)
+- envPaths (line 49)
+
+## laptop-app\node_modules\err-code\index.js
+- assign (line 3)
+- createError (line 15)
+
+## laptop-app\node_modules\err-code\index.umd.js
+- r (line 1)
+- o (line 1)
+- assign (line 4)
+- createError (line 16)
+
+## laptop-app\node_modules\es-object-atoms\RequireObjectCoercible.js
+- RequireObjectCoercible (line 6)
+
+## laptop-app\node_modules\es-object-atoms\ToObject.js
+- ToObject (line 7)
+
+## laptop-app\node_modules\es-object-atoms\isObject.js
+- isObject (line 4)
+
+## laptop-app\node_modules\es-set-tostringtag\index.d.ts
+- setToStringTag (line 1)
+
+## laptop-app\node_modules\es-set-tostringtag\index.js
+- setToStringTag (line 14)
+
+## laptop-app\node_modules\es6-error\es6\index.js
+- _classCallCheck (line 1)
+- _possibleConstructorReturn (line 3)
+- _inherits (line 5)
+- _extendableBuiltin (line 7)
+- ExtendableBuiltin (line 8)
+- ExtendableError (line 33)
+
+## laptop-app\node_modules\es6-error\lib\index.js
+- _classCallCheck (line 7)
+- _possibleConstructorReturn (line 9)
+- _inherits (line 11)
+- _extendableBuiltin (line 13)
+- ExtendableBuiltin (line 14)
+- ExtendableError (line 39)
+
+## laptop-app\node_modules\escalade\index.d.ts
+- escalade (line 10)
+
+## laptop-app\node_modules\escalade\sync\index.d.ts
+- escalade (line 8)
+
+## laptop-app\node_modules\exponential-backoff\dist\backoff.js
+- adopt (line 3)
+- fulfilled (line 5)
+- rejected (line 6)
+- step (line 7)
+- verb (line 14)
+- step (line 15)
+- backOff (line 47)
+- BackOff (line 64)
+
+## laptop-app\node_modules\exponential-backoff\dist\delay\always\always.delay.js
+- __ (line 11)
+- AlwaysDelay (line 19)
+
+## laptop-app\node_modules\exponential-backoff\dist\delay\delay.base.js
+- Delay (line 5)
+
+## laptop-app\node_modules\exponential-backoff\dist\delay\delay.factory.d.ts
+- DelayFactory (line 3)
+
+## laptop-app\node_modules\exponential-backoff\dist\delay\delay.factory.js
+- DelayFactory (line 5)
+- initDelayClass (line 11)
+
+## laptop-app\node_modules\exponential-backoff\dist\delay\skip-first\skip-first.delay.js
+- __ (line 11)
+- adopt (line 16)
+- fulfilled (line 18)
+- rejected (line 19)
+- step (line 20)
+- verb (line 27)
+- step (line 28)
+- SkipFirstDelay (line 55)
+
+## laptop-app\node_modules\exponential-backoff\dist\jitter\full\full.jitter.d.ts
+- fullJitter (line 1)
+
+## laptop-app\node_modules\exponential-backoff\dist\jitter\full\full.jitter.js
+- fullJitter (line 3)
+
+## laptop-app\node_modules\exponential-backoff\dist\jitter\jitter.factory.d.ts
+- JitterFactory (line 3)
+
+## laptop-app\node_modules\exponential-backoff\dist\jitter\jitter.factory.js
+- JitterFactory (line 5)
+
+## laptop-app\node_modules\exponential-backoff\dist\jitter\no\no.jitter.d.ts
+- noJitter (line 1)
+
+## laptop-app\node_modules\exponential-backoff\dist\jitter\no\no.jitter.js
+- noJitter (line 3)
+
+## laptop-app\node_modules\exponential-backoff\dist\options.d.ts
+- getSanitizedOptions (line 55)
+
+## laptop-app\node_modules\exponential-backoff\dist\options.js
+- getSanitizedOptions (line 23)
+
+## laptop-app\node_modules\exponential-backoff\src\backoff.spec.ts
+- initBackOff (line 10)
+- promiseThatIsResolved (line 14)
+- promiseThatIsRejected (line 18)
+- promiseThatFailsOnceThenSucceeds (line 22)
+- request (line 26)
+
+## laptop-app\node_modules\exponential-backoff\src\delay\always\always.delay.spec.ts
+- initClass (line 8)
+
+## laptop-app\node_modules\exponential-backoff\src\delay\delay.factory.ts
+- DelayFactory (line 6)
+- initDelayClass (line 12)
+
+## laptop-app\node_modules\exponential-backoff\src\jitter\full\full.jitter.spec.ts
+- arrayWith5FullJitterDelays (line 6)
+
+## laptop-app\node_modules\exponential-backoff\src\jitter\full\full.jitter.ts
+- fullJitter (line 1)
+
+## laptop-app\node_modules\exponential-backoff\src\jitter\jitter.factory.ts
+- JitterFactory (line 7)
+
+## laptop-app\node_modules\exponential-backoff\src\jitter\no\no.jitter.ts
+- noJitter (line 1)
+
+## laptop-app\node_modules\exponential-backoff\src\options.ts
+- getSanitizedOptions (line 68)
+
+## laptop-app\node_modules\extract-zip\index.d.ts
+- extract (line 16)
+
+## laptop-app\node_modules\fast-deep-equal\es6\index.js
+- equal (line 9)
+
+## laptop-app\node_modules\fast-deep-equal\es6\react.js
+- equal (line 9)
+
+## laptop-app\node_modules\fast-deep-equal\index.js
+- equal (line 7)
+
+## laptop-app\node_modules\fast-deep-equal\react.js
+- equal (line 7)
+
+## laptop-app\node_modules\fast-uri\index.js
+- decodeValidScheme (line 13)
+- normalize (line 27)
+- resolve (line 42)
+- resolveComponent (line 99)
+- equal (line 166)
+- serialize (line 178)
+- getParseError (line 293)
+- hasMalformedPercentEncoding (line 313)
+- isIPLiteral (line 335)
+- hasMalformedComponentPercentEncoding (line 343)
+- canonicalizeHost (line 361)
+- parseWithStatus (line 386)
+- parse (line 569)
+- normalizeString (line 578)
+- normalizeStringWithStatus (line 587)
+- normalizeComparableURI (line 604)
+
+## laptop-app\node_modules\fast-uri\lib\schemes.js
+- isValidSchemeName (line 15)
+- wsIsSecure (line 41)
+- httpParse (line 59)
+- httpSerialize (line 68)
+- wsParse (line 89)
+- wsSerialize (line 102)
+- urnParse (line 134)
+- urnSerialize (line 159)
+- urnuuidParse (line 181)
+- urnuuidSerialize (line 194)
+- getSchemeHandler (line 258)
+
+## laptop-app\node_modules\fast-uri\lib\utils.js
+- percentEncodeNonAscii (line 34)
+- stringArrayToHexStripped (line 54)
+- isZoneIdentifier (line 100)
+- compressIPv6ZeroRun (line 122)
+- normalizeIPv6Address (line 156)
+- normalizeIPv6 (line 214)
+- findToken (line 253)
+- removeDotSegments (line 267)
+- reescapeHostDelimiters (line 362)
+- normalizePercentEncoding (line 376)
+- normalizePathEncoding (line 415)
+- serializePathEncoding (line 472)
+- encodeComponent (line 524)
+- encodeUserinfo (line 570)
+- encodeQuery (line 581)
+- encodeFragment (line 591)
+- isEscapeSafe (line 595)
+- normalizeQueryFragmentEncoding (line 615)
+- escapePreservingEscapes (line 668)
+- recomposeAuthority (line 691)
+
+## laptop-app\node_modules\fast-uri\test\equal.test.js
+- runTest (line 7)
+
+## laptop-app\node_modules\fast-uri\test\reserved-path-normalization.test.js
+- percentEncode (line 8)
+
+## laptop-app\node_modules\fast-uri\types\index.d.ts
+- normalize (line 40)
+- normalize (line 41)
+- normalize (line 42)
+- resolve (line 44)
+- resolveComponent (line 46)
+- parse (line 48)
+- serialize (line 50)
+- equal (line 52)
+- resolve (line 54)
+
+## laptop-app\node_modules\fd-slicer\index.js
+- FdSlicer (line 16)
+- onCloseDone (line 70)
+- ReadStream (line 80)
+- WriteStream (line 135)
+- BufferSlicer (line 187)
+- createFromBuffer (line 290)
+- createFromFd (line 294)
+
+## laptop-app\node_modules\filelist\node_modules\balanced-match\index.js
+- balanced (line 3)
+- maybeMatch (line 18)
+- range (line 24)
+
+## laptop-app\node_modules\filelist\node_modules\brace-expansion\index.js
+- numeric (line 45)
+- escapeBraces (line 51)
+- unescapeBraces (line 59)
+- pushAll (line 69)
+- parseCommaParts (line 78)
+- expandTop (line 118)
+- embrace (line 141)
+- isPadded (line 144)
+- lte (line 148)
+- gte (line 151)
+- combine (line 160)
+- expandSequence (line 187)
+- expand (line 246)
+
+## laptop-app\node_modules\filelist\node_modules\minimatch\minimatch.js
+- charSet (line 46)
+- ext (line 63)
+- m (line 77)
+- braceExpand (line 109)
+- assertValidPattern (line 123)
+- globUnescape (line 159)
+- charUnescape (line 160)
+- regExpEscape (line 161)
+- braExpEscape (line 162)
+- patternStart (line 496)
+- subPatternStart (line 502)
+- clearStateChar (line 510)
+
+## laptop-app\node_modules\form-data\lib\form_data.js
+- escapeHeaderParam (line 26)
+- FormData (line 38)
+
+## laptop-app\node_modules\fs-extra\lib\copy-sync\copy-sync.js
+- copySync (line 9)
+- handleFilterAndCopy (line 29)
+- startCopy (line 36)
+- getStats (line 41)
+- onFile (line 52)
+- mayCopyFile (line 57)
+- copyFile (line 66)
+- copyFileFallback (line 78)
+- onDir (line 98)
+- mkDirAndCopy (line 106)
+- copyDir (line 112)
+- copyDirItem (line 116)
+- onLink (line 123)
+- copyLink (line 159)
+
+## laptop-app\node_modules\fs-extra\lib\copy\copy.js
+- copy (line 10)
+- checkParentDir (line 41)
+- handleFilter (line 53)
+- startCopy (line 60)
+- getStats (line 65)
+- onFile (line 78)
+- mayCopyFile (line 83)
+- copyFile (line 94)
+- copyFileFallback (line 104)
+- setDestModeAndTimestamps (line 114)
+- onDir (line 124)
+- mkDirAndCopy (line 132)
+- copyDir (line 142)
+- copyDirItems (line 149)
+- copyDirItem (line 155)
+- onLink (line 168)
+- copyLink (line 205)
+
+## laptop-app\node_modules\fs-extra\lib\empty\index.js
+- emptyDir (line 9)
+- deleteItem (line 18)
+- emptyDirSync (line 29)
+
+## laptop-app\node_modules\fs-extra\lib\ensure\file.js
+- createFile (line 9)
+- makeFile (line 10)
+- createFileSync (line 31)
+
+## laptop-app\node_modules\fs-extra\lib\ensure\link.js
+- createLink (line 9)
+- makeLink (line 10)
+- createLinkSync (line 39)
+
+## laptop-app\node_modules\fs-extra\lib\ensure\symlink-paths.js
+- symlinkPaths (line 29)
+- symlinkPathsSync (line 67)
+
+## laptop-app\node_modules\fs-extra\lib\ensure\symlink-type.js
+- symlinkType (line 5)
+- symlinkTypeSync (line 16)
+
+## laptop-app\node_modules\fs-extra\lib\ensure\symlink.js
+- createSymlink (line 20)
+- createSymlinkSync (line 46)
+
+## laptop-app\node_modules\fs-extra\lib\json\output-json-sync.js
+- outputJsonSync (line 8)
+
+## laptop-app\node_modules\fs-extra\lib\json\output-json.js
+- outputJson (line 8)
+
+## laptop-app\node_modules\fs-extra\lib\mkdirs\mkdirs-sync.js
+- mkdirsSync (line 9)
+
+## laptop-app\node_modules\fs-extra\lib\mkdirs\mkdirs.js
+- mkdirs (line 9)
+
+## laptop-app\node_modules\fs-extra\lib\mkdirs\win32.js
+- getRootPath (line 6)
+- invalidWin32Path (line 16)
+
+## laptop-app\node_modules\fs-extra\lib\move-sync\move-sync.js
+- moveSync (line 10)
+- doRename (line 20)
+- rename (line 29)
+- moveAcrossDevice (line 38)
+
+## laptop-app\node_modules\fs-extra\lib\move\move.js
+- move (line 11)
+- doRename (line 32)
+- rename (line 46)
+- moveAcrossDevice (line 54)
+
+## laptop-app\node_modules\fs-extra\lib\output\index.js
+- outputFile (line 9)
+- outputFileSync (line 28)
+
+## laptop-app\node_modules\fs-extra\lib\path-exists\index.js
+- pathExists (line 5)
+
+## laptop-app\node_modules\fs-extra\lib\remove\rimraf.js
+- defaults (line 9)
+- rimraf (line 27)
+- CB (line 43)
+- rimraf_ (line 72)
+- fixWinEPERM (line 112)
+- fixWinEPERMSync (line 137)
+- rmdir (line 173)
+- rmkids (line 195)
+- rimrafSync (line 225)
+- rmdirSync (line 268)
+- rmkidsSync (line 288)
+
+## laptop-app\node_modules\fs-extra\lib\util\stat.js
+- nodeSupportsBigInt (line 14)
+- getStats (line 29)
+- getStatsSync (line 55)
+- checkPaths (line 75)
+- checkPathsSync (line 89)
+- checkParentPaths (line 104)
+- checkParentPathsSync (line 133)
+- isSrcSubdir (line 156)
+- errMsg (line 162)
+
+## laptop-app\node_modules\fs-extra\lib\util\utimes.js
+- hasMillisResSync (line 8)
+- hasMillisRes (line 21)
+- timeRemoveMillis (line 45)
+- utimesMillis (line 55)
+- utimesMillisSync (line 67)
+
+## laptop-app\node_modules\fs.realpath\index.js
+- newError (line 16)
+- realpath (line 24)
+- realpathSync (line 42)
+- monkeypatch (line 58)
+- unmonkeypatch (line 63)
+
+## laptop-app\node_modules\fs.realpath\old.js
+- rethrow (line 30)
+- debugCallback (line 42)
+- missingCallback (line 50)
+- maybeCallback (line 65)
+- realpathSync (line 86)
+- start (line 109)
+- realpath (line 183)
+- start (line 211)
+- LOOP (line 233)
+- gotStat (line 261)
+- gotTarget (line 290)
+- gotResolvedLink (line 298)
+
+## laptop-app\node_modules\function-bind\implementation.js
+- concatty (line 10)
+- slicy (line 23)
+- bind (line 42)
+- Empty (line 77)
+
+## laptop-app\node_modules\get-caller-file\index.js
+- getCallerFile (line 6)
+
+## laptop-app\node_modules\get-intrinsic\index.js
+- doEval (line 163)
+- stringToPath (line 254)
+- getBaseIntrinsic (line 270)
+- GetIntrinsic (line 297)
+
+## laptop-app\node_modules\get-intrinsic\test\GetIntrinsic.js
+- toString (line 140)
+- propertyIsEnumerable (line 161)
+
+## laptop-app\node_modules\get-proto\index.js
+- getProto (line 10)
+- getProto (line 15)
+- getProto (line 23)
+
+## laptop-app\node_modules\get-stream\index.js
+- getStream (line 13)
+- rejectPromise (line 27)
+
+## laptop-app\node_modules\glob\common.js
+- ownProp (line 9)
+- alphasort (line 19)
+- setupIgnores (line 23)
+- ignoreMap (line 35)
+- setopts (line 48)
+- finish (line 120)
+- mark (line 177)
+- makeAbs (line 201)
+- isIgnored (line 222)
+- childrenIgnored (line 231)
+
+## laptop-app\node_modules\glob\glob.js
+- glob (line 62)
+- extend (line 81)
+- Glob (line 117)
+- done (line 171)
+- next (line 211)
+- lstatcb_ (line 508)
+- readdirCb (line 550)
+- lstatcb_ (line 753)
+
+## laptop-app\node_modules\glob\node_modules\balanced-match\index.js
+- balanced (line 3)
+- maybeMatch (line 18)
+- range (line 24)
+
+## laptop-app\node_modules\glob\node_modules\brace-expansion\index.js
+- numeric (line 46)
+- escapeBraces (line 52)
+- unescapeBraces (line 60)
+- pushAll (line 70)
+- parseCommaParts (line 79)
+- expandTop (line 119)
+- identity (line 142)
+- embrace (line 146)
+- isPadded (line 149)
+- lte (line 153)
+- gte (line 156)
+- combine (line 169)
+- expandSequence (line 200)
+- expand (line 259)
+
+## laptop-app\node_modules\glob\node_modules\minimatch\minimatch.js
+- charSet (line 40)
+- filter (line 51)
+- ext (line 58)
+- minimatch (line 77)
+- Minimatch (line 81)
+- defaults (line 84)
+- filter (line 88)
+- defaults (line 92)
+- makeRe (line 96)
+- braceExpand (line 100)
+- minimatch (line 115)
+- Minimatch (line 128)
+- make (line 162)
+- debug (line 182)
+- parseNegate (line 215)
+- braceExpand (line 250)
+- parse (line 298)
+- clearStateChar (line 330)
+- makeRe (line 673)
+- match (line 730)
+- globUnescape (line 999)
+- regExpEscape (line 1003)
+
+## laptop-app\node_modules\glob\sync.js
+- globSync (line 18)
+- GlobSync (line 26)
+
+## laptop-app\node_modules\global-agent\dist\Logger.js
+- _interopRequireDefault (line 10)
+
+## laptop-app\node_modules\global-agent\dist\classes\Agent.js
+- _interopRequireDefault (line 14)
+
+## laptop-app\node_modules\global-agent\dist\classes\HttpProxyAgent.js
+- _interopRequireDefault (line 12)
+
+## laptop-app\node_modules\global-agent\dist\classes\HttpsProxyAgent.js
+- _interopRequireDefault (line 14)
+
+## laptop-app\node_modules\global-agent\dist\classes\index.js
+- _interopRequireDefault (line 31)
+
+## laptop-app\node_modules\global-agent\dist\errors.js
+- _interopRequireDefault (line 10)
+
+## laptop-app\node_modules\global-agent\dist\factories\createGlobalProxyAgent.js
+- _interopRequireDefault (line 26)
+- omitUndefined (line 43)
+- createConfiguration (line 58)
+- createGlobalProxyAgent (line 72)
+- mustUrlUseProxy (line 86)
+- getUrlProxy (line 100)
+- getHttpProxy (line 112)
+- getHttpsProxy (line 126)
+
+## laptop-app\node_modules\global-agent\dist\factories\createProxyController.js
+- _interopRequireDefault (line 10)
+- createProxyController (line 18)
+
+## laptop-app\node_modules\global-agent\dist\factories\index.js
+- _interopRequireDefault (line 23)
+
+## laptop-app\node_modules\global-agent\dist\routines\bootstrap.js
+- _interopRequireDefault (line 12)
+- bootstrap (line 18)
+
+## laptop-app\node_modules\global-agent\dist\routines\index.js
+- _interopRequireDefault (line 15)
+
+## laptop-app\node_modules\global-agent\dist\utilities\bindHttpMethod.js
+- _interopRequireDefault (line 12)
+- bindHttpMethod (line 15)
+
+## laptop-app\node_modules\global-agent\dist\utilities\index.js
+- _interopRequireDefault (line 31)
+
+## laptop-app\node_modules\global-agent\dist\utilities\isUrlMatchingNoProxy.js
+- _interopRequireDefault (line 14)
+- isUrlMatchingNoProxy (line 16)
+
+## laptop-app\node_modules\global-agent\dist\utilities\parseProxyUrl.js
+- parseProxyUrl (line 12)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\bin\semver.js
+- main (line 37)
+- failInc (line 136)
+- fail (line 141)
+- help (line 143)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\classes\range.js
+- isNullSet (line 240)
+- isAny (line 241)
+- isSatisfiable (line 245)
+- parseComparator (line 264)
+- isX (line 278)
+- invalidXRangeOrder (line 280)
+- replaceTildes (line 292)
+- replaceTilde (line 300)
+- replaceCarets (line 340)
+- replaceCaret (line 348)
+- replaceXRanges (line 401)
+- replaceXRange (line 409)
+- replaceStars (line 490)
+- replaceGTE0 (line 498)
+- hyphenReplace (line 511)
+- testSet (line 543)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\classes\semver.js
+- isPrereleaseIdentifier (line 10)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\clean.js
+- clean (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\cmp.js
+- cmp (line 10)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\coerce.js
+- coerce (line 7)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\compare-build.js
+- compareBuild (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\compare-loose.js
+- compareLoose (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\compare.js
+- compare (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\diff.js
+- diff (line 5)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\eq.js
+- eq (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\gt.js
+- gt (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\gte.js
+- gte (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\inc.js
+- inc (line 5)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\lt.js
+- lt (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\lte.js
+- lte (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\major.js
+- major (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\minor.js
+- minor (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\neq.js
+- neq (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\parse.js
+- parse (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\patch.js
+- patch (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\prerelease.js
+- prerelease (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\rcompare.js
+- rcompare (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\rsort.js
+- rsort (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\satisfies.js
+- satisfies (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\sort.js
+- sort (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\truncate.js
+- truncate (line 7)
+- cloneInputVersion (line 16)
+- doTruncation (line 24)
+- isPrerelease (line 44)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\functions\valid.js
+- valid (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\internal\identifiers.js
+- compareIdentifiers (line 4)
+- rcompareIdentifiers (line 24)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\internal\parse-options.js
+- parseOptions (line 6)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\internal\re.js
+- makeSafeRegex (line 33)
+- createToken (line 42)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\ranges\gtr.js
+- gtr (line 5)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\ranges\intersects.js
+- intersects (line 4)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\ranges\ltr.js
+- ltr (line 5)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\ranges\max-satisfying.js
+- maxSatisfying (line 6)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\ranges\min-satisfying.js
+- minSatisfying (line 5)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\ranges\min-version.js
+- minVersion (line 7)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\ranges\outside.js
+- outside (line 13)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\ranges\subset.js
+- subset (line 45)
+- simpleSubset (line 76)
+- higherGT (line 226)
+- lowerLT (line 238)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\ranges\to-comparators.js
+- toComparators (line 6)
+
+## laptop-app\node_modules\global-agent\node_modules\semver\ranges\valid.js
+- validRange (line 4)
+
+## laptop-app\node_modules\global-agent\src\factories\createGlobalProxyAgent.js
+- omitUndefined (line 43)
+- mustUrlUseProxy (line 95)
+- getUrlProxy (line 109)
+- getHttpProxy (line 121)
+- getHttpsProxy (line 141)
+
+## laptop-app\node_modules\globalthis\polyfill.js
+- getPolyfill (line 5)
+
+## laptop-app\node_modules\globalthis\shim.js
+- shimGlobal (line 7)
+
+## laptop-app\node_modules\got\dist\source\as-promise\create-rejection.d.ts
+- createRejection (line 2)
+
+## laptop-app\node_modules\got\dist\source\as-promise\create-rejection.js
+- createRejection (line 4)
+- promise (line 5)
+- returnPromise (line 23)
+
+## laptop-app\node_modules\got\dist\source\as-promise\index.js
+- asPromise (line 29)
+- makeRequest (line 34)
+- onError (line 124)
+- shortcut (line 154)
+- newPromise (line 155)
+
+## laptop-app\node_modules\got\dist\source\as-promise\normalize-arguments.js
+- normalizeArguments (line 4)
+
+## laptop-app\node_modules\got\dist\source\as-promise\parse-body.js
+- parseBody (line 4)
+
+## laptop-app\node_modules\got\dist\source\core\calculate-retry-delay.js
+- calculateRetryDelay (line 5)
+
+## laptop-app\node_modules\got\dist\source\core\index.js
+- validateSearchParameters (line 62)
+- isClientRequest (line 71)
+- waitForOpenFile (line 75)
+- onError (line 76)
+- unlockWrite (line 278)
+- lockWrite (line 279)
+- onLockedWrite (line 695)
+- isUnixSocketURL (line 870)
+- retry (line 1262)
+- write (line 1310)
+- endRequest (line 1341)
+
+## laptop-app\node_modules\got\dist\source\core\utils\get-buffer.js
+- getBuffer (line 4)
+
+## laptop-app\node_modules\got\dist\source\core\utils\proxy-events.js
+- default_1 (line 3)
+
+## laptop-app\node_modules\got\dist\source\core\utils\timed-out.js
+- noop (line 7)
+- addTimeout (line 24)
+- cancel (line 28)
+- timeoutHandler (line 35)
+- cancelTimeouts (line 38)
+- socketTimeoutHandler (line 60)
+- timeConnect (line 82)
+- timeRequest (line 102)
+
+## laptop-app\node_modules\got\dist\source\create.js
+- delay (line 32)
+- mergeOptions (line 36)
+- getPromiseOrStream (line 43)
+- isGotInstance (line 44)
+- callInitHooks (line 54)
+- create (line 61)
+- got (line 85)
+- iterateHandlers (line 88)
+
+## laptop-app\node_modules\got\dist\source\utils\deep-freeze.js
+- deepFreeze (line 4)
+
+## laptop-app\node_modules\graceful-fs\clone.js
+- clone (line 9)
+
+## laptop-app\node_modules\graceful-fs\graceful-fs.js
+- noop (line 22)
+- publishQueue (line 24)
+- close (line 53)
+- closeSync (line 72)
+- patch (line 102)
+- readFile (line 111)
+- writeFile (line 131)
+- appendFile (line 152)
+- copyFile (line 173)
+- readdir (line 195)
+- ReadStream (line 297)
+- WriteStream (line 320)
+- createReadStream (line 340)
+- createWriteStream (line 344)
+- open (line 350)
+- enqueue (line 371)
+- resetQueue (line 383)
+- retry (line 397)
+
+## laptop-app\node_modules\graceful-fs\legacy-streams.js
+- legacy (line 5)
+- ReadStream (line 11)
+- WriteStream (line 75)
+
+## laptop-app\node_modules\graceful-fs\polyfills.js
+- patch (line 29)
+- rename (line 99)
+- CB (line 102)
+- read (line 129)
+- patchLchmod (line 165)
+- patchLutimes (line 208)
+- chmodFix (line 249)
+- chmodFixSync (line 259)
+- chownFix (line 271)
+- chownFixSync (line 281)
+- statFix (line 292)
+- callback (line 301)
+- statFixSync (line 313)
+- chownErOk (line 340)
+
+## laptop-app\node_modules\has-flag\index.d.ts
+- hasFlag (line 37)
+
+## laptop-app\node_modules\has-property-descriptors\index.js
+- hasPropertyDescriptors (line 5)
+- hasArrayLengthDefineBug (line 9)
+
+## laptop-app\node_modules\has-symbols\index.d.ts
+- hasNativeSymbols (line 1)
+
+## laptop-app\node_modules\has-symbols\index.js
+- hasNativeSymbols (line 7)
+
+## laptop-app\node_modules\has-symbols\shams.d.ts
+- hasSymbolShams (line 1)
+
+## laptop-app\node_modules\has-symbols\shams.js
+- hasSymbols (line 5)
+
+## laptop-app\node_modules\has-symbols\test\tests.js
+- runSymbolTests (line 5)
+
+## laptop-app\node_modules\has-tostringtag\index.d.ts
+- hasToStringTag (line 1)
+
+## laptop-app\node_modules\has-tostringtag\index.js
+- hasToStringTag (line 6)
+
+## laptop-app\node_modules\has-tostringtag\shams.d.ts
+- hasToStringTagShams (line 1)
+
+## laptop-app\node_modules\has-tostringtag\shams.js
+- hasToStringTagShams (line 6)
+
+## laptop-app\node_modules\has-tostringtag\test\tests.js
+- runSymbolTests (line 4)
+
+## laptop-app\node_modules\hosted-git-info\git-host-info.js
+- maybeJoin (line 2)
+- maybeEncode (line 3)
+- formatHashFragment (line 180)
+
+## laptop-app\node_modules\hosted-git-info\index.js
+- protocolToRepresentation (line 15)
+- fromUrl (line 43)
+- correctProtocol (line 130)
+- isGitHubShorthand (line 155)
+- correctUrl (line 183)
+- parseGitUrl (line 221)
+
+## laptop-app\node_modules\http-cache-semantics\index.js
+- toNumberOrZero (line 101)
+- isErrorResponse (line 112)
+- parseCacheControl (line 125)
+- formatCacheControl (line 146)
+
+## laptop-app\node_modules\http-proxy-agent\dist\index.js
+- omit (line 138)
+
+## laptop-app\node_modules\http2-wrapper\source\agent.js
+- getSortedIndex (line 47)
+- compareSessions (line 66)
+- closeCoveredSessions (line 71)
+- closeSessionIfCovered (line 93)
+- getSessions (line 105)
+- gracefullyClose (line 126)
+- removeFromQueue (line 325)
+- entry (line 337)
+- isFree (line 351)
+- processListeners (line 411)
+
+## laptop-app\node_modules\http2-wrapper\source\auto.js
+- installSocket (line 13)
+- onFree (line 16)
+- onClose (line 22)
+- onRemove (line 28)
+- resolveProtocol (line 40)
+
+## laptop-app\node_modules\http2-wrapper\source\client-request.js
+- callWrite (line 176)
+- callEnd (line 191)
+- onStream (line 244)
+- waitForEnd (line 259)
+- applyTimeout (line 421)
+
+## laptop-app\node_modules\http2-wrapper\source\index.js
+- request (line 8)
+- get (line 12)
+
+## laptop-app\node_modules\http2-wrapper\source\utils\errors.js
+- makeError (line 4)
+
+## laptop-app\node_modules\https-proxy-agent\dist\index.js
+- setServernameFromNonIpHost (line 38)
+- resume (line 167)
+- omit (line 170)
+
+## laptop-app\node_modules\https-proxy-agent\dist\parse-proxy-response.d.ts
+- parseProxyResponse (line 11)
+
+## laptop-app\node_modules\https-proxy-agent\dist\parse-proxy-response.js
+- parseProxyResponse (line 9)
+- read (line 17)
+- cleanup (line 24)
+- onend (line 29)
+- onerror (line 34)
+- ondata (line 39)
+
+## laptop-app\node_modules\inflight\inflight.js
+- inflight (line 7)
+- makeres (line 17)
+- RES (line 18)
+- slice (line 48)
+
+## laptop-app\node_modules\inherits\inherits_browser.js
+- inherits (line 3)
+- inherits (line 18)
+
+## laptop-app\node_modules\is-fullwidth-code-point\index.d.ts
+- isFullwidthCodePoint (line 17)
+
+## laptop-app\node_modules\is-fullwidth-code-point\index.js
+- isFullwidthCodePoint (line 4)
+
+## laptop-app\node_modules\isbinaryfile\lib\index.d.ts
+- isBinaryFile (line 2)
+- isBinaryFileSync (line 3)
+
+## laptop-app\node_modules\isbinaryfile\lib\index.js
+- readProtoVarInt (line 47)
+- readProtoMessage (line 66)
+- isBinaryProto (line 87)
+- isBinaryFile (line 103)
+- isBinaryFileSync (line 136)
+- isBinaryCheck (line 154)
+- isString (line 249)
+- isStatFile (line 252)
+
+## laptop-app\node_modules\isexe\dist\commonjs\posix.js
+- isexe (line 16)
+- sync (line 33)
+- checkStat (line 46)
+- checkMode (line 47)
+
+## laptop-app\node_modules\isexe\dist\commonjs\win32.js
+- isexe (line 17)
+- sync (line 34)
+- checkPathExt (line 47)
+- checkStat (line 62)
+
+## laptop-app\node_modules\isexe\dist\esm\posix.js
+- isexe (line 13)
+- sync (line 29)
+- checkStat (line 41)
+- checkMode (line 42)
+
+## laptop-app\node_modules\isexe\dist\esm\win32.js
+- isexe (line 14)
+- sync (line 30)
+- checkPathExt (line 42)
+- checkStat (line 57)
+
+## laptop-app\node_modules\jake\lib\jake.js
+- action (line 218)
+
+## laptop-app\node_modules\jake\lib\loader.js
+- loadFile (line 67)
+- fileExists (line 78)
+- findImplicitJakefile (line 93)
+
+## laptop-app\node_modules\jake\lib\program.js
+- die (line 26)
+
+## laptop-app\node_modules\jake\lib\rule.js
+- splitNs (line 9)
+- resolveNs (line 26)
+- resolve (line 40)
+- stringEndWith (line 54)
+- stringReplaceSuffix (line 61)
+
+## laptop-app\node_modules\jake\lib\task\file_task.js
+- isFileOrDirectory (line 4)
+- isFile (line 9)
+
+## laptop-app\node_modules\jake\lib\task\task.js
+- parsePrereqName (line 14)
+
+## laptop-app\node_modules\jiti\lib\types.d.ts
+- createJiti (line 28)
+
+## laptop-app\node_modules\js-yaml\bin\js-yaml.js
+- readFile (line 51)
+
+## laptop-app\node_modules\js-yaml\dist\js-yaml.js
+- getDefaultExportFromCjs (line 6)
+- requireCommon (line 13)
+- _typeof (line 16)
+- isNothing (line 24)
+- isObject (line 27)
+- toArray (line 30)
+- extend (line 34)
+- repeat (line 44)
+- isNegativeZero (line 51)
+- requireException (line 64)
+- formatError (line 67)
+- YAMLException2 (line 80)
+- toString (line 94)
+- requireSnippet (line 102)
+- getLine (line 106)
+- padStart (line 123)
+- makeSnippet (line 126)
+- requireType (line 169)
+- compileStyleAliases (line 175)
+- Type2 (line 186)
+- requireSchema (line 218)
+- compileList (line 223)
+- compileMap (line 236)
+- collectType (line 249)
+- Schema2 (line 262)
+- extend (line 265)
+- requireStr (line 307)
+- construct (line 313)
+- requireSeq (line 321)
+- construct (line 327)
+- requireMap (line 335)
+- construct (line 341)
+- requireFailsafe (line 349)
+- require_null (line 360)
+- resolveYamlNull (line 364)
+- constructYamlNull (line 369)
+- isNull (line 372)
+- canonical (line 381)
+- lowercase (line 384)
+- uppercase (line 387)
+- camelcase (line 390)
+- empty (line 393)
+- requireBool (line 403)
+- resolveYamlBoolean (line 407)
+- constructYamlBoolean (line 412)
+- isBoolean (line 415)
+- lowercase (line 424)
+- uppercase (line 427)
+- camelcase (line 430)
+- requireInt (line 440)
+- isHexCode (line 445)
+- isOctCode (line 448)
+- isDecCode (line 451)
+- resolveYamlInteger (line 454)
+- parseYamlInteger (line 502)
+- constructYamlInteger (line 519)
+- isInteger (line 522)
+- binary2 (line 531)
+- octal (line 534)
+- decimal (line 537)
+- hexadecimal (line 540)
+- requireFloat (line 556)
+- resolveYamlFloat (line 563)
+- constructYamlFloat (line 573)
+- representYamlFloat (line 587)
+- isFloat (line 627)
+- requireJson (line 642)
+- requireCore (line 652)
+- requireTimestamp (line 660)
+- resolveYamlTimestamp (line 666)
+- constructYamlTimestamp (line 672)
+- representYamlTimestamp (line 704)
+- requireMerge (line 718)
+- resolveYamlMerge (line 722)
+- requireBinary (line 733)
+- resolveYamlBinary (line 738)
+- constructYamlBinary (line 751)
+- representYamlBinary (line 778)
+- isBinary (line 811)
+- requireOmap (line 825)
+- resolveYamlOmap (line 831)
+- constructYamlOmap (line 853)
+- requirePairs (line 865)
+- resolveYamlPairs (line 870)
+- constructYamlPairs (line 883)
+- requireSet (line 903)
+- resolveYamlSet (line 908)
+- constructYamlSet (line 918)
+- require_default (line 930)
+- requireLoader (line 940)
+- _typeof (line 943)
+- _class (line 968)
+- isEol (line 971)
+- isWhiteSpace (line 974)
+- isWsOrEol (line 977)
+- isFlowIndicator (line 980)
+- fromHexCode (line 983)
+- escapedHexLen (line 993)
+- fromDecimalCode (line 1005)
+- simpleEscapeSequence (line 1011)
+- charFromCodepoint (line 1071)
+- setProperty (line 1077)
+- State (line 1095)
+- generateError (line 1118)
+- throwError (line 1129)
+- throwWarning (line 1132)
+- storeAnchor (line 1137)
+- beginAnchorTransaction (line 1150)
+- commitAnchorTransaction (line 1153)
+- rollbackAnchorTransaction (line 1166)
+- snapshotState (line 1178)
+- restoreState (line 1191)
+- handleYamlDirective (line 1203)
+- handleTagDirective (line 1225)
+- captureSegment (line 1249)
+- chargeMergeWork (line 1265)
+- mergeMappings (line 1271)
+- storeMappingPair (line 1286)
+- readLineBreak (line 1328)
+- skipSeparationSpace (line 1344)
+- testDocumentSeparator (line 1377)
+- writeFoldedLines (line 1389)
+- readPlainScalar (line 1396)
+- readSingleQuotedScalar (line 1468)
+- readDoubleQuotedScalar (line 1505)
+- readFlowCollection (line 1562)
+- readBlockScalar (line 1652)
+- readBlockSequence (line 1758)
+- readBlockMapping (line 1809)
+- readTagProperty (line 1930)
+- readAnchorProperty (line 2004)
+- readAlias (line 2021)
+- tryReadBlockMappingFromProperty (line 2040)
+- composeNode (line 2056)
+- readDocument (line 2209)
+- loadDocuments (line 2282)
+- loadAll2 (line 2309)
+- load2 (line 2322)
+- requireDumper (line 2337)
+- _typeof (line 2340)
+- compileStyleMap (line 2396)
+- encodeHex (line 2414)
+- State (line 2434)
+- indentString (line 2456)
+- generateNextLine (line 2476)
+- testImplicitResolving (line 2479)
+- isWhitespace (line 2488)
+- isPrintable (line 2491)
+- isNsCharOrWhitespace (line 2494)
+- isPlainSafe (line 2497)
+- isPlainSafeFirst (line 2502)
+- isPlainSafeLast (line 2505)
+- codePointAt (line 2508)
+- needIndentIndicator (line 2519)
+- chooseScalarStyle (line 2528)
+- writeScalar (line 2577)
+- testAmbiguity (line 2590)
+- blockHeader (line 2614)
+- dropEndingNewline (line 2621)
+- foldString (line 2624)
+- foldLine (line 2644)
+- escapeString (line 2670)
+- writeFlowSequence (line 2685)
+- writeBlockSequence (line 2701)
+- writeFlowMapping (line 2724)
+- writeBlockMapping (line 2751)
+- detectType (line 2801)
+- writeNode (line 2832)
+- getDuplicateReferences (line 2911)
+- inspectNode (line 2921)
+- dump2 (line 2943)
+- requireJsYaml (line 2960)
+- renamed (line 2965)
+
+## laptop-app\node_modules\js-yaml\dist\js-yaml.min.js
+- t (line 1)
+- V (line 1)
+- e (line 1)
+- t (line 1)
+- J (line 1)
+- e (line 1)
+- t (line 1)
+- z (line 1)
+- Q (line 1)
+- n (line 1)
+- r (line 1)
+- t (line 1)
+- X (line 1)
+- ee (line 1)
+- te (line 1)
+- ne (line 1)
+- re (line 1)
+- ie (line 1)
+- oe (line 1)
+- n (line 1)
+- r (line 1)
+- i (line 1)
+- o (line 1)
+- ae (line 1)
+- le (line 1)
+- ue (line 1)
+- ce (line 1)
+- se (line 1)
+- pe (line 1)
+- fe (line 1)
+- de (line 1)
+- he (line 1)
+- me (line 1)
+- ge (line 1)
+- e (line 1)
+- t (line 1)
+- n (line 1)
+- d (line 1)
+- h (line 1)
+- m (line 1)
+- g (line 1)
+- y (line 1)
+- v (line 1)
+- b (line 1)
+- A (line 1)
+- k (line 1)
+- w (line 1)
+- x (line 1)
+- T (line 1)
+- O (line 1)
+- j (line 1)
+- M (line 1)
+- F (line 1)
+- E (line 1)
+- N (line 1)
+- _ (line 1)
+- D (line 1)
+- U (line 1)
+- q (line 1)
+- Y (line 1)
+- K (line 1)
+- R (line 1)
+- H (line 1)
+- P (line 1)
+- B (line 1)
+- Z (line 1)
+- z (line 1)
+- Q (line 1)
+- X (line 1)
+- ee (line 1)
+- Ae (line 1)
+- e (line 1)
+- s (line 1)
+- p (line 1)
+- f (line 1)
+- d (line 1)
+- h (line 1)
+- m (line 1)
+- g (line 1)
+- y (line 1)
+- v (line 1)
+- b (line 1)
+- A (line 1)
+- k (line 1)
+- w (line 1)
+- x (line 1)
+- C (line 1)
+- S (line 1)
+- I (line 1)
+- T (line 1)
+- O (line 1)
+- j (line 1)
+- n (line 1)
+
+## laptop-app\node_modules\js-yaml\index.js
+- renamed (line 6)
+
+## laptop-app\node_modules\js-yaml\lib\common.js
+- isNothing (line 3)
+- isObject (line 7)
+- toArray (line 11)
+- extend (line 18)
+- repeat (line 31)
+- isNegativeZero (line 41)
+
+## laptop-app\node_modules\js-yaml\lib\dumper.js
+- compileStyleMap (line 61)
+- encodeHex (line 86)
+- State (line 111)
+- indentString (line 138)
+- generateNextLine (line 163)
+- testImplicitResolving (line 167)
+- isWhitespace (line 180)
+- isPrintable (line 188)
+- isNsCharOrWhitespace (line 200)
+- isPlainSafe (line 217)
+- isPlainSafeFirst (line 242)
+- isPlainSafeLast (line 276)
+- codePointAt (line 282)
+- needIndentIndicator (line 297)
+- chooseScalarStyle (line 315)
+- writeScalar (line 392)
+- testAmbiguity (line 419)
+- blockHeader (line 444)
+- dropEndingNewline (line 456)
+- foldString (line 462)
+- foldLine (line 500)
+- escapeString (line 543)
+- writeFlowSequence (line 562)
+- writeBlockSequence (line 586)
+- writeFlowMapping (line 619)
+- writeBlockMapping (line 659)
+- detectType (line 731)
+- writeNode (line 775)
+- getDuplicateReferences (line 881)
+- inspectNode (line 894)
+- dump (line 919)
+
+## laptop-app\node_modules\js-yaml\lib\exception.js
+- formatError (line 5)
+- YAMLException (line 24)
+- toString (line 47)
+
+## laptop-app\node_modules\js-yaml\lib\loader.js
+- _class (line 29)
+- isEol (line 31)
+- isWhiteSpace (line 35)
+- isWsOrEol (line 39)
+- isFlowIndicator (line 46)
+- fromHexCode (line 54)
+- escapedHexLen (line 68)
+- fromDecimalCode (line 75)
+- simpleEscapeSequence (line 83)
+- charFromCodepoint (line 107)
+- setProperty (line 121)
+- State (line 142)
+- generateError (line 186)
+- throwError (line 200)
+- throwWarning (line 204)
+- storeAnchor (line 210)
+- beginAnchorTransaction (line 227)
+- commitAnchorTransaction (line 231)
+- rollbackAnchorTransaction (line 249)
+- snapshotState (line 264)
+- restoreState (line 278)
+- handleYamlDirective (line 292)
+- handleTagDirective (line 322)
+- captureSegment (line 354)
+- chargeMergeWork (line 374)
+- mergeMappings (line 382)
+- storeMappingPair (line 404)
+- readLineBreak (line 465)
+- skipSeparationSpace (line 484)
+- testDocumentSeparator (line 525)
+- writeFoldedLines (line 546)
+- readPlainScalar (line 554)
+- readSingleQuotedScalar (line 657)
+- readDoubleQuotedScalar (line 701)
+- readFlowCollection (line 772)
+- readBlockScalar (line 882)
+- readBlockSequence (line 1024)
+- readBlockMapping (line 1091)
+- readTagProperty (line 1258)
+- readAnchorProperty (line 1349)
+- readAlias (line 1373)
+- tryReadBlockMappingFromProperty (line 1400)
+- composeNode (line 1423)
+- readDocument (line 1633)
+- loadDocuments (line 1733)
+- loadAll (line 1774)
+- load (line 1791)
+
+## laptop-app\node_modules\js-yaml\lib\schema.js
+- compileList (line 6)
+- compileMap (line 26)
+- collectType (line 39)
+- Schema (line 54)
+- extend (line 58)
+
+## laptop-app\node_modules\js-yaml\lib\snippet.js
+- getLine (line 6)
+- padStart (line 27)
+- makeSnippet (line 31)
+
+## laptop-app\node_modules\js-yaml\lib\type.js
+- compileStyleAliases (line 24)
+- Type (line 38)
+
+## laptop-app\node_modules\js-yaml\lib\type\binary.js
+- resolveYamlBinary (line 8)
+- constructYamlBinary (line 32)
+- representYamlBinary (line 69)
+- isBinary (line 112)
+
+## laptop-app\node_modules\js-yaml\lib\type\bool.js
+- resolveYamlBoolean (line 5)
+- constructYamlBoolean (line 14)
+- isBoolean (line 20)
+
+## laptop-app\node_modules\js-yaml\lib\type\float.js
+- resolveYamlFloat (line 24)
+- constructYamlFloat (line 38)
+- representYamlFloat (line 56)
+- isFloat (line 87)
+
+## laptop-app\node_modules\js-yaml\lib\type\int.js
+- isHexCode (line 6)
+- isOctCode (line 12)
+- isDecCode (line 16)
+- resolveYamlInteger (line 20)
+- parseYamlInteger (line 92)
+- constructYamlInteger (line 115)
+- isInteger (line 119)
+
+## laptop-app\node_modules\js-yaml\lib\type\merge.js
+- resolveYamlMerge (line 5)
+
+## laptop-app\node_modules\js-yaml\lib\type\null.js
+- resolveYamlNull (line 5)
+- constructYamlNull (line 14)
+- isNull (line 18)
+
+## laptop-app\node_modules\js-yaml\lib\type\omap.js
+- resolveYamlOmap (line 8)
+- constructYamlOmap (line 37)
+
+## laptop-app\node_modules\js-yaml\lib\type\pairs.js
+- resolveYamlPairs (line 7)
+- constructYamlPairs (line 29)
+
+## laptop-app\node_modules\js-yaml\lib\type\set.js
+- resolveYamlSet (line 7)
+- constructYamlSet (line 21)
+
+## laptop-app\node_modules\js-yaml\lib\type\timestamp.js
+- resolveYamlTimestamp (line 22)
+- constructYamlTimestamp (line 29)
+- representYamlTimestamp (line 78)
+
+## laptop-app\node_modules\json-buffer\index.js
+- stringify (line 5)
+
+## laptop-app\node_modules\json-buffer\test\index.js
+- clone (line 5)
+
+## laptop-app\node_modules\json-schema-traverse\index.d.ts
+- traverse (line 1)
+- traverse (line 7)
+
+## laptop-app\node_modules\json-schema-traverse\index.js
+- _traverse (line 67)
+- escapeJsonPtr (line 91)
+
+## laptop-app\node_modules\json-schema-traverse\spec\fixtures\schema.js
+- subschema (line 48)
+- expectedCalls (line 106)
+- expectedCallsChild (line 117)
+
+## laptop-app\node_modules\json-schema-traverse\spec\index.spec.js
+- callback (line 160)
+- pre (line 164)
+- post (line 168)
+
+## laptop-app\node_modules\json-stringify-safe\stringify.js
+- stringify (line 4)
+- serializer (line 8)
+
+## laptop-app\node_modules\json-stringify-safe\test\stringify_test.js
+- jsonify (line 3)
+- decycle (line 181)
+- decycle (line 194)
+- identity (line 205)
+- bangString (line 244)
+
+## laptop-app\node_modules\json5\dist\index.js
+- createCommonjsModule (line 7)
+- defineProperty (line 74)
+- toString (line 160)
+- codePointAt (line 262)
+- fromCodePoint (line 282)
+- isSpaceSeparator (line 314)
+- isIdStartChar (line 318)
+- isIdContinueChar (line 327)
+- isDigit (line 338)
+- isHexDigit (line 342)
+- parse (line 357)
+- internalize (line 386)
+- lex (line 430)
+- peek (line 451)
+- read (line 457)
+- comment (line 515)
+- multiLineComment (line 531)
+- multiLineCommentAsterisk (line 545)
+- singleLineComment (line 564)
+- value (line 582)
+- identifierNameStartEscape (line 656)
+- identifierName (line 680)
+- identifierNameEscape (line 703)
+- zero (line 768)
+- decimalInteger (line 791)
+- decimalPointLeading (line 813)
+- decimalPoint (line 823)
+- decimalFraction (line 841)
+- decimalExponent (line 858)
+- decimalExponentSign (line 876)
+- decimalExponentInteger (line 886)
+- hexadecimal (line 895)
+- hexadecimalInteger (line 905)
+- string (line 914)
+- start (line 955)
+- beforePropertyName (line 969)
+- afterPropertyName (line 1001)
+- beforePropertyValue (line 1009)
+- afterPropertyValue (line 1013)
+- beforeArrayValue (line 1023)
+- afterArrayValue (line 1031)
+- end (line 1041)
+- newToken (line 1052)
+- literal (line 1061)
+- escape (line 1075)
+- hexEscape (line 1150)
+- unicodeEscape (line 1170)
+- start (line 1187)
+- beforePropertyName (line 1195)
+- afterPropertyName (line 1220)
+- beforePropertyValue (line 1233)
+- beforeArrayValue (line 1241)
+- afterPropertyValue (line 1254)
+- afterArrayValue (line 1277)
+- end (line 1300)
+- push (line 1308)
+- pop (line 1373)
+- invalidParseState (line 1387)
+- invalidLexState (line 1392)
+- invalidChar (line 1396)
+- invalidEOF (line 1404)
+- invalidToken (line 1409)
+- invalidIdentifier (line 1418)
+- separatorChar (line 1423)
+- formatChar (line 1427)
+- syntaxError (line 1455)
+- stringify (line 1462)
+- serializeProperty (line 1522)
+- quoteString (line 1565)
+- serializeObject (line 1625)
+- serializeKey (line 1671)
+- serializeArray (line 1690)
+
+## laptop-app\node_modules\json5\dist\index.min.js
+- u (line 1)
+- Z (line 1)
+- q (line 1)
+- W (line 1)
+- K (line 1)
+- Q (line 1)
+- Y (line 1)
+- Du (line 1)
+- eu (line 1)
+- ru (line 1)
+- tu (line 1)
+- nu (line 1)
+- Fu (line 1)
+- Cu (line 1)
+- u (line 1)
+- c (line 1)
+- B (line 1)
+- s (line 1)
+
+## laptop-app\node_modules\json5\lib\cli.js
+- parseArgs (line 73)
+- version (line 133)
+- usage (line 137)
+
+## laptop-app\node_modules\json5\lib\parse.js
+- parse (line 13)
+- internalize (line 42)
+- lex (line 86)
+- peek (line 107)
+- read (line 113)
+- newToken (line 708)
+- literal (line 717)
+- escape (line 729)
+- hexEscape (line 804)
+- unicodeEscape (line 824)
+- push (line 962)
+- pop (line 1027)
+- invalidParseState (line 1041)
+- invalidLexState (line 1046)
+- invalidChar (line 1050)
+- invalidEOF (line 1058)
+- invalidToken (line 1063)
+- invalidIdentifier (line 1072)
+- separatorChar (line 1077)
+- formatChar (line 1081)
+- syntaxError (line 1109)
+
+## laptop-app\node_modules\json5\lib\stringify.d.ts
+- stringify (line 51)
+- stringify (line 75)
+- stringify (line 87)
+
+## laptop-app\node_modules\json5\lib\stringify.js
+- stringify (line 3)
+- serializeProperty (line 61)
+- quoteString (line 104)
+- serializeObject (line 164)
+- serializeKey (line 208)
+- serializeArray (line 227)
+
+## laptop-app\node_modules\json5\lib\util.d.ts
+- isSpaceSeparator (line 1)
+- isIdStartChar (line 2)
+- isIdContinueChar (line 3)
+- isDigit (line 4)
+- isHexDigit (line 5)
+
+## laptop-app\node_modules\jsonfile\index.js
+- readFile (line 8)
+- readFileSync (line 47)
+- stringify (line 74)
+- writeFile (line 91)
+- writeFileSync (line 111)
+- stripBom (line 120)
+
+## laptop-app\node_modules\keyv\src\index.js
+- loadStore (line 6)
+- generateIterator (line 65)
+
+## laptop-app\node_modules\lodash\_Hash.js
+- Hash (line 14)
+
+## laptop-app\node_modules\lodash\_LazyWrapper.js
+- LazyWrapper (line 14)
+
+## laptop-app\node_modules\lodash\_ListCache.js
+- ListCache (line 14)
+
+## laptop-app\node_modules\lodash\_LodashWrapper.js
+- LodashWrapper (line 11)
+
+## laptop-app\node_modules\lodash\_MapCache.js
+- MapCache (line 14)
+
+## laptop-app\node_modules\lodash\_SetCache.js
+- SetCache (line 13)
+
+## laptop-app\node_modules\lodash\_Stack.js
+- Stack (line 15)
+
+## laptop-app\node_modules\lodash\_apply.js
+- apply (line 11)
+
+## laptop-app\node_modules\lodash\_arrayAggregator.js
+- arrayAggregator (line 11)
+
+## laptop-app\node_modules\lodash\_arrayEach.js
+- arrayEach (line 10)
+
+## laptop-app\node_modules\lodash\_arrayEachRight.js
+- arrayEachRight (line 10)
+
+## laptop-app\node_modules\lodash\_arrayEvery.js
+- arrayEvery (line 11)
+
+## laptop-app\node_modules\lodash\_arrayFilter.js
+- arrayFilter (line 10)
+
+## laptop-app\node_modules\lodash\_arrayIncludes.js
+- arrayIncludes (line 12)
+
+## laptop-app\node_modules\lodash\_arrayIncludesWith.js
+- arrayIncludesWith (line 10)
+
+## laptop-app\node_modules\lodash\_arrayLikeKeys.js
+- arrayLikeKeys (line 22)
+
+## laptop-app\node_modules\lodash\_arrayMap.js
+- arrayMap (line 10)
+
+## laptop-app\node_modules\lodash\_arrayPush.js
+- arrayPush (line 9)
+
+## laptop-app\node_modules\lodash\_arrayReduce.js
+- arrayReduce (line 13)
+
+## laptop-app\node_modules\lodash\_arrayReduceRight.js
+- arrayReduceRight (line 13)
+
+## laptop-app\node_modules\lodash\_arraySample.js
+- arraySample (line 10)
+
+## laptop-app\node_modules\lodash\_arraySampleSize.js
+- arraySampleSize (line 13)
+
+## laptop-app\node_modules\lodash\_arrayShuffle.js
+- arrayShuffle (line 11)
+
+## laptop-app\node_modules\lodash\_arraySome.js
+- arraySome (line 11)
+
+## laptop-app\node_modules\lodash\_asciiToArray.js
+- asciiToArray (line 8)
+
+## laptop-app\node_modules\lodash\_asciiWords.js
+- asciiWords (line 11)
+
+## laptop-app\node_modules\lodash\_assignMergeValue.js
+- assignMergeValue (line 13)
+
+## laptop-app\node_modules\lodash\_assignValue.js
+- assignValue (line 20)
+
+## laptop-app\node_modules\lodash\_assocIndexOf.js
+- assocIndexOf (line 11)
+
+## laptop-app\node_modules\lodash\_baseAggregator.js
+- baseAggregator (line 14)
+
+## laptop-app\node_modules\lodash\_baseAssign.js
+- baseAssign (line 13)
+
+## laptop-app\node_modules\lodash\_baseAssignIn.js
+- baseAssignIn (line 13)
+
+## laptop-app\node_modules\lodash\_baseAssignValue.js
+- baseAssignValue (line 12)
+
+## laptop-app\node_modules\lodash\_baseAt.js
+- baseAt (line 11)
+
+## laptop-app\node_modules\lodash\_baseClamp.js
+- baseClamp (line 10)
+
+## laptop-app\node_modules\lodash\_baseClone.js
+- baseClone (line 90)
+
+## laptop-app\node_modules\lodash\_baseConforms.js
+- baseConforms (line 11)
+
+## laptop-app\node_modules\lodash\_baseConformsTo.js
+- baseConformsTo (line 9)
+
+## laptop-app\node_modules\lodash\_baseCreate.js
+- object (line 15)
+
+## laptop-app\node_modules\lodash\_baseDelay.js
+- baseDelay (line 14)
+
+## laptop-app\node_modules\lodash\_baseDifference.js
+- baseDifference (line 22)
+
+## laptop-app\node_modules\lodash\_baseEvery.js
+- baseEvery (line 12)
+
+## laptop-app\node_modules\lodash\_baseExtremum.js
+- baseExtremum (line 13)
+
+## laptop-app\node_modules\lodash\_baseFill.js
+- baseFill (line 14)
+
+## laptop-app\node_modules\lodash\_baseFilter.js
+- baseFilter (line 11)
+
+## laptop-app\node_modules\lodash\_baseFindIndex.js
+- baseFindIndex (line 12)
+
+## laptop-app\node_modules\lodash\_baseFindKey.js
+- baseFindKey (line 12)
+
+## laptop-app\node_modules\lodash\_baseFlatten.js
+- baseFlatten (line 15)
+
+## laptop-app\node_modules\lodash\_baseForOwn.js
+- baseForOwn (line 12)
+
+## laptop-app\node_modules\lodash\_baseForOwnRight.js
+- baseForOwnRight (line 12)
+
+## laptop-app\node_modules\lodash\_baseFunctions.js
+- baseFunctions (line 13)
+
+## laptop-app\node_modules\lodash\_baseGet.js
+- baseGet (line 12)
+
+## laptop-app\node_modules\lodash\_baseGetAllKeys.js
+- baseGetAllKeys (line 15)
+
+## laptop-app\node_modules\lodash\_baseGetTag.js
+- baseGetTag (line 19)
+
+## laptop-app\node_modules\lodash\_baseGt.js
+- baseGt (line 10)
+
+## laptop-app\node_modules\lodash\_baseHas.js
+- baseHas (line 15)
+
+## laptop-app\node_modules\lodash\_baseHasIn.js
+- baseHasIn (line 9)
+
+## laptop-app\node_modules\lodash\_baseInRange.js
+- baseInRange (line 14)
+
+## laptop-app\node_modules\lodash\_baseIndexOf.js
+- baseIndexOf (line 14)
+
+## laptop-app\node_modules\lodash\_baseIndexOfWith.js
+- baseIndexOfWith (line 11)
+
+## laptop-app\node_modules\lodash\_baseIntersection.js
+- baseIntersection (line 21)
+
+## laptop-app\node_modules\lodash\_baseInverter.js
+- baseInverter (line 14)
+
+## laptop-app\node_modules\lodash\_baseInvoke.js
+- baseInvoke (line 17)
+
+## laptop-app\node_modules\lodash\_baseIsArguments.js
+- baseIsArguments (line 14)
+
+## laptop-app\node_modules\lodash\_baseIsArrayBuffer.js
+- baseIsArrayBuffer (line 13)
+
+## laptop-app\node_modules\lodash\_baseIsDate.js
+- baseIsDate (line 14)
+
+## laptop-app\node_modules\lodash\_baseIsEqual.js
+- baseIsEqual (line 18)
+
+## laptop-app\node_modules\lodash\_baseIsEqualDeep.js
+- baseIsEqualDeep (line 38)
+
+## laptop-app\node_modules\lodash\_baseIsMap.js
+- baseIsMap (line 14)
+
+## laptop-app\node_modules\lodash\_baseIsMatch.js
+- baseIsMatch (line 18)
+
+## laptop-app\node_modules\lodash\_baseIsNaN.js
+- baseIsNaN (line 8)
+
+## laptop-app\node_modules\lodash\_baseIsNative.js
+- baseIsNative (line 39)
+
+## laptop-app\node_modules\lodash\_baseIsRegExp.js
+- baseIsRegExp (line 14)
+
+## laptop-app\node_modules\lodash\_baseIsSet.js
+- baseIsSet (line 14)
+
+## laptop-app\node_modules\lodash\_baseIsTypedArray.js
+- baseIsTypedArray (line 55)
+
+## laptop-app\node_modules\lodash\_baseIteratee.js
+- baseIteratee (line 14)
+
+## laptop-app\node_modules\lodash\_baseKeys.js
+- baseKeys (line 17)
+
+## laptop-app\node_modules\lodash\_baseKeysIn.js
+- baseKeysIn (line 18)
+
+## laptop-app\node_modules\lodash\_baseLodash.js
+- baseLodash (line 6)
+
+## laptop-app\node_modules\lodash\_baseLt.js
+- baseLt (line 10)
+
+## laptop-app\node_modules\lodash\_baseMap.js
+- baseMap (line 12)
+
+## laptop-app\node_modules\lodash\_baseMatches.js
+- baseMatches (line 12)
+
+## laptop-app\node_modules\lodash\_baseMatchesProperty.js
+- baseMatchesProperty (line 21)
+
+## laptop-app\node_modules\lodash\_baseMean.js
+- baseMean (line 15)
+
+## laptop-app\node_modules\lodash\_baseMerge.js
+- baseMerge (line 20)
+
+## laptop-app\node_modules\lodash\_baseMergeDeep.js
+- baseMergeDeep (line 32)
+
+## laptop-app\node_modules\lodash\_baseNth.js
+- baseNth (line 11)
+
+## laptop-app\node_modules\lodash\_baseOrderBy.js
+- baseOrderBy (line 20)
+
+## laptop-app\node_modules\lodash\_basePick.js
+- basePick (line 13)
+
+## laptop-app\node_modules\lodash\_basePickBy.js
+- basePickBy (line 14)
+
+## laptop-app\node_modules\lodash\_baseProperty.js
+- baseProperty (line 8)
+
+## laptop-app\node_modules\lodash\_basePropertyDeep.js
+- basePropertyDeep (line 10)
+
+## laptop-app\node_modules\lodash\_basePropertyOf.js
+- basePropertyOf (line 8)
+
+## laptop-app\node_modules\lodash\_basePullAll.js
+- basePullAll (line 24)
+
+## laptop-app\node_modules\lodash\_basePullAt.js
+- basePullAt (line 19)
+
+## laptop-app\node_modules\lodash\_baseRandom.js
+- baseRandom (line 14)
+
+## laptop-app\node_modules\lodash\_baseRange.js
+- baseRange (line 16)
+
+## laptop-app\node_modules\lodash\_baseReduce.js
+- baseReduce (line 14)
+
+## laptop-app\node_modules\lodash\_baseRepeat.js
+- baseRepeat (line 15)
+
+## laptop-app\node_modules\lodash\_baseRest.js
+- baseRest (line 13)
+
+## laptop-app\node_modules\lodash\_baseSample.js
+- baseSample (line 11)
+
+## laptop-app\node_modules\lodash\_baseSampleSize.js
+- baseSampleSize (line 13)
+
+## laptop-app\node_modules\lodash\_baseSet.js
+- baseSet (line 17)
+
+## laptop-app\node_modules\lodash\_baseShuffle.js
+- baseShuffle (line 11)
+
+## laptop-app\node_modules\lodash\_baseSlice.js
+- baseSlice (line 10)
+
+## laptop-app\node_modules\lodash\_baseSome.js
+- baseSome (line 12)
+
+## laptop-app\node_modules\lodash\_baseSortBy.js
+- baseSortBy (line 11)
+
+## laptop-app\node_modules\lodash\_baseSortedIndex.js
+- baseSortedIndex (line 21)
+
+## laptop-app\node_modules\lodash\_baseSortedIndexBy.js
+- baseSortedIndexBy (line 24)
+
+## laptop-app\node_modules\lodash\_baseSortedUniq.js
+- baseSortedUniq (line 12)
+
+## laptop-app\node_modules\lodash\_baseSum.js
+- baseSum (line 10)
+
+## laptop-app\node_modules\lodash\_baseTimes.js
+- baseTimes (line 10)
+
+## laptop-app\node_modules\lodash\_baseToNumber.js
+- baseToNumber (line 14)
+
+## laptop-app\node_modules\lodash\_baseToPairs.js
+- baseToPairs (line 12)
+
+## laptop-app\node_modules\lodash\_baseToString.js
+- baseToString (line 21)
+
+## laptop-app\node_modules\lodash\_baseTrim.js
+- baseTrim (line 13)
+
+## laptop-app\node_modules\lodash\_baseUnary.js
+- baseUnary (line 8)
+
+## laptop-app\node_modules\lodash\_baseUniq.js
+- baseUniq (line 20)
+
+## laptop-app\node_modules\lodash\_baseUnset.js
+- baseUnset (line 20)
+
+## laptop-app\node_modules\lodash\_baseUpdate.js
+- baseUpdate (line 14)
+
+## laptop-app\node_modules\lodash\_baseValues.js
+- baseValues (line 13)
+
+## laptop-app\node_modules\lodash\_baseWhile.js
+- baseWhile (line 14)
+
+## laptop-app\node_modules\lodash\_baseWrapperValue.js
+- baseWrapperValue (line 15)
+
+## laptop-app\node_modules\lodash\_baseXor.js
+- baseXor (line 15)
+
+## laptop-app\node_modules\lodash\_baseZipObject.js
+- baseZipObject (line 10)
+
+## laptop-app\node_modules\lodash\_cacheHas.js
+- cacheHas (line 9)
+
+## laptop-app\node_modules\lodash\_castArrayLikeObject.js
+- castArrayLikeObject (line 10)
+
+## laptop-app\node_modules\lodash\_castFunction.js
+- castFunction (line 10)
+
+## laptop-app\node_modules\lodash\_castPath.js
+- castPath (line 14)
+
+## laptop-app\node_modules\lodash\_castSlice.js
+- castSlice (line 12)
+
+## laptop-app\node_modules\lodash\_charsEndIndex.js
+- charsEndIndex (line 12)
+
+## laptop-app\node_modules\lodash\_charsStartIndex.js
+- charsStartIndex (line 12)
+
+## laptop-app\node_modules\lodash\_cloneArrayBuffer.js
+- cloneArrayBuffer (line 10)
+
+## laptop-app\node_modules\lodash\_cloneBuffer.js
+- cloneBuffer (line 24)
+
+## laptop-app\node_modules\lodash\_cloneDataView.js
+- cloneDataView (line 11)
+
+## laptop-app\node_modules\lodash\_cloneRegExp.js
+- cloneRegExp (line 11)
+
+## laptop-app\node_modules\lodash\_cloneSymbol.js
+- cloneSymbol (line 14)
+
+## laptop-app\node_modules\lodash\_cloneTypedArray.js
+- cloneTypedArray (line 11)
+
+## laptop-app\node_modules\lodash\_compareAscending.js
+- compareAscending (line 11)
+
+## laptop-app\node_modules\lodash\_compareMultiple.js
+- compareMultiple (line 17)
+
+## laptop-app\node_modules\lodash\_composeArgs.js
+- composeArgs (line 15)
+
+## laptop-app\node_modules\lodash\_composeArgsRight.js
+- composeArgsRight (line 15)
+
+## laptop-app\node_modules\lodash\_copyArray.js
+- copyArray (line 9)
+
+## laptop-app\node_modules\lodash\_copyObject.js
+- copyObject (line 14)
+
+## laptop-app\node_modules\lodash\_copySymbols.js
+- copySymbols (line 12)
+
+## laptop-app\node_modules\lodash\_copySymbolsIn.js
+- copySymbolsIn (line 12)
+
+## laptop-app\node_modules\lodash\_countHolders.js
+- countHolders (line 9)
+
+## laptop-app\node_modules\lodash\_createAggregator.js
+- createAggregator (line 14)
+
+## laptop-app\node_modules\lodash\_createAssigner.js
+- createAssigner (line 11)
+
+## laptop-app\node_modules\lodash\_createBaseEach.js
+- createBaseEach (line 11)
+
+## laptop-app\node_modules\lodash\_createBaseFor.js
+- createBaseFor (line 8)
+
+## laptop-app\node_modules\lodash\_createBind.js
+- createBind (line 17)
+- wrapper (line 21)
+
+## laptop-app\node_modules\lodash\_createCaseFirst.js
+- createCaseFirst (line 13)
+
+## laptop-app\node_modules\lodash\_createCompounder.js
+- createCompounder (line 18)
+
+## laptop-app\node_modules\lodash\_createCtor.js
+- createCtor (line 12)
+
+## laptop-app\node_modules\lodash\_createCurry.js
+- createCurry (line 18)
+- wrapper (line 21)
+
+## laptop-app\node_modules\lodash\_createFind.js
+- createFind (line 12)
+
+## laptop-app\node_modules\lodash\_createFlow.js
+- createFlow (line 24)
+
+## laptop-app\node_modules\lodash\_createHybrid.js
+- createHybrid (line 38)
+- wrapper (line 46)
+
+## laptop-app\node_modules\lodash\_createInverter.js
+- createInverter (line 11)
+
+## laptop-app\node_modules\lodash\_createMathOperation.js
+- createMathOperation (line 12)
+
+## laptop-app\node_modules\lodash\_createOver.js
+- createOver (line 15)
+
+## laptop-app\node_modules\lodash\_createPadding.js
+- createPadding (line 20)
+
+## laptop-app\node_modules\lodash\_createPartial.js
+- createPartial (line 20)
+- wrapper (line 24)
+
+## laptop-app\node_modules\lodash\_createRange.js
+- createRange (line 12)
+
+## laptop-app\node_modules\lodash\_createRecurry.js
+- createRecurry (line 30)
+
+## laptop-app\node_modules\lodash\_createRelationalOperation.js
+- createRelationalOperation (line 10)
+
+## laptop-app\node_modules\lodash\_createRound.js
+- createRound (line 17)
+
+## laptop-app\node_modules\lodash\_createToPairs.js
+- createToPairs (line 17)
+
+## laptop-app\node_modules\lodash\_createWrap.js
+- createWrap (line 51)
+
+## laptop-app\node_modules\lodash\_customDefaultsAssignIn.js
+- customDefaultsAssignIn (line 21)
+
+## laptop-app\node_modules\lodash\_customDefaultsMerge.js
+- customDefaultsMerge (line 18)
+
+## laptop-app\node_modules\lodash\_customOmitClone.js
+- customOmitClone (line 12)
+
+## laptop-app\node_modules\lodash\_equalArrays.js
+- equalArrays (line 22)
+
+## laptop-app\node_modules\lodash\_equalByTag.js
+- equalByTag (line 47)
+
+## laptop-app\node_modules\lodash\_equalObjects.js
+- equalObjects (line 25)
+
+## laptop-app\node_modules\lodash\_escapeStringChar.js
+- escapeStringChar (line 18)
+
+## laptop-app\node_modules\lodash\_flatRest.js
+- flatRest (line 12)
+
+## laptop-app\node_modules\lodash\_getAllKeys.js
+- getAllKeys (line 12)
+
+## laptop-app\node_modules\lodash\_getAllKeysIn.js
+- getAllKeysIn (line 13)
+
+## laptop-app\node_modules\lodash\_getFuncName.js
+- getFuncName (line 16)
+
+## laptop-app\node_modules\lodash\_getHolder.js
+- getHolder (line 8)
+
+## laptop-app\node_modules\lodash\_getMapData.js
+- getMapData (line 11)
+
+## laptop-app\node_modules\lodash\_getMatchData.js
+- getMatchData (line 11)
+
+## laptop-app\node_modules\lodash\_getNative.js
+- getNative (line 12)
+
+## laptop-app\node_modules\lodash\_getRawTag.js
+- getRawTag (line 26)
+
+## laptop-app\node_modules\lodash\_getValue.js
+- getValue (line 9)
+
+## laptop-app\node_modules\lodash\_getView.js
+- getView (line 15)
+
+## laptop-app\node_modules\lodash\_getWrapDetails.js
+- getWrapDetails (line 12)
+
+## laptop-app\node_modules\lodash\_hasPath.js
+- hasPath (line 17)
+
+## laptop-app\node_modules\lodash\_hasUnicode.js
+- hasUnicode (line 22)
+
+## laptop-app\node_modules\lodash\_hasUnicodeWord.js
+- hasUnicodeWord (line 11)
+
+## laptop-app\node_modules\lodash\_hashClear.js
+- hashClear (line 10)
+
+## laptop-app\node_modules\lodash\_hashDelete.js
+- hashDelete (line 11)
+
+## laptop-app\node_modules\lodash\_hashGet.js
+- hashGet (line 21)
+
+## laptop-app\node_modules\lodash\_hashHas.js
+- hashHas (line 18)
+
+## laptop-app\node_modules\lodash\_hashSet.js
+- hashSet (line 16)
+
+## laptop-app\node_modules\lodash\_initCloneArray.js
+- initCloneArray (line 14)
+
+## laptop-app\node_modules\lodash\_initCloneByTag.js
+- initCloneByTag (line 41)
+
+## laptop-app\node_modules\lodash\_initCloneObject.js
+- initCloneObject (line 12)
+
+## laptop-app\node_modules\lodash\_insertWrapDetails.js
+- insertWrapDetails (line 12)
+
+## laptop-app\node_modules\lodash\_isFlattenable.js
+- isFlattenable (line 15)
+
+## laptop-app\node_modules\lodash\_isIndex.js
+- isIndex (line 15)
+
+## laptop-app\node_modules\lodash\_isIterateeCall.js
+- isIterateeCall (line 16)
+
+## laptop-app\node_modules\lodash\_isKey.js
+- isKey (line 16)
+
+## laptop-app\node_modules\lodash\_isKeyable.js
+- isKeyable (line 8)
+
+## laptop-app\node_modules\lodash\_isLaziable.js
+- isLaziable (line 14)
+
+## laptop-app\node_modules\lodash\_isMasked.js
+- isMasked (line 16)
+
+## laptop-app\node_modules\lodash\_isPrototype.js
+- isPrototype (line 11)
+
+## laptop-app\node_modules\lodash\_isStrictComparable.js
+- isStrictComparable (line 11)
+
+## laptop-app\node_modules\lodash\_iteratorToArray.js
+- iteratorToArray (line 8)
+
+## laptop-app\node_modules\lodash\_lazyClone.js
+- lazyClone (line 12)
+
+## laptop-app\node_modules\lodash\_lazyReverse.js
+- lazyReverse (line 11)
+
+## laptop-app\node_modules\lodash\_lazyValue.js
+- lazyValue (line 20)
+
+## laptop-app\node_modules\lodash\_listCacheClear.js
+- listCacheClear (line 8)
+
+## laptop-app\node_modules\lodash\_listCacheDelete.js
+- listCacheDelete (line 18)
+
+## laptop-app\node_modules\lodash\_listCacheGet.js
+- listCacheGet (line 12)
+
+## laptop-app\node_modules\lodash\_listCacheHas.js
+- listCacheHas (line 12)
+
+## laptop-app\node_modules\lodash\_listCacheSet.js
+- listCacheSet (line 13)
+
+## laptop-app\node_modules\lodash\_mapCacheClear.js
+- mapCacheClear (line 12)
+
+## laptop-app\node_modules\lodash\_mapCacheDelete.js
+- mapCacheDelete (line 12)
+
+## laptop-app\node_modules\lodash\_mapCacheGet.js
+- mapCacheGet (line 12)
+
+## laptop-app\node_modules\lodash\_mapCacheHas.js
+- mapCacheHas (line 12)
+
+## laptop-app\node_modules\lodash\_mapCacheSet.js
+- mapCacheSet (line 13)
+
+## laptop-app\node_modules\lodash\_mapToArray.js
+- mapToArray (line 8)
+
+## laptop-app\node_modules\lodash\_matchesStrictComparable.js
+- matchesStrictComparable (line 10)
+
+## laptop-app\node_modules\lodash\_memoizeCapped.js
+- memoizeCapped (line 14)
+
+## laptop-app\node_modules\lodash\_mergeData.js
+- mergeData (line 35)
+
+## laptop-app\node_modules\lodash\_nativeKeysIn.js
+- nativeKeysIn (line 10)
+
+## laptop-app\node_modules\lodash\_objectToString.js
+- objectToString (line 18)
+
+## laptop-app\node_modules\lodash\_overArg.js
+- overArg (line 9)
+
+## laptop-app\node_modules\lodash\_overRest.js
+- overRest (line 15)
+
+## laptop-app\node_modules\lodash\_parent.js
+- parent (line 12)
+
+## laptop-app\node_modules\lodash\_reorder.js
+- reorder (line 17)
+
+## laptop-app\node_modules\lodash\_replaceHolders.js
+- replaceHolders (line 13)
+
+## laptop-app\node_modules\lodash\_safeGet.js
+- safeGet (line 9)
+
+## laptop-app\node_modules\lodash\_setCacheAdd.js
+- setCacheAdd (line 14)
+
+## laptop-app\node_modules\lodash\_setCacheHas.js
+- setCacheHas (line 10)
+
+## laptop-app\node_modules\lodash\_setToArray.js
+- setToArray (line 8)
+
+## laptop-app\node_modules\lodash\_setToPairs.js
+- setToPairs (line 8)
+
+## laptop-app\node_modules\lodash\_setWrapToString.js
+- setWrapToString (line 16)
+
+## laptop-app\node_modules\lodash\_shortOut.js
+- shortOut (line 17)
+
+## laptop-app\node_modules\lodash\_shuffleSelf.js
+- shuffleSelf (line 11)
+
+## laptop-app\node_modules\lodash\_stackClear.js
+- stackClear (line 10)
+
+## laptop-app\node_modules\lodash\_stackDelete.js
+- stackDelete (line 10)
+
+## laptop-app\node_modules\lodash\_stackGet.js
+- stackGet (line 10)
+
+## laptop-app\node_modules\lodash\_stackHas.js
+- stackHas (line 10)
+
+## laptop-app\node_modules\lodash\_stackSet.js
+- stackSet (line 18)
+
+## laptop-app\node_modules\lodash\_strictIndexOf.js
+- strictIndexOf (line 11)
+
+## laptop-app\node_modules\lodash\_strictLastIndexOf.js
+- strictLastIndexOf (line 11)
+
+## laptop-app\node_modules\lodash\_stringSize.js
+- stringSize (line 12)
+
+## laptop-app\node_modules\lodash\_stringToArray.js
+- stringToArray (line 12)
+
+## laptop-app\node_modules\lodash\_toKey.js
+- toKey (line 13)
+
+## laptop-app\node_modules\lodash\_toSource.js
+- toSource (line 14)
+
+## laptop-app\node_modules\lodash\_trimmedEndIndex.js
+- trimmedEndIndex (line 12)
+
+## laptop-app\node_modules\lodash\_unicodeSize.js
+- unicodeSize (line 36)
+
+## laptop-app\node_modules\lodash\_unicodeToArray.js
+- unicodeToArray (line 36)
+
+## laptop-app\node_modules\lodash\_unicodeWords.js
+- unicodeWords (line 65)
+
+## laptop-app\node_modules\lodash\_updateWrapDetails.js
+- updateWrapDetails (line 36)
+
+## laptop-app\node_modules\lodash\_wrapperClone.js
+- wrapperClone (line 12)
+
+## laptop-app\node_modules\lodash\after.js
+- after (line 30)
+
+## laptop-app\node_modules\lodash\ary.js
+- ary (line 23)
+
+## laptop-app\node_modules\lodash\assign.js
+- Foo (line 32)
+- Bar (line 36)
+
+## laptop-app\node_modules\lodash\assignIn.js
+- Foo (line 22)
+- Bar (line 26)
+
+## laptop-app\node_modules\lodash\assignInWith.js
+- customizer (line 25)
+
+## laptop-app\node_modules\lodash\assignWith.js
+- customizer (line 24)
+
+## laptop-app\node_modules\lodash\before.js
+- before (line 23)
+
+## laptop-app\node_modules\lodash\bind.js
+- greet (line 30)
+
+## laptop-app\node_modules\lodash\capitalize.js
+- capitalize (line 19)
+
+## laptop-app\node_modules\lodash\castArray.js
+- castArray (line 36)
+
+## laptop-app\node_modules\lodash\chain.js
+- chain (line 32)
+
+## laptop-app\node_modules\lodash\chunk.js
+- chunk (line 30)
+
+## laptop-app\node_modules\lodash\clamp.js
+- clamp (line 23)
+
+## laptop-app\node_modules\lodash\clone.js
+- clone (line 32)
+
+## laptop-app\node_modules\lodash\cloneDeep.js
+- cloneDeep (line 25)
+
+## laptop-app\node_modules\lodash\cloneDeepWith.js
+- customizer (line 20)
+- cloneDeepWith (line 35)
+
+## laptop-app\node_modules\lodash\cloneWith.js
+- customizer (line 22)
+- cloneWith (line 37)
+
+## laptop-app\node_modules\lodash\commit.js
+- wrapperCommit (line 29)
+
+## laptop-app\node_modules\lodash\compact.js
+- compact (line 16)
+
+## laptop-app\node_modules\lodash\concat.js
+- concat (line 28)
+
+## laptop-app\node_modules\lodash\cond.js
+- cond (line 38)
+
+## laptop-app\node_modules\lodash\conforms.js
+- conforms (line 31)
+
+## laptop-app\node_modules\lodash\conformsTo.js
+- conformsTo (line 28)
+
+## laptop-app\node_modules\lodash\constant.js
+- constant (line 20)
+
+## laptop-app\node_modules\lodash\core.js
+- arrayPush (line 89)
+- baseFindIndex (line 105)
+- baseProperty (line 124)
+- basePropertyOf (line 137)
+- baseReduce (line 156)
+- baseValues (line 175)
+- overArg (line 198)
+- square (line 335)
+- lodash (line 354)
+- object (line 369)
+- LodashWrapper (line 391)
+- assignValue (line 412)
+- baseAssignValue (line 429)
+- baseDelay (line 443)
+- baseEvery (line 469)
+- baseExtremum (line 488)
+- baseFilter (line 515)
+- baseFlatten (line 536)
+- baseForOwn (line 580)
+- baseFunctions (line 593)
+- baseGetTag (line 606)
+- baseGt (line 619)
+- baseIsDate (line 639)
+- baseIsEqual (line 657)
+- baseIsEqualDeep (line 681)
+- baseIsRegExp (line 741)
+- baseIteratee (line 752)
+- baseLt (line 771)
+- baseMap (line 783)
+- baseMatches (line 800)
+- basePick (line 829)
+- baseRest (line 847)
+- baseSlice (line 860)
+- copyArray (line 889)
+- baseSome (line 902)
+- baseWrapperValue (line 922)
+- compareAscending (line 937)
+- copyObject (line 977)
+- createAssigner (line 1010)
+- createBaseEach (line 1039)
+- createBaseFor (line 1067)
+- createCtor (line 1092)
+- createFind (line 1114)
+- createPartial (line 1139)
+- wrapper (line 1146)
+- equalArrays (line 1178)
+- equalByTag (line 1248)
+- equalObjects (line 1285)
+- flatRest (line 1349)
+- isFlattenable (line 1360)
+- isIndex (line 1372)
+- isIterateeCall (line 1392)
+- nativeKeysIn (line 1415)
+- objectToString (line 1432)
+- overRest (line 1445)
+- compact (line 1493)
+- concat (line 1519)
+- findIndex (line 1569)
+- flatten (line 1595)
+- flattenDeep (line 1614)
+- head (line 1637)
+- indexOf (line 1664)
+- last (line 1697)
+- slice (line 1718)
+- chain (line 1756)
+- tap (line 1785)
+- thru (line 1813)
+- wrapperChain (line 1844)
+- wrapperValue (line 1862)
+- every (line 1909)
+- filter (line 1955)
+- forEach (line 2027)
+- square (line 2054)
+- map (line 2073)
+- reduce (line 2114)
+- size (line 2139)
+- some (line 2183)
+- sortBy (line 2217)
+- before (line 2247)
+- greet (line 2284)
+- isEven (line 2361)
+- negate (line 2368)
+- once (line 2396)
+- clone (line 2428)
+- eq (line 2467)
+- isArrayLike (line 2544)
+- isBoolean (line 2565)
+- isEmpty (line 2622)
+- isEqual (line 2659)
+- isFinite (line 2689)
+- isFunction (line 2710)
+- isLength (line 2746)
+- isObject (line 2776)
+- isObjectLike (line 2805)
+- isNaN (line 2837)
+- isNull (line 2861)
+- isNumber (line 2891)
+- isString (line 2932)
+- isUndefined (line 2954)
+- toArray (line 2981)
+- toString (line 3062)
+- Foo (line 3089)
+- Bar (line 3093)
+- Foo (line 3124)
+- Bar (line 3128)
+- Shape (line 3156)
+- Circle (line 3161)
+- create (line 3176)
+- has (line 3260)
+- Foo (line 3279)
+- Foo (line 3307)
+- result (line 3369)
+- Foo (line 3390)
+- values (line 3403)
+- escape (line 3437)
+- identity (line 3462)
+- matches (line 3545)
+- vowels (line 3568)
+- mixin (line 3585)
+- noConflict (line 3634)
+- noop (line 3653)
+- uniqueId (line 3674)
+- max (line 3699)
+- min (line 3723)
+
+## laptop-app\node_modules\lodash\core.min.js
+- n (line 6)
+- t (line 6)
+- r (line 6)
+- e (line 6)
+- u (line 6)
+- o (line 6)
+- i (line 6)
+- c (line 6)
+- f (line 6)
+- a (line 7)
+- l (line 7)
+- p (line 7)
+- s (line 7)
+- h (line 7)
+- v (line 7)
+- y (line 8)
+- g (line 8)
+- _ (line 8)
+- b (line 8)
+- j (line 8)
+- d (line 8)
+- m (line 8)
+- O (line 8)
+- x (line 10)
+- w (line 10)
+- A (line 10)
+- E (line 10)
+- N (line 10)
+- k (line 10)
+- F (line 11)
+- T (line 11)
+- S (line 11)
+- B (line 11)
+- I (line 11)
+- R (line 11)
+- q (line 12)
+- D (line 12)
+- P (line 13)
+- z (line 13)
+- C (line 13)
+- G (line 13)
+- u (line 13)
+- J (line 14)
+- M (line 15)
+- U (line 15)
+- V (line 16)
+- H (line 16)
+- K (line 16)
+- L (line 16)
+- Q (line 17)
+- W (line 17)
+- X (line 17)
+- Y (line 17)
+- Z (line 17)
+- nn (line 18)
+- tn (line 18)
+- rn (line 18)
+- en (line 18)
+- un (line 18)
+- on (line 18)
+- cn (line 18)
+- fn (line 19)
+- an (line 19)
+- ln (line 19)
+- pn (line 19)
+- sn (line 19)
+- hn (line 19)
+- vn (line 19)
+- yn (line 19)
+- gn (line 19)
+- _n (line 19)
+- bn (line 20)
+- jn (line 20)
+- dn (line 20)
+- mn (line 20)
+- On (line 21)
+- xn (line 21)
+- wn (line 21)
+- An (line 21)
+- En (line 21)
+- Nn (line 21)
+- kn (line 21)
+- Fn (line 21)
+- Tn (line 21)
+- Sn (line 21)
+- Bn (line 22)
+- In (line 22)
+- Rn (line 22)
+- qn (line 22)
+- Dn (line 22)
+- Pn (line 22)
+- zn (line 22)
+- Cn (line 22)
+- Gn (line 22)
+- Jn (line 23)
+- Mn (line 23)
+- Un (line 23)
+- Vn (line 23)
+- Hn (line 23)
+- Kn (line 23)
+- Ln (line 23)
+- Qn (line 24)
+- Wn (line 24)
+- Xn (line 24)
+- Yn (line 24)
+- Zn (line 24)
+- n (line 26)
+
+## laptop-app\node_modules\lodash\create.js
+- Shape (line 18)
+- Circle (line 23)
+- create (line 38)
+
+## laptop-app\node_modules\lodash\curry.js
+- curry (line 47)
+
+## laptop-app\node_modules\lodash\curryRight.js
+- curryRight (line 44)
+
+## laptop-app\node_modules\lodash\debounce.js
+- debounce (line 66)
+- invokeFunc (line 89)
+- leadingEdge (line 99)
+- remainingWait (line 108)
+- shouldInvoke (line 118)
+- timerExpired (line 129)
+- trailingEdge (line 138)
+- cancel (line 150)
+- flush (line 158)
+- debounced (line 162)
+
+## laptop-app\node_modules\lodash\deburr.js
+- deburr (line 40)
+
+## laptop-app\node_modules\lodash\defaultTo.js
+- defaultTo (line 21)
+
+## laptop-app\node_modules\lodash\drop.js
+- drop (line 29)
+
+## laptop-app\node_modules\lodash\dropRight.js
+- dropRight (line 29)
+
+## laptop-app\node_modules\lodash\dropRightWhile.js
+- dropRightWhile (line 39)
+
+## laptop-app\node_modules\lodash\dropWhile.js
+- dropWhile (line 39)
+
+## laptop-app\node_modules\lodash\endsWith.js
+- endsWith (line 29)
+
+## laptop-app\node_modules\lodash\eq.js
+- eq (line 33)
+
+## laptop-app\node_modules\lodash\escape.js
+- escape (line 36)
+
+## laptop-app\node_modules\lodash\escapeRegExp.js
+- escapeRegExp (line 25)
+
+## laptop-app\node_modules\lodash\every.js
+- every (line 48)
+
+## laptop-app\node_modules\lodash\fill.js
+- fill (line 33)
+
+## laptop-app\node_modules\lodash\filter.js
+- filter (line 47)
+
+## laptop-app\node_modules\lodash\findIndex.js
+- findIndex (line 43)
+
+## laptop-app\node_modules\lodash\findKey.js
+- findKey (line 40)
+
+## laptop-app\node_modules\lodash\findLastIndex.js
+- findLastIndex (line 44)
+
+## laptop-app\node_modules\lodash\findLastKey.js
+- findLastKey (line 40)
+
+## laptop-app\node_modules\lodash\flatMap.js
+- duplicate (line 18)
+- flatMap (line 25)
+
+## laptop-app\node_modules\lodash\flatMapDeep.js
+- duplicate (line 20)
+- flatMapDeep (line 27)
+
+## laptop-app\node_modules\lodash\flatMapDepth.js
+- duplicate (line 19)
+- flatMapDepth (line 26)
+
+## laptop-app\node_modules\lodash\flatten.js
+- flatten (line 17)

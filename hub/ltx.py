@@ -1028,6 +1028,34 @@ async def render(image: Optional[UploadFile] = File(None), prompt: str = Form(..
     return job
 
 
+class RenderJsonIn(BaseModel):
+    prompt: str
+    frames: int = 49
+    size: str = "landscape"
+    seed: Optional[int] = None
+    transformer: Optional[str] = None
+    sex_lora: Optional[str] = None
+    sex_strength: float = 0.7
+    name: Optional[str] = None
+    opts: Optional[str] = None
+
+
+@router.post("/render-json")
+async def render_json(req: RenderJsonIn):
+    return await render(
+        image=None,
+        prompt=req.prompt,
+        frames=req.frames,
+        size=req.size,
+        seed=req.seed,
+        transformer=req.transformer,
+        sex_lora=req.sex_lora,
+        sex_strength=req.sex_strength,
+        name=req.name,
+        opts=req.opts,
+    )
+
+
 @router.get("/jobs")
 def jobs():
     out = []

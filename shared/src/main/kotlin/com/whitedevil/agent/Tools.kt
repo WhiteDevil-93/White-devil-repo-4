@@ -410,6 +410,7 @@ class ToolBox(
         path: String,
         method: String = "GET",
         postBody: String? = null,
+        contentType: String = "application/json",
         readTimeoutMs: Int = 30000,
     ): String {
         val cleanBase = relayBaseUrl.trimEnd('/')
@@ -427,7 +428,7 @@ class ToolBox(
         }
         if (postBody != null) {
             conn.doOutput = true
-            conn.setRequestProperty("Content-Type", "application/json")
+            conn.setRequestProperty("Content-Type", contentType)
             conn.outputStream.use { it.write(postBody.toByteArray()) }
         }
         val code = conn.responseCode
@@ -609,14 +610,18 @@ class ToolBox(
                         }.getOrNull().orEmpty()
                     }
                     if (p.length < 10) return "Error: ltx needs a prompt (10+ chars)."
-                    // Form-urlencoded via hub_request shape — use JSON fields the FastAPI Form accepts poorly;
-                    // post as multipart-ish query body through a small JSON wrapper endpoint isn't available,
-                    // so use hub_request with path and let relay accept form: build urlencoded.
+                    // Form-urlencoded via hub_request shape matching FastAPI Form(...)
                     val form = buildString {
                         append("prompt=").append(java.net.URLEncoder.encode(p, "UTF-8"))
                         append("&frames=49&size=landscape")
                     }
-                    relayHttp("/api/ltx/render", method = "POST", postBody = form, readTimeoutMs = 120_000)
+                    relayHttp(
+                        "/api/ltx/render",
+                        method = "POST",
+                        postBody = form,
+                        contentType = "application/x-www-form-urlencoded",
+                        readTimeoutMs = 120_000,
+                    )
                 }
                 "gen" -> {
                     if (bodyJson.isEmpty()) return "Error: gen needs body_json."
