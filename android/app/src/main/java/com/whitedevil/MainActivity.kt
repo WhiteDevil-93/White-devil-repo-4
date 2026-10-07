@@ -120,6 +120,7 @@ class MainActivity : FragmentActivity() {
     internal var hubBannerText by mutableStateOf("")
     internal var hubBannerVisible by mutableStateOf(false)
     internal var agentStatusSubtitle by mutableStateOf("On-device agent")
+    internal var agentSaveStatus by mutableStateOf("No saved conversation")
     internal val hubScreensUi = mutableStateListOf<HubScreenUi>()
     internal var hubCurrentScreenIdState by mutableStateOf<String?>(null)
     internal var hubConnectionLabel by mutableStateOf("Checking…")
@@ -688,23 +689,29 @@ class MainActivity : FragmentActivity() {
                 historyJson.encodeToString(ListSerializer(ChatMessage.serializer()), lean),
             )
             android.system.Os.rename(temporary.path, agentHistoryFile().path)
+            agentSaveStatus = "Saved locally"
         } catch (e: Exception) {
+            agentSaveStatus = "Not saved — retry save"
             main.post { addMessageBubble("Not saved", "Conversation save failed (${e.javaClass.simpleName}). Keep this session open and try again.", ROLE_ERROR) }
         }
     }
 
     private fun loadAgentHistory(): List<ChatMessage> = synchronized(agentHistoryLock) {
         agentHistoryCache?.let { return@synchronized it }
-        return runCatching {
+        return@synchronized runCatching {
             val file = agentHistoryFile()
-            if (!file.isFile) return emptyList()
+            if (!file.isFile) return@runCatching emptyList()
             historyJson.decodeFromString(ListSerializer(ChatMessage.serializer()), file.readText())
                 .filter { it.role in setOf("user", "assistant", "tool") }
                 .takeLast(Agent.MAX_HISTORY_MESSAGES)
-        }.onSuccess { agentHistoryCache = it }.getOrElse { e ->
+        }.onSuccess { agentHistoryCache = it; agentSaveStatus = "Saved locally" }.getOrElse { e ->
             main.post { addMessageBubble("History unavailable", "Saved history could not be read (${e.javaClass.simpleName}). File preserved; clear chat explicitly before starting again.", ROLE_ERROR) }
             throw IllegalStateException("Could not read saved conversation; clear chat to reset", e)
         }
+    }
+
+    internal fun retryAgentHistorySave() {
+        agentHistoryCache?.let { persistAgentHistory(it) }
     }
 
     /** Rebuilds chat bubbles from a restored conversation. */

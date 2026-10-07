@@ -9,13 +9,17 @@ class LatestRequestGate {
     fun accepts(ticket: Long): Boolean = ticket == generation
 }
 
+fun canSubmitGoal(enabled: Boolean, text: String, attachmentCount: Int): Boolean =
+    enabled && (text.isNotBlank() || attachmentCount > 0)
+
 /** HTTP success means transport success, not job completion. */
 fun actionReplySummary(body: String): String {
     val reply = runCatching { Json.parseToJsonElement(body) as? JsonObject }.getOrNull()
         ?: return "Request accepted"
     fun value(key: String) = (reply[key] as? JsonPrimitive)?.contentOrNull
     val status = value("status")
-    if (value("ok") == "false" || value("success") == "false" || status in setOf("error", "failed")) {
+    if (value("ok") == "false" || value("success") == "false" || status in setOf("error", "failed") ||
+        (reply["error"] != null && reply["error"] != JsonNull && value("error") != "")) {
         throw IllegalStateException(value("error")?.take(120)?.takeIf { it.isNotBlank() } ?: "Request rejected")
     }
     val id = value("job_id") ?: value("id")

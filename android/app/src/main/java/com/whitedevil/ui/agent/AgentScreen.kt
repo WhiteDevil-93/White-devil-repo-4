@@ -114,6 +114,10 @@ fun AgentScreen(host: MainActivity) {
                 }
             }
             if (hasKey) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(host.agentSaveStatus, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                    if (host.agentSaveStatus.startsWith("Not saved")) TextButton(onClick = { host.retryAgentHistorySave() }) { Text("Retry save") }
+                }
                 DeepSpaceComposer(host, Modifier.fillMaxWidth().imePadding())
             }
         }
@@ -201,7 +205,7 @@ private fun AgentChatHeader(
 private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier) {
     val attachments = host.pendingAttachmentsUiPublic()
     val input = host.agentInputTextPublic()
-    val canSend = host.agentComposerEnabledPublic() && (input.isNotBlank() || attachments.isNotEmpty())
+    val canSend = com.whitedevil.agent.canSubmitGoal(host.agentComposerEnabledPublic(), input, attachments.size)
     Column(
         modifier
             .background(WdPalette.bg)
