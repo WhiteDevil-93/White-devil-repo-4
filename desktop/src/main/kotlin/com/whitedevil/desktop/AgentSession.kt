@@ -1,6 +1,13 @@
 package com.whitedevil.desktop
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.ChatMessage
 import com.whitedevil.agent.stripBlobs
@@ -28,6 +35,14 @@ data class ChatMeta(val id: String, val title: String, val updated: Long, val me
 internal fun String.oneLine(): String = split(Regex("\\s+")).filter { it.isNotEmpty() }.joinToString(" ")
 
 class AgentSession(private val dir: File?) {
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    var input by mutableStateOf("")
+    var busy by mutableStateOf(false)
+    var job by mutableStateOf<Job?>(null)
+    var attachments by mutableStateOf<List<Attachment>>(emptyList())
+    var attachNote by mutableStateOf<String?>(null)
+
     val lines = mutableStateListOf<ChatLine>()
 
     var history: List<ChatMessage> = emptyList()

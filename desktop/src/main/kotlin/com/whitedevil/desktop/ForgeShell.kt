@@ -59,6 +59,7 @@ enum class Screen(val label: String, val icon: ImageVector, val group: NavGroup)
     Vast("Vast", Icons.Outlined.Dns, NavGroup.Laptop),
     Setup("Setup", Icons.Outlined.Tune, NavGroup.Laptop),
     LoraTrain("Train LoRA", Icons.Outlined.ModelTraining, NavGroup.Laptop),
+    Qwen("Qwen API", Icons.Outlined.Memory, NavGroup.Laptop),
     Agent("Venice", Icons.Outlined.AutoAwesome, NavGroup.Laptop),
     Caretaker("Caretaker", Icons.Outlined.HealthAndSafety, NavGroup.Laptop),
     Settings("Settings", Icons.Outlined.Settings, NavGroup.None),

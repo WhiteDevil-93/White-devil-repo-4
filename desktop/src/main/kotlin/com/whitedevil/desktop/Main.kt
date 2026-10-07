@@ -131,6 +131,7 @@ private fun runApp() = application {
                                 Screen.Setup -> SetupScreen(settings)
                                 Screen.Caretaker -> CaretakerScreen(settings)
                                 Screen.LoraTrain -> LoraTrainScreen(settings)
+                                Screen.Qwen -> QwenScreen(settings)
                                 Screen.Settings -> SettingsScreen(
                                     initial = settings,
                                     onSave = { settings = it; screen = Screen.Home },

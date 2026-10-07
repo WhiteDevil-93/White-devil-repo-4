@@ -3,6 +3,7 @@ package com.whitedevil.veniceagent
 import com.whitedevil.agent.ChatCompletionRequest
 import com.whitedevil.agent.ChatCompletionResponse
 import com.whitedevil.agent.ChatMessage
+import com.whitedevil.agent.InferenceClient
 import com.whitedevil.agent.MessageContent
 import com.whitedevil.agent.VeniceClient
 import com.whitedevil.agent.VeniceParameters
@@ -27,7 +28,7 @@ import kotlinx.coroutines.delay
  * callback throws.
  */
 class Agent(
-    private val client: VeniceClient,
+    private val client: InferenceClient,
     private val model: String,
     private val toolBox: ToolBox,
     private val systemPrompt: String,

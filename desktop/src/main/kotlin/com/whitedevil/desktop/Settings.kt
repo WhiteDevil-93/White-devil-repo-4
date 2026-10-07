@@ -26,9 +26,16 @@ data class Settings(
     val deviceName: String = "",
     /** Interface size, 0.8 to 2.0 (see UiScale). */
     val uiScale: Float = UiScale.DEFAULT,
+    /** Model provider for agent: "venice" or "qwen". */
+    val provider: String = PROVIDER_VENICE,
+    val qwenGatewayUrl: String = DEFAULT_QWEN_URL,
+    val qwenModel: String = "qwen-agent",
 ) {
     companion object {
         const val DEFAULT_HUB_URL = "https://84-12-112-249.sslip.io"
+        const val PROVIDER_VENICE = "venice"
+        const val PROVIDER_QWEN = "qwen"
+        const val DEFAULT_QWEN_URL = "http://127.0.0.1:18080"
 
         private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
 
@@ -66,7 +73,8 @@ data class Settings(
 
     /** Everything the agent needs before it can be started, or null when ready. */
     fun blockedReason(): String? = when {
-        veniceApiKey.isBlank() -> "Add your Venice API key in Settings."
+        provider == PROVIDER_QWEN && qwenGatewayUrl.isBlank() -> "Set the Qwen gateway URL in Settings."
+        provider == PROVIDER_VENICE && veniceApiKey.isBlank() -> "Add your Venice API key in Settings."
         hubUrl.isBlank() -> "Set the hub URL in Settings."
         else -> null
     }

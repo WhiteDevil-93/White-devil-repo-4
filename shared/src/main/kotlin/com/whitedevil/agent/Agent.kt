@@ -12,10 +12,11 @@ sealed class AgentEvent {
     data class ToolCall(val name: String, val arguments: String) : AgentEvent()
     data class ToolOutput(val name: String, val output: String) : AgentEvent()
     data class Error(val message: String) : AgentEvent()
+    data class Status(val message: String) : AgentEvent()
 }
 
 class Agent(
-    private val client: VeniceClient,
+    private val client: InferenceClient,
     private val model: String,
     private val toolBox: ToolBox,
     private val systemPrompt: String,
@@ -226,6 +227,8 @@ class Agent(
 
         repeat(maxToolIterations) {
             trimHistory()
+            onEvent(AgentEvent.Status("Waiting for model inference…"))
+
             val request = ChatCompletionRequest(
                 model = model,
                 messages = history,
@@ -243,7 +246,16 @@ class Agent(
             var lastError: Exception? = null
             for (attempt in 0 until MAX_REQUEST_ATTEMPTS) {
                 try {
-                    val partial = onPartial
+                    val partial: ((String) -> Unit)? = if (onPartial == null) null else { text ->
+                        if (text.isEmpty()) onPartial("")
+                        else {
+                            val regex = Regex("<wd_render>([\\s\\S]*?)(?:</wd_render>|\$)")
+                            val rendered = regex.findAll(text).joinToString("\n\n") { it.groupValues[1].trim() }.trim()
+                            if (rendered.isNotBlank() || text.isNotBlank()) {
+                                onPartial(rendered)
+                            }
+                        }
+                    }
                     if (partial != null) partial("")      // a retry starts the text over
                     response = if (partial != null) client.chatCompletionStream(request, partial) else client.chatCompletion(request)
                     break
@@ -272,10 +284,19 @@ class Agent(
             history.add(message)
 
             val toolCalls = message.toolCalls
+            
+            val rawReply = message.textContent()
+            val regex = Regex("<wd_render>([\\s\\S]*?)(?:</wd_render>|\$)")
+            val renderedReply = regex.findAll(rawReply).joinToString("\n\n") { it.groupValues[1].trim() }.trim()
+            
+            // If there are tool calls, we should emit the rendered reply so it becomes permanent before tools run
+            if (!toolCalls.isNullOrEmpty() && renderedReply.isNotBlank()) {
+                onEvent(AgentEvent.Venice(renderedReply))
+            }
+
             if (toolCalls.isNullOrEmpty()) {
-                val reply = message.textContent()
-                onEvent(AgentEvent.Venice(reply))
-                return reply
+                onEvent(AgentEvent.Venice(renderedReply))
+                return rawReply
             }
 
             // Execute each tool call

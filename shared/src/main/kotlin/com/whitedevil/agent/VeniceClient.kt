@@ -23,7 +23,7 @@ class VeniceApiException(val status: Int, message: String) : Exception(message)
 class VeniceClient(
     private val apiKey: String,
     private val baseUrl: String = "https://api.venice.ai/api/v1",
-) : AutoCloseable {
+) : InferenceClient {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -49,7 +49,7 @@ class VeniceClient(
     fun encodeRequest(request: ChatCompletionRequest): String =
         json.encodeToString(ChatCompletionRequest.serializer(), request)
 
-    suspend fun chatCompletion(request: ChatCompletionRequest): ChatCompletionResponse {
+    override suspend fun chatCompletion(request: ChatCompletionRequest): ChatCompletionResponse {
         val cleanBase = baseUrl.trimEnd('/')
         val response = http.post("$cleanBase/chat/completions") {
             header("Authorization", "Bearer $apiKey")
@@ -69,7 +69,7 @@ class VeniceClient(
      * each time it grows (so a retry that starts over simply replaces it). Tool calls are assembled
      * from their fragments and come back in the returned response exactly like the non-streaming call.
      */
-    suspend fun chatCompletionStream(request: ChatCompletionRequest, onText: (String) -> Unit): ChatCompletionResponse {
+    override suspend fun chatCompletionStream(request: ChatCompletionRequest, onText: (String) -> Unit): ChatCompletionResponse {
         val cleanBase = baseUrl.trimEnd('/')
         val asm = StreamAssembler(json)
         http.preparePost("$cleanBase/chat/completions") {

@@ -790,9 +790,12 @@ class MainActivity : FragmentActivity() {
             .show()
     }
 
-    private fun resetAgentChat() {
+    internal fun stopAgentChat() {
         currentAgentJob?.cancel()
         agentShowProgress = false
+    }
+
+    private fun resetAgentChat() {
         runCatching {
             // New chat first, then drop the old one: deleting the open chat alone would reopen another.
             val old = workspace.ensureCurrent()
@@ -966,6 +969,7 @@ class MainActivity : FragmentActivity() {
                                 is AgentEvent.ToolCall -> { streamBubbleId = null; addMessageBubble("Tool Call: ${event.name}", event.arguments, ROLE_TOOL_CALL) }
                                 is AgentEvent.ToolOutput -> { streamBubbleId = null; addMessageBubble("Output: ${event.name}", event.output, ROLE_TOOL_OUTPUT) }
                                 is AgentEvent.Error -> { streamBubbleId = null; addMessageBubble("Error", event.message, ROLE_ERROR) }
+                                is AgentEvent.Status -> { streamBubbleId = null; addMessageBubble("Status", event.message, ROLE_STATUS) }
                             }
                         }
                     },
@@ -1738,6 +1742,7 @@ class MainActivity : FragmentActivity() {
         const val ROLE_TOOL_OUTPUT = 4
         const val ROLE_ERROR = 5
         const val ROLE_INFO = 6
+        const val ROLE_STATUS = 7
 
         val BG = Color.parseColor("#FF0B0B0C")
         val BAR_GLASS = Color.parseColor("#D9121216")

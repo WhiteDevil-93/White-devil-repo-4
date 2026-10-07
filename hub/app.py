@@ -76,6 +76,7 @@ _mount("setupbot")
 _mount("vast")
 _mount("ltx")
 _mount("lora_train")
+_mount("qwen")
 # Bridges
 _mount("term_bridge")
 _mount("auth")

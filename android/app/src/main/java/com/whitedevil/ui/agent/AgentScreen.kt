@@ -208,7 +208,8 @@ private fun AgentChatHeader(
 private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier) {
     val attachments = host.pendingAttachmentsUiPublic()
     val input = host.agentInputTextPublic()
-    val canSend = host.agentComposerEnabledPublic() && input.isNotBlank()
+    val canSend = host.agentComposerEnabledPublic() && (input.isNotBlank() || attachments.isNotEmpty())
+    val isBusy = !host.agentComposerEnabledPublic()
     Column(
         modifier
             .background(WdPalette.bg)
@@ -267,21 +268,39 @@ private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier)
                     }
                 },
             )
-            IconButton(
-                onClick = { host.sendAgentMessage() },
-                enabled = canSend,
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(if (canSend) WdPalette.accent else WdPalette.stroke)
-                    .semantics { contentDescription = "Send" },
-            ) {
-                Icon(
-                    Icons.Outlined.KeyboardArrowUp,
-                    null,
-                    tint = WdPalette.onAccent,
-                    modifier = Modifier.size(18.dp),
-                )
+            if (isBusy) {
+                IconButton(
+                    onClick = { host.stopAgentChat() },
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(WdPalette.accentLight)
+                        .semantics { contentDescription = "Stop" },
+                ) {
+                    androidx.compose.material3.Text(
+                        "■",
+                        color = WdPalette.onLightButton,
+                        modifier = Modifier.padding(bottom = 2.dp),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            } else {
+                IconButton(
+                    onClick = { host.sendAgentMessage() },
+                    enabled = canSend,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(if (canSend) WdPalette.accent else WdPalette.stroke)
+                        .semantics { contentDescription = "Send" },
+                ) {
+                    Icon(
+                        Icons.Outlined.KeyboardArrowUp,
+                        null,
+                        tint = WdPalette.onAccent,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
         }
     }

@@ -54,14 +54,12 @@ object MessageContent {
     fun multimodal(text: String, imageDataUrls: List<String>): JsonElement {
         if (imageDataUrls.isEmpty()) return text(text)
         return buildJsonArray {
-            if (text.isNotBlank()) {
-                add(
-                    buildJsonObject {
-                        put("type", "text")
-                        put("text", text)
-                    },
-                )
-            }
+            add(
+                buildJsonObject {
+                    put("type", "text")
+                    put("text", if (text.isBlank()) " " else text)
+                },
+            )
             imageDataUrls.forEach { url ->
                 add(
                     buildJsonObject {
