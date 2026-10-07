@@ -74,7 +74,15 @@ fun AgentChatScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(visible, key = { it.id }) { msg ->
-            ChatBubbleRow(msg, onToggleTool, onCopy)
+            val toolState = if (msg.role == MainActivity.ROLE_TOOL_CALL) {
+                val name = msg.sender.removePrefix("Tool Call: ")
+                val later = visible.dropWhile { it.id != msg.id }.drop(1)
+                    .takeWhile { it.role != MainActivity.ROLE_TOOL_CALL || it.sender.removePrefix("Tool Call: ") != name }
+                val output = later.firstOrNull { it.role == MainActivity.ROLE_TOOL_OUTPUT && it.sender.removePrefix("Output: ") == name }
+                output?.let { com.whitedevil.agent.toolOutputState(it.message) }
+                    ?: if (agentThinking) "Running" else "Interrupted — no result received"
+            } else if (msg.isTool()) com.whitedevil.agent.toolOutputState(msg.message) else ""
+            ChatBubbleRow(msg, onToggleTool, onCopy, toolState)
         }
         if (agentThinking) {
             item(key = "typing") { TypingRow() }
@@ -106,11 +114,11 @@ private fun ThinkingDots() {
 }
 
 @Composable
-private fun ChatBubbleRow(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy: (String) -> Unit) {
+private fun ChatBubbleRow(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy: (String) -> Unit, toolState: String) {
     when {
         msg.isInfo() -> InfoLine(msg)
         msg.isUser() -> UserBubble(msg, onCopy)
-        msg.isTool() -> ToolBubble(msg, onToggleTool, onCopy)
+        msg.isTool() -> ToolBubble(msg, onToggleTool, onCopy, toolState)
         else -> AssistantBubble(msg, onCopy)
     }
     if (!msg.isTool() && !msg.isInfo()) TextButton(onClick = { onCopy(msg.message) }) { Text("Copy") }
@@ -159,7 +167,7 @@ private fun AssistantBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
 }
 
 @Composable
-private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy: (String) -> Unit) {
+private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy: (String) -> Unit, toolState: String) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -175,7 +183,7 @@ private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy:
             )
             TextButton(onClick = { onToggleTool(msg.id) }) { Text(if (msg.toolExpanded) "Collapse" else "Expand") }
         }
-        Text(if (msg.role == MainActivity.ROLE_TOOL_CALL) "Tool requested" else "Result received — inspect output for outcome", style = MaterialTheme.typography.labelMedium)
+        Text(toolState, style = MaterialTheme.typography.labelMedium)
         TextButton(onClick = { onCopy(msg.message) }) { Text("Copy") }
         if (msg.toolExpanded) {
             Spacer(Modifier.height(8.dp))

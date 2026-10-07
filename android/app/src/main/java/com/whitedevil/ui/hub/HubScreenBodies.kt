@@ -2,6 +2,7 @@ package com.whitedevil.ui.hub
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -192,10 +193,12 @@ fun HubGalleryBody(json: String, host: MainActivity) {
     playing?.let { (clips, start) ->
         HubClipViewer(relay, auth, clips, start) { playing = null }
     }
-    LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    BoxWithConstraints(Modifier.fillMaxSize().padding(16.dp)) {
+    val columns = maxOf(1, ((maxWidth.value + 8f) / 128f).toInt())
+    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { HubSectionTitle("Gallery", "Showing ${minOf(galleryLimit, latest.size)} of ${latest.size} clips · tap to play") }
         item { if (latest.size > galleryLimit) HubPrimaryButton("Show more clips") { galleryLimit += 48 } }
-        items(latest.take(galleryLimit).chunked(3)) { row ->
+        items(latest.take(galleryLimit).chunked(columns)) { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { clip ->
                     val idx = latest.indexOf(clip)
@@ -209,6 +212,7 @@ fun HubGalleryBody(json: String, host: MainActivity) {
                 }
             }
         }
+    }
     }
 }
 

@@ -20,13 +20,14 @@ import com.whitedevil.agent.Agent
 import com.whitedevil.agent.AgentEvent
 import com.whitedevil.agent.ToolBox
 import com.whitedevil.agent.VeniceClient
+import com.whitedevil.agent.toolOutputState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** One rendered line of the conversation. Mirrors the Android bubble roles. */
-data class ChatLine(val role: String, val title: String, val body: String)
+data class ChatLine(val role: String, val title: String, val body: String, val toolState: String? = null)
 
 private const val ROLE_USER = "user"
 private const val ROLE_VENICE = "venice"
@@ -86,13 +87,17 @@ fun AgentScreen(settings: Settings, session: AgentSession, onOpenSettings: () ->
                             systemPrompt = DEFAULT_SYSTEM_PROMPT,
                             enableWebSearch = settings.enableWebSearch,
                             onEvent = { event ->
+                                if (event is AgentEvent.ToolOutput) {
+                                    val index = lines.indexOfLast { it.role == ROLE_TOOL_CALL && it.title == "Tool · ${event.name}" }
+                                    if (index >= 0) lines[index] = lines[index].copy(toolState = toolOutputState(event.output))
+                                }
                                 // Compose snapshot state is thread-safe to mutate;
                                 // recomposition is dispatched to the UI thread.
                                 lines += when (event) {
                                     is AgentEvent.User -> ChatLine(ROLE_USER, "You", event.text)
                                     is AgentEvent.Venice -> ChatLine(ROLE_VENICE, "Venice", event.text)
-                                    is AgentEvent.ToolCall -> ChatLine(ROLE_TOOL_CALL, "Tool · ${event.name}", event.arguments)
-                                    is AgentEvent.ToolOutput -> ChatLine(ROLE_TOOL_OUT, "Output · ${event.name}", event.output)
+                                    is AgentEvent.ToolCall -> ChatLine(ROLE_TOOL_CALL, "Tool · ${event.name}", event.arguments, "Running")
+                                    is AgentEvent.ToolOutput -> ChatLine(ROLE_TOOL_OUT, "Output · ${event.name}", event.output, toolOutputState(event.output))
                                     is AgentEvent.Error -> ChatLine(ROLE_ERROR, "Error", event.message)
                                 }
                             },
@@ -107,6 +112,9 @@ fun AgentScreen(settings: Settings, session: AgentSession, onOpenSettings: () ->
             } catch (e: Exception) {
                 lines += ChatLine(ROLE_ERROR, "Error", e.message ?: e.javaClass.simpleName)
             } finally {
+                lines.indices.forEach { index ->
+                    if (lines[index].toolState == "Running") lines[index] = lines[index].copy(toolState = "Interrupted — no result received")
+                }
                 busy = false
             }
         }
@@ -218,7 +226,7 @@ private fun Bubble(line: ChatLine) {
             TextButton(onClick = { clipboard.setText(AnnotatedString(line.body)) }) { Text("Copy") }
             if (mono || line.body.length > 4000) TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Collapse" else "Expand") }
         }
-        if (mono) Text(if (line.role == ROLE_TOOL_CALL) "Tool requested" else "Result received — inspect output for outcome", style = MaterialTheme.typography.labelSmall)
+        if (mono) Text(line.toolState ?: if (line.role == ROLE_TOOL_OUT) toolOutputState(line.body) else "Interrupted — no result received", style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(4.dp))
         // Tool output can be enormous; the full text stays in the agent's history,
         // only the rendering is capped so one blob cannot lock the UI.

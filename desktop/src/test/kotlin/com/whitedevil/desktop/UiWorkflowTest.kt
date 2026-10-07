@@ -4,6 +4,11 @@ import com.whitedevil.agent.*
 import kotlin.test.*
 
 class UiWorkflowTest {
+    @Test fun `tool completion distinguishes returned output and reported failure`() {
+        assertTrue(toolOutputState("Error: offline").startsWith("Failed"))
+        assertTrue(toolOutputState("""{"ok":false}""").startsWith("Failed"))
+        assertTrue(toolOutputState("queued").startsWith("Complete"))
+    }
     @Test fun `out of order responses and repeated refreshes are rejected`() {
         val gate = LatestRequestGate(); val first = gate.next(); val second = gate.next()
         assertFalse(gate.accepts(first)); assertTrue(gate.accepts(second))

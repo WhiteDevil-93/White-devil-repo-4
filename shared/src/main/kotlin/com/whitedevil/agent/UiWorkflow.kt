@@ -12,6 +12,12 @@ class LatestRequestGate {
 fun canSubmitGoal(enabled: Boolean, text: String, attachmentCount: Int): Boolean =
     enabled && (text.isNotBlank() || attachmentCount > 0)
 
+/** Completion of tool execution is not proof that a downstream job has completed. */
+fun toolOutputState(output: String): String =
+    if (output.trimStart().startsWith("Error:", ignoreCase = true) ||
+        runCatching { actionReplySummary(output) }.isFailure) "Failed (reported by tool)"
+    else "Complete — tool returned; inspect output for job outcome"
+
 /** HTTP success means transport success, not job completion. */
 fun actionReplySummary(body: String): String {
     val reply = runCatching { Json.parseToJsonElement(body) as? JsonObject }.getOrNull()
