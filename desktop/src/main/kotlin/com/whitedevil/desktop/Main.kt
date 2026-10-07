@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +51,8 @@ fun main() = application {
     ) {
         var settings by remember { mutableStateOf(Settings.load()) }
         var screen by remember { mutableStateOf(Screen.Agent) }
+        val agentSession = remember { AgentSession() }
+        DisposableEffect(agentSession) { onDispose { agentSession.close() } }
 
         MaterialTheme(colorScheme = WhiteDevilColors) {
             Surface(color = MaterialTheme.colorScheme.background) {
@@ -57,6 +62,7 @@ fun main() = application {
                         when (screen) {
                             Screen.Agent -> AgentScreen(
                                 settings = settings,
+                                session = agentSession,
                                 onOpenSettings = { screen = Screen.Settings },
                             )
                             // Kept alive across tab switches: restarting the shell
@@ -103,17 +109,26 @@ private enum class Screen(val label: String) {
 @Composable
 private fun NavRail(current: Screen, onSelect: (Screen) -> Unit) {
     NavigationRail(
-        modifier = Modifier.fillMaxHeight().width(96.dp),
+        modifier = Modifier.fillMaxHeight().width(132.dp).verticalScroll(rememberScrollState()),
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Spacer(Modifier.height(12.dp))
-        Screen.entries.forEach { screen ->
+        val groups = linkedMapOf(
+            "Create" to listOf(Screen.Agent, Screen.Ltx),
+            "Monitor" to listOf(Screen.Renders, Screen.Gallery, Screen.Colab, Screen.Thunder, Screen.Vast),
+            "Operate" to listOf(Screen.Terminal, Screen.Setup),
+            "Account" to listOf(Screen.Settings),
+        )
+        groups.forEach { (group, screens) ->
+        Text(group, modifier = Modifier.padding(top = 12.dp), style = MaterialTheme.typography.labelSmall)
+        screens.forEach { screen ->
             NavigationRailItem(
                 selected = current == screen,
                 onClick = { onSelect(screen) },
                 icon = {},
                 label = { Text(screen.label, style = MaterialTheme.typography.labelMedium) },
             )
+        }
         }
     }
 }

@@ -92,10 +92,14 @@ textarea.input{min-height:110px;resize:vertical;font:inherit;line-height:1.45}
     <a class="btn sm" href="/app/setup/">Setup</a></div>
 </div>
 
+<script src="/app/ui/workflow.js"></script>
 <h2>AI review</h2>
 <div class="card" id="aireview">
   <div class="tip">Vision pass on the latest LTX contact sheet, or run the render→assess→adjust QA cycle.</div>
   <div id="aihero" class="skel" style="height:120px;border-radius:14px;margin:10px 0"></div>
+  <label class="field"><span>QA source (completed image chain with per-part prompts)</span><select class="input" id="cycsrc"><option value="">Choose a source — no automatic selection</option></select></label>
+  <label class="field"><span>Maximum rounds (two candidate stacks per round)</span><input class="input" id="cycrounds" type="number" min="1" max="10" step="1" value="1"></label>
+  <p class="tip" id="cycplan" aria-live="polite">Select a source and review the workload before starting. GPU and AI review charges apply; no price quote is available.</p>
   <div class="row wrap" style="gap:8px">
     <button class="btn primary grow" id="airev" onclick="aiReview()">✦ AI review latest</button>
     <button class="btn grow" id="cycstart" onclick="cycleAct('start')">Start QA cycle</button>
@@ -441,21 +445,40 @@ async function cycleStatus(){
   } catch (e) { $('cycst').textContent = 'Cycle API: ' + (e.message || e); }
 }
 async function cycleAct(act){
+  const button = $(act === 'start' ? 'cycstart' : 'cycstop');
+  if (button.disabled) return;
   try {
     if (act === 'start') {
-      const body = {rounds: 5};
-      // Prefer a finished LTX job id if we have one in the jobs list
-      const done = (window._jobs || []).find(j => j.status === 'done');
-      if (done) body.src = done.id;
-      await F.post('/api/ltx/cycle/start', body);
-      F.toast('QA cycle started');
+      const plan = WdWorkflow.cyclePlan(window._jobs || [], $('cycsrc').value, $('cycrounds').value);
+      if (!confirm(`Start QA on ${plan.name} (${plan.body.src})?\nUp to ${plan.body.rounds} rounds, ${plan.maxClips} clip renders plus AI reviews. GPU/API charges apply. Any existing cycle may be replaced. Cancel if you have not checked its status.`)) return;
+      button.disabled = true;
+      await F.post('/api/ltx/cycle/start', plan.body);
+      F.toast('QA start request accepted — check cycle status');
     } else {
+      button.disabled = true;
       await F.post('/api/ltx/cycle/stop', {});
       F.toast('QA cycle stop requested');
     }
     cycleStatus();
   } catch (e) { F.toast(e.message); }
+  finally { button.disabled = false; }
 }
+
+function updateCycleSources(){
+  const selected = $('cycsrc').value;
+  $('cycsrc').innerHTML = '<option value="">Choose a source — no automatic selection</option>' +
+    (window._jobs || []).filter(WdWorkflow.eligibleCycleSource).map(j => `<option value="${esc(j.id)}">${esc(j.name || j.id)} · ${esc(j.id)}</option>`).join('');
+  $('cycsrc').value = selected;
+  updateCyclePlan();
+}
+function updateCyclePlan(){
+  try {
+    const plan = WdWorkflow.cyclePlan(window._jobs || [], $('cycsrc').value, $('cycrounds').value);
+    $('cycplan').textContent = `${plan.name}: up to ${plan.maxClips} clip renders over ${plan.body.rounds} rounds, plus AI reviews. GPU/API charges apply; no price quote is available.`;
+  } catch (e) { $('cycplan').textContent = e.message; }
+}
+$('cycsrc').onchange = updateCyclePlan;
+$('cycrounds').oninput = updateCyclePlan;
 
 
 vrev = F.mountVideoReview($('videoreview'), { source: 'ltx', title: 'Video review' });

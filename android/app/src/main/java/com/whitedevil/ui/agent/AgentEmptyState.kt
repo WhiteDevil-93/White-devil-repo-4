@@ -65,19 +65,19 @@ fun AgentSetupEmptyState(
             )
             Column(Modifier.align(Alignment.BottomStart).padding(20.dp)) {
                 Text("STEP 01", style = MaterialTheme.typography.labelLarge, color = WdPalette.accentLight)
-                Text("Neural Linkage", style = MaterialTheme.typography.titleLarge)
+                Text("Add your Venice API key", style = MaterialTheme.typography.titleLarge)
             }
         }
         WdHairline()
         Column(Modifier.padding(20.dp)) {
             Text(
-                "Integrate your intelligence layer to start forging. Securely connect your preferred LLM architectures via encrypted API protocols.",
+                "Your key lets this app send goals to Venice. Add a key, test the connection in Settings, then send your first goal. Venice usage may incur charges; never share your key in chat.",
                 style = MaterialTheme.typography.bodySmall,
             )
             Spacer(Modifier.height(20.dp))
             ConfigBlock {
-                ConfigRow("API Endpoint", "Configure in Settings")
-                ConfigRow("Secret Token", "Add Venice API key", onClick = onAddKey)
+                ConfigRow("Provider", "Venice")
+                ConfigRow("API key", "Add Venice API key", onClick = onAddKey)
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -86,7 +86,7 @@ fun AgentSetupEmptyState(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("MODEL ARCHITECTURE", style = MaterialTheme.typography.labelLarge)
+                        Text("Model", style = MaterialTheme.typography.labelLarge)
                         Text(modelLabel, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                     }
                     Text("⌄", color = WdPalette.textMetadata)
@@ -104,7 +104,7 @@ fun AgentSetupEmptyState(
                     contentColor = WdPalette.onLightButton,
                 ),
             ) {
-                Text("INITIALIZE PROTOCOL", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Text("Add API key", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -117,9 +117,9 @@ fun AgentReadyEmptyState(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .padding(24.dp),
     ) {
-        Text("Command Venice", style = MaterialTheme.typography.titleMedium, color = WdPalette.accentLight)
+        Text("Send your first goal", style = MaterialTheme.typography.titleMedium, color = WdPalette.accentLight)
         Spacer(Modifier.height(6.dp))
-        Text("No messages yet. Send a command below.", style = MaterialTheme.typography.bodySmall)
+        Text("Key configured, not yet verified. Test connections in You → Settings, then describe what you want to accomplish below.", style = MaterialTheme.typography.bodySmall)
     }
 }
 

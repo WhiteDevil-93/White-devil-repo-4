@@ -25,6 +25,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import com.whitedevil.BuildConfig
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +54,13 @@ fun YouHomeScreen(
     onTestConnections: () -> Unit,
     onAddVeniceKey: () -> Unit,
 ) {
+    var docsOpen by remember { mutableStateOf(false) }
+    if (docsOpen) AlertDialog(
+        onDismissRequest = { docsOpen = false },
+        title = { Text("WhiteDevil guide") },
+        text = { Text("Agent: add a Venice API key, test connections in Settings, then send a goal. Stop ends the current run without clearing history.\n\nHub: create and monitor work. Check source, workload and cost before starting a render.\n\nPhone files: link a folder, open subfolders, then attach files to a goal.\n\nSettings: configure connections, agent and security. Configured does not mean online.") },
+        confirmButton = { TextButton(onClick = { docsOpen = false }) { Text("Close") } },
+    )
     WdScreenBackground(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             Column(
@@ -59,15 +70,9 @@ fun YouHomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box {
-                    AsyncImage(
-                        model = AVATAR,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(88.dp)
-                            .clip(CircleShape)
-                            .border(2.dp, WdPalette.accent, CircleShape),
-                        contentScale = ContentScale.Crop,
-                    )
+                    Box(Modifier.size(88.dp).border(2.dp, WdPalette.accent, CircleShape), contentAlignment = Alignment.Center) {
+                        Text("WD", style = MaterialTheme.typography.titleLarge)
+                    }
                     Box(
                         Modifier
                             .align(Alignment.BottomEnd)
@@ -80,12 +85,12 @@ fun YouHomeScreen(
                             Modifier
                                 .fillMaxSize()
                                 .clip(CircleShape)
-                                .background(WdPalette.success),
+                                .background(WdPalette.textMetadata),
                         )
                     }
                 }
                 Spacer(Modifier.size(16.dp))
-                Text("User_7294", style = MaterialTheme.typography.titleLarge)
+                Text("This device", style = MaterialTheme.typography.titleLarge)
                 Box(
                     Modifier
                         .padding(top = 8.dp)
@@ -93,7 +98,7 @@ fun YouHomeScreen(
                         .background(WdPalette.surface)
                         .padding(horizontal = 10.dp, vertical = 4.dp),
                 ) {
-                    Text("DEVELOPER TIER", style = MaterialTheme.typography.labelLarge, color = WdPalette.accentLight)
+                    Text("Local profile • no account tier", style = MaterialTheme.typography.labelLarge, color = WdPalette.accentLight)
                 }
                 if (!veniceReady) {
                     Text(
@@ -114,15 +119,15 @@ fun YouHomeScreen(
                 }
             }
             WdHairline()
-            ProfileRow(Icons.Outlined.Settings, "General Settings", "UI, Language, Regions", onSettings)
+            ProfileRow(Icons.Outlined.Settings, "Settings", "Connection, agent & security", onSettings)
             WdHairline(Modifier.padding(start = 16.dp))
             ProfileRow(Icons.Outlined.Folder, "Phone files", "Browse & attach from this device", onPhoneFiles)
             WdHairline(Modifier.padding(start = 16.dp))
             ProfileRow(Icons.Outlined.Terminal, "System Console", "Log analysis & CLI", onTerminal)
             WdHairline(Modifier.padding(start = 16.dp))
-            ProfileRow(Icons.Outlined.Shield, "Security Protocol", "All nodes active", onTestConnections, subtitleColor = WdPalette.success.copy(alpha = 0.7f))
+            ProfileRow(Icons.Outlined.Shield, "Test connections", "Check current service reachability", onTestConnections)
             WdHairline(Modifier.padding(start = 16.dp))
-            ProfileRow(Icons.AutoMirrored.Outlined.MenuBook, "WhiteDevil Docs", "API & SDK reference", onSettings)
+            ProfileRow(Icons.AutoMirrored.Outlined.MenuBook, "WhiteDevil guide", "Setup & workflow help", { docsOpen = true })
             WdHairline()
             Column(
                 Modifier
@@ -130,11 +135,11 @@ fun YouHomeScreen(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("VERSION 9.0 • BUILD 92", style = MaterialTheme.typography.labelLarge, color = WdPalette.textMetadata.copy(alpha = 0.5f))
+                Text("VERSION ${BuildConfig.VERSION_NAME} • BUILD ${BuildConfig.VERSION_CODE}", style = MaterialTheme.typography.labelLarge, color = WdPalette.textMetadata)
                 Text(
-                    "FORGE PROTOCOL ACTIVATED",
+                    "Status is verified only by connection tests",
                     style = MaterialTheme.typography.labelLarge,
-                    color = WdPalette.textMetadata.copy(alpha = 0.35f),
+                    color = WdPalette.textMetadata,
                     modifier = Modifier.padding(top = 6.dp),
                 )
             }

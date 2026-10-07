@@ -225,6 +225,7 @@ function buildMenu() {
       submenu: [
         { label: "Home", accelerator: "CmdOrCtrl+1", click: () => go("home") },
         { label: "Venice Agent", accelerator: "CmdOrCtrl+Shift+V", click: () => go("venice") },
+        { label: "HypnoForge", accelerator: "CmdOrCtrl+Shift+H", click: () => go("hypno") },
         { label: "Shell", accelerator: "CmdOrCtrl+Shift+T", click: () => go("term") },
         { label: "Renders", click: () => go("renders") },
         { type: "separator" },
@@ -250,6 +251,7 @@ function createTray() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: "Open Forge Hub", click: () => createMainWindow() },
     { label: "Venice Agent", click: () => { createMainWindow(); mainWindow.loadURL(hubTarget(cached || loadSettings()) + "#venice"); } },
+    { label: "HypnoForge", click: () => { createMainWindow(); mainWindow.loadURL(hubTarget(cached || loadSettings()) + "#hypno"); } },
     { label: "Settings", click: () => openSettings() },
     { type: "separator" },
     { label: "Quit", click: () => app.quit() },

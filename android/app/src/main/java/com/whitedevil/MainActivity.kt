@@ -129,6 +129,9 @@ class MainActivity : FragmentActivity() {
     internal var hubScreenJson by mutableStateOf("")
     internal var hubScreenLoading by mutableStateOf(false)
     internal var hubScreenError by mutableStateOf<String?>(null)
+    internal var hubLastUpdated by mutableStateOf(0L)
+    internal val hubPendingActions = mutableStateListOf<String>()
+    private var hubRequestGeneration = 0L
     internal var hubBlockedByUpdate by mutableStateOf(false)
     internal var hubForceUpdateVersion by mutableIntStateOf(0)
     internal var hubForceUpdateApkUrl: String? = null
@@ -159,6 +162,7 @@ class MainActivity : FragmentActivity() {
     )
     internal var agentSelectedModel by mutableStateOf(SettingsManager.DEFAULT_MODEL)
     private var currentAgentJob: Job? = null
+    private var agentGeneration = 0L
 
     // Agent attachments (photos, videos, audio, documents)
     private data class PendingAttachment(
@@ -650,9 +654,12 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun resetAgentChat() {
+        agentGeneration++
         currentAgentJob?.cancel()
         agentShowProgress = false
-        runCatching { agentHistoryFile().delete() }
+        agentThinking = false
+        setAgentComposerEnabled(true)
+        persistAgentHistory(emptyList())
         chatMessages.clear()
         agentStatusSubtitle = "On-device agent"
         addMessageBubble("Agent Reset", "Chat context cleared. Ready for next task.", ROLE_VENICE)
@@ -662,16 +669,24 @@ class MainActivity : FragmentActivity() {
 
     private val historyJson = Json { ignoreUnknownKeys = true }
 
+    internal fun stopAgentRun() {
+        currentAgentJob?.cancel()
+    }
+
     /** Persists the conversation (image blobs stripped) so it survives app restarts. */
     private fun persistAgentHistory(messages: List<ChatMessage>) {
-        runCatching {
+        try {
             val lean = messages
                 .filter { it.role in setOf("user", "assistant", "tool") }
                 .takeLast(Agent.MAX_HISTORY_MESSAGES)
                 .map { it.copy(content = stripBlobs(it.content)) }
-            agentHistoryFile().writeText(
+            val temporary = File(filesDir, "agent_history.json.tmp")
+            temporary.writeText(
                 historyJson.encodeToString(ListSerializer(ChatMessage.serializer()), lean),
             )
+            android.system.Os.rename(temporary.path, agentHistoryFile().path)
+        } catch (e: Exception) {
+            main.post { addMessageBubble("Not saved", "Conversation save failed (${e.javaClass.simpleName}). Keep this session open and try again.", ROLE_ERROR) }
         }
     }
 
@@ -682,7 +697,10 @@ class MainActivity : FragmentActivity() {
             historyJson.decodeFromString(ListSerializer(ChatMessage.serializer()), file.readText())
                 .filter { it.role in setOf("user", "assistant", "tool") }
                 .takeLast(Agent.MAX_HISTORY_MESSAGES)
-        }.getOrDefault(emptyList())
+        }.getOrElse { e ->
+            main.post { addMessageBubble("History unavailable", "Saved history could not be read (${e.javaClass.simpleName}). File preserved; clear chat explicitly before starting again.", ROLE_ERROR) }
+            throw IllegalStateException("Could not read saved conversation; clear chat to reset", e)
+        }
     }
 
     /** Rebuilds chat bubbles from a restored conversation. */
@@ -706,6 +724,7 @@ class MainActivity : FragmentActivity() {
     }
 
     internal fun sendAgentMessage() {
+        if (!agentComposerEnabled) return
         val text = agentInputText.trim()
         if (text.isEmpty() && pendingAttachments.isEmpty()) return
         val apiKey = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim() ?: ""
@@ -749,6 +768,7 @@ class MainActivity : FragmentActivity() {
         setAgentComposerEnabled(false)
 
         val currentClient = VeniceClient(apiKey = apiKey)
+        val generation = ++agentGeneration
         currentAgentJob = scope.launch {
             var finishedAgent: Agent? = null
             try {
@@ -773,6 +793,7 @@ class MainActivity : FragmentActivity() {
                     enableWebSearch = webSearch,
                     onEvent = { event ->
                         main.post {
+                            if (generation != agentGeneration) return@post
                             when (event) {
                                 is AgentEvent.User -> addMessageBubble("You", event.text, ROLE_USER)
                                 is AgentEvent.Venice -> addMessageBubble("Venice", event.text, ROLE_VENICE)
@@ -791,13 +812,19 @@ class MainActivity : FragmentActivity() {
                         agent.send(fullText, imageDataUrls)
                     }
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                if (generation == agentGeneration) addMessageBubble("Stopped", "Current run stopped. Conversation retained.", ROLE_VENICE)
+                throw e
             } catch (e: Exception) {
                 addMessageBubble("Error", e.message ?: "Unknown error running Venice agent", ROLE_ERROR)
             } finally {
-                finishedAgent?.let { persistAgentHistory(it.snapshot()) }
-                agentShowProgress = false
-                agentThinking = false
-                setAgentComposerEnabled(true)
+                currentClient.close()
+                if (generation == agentGeneration) {
+                    finishedAgent?.let { persistAgentHistory(it.snapshot()) }
+                    agentShowProgress = false
+                    agentThinking = false
+                    setAgentComposerEnabled(true)
+                }
             }
         }
     }
@@ -1129,15 +1156,19 @@ class MainActivity : FragmentActivity() {
     internal fun refreshHubNativeScreen() {
         if (hubBlockedByUpdate) return
         val id = currentHubScreenId ?: return
+        val generation = ++hubRequestGeneration
         hubScreenLoading = true
         hubScreenError = null
         scope.launch {
             try {
                 val json = withContext(Dispatchers.IO) { fetchHubScreenJson(id) }
+                if (generation != hubRequestGeneration || id != currentHubScreenId) return@launch
                 hubScreenJson = json
+                hubLastUpdated = System.currentTimeMillis()
                 hubScreenLoading = false
                 updateHubConnectionPill(online = true)
             } catch (e: Exception) {
+                if (generation != hubRequestGeneration || id != currentHubScreenId) return@launch
                 hubScreenLoading = false
                 hubScreenError = when (e) {
                     is RelayHttpException -> e.message?.take(500) ?: "HTTP ${e.code}"
@@ -1174,9 +1205,13 @@ class MainActivity : FragmentActivity() {
             "hypno" -> {
                 val overview = RelayHttp.get(relayBase, auth, "/api/laptop/hypno/overview")
                 val jobs = runCatching { RelayHttp.get(relayBase, auth, "/api/laptop/hypno/jobs") }.getOrDefault("[]")
+                val library = runCatching {
+                    RelayHttp.get(relayBase, auth, "/api/laptop/hypno/library?limit=80")
+                }.getOrDefault("{}")
                 JSONObject().apply {
                     put("overview", JSONObject(overview))
                     put("jobs", JSONArray(jobs))
+                    put("library", JSONObject(library))
                 }.toString()
             }
             "ltx", "shotwriter" -> {
@@ -1246,15 +1281,27 @@ class MainActivity : FragmentActivity() {
     internal fun relayAuthorization(): String = basicAuth("wan")
 
     internal fun hubRelayPost(path: String, jsonBody: String, refreshAfter: Boolean = true) {
+        if (path in hubPendingActions) return
+        hubPendingActions.add(path)
         scope.launch {
             try {
-                withContext(Dispatchers.IO) {
+                val response = withContext(Dispatchers.IO) {
                     RelayHttp.post(relayBase, basicAuth("wan"), path, jsonBody)
                 }
+                val reply = runCatching { JSONObject(response) }.getOrNull()
+                if (reply?.optBoolean("ok", true) == false || reply?.optBoolean("success", true) == false ||
+                    reply?.optString("status") in setOf("error", "failed")) {
+                    throw IllegalStateException(reply?.optString("error")?.takeIf { it.isNotBlank() } ?: "Request rejected")
+                }
                 if (refreshAfter) refreshHubNativeScreen()
-                UiFeedback.snackbar(snackbarAnchor, "Done")
+                val status = reply?.optString("status")?.takeIf { it.isNotBlank() } ?: "Request accepted"
+                val jobId = reply?.optString("job_id")?.takeIf { it.isNotBlank() }
+                    ?: reply?.optString("id")?.takeIf { it.isNotBlank() }
+                UiFeedback.snackbar(snackbarAnchor, "$status${jobId?.let { " · $it" } ?: ""}")
             } catch (e: Exception) {
                 UiFeedback.snackbar(snackbarAnchor, e.message?.take(120) ?: "Request failed")
+            } finally {
+                hubPendingActions.remove(path)
             }
         }
     }
@@ -1284,6 +1331,11 @@ class MainActivity : FragmentActivity() {
     internal fun showHubScreen(id: String) {
         if (hubBlockedByUpdate) return
         if (hubScreens.none { it.id == id }) return
+        if (currentHubScreenId != id) {
+            hubScreenJson = ""
+            hubLastUpdated = 0L
+            hubScreenError = null
+        }
         currentHubScreenId = id
         prefs.edit().putString("last_hub_screen", id).apply()
         renderHubChips()

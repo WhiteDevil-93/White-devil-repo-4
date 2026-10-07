@@ -39,6 +39,8 @@ HF_PROBE = "https://huggingface.co/Lightricks/LTX-2.5/resolve/main/vae/ltx-2.5-a
 _hf_ok = {"at": 0, "tok": None, "ok": False, "why": ""}
 COLAB = str(HOME / ".local/bin/colab")
 COLAB_OPS = str(HOME / "wan" / "colab_ops.sh")
+STAGE_DIR = HOME / "wan" / "lora_stage"
+COACH_LORA = "penis-lora-by-coachbate-ltx-2.3.safetensors"
 PLANNER = "x-ai/grok-4.5"
 ACTIVE = {"planned", "creating", "waiting", "uploading", "installing"}
 RUN_ID = re.compile(r"^[0-9a-f]{12}$")
@@ -48,6 +50,15 @@ REMOTE_DIR = {"thunder": "/home/ubuntu/forge_setup", "thunder_new": "/home/ubunt
               "vast": "/root/forge_setup", "vast_new": "/root/forge_setup",
               "colab": "/content/forge_setup"}
 _threads = {}
+
+
+def as_lf_bytes(data: bytes) -> bytes:
+    """Bash rejects `set -o pipefail\\r`. Always ship LF scripts to Colab/Thunder/Vast."""
+    return data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
+def write_lf(path: Path, text: str) -> None:
+    path.write_bytes(as_lf_bytes(text.encode("utf-8")))
 
 
 def recipes():
@@ -653,9 +664,38 @@ def env_file(r, opts, base):
 
 
 def launch_cmd(rdir, base, log):
-    inner = (f"set -a; . {rdir}/env; set +a; mkdir -p {base}/logs; cd {rdir}; "
+    # Strip CR again on the box in case an upload path rewrote the file.
+    inner = (f"sed -i 's/\\r$//' {rdir}/setup.sh {rdir}/env 2>/dev/null; "
+             f"set -a; . {rdir}/env; set +a; mkdir -p {base}/logs; cd {rdir}; "
              f"setsid nohup bash {rdir}/setup.sh > {base}/{log} 2>&1 < /dev/null & echo launched")
     return inner
+
+
+def ensure_coachbate_on_colab(step):
+    """Push the staged CoachBate 2.3 LoRA into /content/lora_keep for setup.sh to restore."""
+    src = STAGE_DIR / COACH_LORA
+    if not src.is_file() or src.stat().st_size < 1_000_000:
+        step("uploading", f"CoachBate 2.3 not staged at {src} — content pack will warn if missing")
+        return False
+    remote = f"/content/lora_keep/{COACH_LORA}"
+    colab(f"mkdir -p /content/lora_keep")
+    check = colab(f"stat -c%s {remote} 2>/dev/null || echo 0")
+    remote_sz = (check.stdout or "").strip().splitlines()[-1:] or ["0"]
+    remote_sz = remote_sz[0].strip()
+    want = str(src.stat().st_size)
+    if remote_sz == want:
+        step("uploading", "CoachBate 2.3 already on Colab keep")
+        return True
+    step("uploading", "Uploading CoachBate 2.3 LoRA to Colab (about 1.3 GB)")
+    subprocess.run(
+        ["flock", "/tmp/colab.lock", COLAB, "upload", "-s", "colab", str(src), remote],
+        check=True, capture_output=True, text=True, timeout=3600,
+    )
+    verify = colab(f"stat -c%s {remote} 2>/dev/null || echo 0")
+    got = (verify.stdout or "").strip().splitlines()[-1:] or ["0"]
+    if got[0].strip() != want:
+        raise RuntimeError(f"CoachBate upload size mismatch: remote={got[0]!r} want={want}")
+    return True
 
 
 def poll_cmd(rdir, base, log):
@@ -746,9 +786,12 @@ def work(rid):
             step("uploading", "Uploading the setup script")
             with tempfile.TemporaryDirectory() as td:
                 envp = Path(td) / "env"
-                envp.write_text(env_file(r, run["options"], base))
+                write_lf(envp, env_file(r, run["options"], base))
                 envp.chmod(0o600)
-                script = str(RECIPES / r["id"] / r["script"])
+                script_src = RECIPES / r["id"] / r["script"]
+                script_lf = Path(td) / "setup.sh"
+                script_lf.write_bytes(as_lf_bytes(script_src.read_bytes()))
+                script_lf.chmod(0o755)
                 if kind == "colab":
                     if not colab_active():
                         step("uploading", "Starting a Colab G4 runtime (a few minutes)")
@@ -756,17 +799,19 @@ def work(rid):
                                         "--gpu", "G4"], capture_output=True, text=True, timeout=900)
                         if not colab_active():
                             return step("failed", "Colab didn't give a G4 runtime (quota or none free). Try again later.")
-                    colab(f"mkdir -p {rdir} {base}/logs")
-                    for src, name in ((script, "setup.sh"), (str(envp), "env")):
+                    colab(f"mkdir -p {rdir} {base}/logs /content/lora_keep")
+                    if r["id"] == "ltx25":
+                        ensure_coachbate_on_colab(step)
+                    for src, name in ((str(script_lf), "setup.sh"), (str(envp), "env")):
                         subprocess.run(["flock", "/tmp/colab.lock", COLAB, "upload", "-s", "colab", src,
                                         f"{rdir}/{name}"], check=True, capture_output=True, text=True, timeout=600)
-                    colab(f"chmod 600 {rdir}/env; " + launch_cmd(rdir, base, log))
+                    colab(f"chmod 600 {rdir}/env; chmod 755 {rdir}/setup.sh; " + launch_cmd(rdir, base, log))
                 else:
                     user = run.get("user", "ubuntu")
                     rssh(run, f"mkdir -p {rdir} && chmod 700 {rdir}")
-                    scp(run["host"], run["port"], script, f"{rdir}/setup.sh", user)
+                    scp(run["host"], run["port"], str(script_lf), f"{rdir}/setup.sh", user)
                     scp(run["host"], run["port"], str(envp), f"{rdir}/env", user)
-                    res = rssh(run, f"chmod 600 {rdir}/env; {sudo(run)}bash -c "
+                    res = rssh(run, f"chmod 600 {rdir}/env; chmod 755 {rdir}/setup.sh; {sudo(run)}bash -c "
                                + shlex.quote(launch_cmd(rdir, base, log)))
                     if "launched" not in res.stdout:
                         return step("failed", "Couldn't start the setup: " + mask(res.stderr.strip())[:300])
@@ -815,8 +860,14 @@ def work(rid):
         done = "Done. ComfyUI is running"
         if kind == "colab":
             import colab as colab_api
-            colab_api.comfy_tunnel(True)
-            done += ": open it from the Colab screen"
+            step("installing", "Bringing the Comfy tunnel up")
+            tun = colab_api.comfy_tunnel(True, wait_s=90)
+            if tun.get("online"):
+                done += ": open LTX from the phone (tunnel on :18288)"
+            else:
+                done += (": Comfy finished on Colab, but the relay tunnel is not answering yet — "
+                         "open the Colab screen and hit Recover, or wait a minute")
+                notify(f"Setup done but tunnel cold: {tun.get('detail') or tun}")
         elif kind in ("thunder", "thunder_new") and run["plan"].get("use_for_renders"):
             done += ": open it from the Thunder screen"
         if run["plan"].get("use_for_renders") and kind in ("thunder", "thunder_new"):

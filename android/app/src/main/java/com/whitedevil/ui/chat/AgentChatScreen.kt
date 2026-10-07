@@ -27,8 +27,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,14 +56,20 @@ fun AgentChatScreen(
 ) {
     val visible = if (includeInfoMessages) messages else messages.filter { !it.isInfo() }
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     LaunchedEffect(scrollTrigger, agentThinking) {
-        val last = messages.size + if (agentThinking) 1 else 0
-        if (last > 0) listState.animateScrollToItem((last - 1).coerceAtLeast(0))
+        val last = visible.size + if (agentThinking) 1 else 0
+        val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        if (last > 0 && lastVisible >= last - 3) listState.animateScrollToItem(last - 1)
     }
-
+    Column(modifier.fillMaxSize()) {
+    TextButton(onClick = { scope.launch {
+        val last = visible.size + if (agentThinking) 1 else 0
+        if (last > 0) listState.animateScrollToItem(last - 1)
+    } }) { Text("Jump to latest") }
     LazyColumn(
         state = listState,
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.weight(1f).fillMaxWidth(),
         contentPadding = PaddingValues(top = 8.dp, bottom = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -70,6 +79,7 @@ fun AgentChatScreen(
         if (agentThinking) {
             item(key = "typing") { TypingRow() }
         }
+    }
     }
 }
 
@@ -103,6 +113,7 @@ private fun ChatBubbleRow(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCo
         msg.isTool() -> ToolBubble(msg, onToggleTool, onCopy)
         else -> AssistantBubble(msg, onCopy)
     }
+    if (!msg.isTool() && !msg.isInfo()) TextButton(onClick = { onCopy(msg.message) }) { Text("Copy") }
 }
 
 @Composable
@@ -128,7 +139,6 @@ private fun UserBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
             modifier = Modifier
                 .widthIn(max = 300.dp)
                 .background(WdPalette.accent, RoundedCornerShape(2.dp))
-                .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
                 .padding(horizontal = 10.dp, vertical = 7.dp),
         )
     }
@@ -144,7 +154,6 @@ private fun AssistantBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .widthIn(max = 340.dp)
-            .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
             .padding(end = 4.dp),
     )
 }
@@ -155,7 +164,6 @@ private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy:
         Modifier
             .fillMaxWidth()
             .background(WdPalette.surface, RoundedCornerShape(WdDimens.controlRadius))
-            .clickable { onToggleTool(msg.id) }
             .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -165,12 +173,10 @@ private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy:
                 color = WdPalette.accent,
                 modifier = Modifier.weight(1f),
             )
-            Text(
-                if (msg.toolExpanded) "−" else "+",
-                style = MaterialTheme.typography.titleMedium,
-                color = WdPalette.textMetadata,
-            )
+            TextButton(onClick = { onToggleTool(msg.id) }) { Text(if (msg.toolExpanded) "Collapse" else "Expand") }
         }
+        Text(if (msg.role == MainActivity.ROLE_TOOL_CALL) "Tool requested" else "Result received — inspect output for outcome", style = MaterialTheme.typography.labelMedium)
+        TextButton(onClick = { onCopy(msg.message) }) { Text("Copy") }
         if (msg.toolExpanded) {
             Spacer(Modifier.height(8.dp))
             Text(

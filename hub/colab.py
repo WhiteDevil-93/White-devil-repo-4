@@ -272,6 +272,45 @@ def job_action(jid: str, action: str):
     return runner("POST", f"/jobs/{jid}/{action}") or {"ok": False}
 
 
+def comfy_tunnel(enable: bool = True, wait_s: int = 60) -> dict:
+    """Start or park the wan-colab-comfy-tunnel unit and optionally wait for Comfy HTTP.
+
+    Phone setup calls this after SETUP_COMPLETE. Missing this function used to mark a
+    finished install as failed with a nonsense step string.
+    """
+    unit = "wan-colab-comfy-tunnel.service"
+    paused = WAN / "paused_comfy"
+    if enable:
+        paused.unlink(missing_ok=True)
+        subprocess.run(["sudo", "systemctl", "reset-failed", unit], capture_output=True)
+        subprocess.run(["sudo", "systemctl", "restart", unit], capture_output=True)
+        deadline = time.time() + max(5, wait_s)
+        while time.time() < deadline:
+            try:
+                r = requests.get("http://127.0.0.1:18288/system_stats", timeout=5)
+                if r.status_code == 200:
+                    return {"ok": True, "online": True, "http": 200}
+            except requests.RequestException:
+                pass
+            time.sleep(2)
+        active = subprocess.run(["systemctl", "is-active", unit], capture_output=True, text=True)
+        return {
+            "ok": False,
+            "online": False,
+            "tunnel": (active.stdout or "").strip(),
+            "detail": "tunnel restarted but Comfy /system_stats not answering yet",
+        }
+    stamp = time.strftime("%Y-%m-%d %H:%M") + "\n"
+    paused.write_text(stamp)
+    subprocess.run(["sudo", "systemctl", "stop", unit], capture_output=True)
+    return {"ok": True, "online": False}
+
+
+@router.post("/comfy-tunnel")
+def comfy_tunnel_api(enable: bool = True):
+    return comfy_tunnel(enable)
+
+
 @router.post("/recover")
 def recover():
     if subprocess.run(["pgrep", "-f", "colab_recover.sh"], capture_output=True).returncode == 0:
@@ -281,7 +320,7 @@ def recover():
     subprocess.Popen(["bash", str(WAN / "colab_recover.sh")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                      start_new_session=True)
     # Bring Comfy tunnel back if systemd unit exists.
-    subprocess.run(["sudo", "systemctl", "restart", "wan-colab-comfy-tunnel.service"], capture_output=True)
+    comfy_tunnel(True, wait_s=30)
     return {"ok": True}
 
 

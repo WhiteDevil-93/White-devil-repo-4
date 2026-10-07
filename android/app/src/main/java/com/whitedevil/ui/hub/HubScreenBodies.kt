@@ -100,6 +100,7 @@ fun HubRendersBody(json: String, host: MainActivity) {
     var query by remember { mutableStateOf("") }
     var kind by remember { mutableStateOf("all") }
     var source by remember { mutableStateOf("all") }
+    var collectionLimit by remember { mutableStateOf(16) }
     var playing by remember { mutableStateOf<Pair<List<HubClipRef>, Int>?>(null) }
     val relay = host.relayBasePublic()
     val auth = host.relayAuthPublic()
@@ -154,7 +155,7 @@ fun HubRendersBody(json: String, host: MainActivity) {
                         .padding(top = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    refs.take(16).forEachIndexed { i, ref ->
+                    refs.take(collectionLimit).forEachIndexed { i, ref ->
                         HubRelayThumb(
                             relay,
                             auth,
@@ -164,6 +165,7 @@ fun HubRendersBody(json: String, host: MainActivity) {
                         )
                     }
                 }
+                if (refs.size > collectionLimit) HubPrimaryButton("Show more clips (${collectionLimit} of ${refs.size} shown)") { collectionLimit += 16 }
             }
         }
     }
@@ -175,6 +177,7 @@ fun HubGalleryBody(json: String, host: MainActivity) {
     val relay = host.relayBasePublic()
     val auth = host.relayAuthPublic()
     var playing by remember { mutableStateOf<Pair<List<HubClipRef>, Int>?>(null) }
+    var galleryLimit by remember { mutableStateOf(48) }
     val latest = remember(arr) {
         arr.flatMap { g ->
             val clips = g.optJSONArray("clips") ?: JSONArray()
@@ -184,14 +187,15 @@ fun HubGalleryBody(json: String, host: MainActivity) {
                 val idx = clip.optInt("idx").takeIf { it > 0 }
                 HubClipRef(clip.optString("name"), title + (idx?.let { " · $it" } ?: "")) to clip.optDouble("mtime")
             }
-        }.sortedByDescending { it.second }.take(48).map { it.first }
+        }.sortedByDescending { it.second }.map { it.first }
     }
     playing?.let { (clips, start) ->
         HubClipViewer(relay, auth, clips, start) { playing = null }
     }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { HubSectionTitle("Gallery", "${latest.size} recent clips · tap to play") }
-        items(latest.chunked(3)) { row ->
+        item { HubSectionTitle("Gallery", "Showing ${minOf(galleryLimit, latest.size)} of ${latest.size} clips · tap to play") }
+        item { if (latest.size > galleryLimit) HubPrimaryButton("Show more clips") { galleryLimit += 48 } }
+        items(latest.take(galleryLimit).chunked(3)) { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { clip ->
                     val idx = latest.indexOf(clip)
@@ -336,14 +340,22 @@ fun HubHypnoBody(json: String, host: MainActivity) {
     var capTheme by remember { mutableStateOf("") }
     var capStyle by remember { mutableStateOf("filthy_short") }
     var ingestUrls by remember { mutableStateOf("") }
+    var libraryQuery by remember { mutableStateOf("") }
+    var libraryKind by remember { mutableStateOf("") }
     val projects = overview.optJSONArray("projects") ?: JSONArray()
+    val library = root.optJSONObject("library")
+    val libraryLines = library?.optString("output", "")?.lines()
+        ?.filter { it.isNotBlank() }
+        ?.filter { libraryQuery.isBlank() || it.contains(libraryQuery, ignoreCase = true) }
+        ?.filter { libraryKind.isBlank() || it.contains(libraryKind, ignoreCase = true) }
+        ?: emptyList()
     if (project.isEmpty() && projects.length() > 0) {
         project = projects.getJSONObject(0).optString("path", projects.getJSONObject(0).optString("name"))
     }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("make", "renders", "write", "ingest", "jobs", "chat").forEach { t ->
+                listOf("make", "renders", "library", "write", "ingest", "jobs", "chat").forEach { t ->
                     HubPill(
                         t.replaceFirstChar { it.uppercase() },
                         ok = tab == t,
@@ -381,6 +393,35 @@ fun HubHypnoBody(json: String, host: MainActivity) {
                     HubCard {
                         Text(r.optString("name", r.optString("path", "render")), fontWeight = FontWeight.SemiBold)
                         Text(formatAgo(r.optDouble("mtime")), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+            "library" -> {
+                item {
+                    HubCard {
+                        HubSectionTitle("HypnoForge library", "Search media on the laptop")
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            BasicTextField(
+                                value = libraryQuery,
+                                onValueChange = { libraryQuery = it },
+                                modifier = Modifier.weight(1f),
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(color = WdPalette.text),
+                                decorationBox = {
+                                    if (libraryQuery.isEmpty()) Text("Search names or tags", color = WdPalette.textMetadata)
+                                    it()
+                                },
+                            )
+                            listOf("", "video", "image", "audio").forEach { kind ->
+                                HubPill(kind.ifBlank { "All" }, ok = libraryKind == kind, onClick = { libraryKind = kind })
+                            }
+                        }
+                        if (libraryLines.isEmpty()) {
+                            Text("No matching library items", color = WdPalette.textSecondary)
+                        } else {
+                            libraryLines.take(80).forEach { line ->
+                                Text(line, style = MaterialTheme.typography.bodySmall, color = WdPalette.textSecondary)
+                            }
+                        }
                     }
                 }
             }
@@ -626,7 +667,7 @@ fun HubShotwriterBody(json: String, host: MainActivity) {
                         it()
                     },
                 )
-                HubPrimaryButton("Start chain on relay", enabled = idea.isNotBlank()) {
+                HubPrimaryButton(if ("/api/gen/chain" in host.hubPendingActions) "Submitting…" else "Start chain on relay", enabled = idea.isNotBlank() && "/api/gen/chain" !in host.hubPendingActions) {
                     val n = total.toIntOrNull() ?: 5
                     val body = JSONObject()
                         .put("idea", idea)

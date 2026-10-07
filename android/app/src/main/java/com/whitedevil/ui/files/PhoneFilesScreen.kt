@@ -31,6 +31,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +64,7 @@ fun PhoneFilesScreen(host: MainActivity) {
     var entries by remember { mutableStateOf<List<PhoneFileEntry>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
     var folderName by remember { mutableStateOf("No folder linked") }
+    val folders = remember { mutableStateListOf<Pair<Uri, String>>() }
 
     fun reload() {
         folderUri = host.phoneFolderUriPublic()
@@ -73,8 +76,8 @@ fun PhoneFilesScreen(host: MainActivity) {
             return
         }
         runCatching {
-            val root = DocumentFile.fromTreeUri(host, tree)
-                ?: error("Couldn't open linked folder")
+            var root = DocumentFile.fromTreeUri(host, tree) ?: error("Couldn't open linked folder")
+            folders.forEach { (_, name) -> root = root.findFile(name) ?: error("Folder no longer available: $name") }
             folderName = root.name ?: "Phone folder"
             entries = root.listFiles()
                 .filter { it.name != null }
@@ -95,9 +98,8 @@ fun PhoneFilesScreen(host: MainActivity) {
         }
     }
 
-    LaunchedEffect(Unit) { reload() }
     // Refresh when host stores a new tree URI
-    LaunchedEffect(host.phoneFolderUriPublic()?.toString()) { reload() }
+    LaunchedEffect(host.phoneFolderUriPublic()?.toString()) { folders.clear(); reload() }
 
     WdScreenBackground(Modifier.fillMaxSize()) {
         Column(
@@ -115,6 +117,10 @@ fun PhoneFilesScreen(host: MainActivity) {
                     .clickable { host.showYouSub(MainActivity.YouSub.HOME) },
             )
             Text("Phone files", style = MaterialTheme.typography.headlineLarge)
+            if (folders.isNotEmpty()) {
+                Text("Linked folder / ${folders.joinToString(" / ") { it.second }}", style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = { folders.removeAt(folders.lastIndex); reload() }) { Text("Up one folder") }
+            }
             Text(
                 "Browse a folder on this phone. Pick files to attach to Agent, or keep a linked folder for quick access.",
                 style = MaterialTheme.typography.bodySmall,
@@ -219,8 +225,9 @@ fun PhoneFilesScreen(host: MainActivity) {
                         WdSurfaceCard(
                             Modifier
                                 .fillMaxWidth()
-                                .clickable(enabled = !entry.isDirectory) {
-                                    host.attachPhoneUriPublic(entry.uri)
+                                .clickable {
+                                    if (entry.isDirectory) { folders.add(entry.uri to entry.name); reload() }
+                                    else host.attachPhoneUriPublic(entry.uri)
                                 },
                         ) {
                             Row(

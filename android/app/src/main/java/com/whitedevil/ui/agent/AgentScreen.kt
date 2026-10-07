@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,7 +69,7 @@ fun AgentScreen(host: MainActivity) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "AGENT CONFIG: VENICE",
+                        "Set up your agent",
                         style = MaterialTheme.typography.labelLarge,
                         color = WdPalette.text,
                         fontWeight = FontWeight.Bold,
@@ -149,7 +150,7 @@ private fun AgentChatHeader(
                         .background(WdPalette.accent),
                 )
                 Text(
-                    " $modelLabel • ACTIVE",
+                    " $modelLabel • ${if (host.agentShowProgressPublic()) "WORKING" else "CONFIGURED"}",
                     style = MaterialTheme.typography.labelLarge,
                     color = WdPalette.textMetadata,
                     modifier = Modifier.padding(start = 6.dp),
@@ -161,14 +162,17 @@ private fun AgentChatHeader(
                 )
             }
         }
+        if (host.agentShowProgressPublic()) {
+            TextButton(onClick = { host.stopAgentRun() }) { Text("Stop") }
+        }
         Box {
             IconButton(
                 onClick = onOverflow,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .border(1.dp, WdPalette.stroke, RoundedCornerShape(2.dp)),
             ) {
-                Icon(Icons.Outlined.Tune, null, tint = WdPalette.textSecondary, modifier = Modifier.size(18.dp))
+                Icon(Icons.Outlined.Tune, "Agent options", tint = WdPalette.textSecondary, modifier = Modifier.size(18.dp))
             }
             DropdownMenu(expanded = overflowOpen, onDismissRequest = onDismissOverflow) {
                 DropdownMenuItem(text = { Text("Change model") }, onClick = {
@@ -197,7 +201,7 @@ private fun AgentChatHeader(
 private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier) {
     val attachments = host.pendingAttachmentsUiPublic()
     val input = host.agentInputTextPublic()
-    val canSend = host.agentComposerEnabledPublic() && input.isNotBlank()
+    val canSend = host.agentComposerEnabledPublic() && (input.isNotBlank() || attachments.isNotEmpty())
     Column(
         modifier
             .background(WdPalette.bg)
@@ -206,13 +210,10 @@ private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier)
         if (attachments.isNotEmpty()) {
             LazyRow(modifier = Modifier.padding(bottom = 8.dp)) {
                 itemsIndexed(attachments) { index, item ->
-                    Text(
-                        item.name.take(20),
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .clickable { host.removePendingAttachment(index) },
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(item.name.take(40), style = MaterialTheme.typography.labelMedium)
+                        TextButton(onClick = { host.removePendingAttachment(index) }, enabled = host.agentComposerEnabledPublic()) { Text("Remove") }
+                    }
                 }
             }
         }
@@ -243,7 +244,7 @@ private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier)
                 decorationBox = { inner ->
                     Box {
                         if (input.isEmpty()) {
-                            Text("Command Venice...", style = MaterialTheme.typography.bodyMedium, color = WdPalette.textMetadata)
+                            Text("Describe your goal…", style = MaterialTheme.typography.bodyMedium, color = WdPalette.textMetadata)
                         }
                         inner()
                     }
@@ -253,7 +254,7 @@ private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier)
                 onClick = { host.sendAgentMessage() },
                 enabled = canSend,
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(48.dp)
                     .clip(RoundedCornerShape(2.dp))
                     .background(if (canSend) WdPalette.accent else WdPalette.stroke)
                     .semantics { contentDescription = "Send" },

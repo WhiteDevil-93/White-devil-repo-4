@@ -9,15 +9,15 @@ import androidx.compose.ui.graphics.Color
  * product rather than two.
  */
 val WhiteDevilColors = darkColorScheme(
-    primary = Color(0xFF9B2C2C),
+    primary = Color(0xFF8F82FF),
     onPrimary = Color(0xFFFFFFFF),
-    secondary = Color(0xFFFDF2D6),
-    onSecondary = Color(0xFF805500),
-    background = Color(0xFF141110),
-    onBackground = Color(0xFFF0E9E0),
-    surface = Color(0xFF1B1714),
-    onSurface = Color(0xFFF0E9E0),
-    surfaceVariant = Color(0xFF211C18),
-    onSurfaceVariant = Color(0xFFA89E93),
-    error = Color(0xFFD99393),
+    secondary = Color(0xFFB3A9FF),
+    onSecondary = Color(0xFF0A0B0F),
+    background = Color(0xFF0A0B0F),
+    onBackground = Color(0xFFECEEF5),
+    surface = Color(0xFF141722),
+    onSurface = Color(0xFFECEEF5),
+    surfaceVariant = Color(0xFF1B1F2C),
+    onSurfaceVariant = Color(0xFFA9AFC2),
+    error = Color(0xFFF0645A),
 )

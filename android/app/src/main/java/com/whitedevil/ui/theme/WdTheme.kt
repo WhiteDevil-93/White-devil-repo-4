@@ -12,23 +12,23 @@ import androidx.compose.ui.unit.sp
 
 /** UX Pilot “Deep Space” — https://uxpilot.ai/a/ui-design?page=KWVlind9DyhFkDfRaXEf */
 object WdPalette {
-    val bg = Color(0xFF0B0E14)
-    val surface = Color(0xFF151921)
-    val bgElevated = Color(0xFF151921)
-    val surfaceHover = Color(0xFF1F2937)
-    val stroke = Color(0xFF1F2937)
-    val accent = Color(0xFF7C3AED)
-    val accentLight = Color(0xFFC084FC)
+    val bg = Color(0xFF0A0B0F)
+    val surface = Color(0xFF141722)
+    val bgElevated = Color(0xFF141722)
+    val surfaceHover = Color(0xFF1B1F2C)
+    val stroke = Color(0xFF646D8C)
+    val accent = Color(0xFF5B4BE8)
+    val accentLight = Color(0xFFB3A9FF)
     val onAccent = Color(0xFFFFFFFF)
     val onLightButton = Color(0xFF0B0E14)
     val text = Color(0xFFFFFFFF)
-    val textSecondary = Color(0x99FFFFFF)
-    val textMetadata = Color(0x66FFFFFF)
-    val userBubble = Color(0xFF7C3AED)
-    val success = Color(0xFF22C55E)
+    val textSecondary = Color(0xFFA9AFC2)
+    val textMetadata = Color(0xFF9097AD)
+    val userBubble = accent
+    val success = Color(0xFF3FBF8A)
 
     val accentDim @Composable get() = accent.copy(alpha = 0.65f)
-    val errorText @Composable get() = accentLight
+    val errorText @Composable get() = Color(0xFFF0645A)
 }
 
 private val scheme = darkColorScheme(
@@ -40,7 +40,7 @@ private val scheme = darkColorScheme(
     onSurface = WdPalette.text,
     onSurfaceVariant = WdPalette.textSecondary,
     outline = WdPalette.stroke,
-    error = WdPalette.accentLight,
+    error = Color(0xFFF0645A),
 )
 
 private val wdTypography = Typography(
@@ -89,8 +89,8 @@ private val wdTypography = Typography(
     labelLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
-        fontSize = 10.sp,
-        lineHeight = 12.sp,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
         letterSpacing = 1.2.sp,
         color = WdPalette.textMetadata,
     ),
@@ -104,8 +104,8 @@ private val wdTypography = Typography(
     labelSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
-        fontSize = 9.sp,
-        lineHeight = 11.sp,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
         letterSpacing = 0.5.sp,
         color = WdPalette.textMetadata,
     ),

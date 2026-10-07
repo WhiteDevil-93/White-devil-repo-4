@@ -23,6 +23,12 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +50,7 @@ private const val HUB_HERO =
 
 @Composable
 fun ForgeHubScreen(host: MainActivity) {
+    var destinationsOpen by remember { mutableStateOf(false) }
     WdScreenBackground(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.fillMaxWidth().height(120.dp)) {
@@ -87,7 +94,7 @@ fun ForgeHubScreen(host: MainActivity) {
                             .weight(1f)
                             .clickable { host.onHubBannerClickPublic() },
                     )
-                    IconButton(onClick = { host.dismissHubBannerPublic() }, modifier = Modifier.size(32.dp)) {
+                    IconButton(onClick = { host.dismissHubBannerPublic() }, modifier = Modifier.size(48.dp)) {
                         Icon(Icons.Outlined.Close, contentDescription = "Dismiss", tint = WdPalette.textMetadata)
                     }
                 }
@@ -99,13 +106,40 @@ fun ForgeHubScreen(host: MainActivity) {
                     trackColor = Color.Transparent,
                 )
             }
+            Box {
+                TextButton(onClick = { destinationsOpen = true }) { Text("All destinations ▾ · swipe tabs below") }
+                DropdownMenu(expanded = destinationsOpen, onDismissRequest = { destinationsOpen = false }) {
+                    val groups = host.hubScreensUiPublic().groupBy { screen ->
+                        when (screen.id) {
+                            "shotwriter", "ltx" -> "Create"
+                            "renders", "gallery", "colab", "thunder", "vast" -> "Monitor"
+                            else -> "Operate"
+                        }
+                    }
+                    groups.forEach { (group, screens) ->
+                        Text(group, modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelLarge)
+                        screens.forEach { screen -> DropdownMenuItem(text = { Text(screen.title) }, onClick = {
+                            destinationsOpen = false
+                            host.showHubScreenPublic(screen.id)
+                        }) }
+                    }
+                }
+            }
+            if (host.hubScreenError != null && host.hubScreenJson.isNotBlank()) {
+                Text("Refresh failed — showing previous data: ${host.hubScreenError}", color = WdPalette.errorText, modifier = Modifier.padding(horizontal = 16.dp))
+            }
+            if (host.hubLastUpdated > 0L) {
+                Text("Last updated ${java.text.DateFormat.getTimeInstance().format(java.util.Date(host.hubLastUpdated))}", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 16.dp))
+            }
+            if (host.hubPendingActions.isNotEmpty()) Text("Submitting request…", modifier = Modifier.padding(horizontal = 16.dp))
             LazyRow(Modifier.padding(horizontal = WdDimens.screenHorizontal, vertical = 6.dp)) {
                 items(host.hubScreensUiPublic(), key = { it.id }) { screen ->
                     val active = screen.id == host.hubCurrentScreenIdPublic()
                     Column(
                         Modifier
                             .clickable { host.showHubScreenPublic(screen.id) }
-                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                            .semantics { selected = active }
+                            .padding(horizontal = 8.dp, vertical = 14.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(

@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.password
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -51,6 +52,7 @@ fun SettingsScreen(
     form: SettingsFormState,
     onFormChange: (SettingsFormState) -> Unit,
 ) {
+    var section by remember { mutableStateOf("Connection") }
     WdScreenBackground(Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -70,6 +72,15 @@ fun SettingsScreen(
                 )
             }
             Text("Settings", style = MaterialTheme.typography.headlineLarge)
+            listOf(listOf("Connection", "Agent"), listOf("Security", "Advanced")).forEach { choices ->
+                Row(Modifier.fillMaxWidth()) {
+                    choices.forEach { choice ->
+                        TextButton(onClick = { section = choice }, modifier = Modifier.weight(1f).semantics { selected = section == choice }) {
+                            Text(if (section == choice) "● $choice" else choice)
+                        }
+                    }
+                }
+            }
             Text(
                 "Encrypted on device · also offered to Google / Samsung Pass on Save",
                 style = MaterialTheme.typography.bodySmall,
@@ -90,6 +101,7 @@ fun SettingsScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = WdPalette.surface, contentColor = WdPalette.text),
             ) { Text("Run connection test") }
             Spacer(Modifier.height(16.dp))
+            if (section == "Security") {
             SettingsSection("Security") {
                 RowSwitch("Biometric unlock", form.biometricUnlock) {
                     onFormChange(form.copy(biometricUnlock = it))
@@ -109,7 +121,9 @@ fun SettingsScreen(
             }
             Spacer(Modifier.height(10.dp))
             DeviceAuthSection(host, form, onFormChange)
+            }
             Spacer(Modifier.height(10.dp))
+            if (section == "Agent") {
             SettingsSection("Venice") {
                 Field("API key", form.veniceKey, secret = true, keyboardType = KeyboardType.Password) {
                     onFormChange(form.copy(veniceKey = it))
@@ -118,6 +132,8 @@ fun SettingsScreen(
                 RowSwitch("Web search", form.webSearch) { onFormChange(form.copy(webSearch = it)) }
             }
             Spacer(Modifier.height(10.dp))
+            }
+            if (section == "Connection") {
             SettingsSection("Relay") {
                 Field("Base URL", form.relayUrl, keyboardType = KeyboardType.Uri) {
                     onFormChange(form.copy(relayUrl = it))
@@ -128,11 +144,14 @@ fun SettingsScreen(
                 }
             }
             Spacer(Modifier.height(10.dp))
+            }
+            if (section == "Advanced") {
             SettingsSection("Laptop tunnel") {
                 Field("User", form.laptopUser) { onFormChange(form.copy(laptopUser = it)) }
                 Field("Password", form.laptopPass, secret = true, keyboardType = KeyboardType.Password) {
                     onFormChange(form.copy(laptopPass = it))
                 }
+            }
             }
             Button(
                 onClick = { host.saveSettingsFromCompose(form) },
@@ -270,6 +289,7 @@ private fun Field(
     Text(label, style = MaterialTheme.typography.labelSmall)
     OutlinedTextField(
         value = value,
+        label = { Text(label) },
         onValueChange = onChange,
         modifier = Modifier
             .fillMaxWidth()

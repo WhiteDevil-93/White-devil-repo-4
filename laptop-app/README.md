@@ -75,6 +75,7 @@ npm start
 
 - `Ctrl+1` Home
 - `Ctrl+Shift+V` Venice Agent
+- `Ctrl+Shift+H` HypnoForge library, renders, captions, ingest, jobs, and chat
 - `Ctrl+Shift+T` Shell
 - `Ctrl+,` Settings
 - `Ctrl+R` Reload

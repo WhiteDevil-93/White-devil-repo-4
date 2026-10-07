@@ -34,17 +34,17 @@ private const val ROLE_TOOL_OUT = "tool_out"
 private const val ROLE_ERROR = "error"
 
 @Composable
-fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
-    val scope = rememberCoroutineScope()
-    val lines = remember { mutableStateListOf<ChatLine>() }
-    var input by remember { mutableStateOf("") }
-    var busy by remember { mutableStateOf(false) }
-    var job by remember { mutableStateOf<Job?>(null) }
+fun AgentScreen(settings: Settings, session: AgentSession, onOpenSettings: () -> Unit) {
+    val scope = session.scope
+    val lines = session.lines
+    var input by session::input
+    var busy by session::busy
     val listState = rememberLazyListState()
 
     // Keep the newest line in view as the agent works.
     LaunchedEffect(lines.size) {
-        if (lines.isNotEmpty()) listState.animateScrollToItem(lines.lastIndex)
+        val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        if (lines.isNotEmpty() && lastVisible >= lines.lastIndex - 2) listState.animateScrollToItem(lines.lastIndex)
     }
 
     fun send() {
@@ -57,7 +57,7 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
         }
         input = ""
         busy = true
-        job = scope.launch {
+        session.job = scope.launch {
             // The loop and every tool are blocking JVM work; keeping them off the
             // UI dispatcher is what stops the window freezing mid-run.
             try {
@@ -86,7 +86,8 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
                                 }
                             },
                         )
-                        agent.send(text)
+                        agent.restore(session.history)
+                        try { agent.send(text) } finally { session.adopt(agent.snapshot()) }
                     }
                 }
             } catch (e: CancellationException) {
@@ -104,10 +105,17 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
         TopBar(
             busy = busy,
             model = settings.model,
-            onStop = { job?.cancel() },
-            onClear = { if (!busy) lines.clear() },
+            onStop = { session.job?.cancel() },
+            onClear = session::clear,
             onOpenSettings = onOpenSettings,
         )
+
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(session.saveStatus, style = MaterialTheme.typography.bodySmall)
+            if (session.saveStatus.startsWith("Not saved")) TextButton(onClick = session::save) { Text("Retry save") }
+            Spacer(Modifier.weight(1f))
+            TextButton(onClick = { scope.launch { if (lines.isNotEmpty()) listState.animateScrollToItem(lines.lastIndex) } }) { Text("Jump to latest") }
+        }
 
         LazyColumn(
             state = listState,
@@ -169,7 +177,7 @@ private fun EmptyState(settings: Settings) {
         Text("Give the agent a goal.", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
         Text(
-            blocked ?: "Connected to ${settings.hubUrl}",
+            blocked ?: "Configured for ${settings.hubUrl} — connection not tested",
             style = MaterialTheme.typography.bodySmall,
             color = if (blocked != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
         )

@@ -20,8 +20,15 @@ android {
         applicationId = "com.whitedevil"
         minSdk = 31
         targetSdk = 35
-        versionCode = 21
-        versionName = "9.12"
+        versionCode = 22
+        versionName = "9.13"
+
+        // The only device this ships to is arm64 (S25 Ultra, Snapdragon 8 Elite).
+        // Honest accounting: all four ABIs together were 0.04 MiB of the APK, so
+        // this is correctness, not a size win -- the size win is R8 below.
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
     }
 
     signingConfigs {
@@ -37,7 +44,16 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // Was false, which is why the APK carried 33,979 classes -- 11,400 of
+            // them androidx.compose.material.icons against 18 icons actually used.
+            isMinifyEnabled = true
+            // Left off deliberately: every res/ entry together is 0.33 MiB, so
+            // resource shrinking adds a by-name-lookup failure mode for no gain.
+            isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             signingConfig = signingConfigs.getByName("release")
         }
     }

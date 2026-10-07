@@ -398,6 +398,9 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
   </style>
 
   <script src="/app/ui/forge.js"></script>
+  <div id="chat-sync" role="status" aria-live="polite" style="padding:8px 16px">Hub sync not checked</div>
+  <button type="button" id="chat-sync-retry" class="btn sm" style="margin:0 16px">Retry chat sync</button>
+  <script src="/app/ui/workflow.js"></script>
   <script>
     // Venice Agent functional JavaScript
     const {$, esc} = F;
@@ -423,6 +426,11 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
     let modelTools = {};
     let store = {activeId: null, chats: []};
     let persistTimer = 0;
+    const saveToHub = WdWorkflow.chatSaver(
+      payload => F.api('/api/venice/chats', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: payload}),
+      status => { document.getElementById('chat-sync').textContent = status; }
+    );
+    document.getElementById('chat-sync-retry').onclick = () => persist(true);
     let pendingAttach = [];
     let micRec = null, micChunks = [];
     let webSearchOn = false;
@@ -775,8 +783,8 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       putCurrent();
       showThread();
       writeLocalStore();
-      const send = () => F.api('/api/venice/chats', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(store)}).catch(() => {});
-      if (now) send();
+      const send = () => saveToHub(JSON.stringify(store));
+      if (now) { clearTimeout(persistTimer); send(); }
       else {
         clearTimeout(persistTimer);
         persistTimer = setTimeout(send, 250);
