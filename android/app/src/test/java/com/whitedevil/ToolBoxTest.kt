@@ -379,4 +379,56 @@ class ToolBoxTest {
         assertTrue(names.containsAll(listOf("git_status", "git_diff", "git_log", "git_commit", "git_push")))
     }
 
+    @Test
+    fun testQueueGpuRenderLtxSendsFormUrlEncoded() {
+        val server = ServerSocket(0).apply { soTimeout = 2000 }
+        var receivedContentType = ""
+        var receivedBody = ""
+        var requestPath = ""
+        val serving = thread(start = true, isDaemon = true) {
+            server.accept().use { socket ->
+                val reader = socket.getInputStream().bufferedReader()
+                requestPath = reader.readLine().split(" ")[1]
+                var len = 0
+                while (true) {
+                    val line = reader.readLine()
+                    if (line.isEmpty()) break
+                    if (line.startsWith("Content-Type:", ignoreCase = true)) {
+                        receivedContentType = line.substringAfter(":").trim()
+                    }
+                    if (line.startsWith("Content-Length:", ignoreCase = true)) {
+                        len = line.substringAfter(":").trim().toInt()
+                    }
+                }
+                val chars = CharArray(len)
+                reader.read(chars)
+                receivedBody = String(chars)
+                val resp = """{"id":"fake123","status":"queued"}""".toByteArray()
+                socket.getOutputStream().use { out ->
+                    out.write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${resp.size}\r\nConnection: close\r\n\r\n".toByteArray())
+                    out.write(resp)
+                }
+            }
+        }
+        try {
+            val box = ToolBox(
+                workspaceDir = folder.newFolder("ltx-render"),
+                relayBaseUrl = "http://127.0.0.1:${server.localPort}",
+                relayUser = "",
+                relayPass = "",
+            )
+            val result = box.execute("queue_gpu_render", """{"cloud":"ltx","prompt":"a cinematic drone shot of mountains"}""")
+            serving.join(2500)
+            assertEquals("/api/ltx/render", requestPath)
+            assertEquals("application/x-www-form-urlencoded", receivedContentType)
+            assertTrue(receivedBody.contains("prompt=a+cinematic+drone+shot+of+mountains"))
+            assertTrue(receivedBody.contains("frames=49"))
+            assertTrue(receivedBody.contains("size=landscape"))
+            assertTrue(result.contains("fake123"))
+        } finally {
+            server.close()
+        }
+    }
+
 }
+
