@@ -64,7 +64,7 @@ import kotlinx.coroutines.launch
  * Nothing polls on this screen.
  */
 @Composable
-fun VastScreen(settings: Settings) {
+fun VastScreen(settings: Settings, onCreate: (String) -> Unit = {}) {
     val clients = rememberOpsClients(settings)
     val api = remember(clients) { VastApi(clients.reader) }
     val actions = remember(clients) { VastActions(clients.actor) }
@@ -82,6 +82,11 @@ fun VastScreen(settings: Settings) {
         refreshing = state.refreshing,
         onRefresh = { scope.launch { state.refresh() } },
     ) {
+        RenderHereCard(
+            "Vast",
+            listOf("Rent and manage machines here. Renders are built in Create and go to whichever runner is connected to the hub: the hub keeps one 14B runner connection and one LTX connection."),
+            onCreate,
+        )
         Note(
             "A running instance bills by the hour. Stopping releases the GPU but the disk keeps billing until you delete the instance. " +
                 "Rent, Start, Stop and Delete each ask for confirmation first and then show the hub's answer.",

@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
  * runner token route are deliberately not wired here.
  */
 @Composable
-fun ColabScreen(settings: Settings) {
+fun ColabScreen(settings: Settings, onCreate: (String) -> Unit = {}) {
     val clients = rememberOpsClients(settings)
     val api = remember(clients) { ColabApi(clients.reader) }
     val actions = remember(clients) { ColabActions(clients.actor) }
@@ -82,6 +82,11 @@ fun ColabScreen(settings: Settings) {
         refreshing = state.refreshing,
         onRefresh = { scope.launch { state.refresh() }; scope.launch { packs.refresh() } },
     ) {
+        RenderHereCard(
+            "Colab",
+            listOf("LTX 2.5 renders on the Colab runtime (the hub talks to its ComfyUI tunnel). Wan chains go to the 14B runner on Thunder."),
+            onCreate,
+        )
         Note(
             "Read-only view. Nothing on this screen changes the runtime except the two controls at the bottom, " +
                 "each of which asks you to type a confirmation first.",

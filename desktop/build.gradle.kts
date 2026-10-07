@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":shared"))            // agent loop, Venice client, tools
     implementation(compose.desktop.currentOs)
     implementation(compose.material3)
+    implementation(compose.materialIconsExtended)   // sidebar icons
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.9.0")
 
     // A real pty, not a pipe: wsl.exe needs a terminal on the other end or
@@ -37,6 +38,7 @@ dependencies {
     // Ktor client + kotlinx-serialization arrive transitively via :shared (api).
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-client-mock:2.3.12")
+    testImplementation(compose.desktop.uiTestJUnit4)   // drives real screens (click, type) so a crash on open is caught here, not by the user
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 }
 
@@ -50,7 +52,7 @@ compose.desktop {
             packageName = "WhiteDevil"
             // MSI needs numeric major.minor.build (major <= 255). Bump this for every
             // MSI you hand out: an upgrade is keyed on upgradeUuid + a higher version.
-            packageVersion = "1.0.0"
+            packageVersion = "1.0.3"
             description = "WhiteDevil desktop: agent, shell and render tools"
             vendor = "WhiteDevil"
 

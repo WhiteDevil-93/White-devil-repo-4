@@ -50,11 +50,38 @@ data class GalleryItem(val key: String, val group: MediaGroup, val clip: MediaCl
 
 data class GallerySection(val headerKey: String, val group: MediaGroup, val items: List<GalleryItem>)
 
+/** The hub's own marker (`source`) or the file name the LTX builder writes (ltx_...). */
+fun isLtxClip(c: MediaClip): Boolean {
+    val n = c.name.lowercase()
+    return c.source == "ltx" || n.startsWith("ltx_") || n.startsWith("ltx-") || "ltx_chain" in n
+}
+
+/**
+ * The hub files every clip that isn't part of a pack, chain or keeper set under one group, "Tests &
+ * experiments". Your LTX renders land there too (710 of its 869 clips), so with tests hidden by default
+ * they all vanished. LTX renders are real renders: they get their own "LTX 2.5 renders" project, and the
+ * test group keeps only what is actually a test.
+ */
+fun splitLtx(groups: List<MediaGroup>): List<MediaGroup> = groups.flatMap { g ->
+    if (g.kind != "test") return@flatMap listOf(g)
+    val (ltx, rest) = g.clips.partition(::isLtxClip)
+    if (ltx.isEmpty()) return@flatMap listOf(g)
+    fun newest(cs: List<MediaClip>) = cs.mapNotNull { it.mtime }.maxOrNull()
+    listOfNotNull(
+        MediaGroup(id = "ltx-renders", title = "LTX 2.5 renders", kind = "ltx", source = "ltx", updated = newest(ltx), clips = ltx),
+        // The hub labelled the whole catch-all group "ltx" because most of it is LTX; what is left is not, so it
+        // keeps a source only if its own clips agree on one. Otherwise "ltx" would still match the real tests.
+        rest.takeIf { it.isNotEmpty() }?.let { g.copy(clips = it, updated = newest(it) ?: g.updated, source = it.mapNotNull { c -> c.source }.distinct().singleOrNull()) },
+    )
+}
+
 /**
  * Lazy lists crash on duplicate keys, and nothing guarantees the hub never repeats
  * a group id or clip name, so keys carry an occurrence counter.
  */
 fun buildGallerySections(groups: List<MediaGroup>): List<GallerySection> {
+    // Group titles are renamed for display here, the one place both Renders and Gallery build their sections.
+    val groups = splitLtx(groups).map { g -> prettyGroupTitle(g.title, g.kind).let { t -> if (t == g.title) g else g.copy(title = t) } }
     val seen = HashMap<String, Int>()
     fun unique(base: String): String {
         val n = seen.merge(base, 1, Int::plus) ?: 1
@@ -109,6 +136,7 @@ fun kindLabel(kind: String?): String? = when (kind) {
     "pack" -> "Pack"
     "chain" -> "Chain"
     "keeper" -> "Keeper"
-    "test" -> "Test"
+    "test" -> "Unsorted"
+    "ltx" -> "LTX"
     else -> kind
 }

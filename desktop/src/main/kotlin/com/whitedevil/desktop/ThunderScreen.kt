@@ -75,7 +75,7 @@ import javax.swing.SwingUtilities
  * here: resize (modify) and port changes; use the web screen for those.
  */
 @Composable
-fun ThunderScreen(settings: Settings) {
+fun ThunderScreen(settings: Settings, onCreate: (String) -> Unit = {}) {
     val clients = rememberOpsClients(settings)
     val api = remember(clients) { ThunderApi(clients.reader) }
     val actions = remember(clients) { ThunderActions(clients.actor) }
@@ -96,6 +96,11 @@ fun ThunderScreen(settings: Settings) {
         refreshing = state.refreshing || queue.refreshing,
         onRefresh = { scope.launch { state.refresh() }; scope.launch { queue.refresh() } },
     ) {
+        RenderHereCard(
+            "Thunder",
+            listOf("Wan 2.2 14B renders here: the 14B runner on your Thunder instance takes the chain you build in Create. The queue below shows what it is doing."),
+            onCreate,
+        )
         Note(
             "Thunder has no stop button: to stop paying, snapshot the instance and delete it. " +
                 "Buttons that create, delete, snapshot or submit ask for confirmation first and then show the hub's answer.",
@@ -307,7 +312,7 @@ private fun SnapshotRow(snap: ThunderSnapshot, stale: Boolean, controller: Actio
 }
 
 @Composable
-private fun QueueCard(q: ThunderQueue, stale: Boolean, controller: ActionController, actions: ThunderActions) {
+internal fun QueueCard(q: ThunderQueue, stale: Boolean, controller: ActionController, actions: ThunderActions) {
     SectionCard(
         "14B render queue",
         trailing = { Pill(when (q.runnerUp) { true -> "runner up"; false -> "runner not reachable"; null -> "runner unknown" }, if (q.runnerUp == true) Tone.Ok else Tone.Warn) },

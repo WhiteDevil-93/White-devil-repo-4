@@ -3,17 +3,17 @@ package com.whitedevil.desktop
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +27,7 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 
 /**
- * WhiteDevil desktop — the laptop-end interface.
+ * WhiteDevil desktop — the laptop-end interface (Forge Hub).
  *
  * Deliberately not a webview. The agent loop it drives is [com.whitedevil.agent.Agent]
  * from :shared, the same class the Android app runs, so a fix to the loop lands on
@@ -37,83 +37,111 @@ import androidx.compose.ui.window.rememberWindowState
  * The hub on the OCI VM stays the system of record: it is reachable when this
  * laptop is not, which is what lets the phone keep working while the laptop is
  * away. This app is a client of it, not a replacement for it.
+ *
+ * The shell (sidebar, top bar, Home) follows the UX Pilot "Forge Hub laptop PWA" design;
+ * colours come from [Forge], which mirrors hub/static/ui/tokens.css.
  */
-fun main() = application {
+fun main() {
+    CrashLog.install()
+    runApp()
+}
+
+private fun runApp() = application {
     val windowState = rememberWindowState(size = DpSize(1280.dp, 860.dp))
+    var settings by remember { mutableStateOf(Settings.load()) }
+    // The Venice conversation belongs to the app, not to the Venice screen: leaving the screen must not lose it.
+    val agentSession = remember { AgentSession.load() }
+    val mcpHost = remember { com.whitedevil.desktop.mcp.McpHost(java.io.File(Settings.dir, "mcp-servers.json")) }
+    val skillStore = remember { com.whitedevil.desktop.skills.SkillStore(java.io.File(Settings.dir, "skills")).also { runCatching { it.seedDefaults() } } }
+    // Some connectors (Google Drive) need a minute or two to load: start them now so they are ready by the first message.
+    DisposableEffect(mcpHost) { mcpHost.warmUp(); onDispose { mcpHost.close() } }
+    val scale = UiScale.clamp(settings.uiScale)
+    // Saved straight away so the size is still there after a restart.
+    val setScale = { v: Float -> settings = settings.copy(uiScale = UiScale.clamp(v)).also { Settings.save(it) } }
 
     Window(
         onCloseRequest = ::exitApplication,
         state = windowState,
-        title = "WhiteDevil",
+        title = "Forge Hub",
+        // Ctrl + / Ctrl - / Ctrl 0, like a browser.
+        onPreviewKeyEvent = { e ->
+            if (e.type == KeyEventType.KeyDown && e.isCtrlPressed) {
+                when (e.key) {
+                    Key.Equals, Key.Plus, Key.NumPadAdd -> { setScale(UiScale.step(scale, +1)); true }
+                    Key.Minus, Key.NumPadSubtract -> { setScale(UiScale.step(scale, -1)); true }
+                    Key.Zero, Key.NumPad0 -> { setScale(UiScale.DEFAULT); true }
+                    else -> false
+                }
+            } else false
+        },
     ) {
-        var settings by remember { mutableStateOf(Settings.load()) }
-        var screen by remember { mutableStateOf(Screen.Agent) }
+        // FORGEHUB_START_SCREEN=Renders (any Screen name) opens there instead of Home: lets a run be
+        // checked screen by screen without clicking, and is ignored when unset or misspelled.
+        var screen by remember {
+            mutableStateOf(Screen.entries.firstOrNull { it.name.equals(System.getenv("FORGEHUB_START_SCREEN"), ignoreCase = true) } ?: Screen.Home)
+        }
 
+        var createTab by remember { mutableStateOf(CREATE_WAN) }
+        val baseDensity = LocalDensity.current
+        CompositionLocalProvider(LocalDensity provides Density(baseDensity.density * scale, baseDensity.fontScale)) {
         MaterialTheme(colorScheme = WhiteDevilColors) {
-            Surface(color = MaterialTheme.colorScheme.background) {
+            Surface(color = Forge.Bg) {
+                // One library request for the shell: it drives the status pill and Home. The
+                // Renders and Gallery screens keep their own, so they can refresh independently.
+                val client = rememberMediaClient(settings)
+                val library = rememberLibrary(client)
+                val nowMs by rememberNowMs()
+                val health = when (library.state) {
+                    is LibraryUiState.Loaded -> HubHealth.Online
+                    is LibraryUiState.Error -> HubHealth.Unreachable
+                    else -> HubHealth.Connecting
+                }
+
                 Row(Modifier.fillMaxSize()) {
-                    NavRail(current = screen, onSelect = { screen = it })
-                    Box(Modifier.weight(1f)) {
-                        when (screen) {
-                            Screen.Agent -> AgentScreen(
-                                settings = settings,
-                                onOpenSettings = { screen = Screen.Settings },
-                            )
-                            // Kept alive across tab switches: restarting the shell
-                            // on every switch would discard the session and any
-                            // long-running command in it.
-                            Screen.Terminal -> TerminalScreen()
-                            Screen.Renders -> RendersScreen(settings)
-                            Screen.Gallery -> GalleryScreen(settings)
-                            Screen.Colab -> ColabScreen(settings)
-                            Screen.Thunder -> ThunderScreen(settings)
-                            Screen.Ltx -> LtxScreen(settings)
-                            Screen.Vast -> VastScreen(settings)
-                            Screen.Setup -> SetupScreen(settings)
-                            Screen.Settings -> SettingsScreen(
-                                initial = settings,
-                                onSave = { settings = it; screen = Screen.Agent },
-                                onBack = { screen = Screen.Agent },
-                            )
+                    ForgeSidebar(current = screen, onSelect = { screen = it }, scale = scale, onScale = setScale)
+                    Column(Modifier.weight(1f).fillMaxSize()) {
+                        ForgeTopBar(title = screen.label, health = health, hubLabel = client.hubLabel)
+                        Box(Modifier.weight(1f)) {
+                            when (screen) {
+                                Screen.Home -> HomeScreen(library.state, nowMs, client, onOpen = { screen = it })
+                                Screen.Create -> CreateScreen(settings, createTab, onTab = { createTab = it })
+                                Screen.Agent -> AgentScreen(
+                                    settings = settings,
+                                    onOpenSettings = { screen = Screen.Settings },
+                                    // Saved right away, so the choice is still there after a restart.
+                                    onModelChange = { id -> settings = settings.copy(model = id).also { Settings.save(it) } },
+                                    session = agentSession,
+                                    mcp = mcpHost,
+                                    skills = skillStore,
+                                    library = library.state,
+                                    media = client,
+                                    onOpen = { screen = it },
+                                    onSettingsChange = { s -> settings = s.also { Settings.save(it) } },
+                                )
+                                // Kept alive across tab switches: restarting the shell
+                                // on every switch would discard the session and any
+                                // long-running command in it.
+                                Screen.Terminal -> TerminalScreen()
+                                Screen.Renders -> RendersScreen(settings)
+                                Screen.Gallery -> GalleryScreen(settings)
+                                Screen.Colab -> ColabScreen(settings, onCreate = { createTab = it; screen = Screen.Create })
+                                Screen.Thunder -> ThunderScreen(settings, onCreate = { createTab = it; screen = Screen.Create })
+                                Screen.Ltx -> LtxScreen(settings)
+                                Screen.Vast -> VastScreen(settings, onCreate = { createTab = it; screen = Screen.Create })
+                                Screen.Setup -> SetupScreen(settings)
+                                Screen.Caretaker -> CaretakerScreen(settings)
+                                Screen.LoraTrain -> LoraTrainScreen(settings)
+                                Screen.Settings -> SettingsScreen(
+                                    initial = settings,
+                                    onSave = { settings = it; screen = Screen.Home },
+                                    onBack = { screen = Screen.Home },
+                                )
+                            }
                         }
                     }
                 }
             }
         }
-    }
-}
-
-private enum class Screen(val label: String) {
-    Agent("Agent"),
-    Terminal("Shell"),
-    Renders("Renders"),
-    Gallery("Gallery"),
-    Colab("Colab"),
-    Thunder("Thunder"),
-    Ltx("LTX"),
-    Vast("Vast"),
-    Setup("Setup"),
-    Settings("Settings"),
-}
-
-/**
- * Left rail rather than a top tab strip: it matches the Forge Hub design's
- * sidebar, and leaves the full window height for the conversation and the shell.
- */
-@Composable
-private fun NavRail(current: Screen, onSelect: (Screen) -> Unit) {
-    NavigationRail(
-        modifier = Modifier.fillMaxHeight().width(96.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) {
-        Spacer(Modifier.height(12.dp))
-        Screen.entries.forEach { screen ->
-            NavigationRailItem(
-                selected = current == screen,
-                onClick = { onSelect(screen) },
-                icon = {},
-                label = { Text(screen.label, style = MaterialTheme.typography.labelMedium) },
-            )
         }
     }
 }

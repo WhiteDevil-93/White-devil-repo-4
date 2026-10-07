@@ -8,15 +8,22 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
+import io.ktor.utils.io.jvm.javaio.toInputStream
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentLength
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.net.URI
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.util.Base64
 
 /**
@@ -94,6 +101,57 @@ class MediaClient(
     /** JPEG bytes of the clip's contact sheet. */
     suspend fun contactSheet(name: String): MediaResult<ByteArray> =
         image(MediaOp.ContactSheet, "/api/media/contact/", name, MAX_CONTACT_BYTES)
+
+    /**
+     * Streams the video `/clips/<name>` (the path the phone's Download button uses) to [dest] and
+     * returns its size. Written to a `.part` file and renamed only when complete, so a dropped
+     * connection never leaves a truncated file that looks like a finished clip.
+     */
+    suspend fun downloadClip(name: String, dest: Path): MediaResult<Long> {
+        val target = when (val h = hub) {
+            is Hub.Invalid -> return MediaResult.Failure(h.error)
+            is Hub.Valid -> h
+        }
+        if (name.isEmpty()) {
+            return MediaResult.Failure(MediaError(MediaErrorKind.ClientError, "A clip with an empty name cannot be fetched."))
+        }
+        val op = MediaOp.Clip
+        val ms = timeouts.forOp(op)
+        val part = dest.resolveSibling(dest.fileName.toString() + ".part")
+        return try {
+            http.prepareGet(target.base + "/clips/" + encodePathSegment(name)) {
+                authHeader?.let { header(HttpHeaders.Authorization, it) }
+                timeout { requestTimeoutMillis = ms; connectTimeoutMillis = timeouts.connectMs; socketTimeoutMillis = ms }
+            }.execute { response ->
+                val status = response.status.value
+                if (status !in 200..299) {
+                    return@execute MediaResult.Failure(
+                        MediaErrors.fromStatus(op, status, errorText(response), response.headers[HttpHeaders.Location], hasPassword),
+                    )
+                }
+                val type = response.headers[HttpHeaders.ContentType]?.substringBefore(';')?.trim()?.lowercase()
+                if (type != null && (type.startsWith("text/") || type == "application/json")) {
+                    return@execute MediaResult.Failure(MediaError(MediaErrorKind.BadResponse, "The hub sent $type instead of a video."))
+                }
+                withContext(Dispatchers.IO) {
+                    Files.createDirectories(dest.parent)
+                    val written = response.bodyAsChannel().toInputStream().use { input ->
+                        Files.newOutputStream(part).use { out -> input.copyTo(out) }
+                    }
+                    if (written == 0L) {
+                        Files.deleteIfExists(part)
+                        return@withContext MediaResult.Failure(MediaError(MediaErrorKind.BadResponse, "The hub sent an empty file."))
+                    }
+                    Files.move(part, dest, StandardCopyOption.REPLACE_EXISTING)
+                    MediaResult.Ok(written)
+                }
+            }
+        } catch (e: Exception) {
+            withContext(NonCancellable) { runCatching { Files.deleteIfExists(part) } }
+            currentCoroutineContext().ensureActive()
+            MediaResult.Failure(MediaErrors.fromException(op, e, target.host, timeouts))
+        }
+    }
 
     private suspend fun image(op: MediaOp, prefix: String, name: String, maxBytes: Long): MediaResult<ByteArray> {
         if (name.isEmpty()) {

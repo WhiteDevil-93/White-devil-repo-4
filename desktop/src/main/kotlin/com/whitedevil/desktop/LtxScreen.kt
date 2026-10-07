@@ -2,6 +2,9 @@ package com.whitedevil.desktop
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,6 +55,8 @@ import com.whitedevil.desktop.ops.orUnknown
 import com.whitedevil.desktop.ops.rememberOpsClients
 import com.whitedevil.desktop.ops.yesNoUnknown
 import kotlinx.coroutines.launch
+import java.awt.Desktop
+import java.net.URI
 
 /** Status asks ComfyUI four times and can shell out to the Colab CLI on the hub, so it is read less often than jobs. */
 private const val LTX_STATUS_POLL_MS = 60_000L
@@ -70,6 +75,22 @@ private const val LTX_STATUS_POLL_MS = 60_000L
  */
 @Composable
 fun LtxScreen(settings: Settings) {
+    // Build is the screen you come here for; Monitor keeps the ComfyUI status, the render-review cycle
+    // and the hub's own job list (with Cancel) that the screen had before the builder existed.
+    var tab by remember { mutableStateOf("build") }
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Chip("Build", tab == "build") { tab = "build" }
+            Chip("Monitor & QA cycle", tab == "monitor") { tab = "monitor" }
+        }
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            if (tab == "build") LtxBuilderScreen(settings) else LtxMonitor(settings)
+        }
+    }
+}
+
+@Composable
+private fun LtxMonitor(settings: Settings) {
     val clients = rememberOpsClients(settings)
     val api = remember(clients) { LtxApi(clients.reader) }
     val actions = remember(clients) { LtxActions(clients.actor) }
@@ -103,6 +124,7 @@ fun LtxScreen(settings: Settings) {
             scope.launch { cycle.refresh() }
         },
     ) {
+        BuilderCard(settings)
         Note(
             "Status, jobs and the cycle are read-only. The only controls here are Cancel on a job and Start / Stop for the cycle, " +
                 "each of which asks you to confirm first. Rendering a clip or a chain, 2× sharpening, installing models and the " +
@@ -363,4 +385,28 @@ private fun cancelSpec(j: LtxJob, actions: LtxActions): ActionSpec {
         danger = true,
         run = { actions.cancelJob(id) },
     )
+}
+
+/**
+ * The place to actually build a render (picture, prompt, length, Render, New render) is the LTX web
+ * page on the hub. This opens it in the default browser; the browser asks for the relay login the
+ * first time and remembers it.
+ */
+@Composable
+private fun BuilderCard(settings: Settings) {
+    var error by remember { mutableStateOf<String?>(null) }
+    val url = settings.hubUrl.trim().trimEnd('/') + "/app/ltx/"
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Button(
+                onClick = {
+                    error = null
+                    runCatching { Desktop.getDesktop().browse(URI(url)) }.onFailure { error = "Couldn't open the browser: ${it.message}" }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Forge.Acc2, contentColor = androidx.compose.ui.graphics.Color.White),
+            ) { Text("Open the web version") }
+            Text(url, color = Forge.Dim, style = MaterialTheme.typography.bodySmall)
+        }
+        error?.let { Text(it, color = Forge.Bad, style = MaterialTheme.typography.bodySmall) }
+    }
 }

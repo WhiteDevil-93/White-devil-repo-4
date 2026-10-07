@@ -1,28 +1,31 @@
 package com.whitedevil.desktop
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /**
- * Renders: the hub's clip library, grouped the way the hub groups it (goon packs,
- * chains, keepers, tests), with each group's pipeline, size and age.
+ * Renders: the hub's clip library as a searchable timeline (newest first, grouped by day), or by
+ * project. Search, source/date chips and sorting come from [MediaFilter]; the hub's pile of test
+ * renders is hidden until asked for or searched.
  *
- * Native list rendered from JSON. There is no status field in the hub's response,
- * so none is shown; what is shown is exactly what the hub sends: kind, source,
- * clip count, size and modification time.
+ * There is no status field in the hub's response, so none is shown; what is shown is exactly what
+ * the hub sends: name, project, source, size and modification time.
  */
 @Composable
 fun RendersScreen(settings: Settings) {
@@ -30,38 +33,55 @@ fun RendersScreen(settings: Settings) {
     val library = rememberLibrary(client)
     val nowMs by rememberNowMs()
     val expanded = remember(client) { mutableStateMapOf<String, Boolean>() }
+    val actions = rememberClipActions(client)
+    // Held here, above the load state, so a Refresh does not throw the user's search away.
+    var filter by remember { mutableStateOf(MediaFilter()) }
     val state = library.state
 
     Column(Modifier.fillMaxSize()) {
         MediaTopBar(
             title = "Renders",
             subtitle = when (state) {
-                is LibraryUiState.Loaded -> "${client.hubLabel} - ${state.groups.size} groups, ${state.clipCount} clips"
+                is LibraryUiState.Loaded -> "${client.hubLabel} - ${state.groups.size} projects, ${state.clipCount} clips"
                 else -> client.hubLabel
             },
             busy = state is LibraryUiState.Loading,
             onRefresh = library::reload,
         )
-        Box(Modifier.weight(1f).fillMaxWidth()) {
-            when (state) {
-                is LibraryUiState.Loading -> LoadingPanel("Loading renders from ${client.hubLabel}...")
-                is LibraryUiState.Error -> ErrorPanel(state.error, onRetry = library::reload)
-                is LibraryUiState.Empty -> EmptyPanel(
-                    "The hub answered normally and its library has no renders.",
-                    onRefresh = library::reload,
-                )
-                is LibraryUiState.Loaded -> RenderList(state, expanded, nowMs)
-            }
+        when (state) {
+            is LibraryUiState.Loading -> LoadingPanel("Loading renders from ${client.hubLabel}...")
+            is LibraryUiState.Error -> ErrorPanel(state.error, onRetry = library::reload)
+            is LibraryUiState.Empty -> EmptyPanel(
+                "The hub answered normally and its library has no renders.",
+                onRefresh = library::reload,
+            )
+            is LibraryUiState.Loaded -> RenderList(state, filter, { filter = it }, expanded, nowMs, actions)
         }
     }
 }
 
 @Composable
-private fun RenderList(state: LibraryUiState.Loaded, expanded: MutableMap<String, Boolean>, nowMs: Long) {
-    val sections = remember(state) { buildGallerySections(state.groups) }
+private fun RenderList(
+    state: LibraryUiState.Loaded,
+    filter: MediaFilter,
+    onFilter: (MediaFilter) -> Unit,
+    expanded: MutableMap<String, Boolean>,
+    nowMs: Long,
+    actions: ClipActions,
+) {
+    val all = remember(state) { buildGallerySections(state.groups).flatMap { it.items } }
+    val counts = remember(all, filter, nowMs) { filterCounts(all, filter, nowMs) }
+    val shownItems = remember(all, filter, nowMs) { filterItems(all, filter, nowMs) }
+    val sections = remember(shownItems, filter, nowMs) { buildSections(shownItems, filter, nowMs) }
+
+    MediaFilterBar(filter, onFilter, counts, shown = shownItems.size)
     Box(Modifier.fillMaxSize()) {
+        if (sections.isEmpty()) {
+            NoMatches(onReset = { onFilter(MediaFilter(sort = filter.sort, view = filter.view)) })
+            return@Box
+        }
         LazyColumn(
-            // Capped and centred like the Agent screen: rows running the full width of a wide monitor are hard to scan.
+            // Capped and centred: rows running the full width of a wide monitor are hard to scan.
             modifier = Modifier.fillMaxWidth().widthIn(max = 1100.dp).fillMaxHeight()
                 .align(Alignment.TopCenter).padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -71,17 +91,16 @@ private fun RenderList(state: LibraryUiState.Loaded, expanded: MutableMap<String
                 item(key = "warnings") { WarningsBanner(state.warnings) }
             }
             sections.forEach { section ->
-                val open = expanded[section.headerKey] == true
-                item(key = section.headerKey) {
-                    GroupHeader(
-                        section.group,
-                        open = open,
-                        nowMs = nowMs,
-                        onToggle = { expanded[section.headerKey] = !open },
-                    )
-                }
-                if (open) {
-                    items(section.items, key = { it.key }) { item -> ClipRow(item.group, item.clip, nowMs) }
+                if (filter.view == ViewMode.Projects) {
+                    // Searching opens everything it found; otherwise projects start collapsed.
+                    val open = expanded[section.key] ?: filter.searching
+                    item(key = "h:${section.key}") {
+                        ProjectHeader(section, open) { expanded[section.key] = !open }
+                    }
+                    if (open) items(section.items, key = { it.key }) { ClipRow(it.group, it.clip, nowMs, showProject = false, actions = actions) }
+                } else {
+                    item(key = "h:${section.key}") { DayHeader(section.title, section.items.size) }
+                    items(section.items, key = { it.key }) { ClipRow(it.group, it.clip, nowMs, showProject = true, actions = actions) }
                 }
             }
         }
@@ -89,75 +108,67 @@ private fun RenderList(state: LibraryUiState.Loaded, expanded: MutableMap<String
 }
 
 @Composable
-private fun GroupHeader(group: MediaGroup, open: Boolean, nowMs: Long, onToggle: () -> Unit) {
-    val tone = MaterialTheme.colorScheme
+private fun DayHeader(title: String, count: Int) {
+    Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(title.uppercase(), color = Forge.Dim, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.4.sp)
+        Spacer(Modifier.width(10.dp))
+        Text("$count", color = Forge.Dim, fontSize = 11.sp)
+    }
+}
+
+@Composable
+internal fun NoMatches(onReset: () -> Unit) {
+    Column(Modifier.fillMaxSize().padding(48.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("No clips match", color = Forge.Fg, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(6.dp))
+        Text("Try fewer words, a wider date range, or turn on Show unsorted.", color = Forge.Mut, fontSize = 13.sp)
+        TextButton(onClick = onReset) { Text("RESET FILTERS", color = Forge.Acc, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+    }
+}
+
+@Composable
+private fun ProjectHeader(section: ViewSection, open: Boolean, onToggle: () -> Unit) {
+    val shape = RoundedCornerShape(10.dp)
     Row(
         Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(tone.surface)
+            .clip(shape)
+            .background(Forge.Panel)
+            .border(1.dp, if (open) Forge.Acc2 else Forge.Line, shape)
             .clickable(onClick = onToggle)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(group.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                kindLabel(group.kind)?.let { Tag(it) }
-                group.source?.let { Tag(it, tone.secondary) }
-            }
-        }
-        Spacer(Modifier.width(16.dp))
-        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            val total = group.totalMb?.let { " - ${formatMb(it)}" } ?: ""
-            Text(
-                "${group.clips.size} ${if (group.clips.size == 1) "clip" else "clips"}$total",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Text(
-                "updated ${formatAge(group.updated, nowMs)}",
-                style = MaterialTheme.typography.labelSmall,
-                color = tone.onSurfaceVariant,
-            )
-            Text(
-                if (open) "Hide clips" else "Show clips",
-                style = MaterialTheme.typography.labelSmall,
-                color = tone.secondary,
-            )
-        }
+        Text(section.title, color = Forge.Fg, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        section.source?.let { Tag(it, Forge.Acc); Spacer(Modifier.width(10.dp)) }
+        val total = section.items.map { it.clip.mb }.let { l -> if (l.any { it == null }) null else l.sumOf { it ?: 0.0 } }
+        Text(
+            "${section.items.size} ${if (section.items.size == 1) "clip" else "clips"}" + (total?.let { " · ${formatMb(it)}" } ?: ""),
+            color = Forge.Mut, fontSize = 13.sp,
+        )
+        Spacer(Modifier.width(14.dp))
+        Text(if (open) "Hide" else "Show", color = Forge.Acc, fontSize = 12.sp)
     }
 }
 
 @Composable
-private fun ClipRow(group: MediaGroup, clip: MediaClip, nowMs: Long) {
-    val tone = MaterialTheme.colorScheme
+private fun ClipRow(group: MediaGroup, clip: MediaClip, nowMs: Long, showProject: Boolean, actions: ClipActions) {
     Row(
-        Modifier.fillMaxWidth().padding(start = 16.dp)
-            .background(tone.surfaceVariant, RoundedCornerShape(8.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+        Modifier.fillMaxWidth()
+            .background(Forge.Well, RoundedCornerShape(8.dp))
+            .border(1.dp, Forge.Line, RoundedCornerShape(8.dp))
+            .padding(horizontal = 14.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            clip.idx?.let { "#$it" } ?: "-",
-            style = MaterialTheme.typography.labelSmall,
-            color = tone.onSurfaceVariant,
-            modifier = Modifier.width(36.dp),
-        )
-        Text(
-            clip.name,
-            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-            modifier = Modifier.weight(1f),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Column(Modifier.weight(1f)) {
+            Text(prettyClipName(clip.name), color = Forge.Fg, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            // the raw file name stays visible (and searchable) in small type under the readable title
+            Text((if (showProject) group.title + "  ·  " else "") + clip.name, color = Forge.Dim, fontSize = 10.sp, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
         // Only worth a tag when this clip came from a different pipeline than its group.
-        clip.source?.takeIf { it != group.source }?.let { Tag(it, tone.secondary) }
-        Text(formatMb(clip.mb), style = MaterialTheme.typography.labelSmall, color = tone.onSurfaceVariant)
-        Text(
-            formatAge(clip.mtime, nowMs),
-            style = MaterialTheme.typography.labelSmall,
-            color = tone.onSurfaceVariant,
-            modifier = Modifier.width(96.dp),
-        )
+        (clip.source ?: group.source)?.let { Tag(it, Forge.Acc) }
+        Text(formatMb(clip.mb), color = Forge.Mut, fontSize = 12.sp)
+        Text(formatAge(clip.mtime, nowMs), color = Forge.Dim, fontSize = 12.sp, modifier = Modifier.width(96.dp))
+        ClipButtons(actions, clip.name)
     }
 }

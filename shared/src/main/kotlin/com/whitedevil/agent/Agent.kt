@@ -313,11 +313,14 @@ class Agent(
                 )
             }
             if (toolImages.isNotEmpty()) {
+                // Screenshots pile up fast while acting on a screen or a page: only the newest few stay as images,
+                // older ones become a one-line note, or the context fills with stale pictures.
+                pruneToolImages(keep = 1)
                 history.add(
                     ChatMessage(
                         role = "user",
                         content = MessageContent.multimodal(
-                            "These image(s) were retrieved by your app integration for the requested task. Analyze them directly and answer the user's original request. Clearly state any limitation of reviewing a still frame rather than full video motion or audio.",
+                            TOOL_IMAGES_NOTE,
                             toolImages,
                         ),
                     ),
@@ -329,4 +332,17 @@ class Agent(
         onEvent(AgentEvent.Error(limitMsg))
         return limitMsg
     }
+
+    /** Replaces the images in all but the newest [keep] tool-image messages with a short note. */
+    private fun pruneToolImages(keep: Int) {
+        val idx = history.indices.filter { history[it].role == "user" && history[it].textContent().startsWith(TOOL_IMAGES_NOTE) && history[it].content !is JsonPrimitive }
+        for (i in idx.dropLast(keep)) {
+            history[i] = history[i].copy(content = MessageContent.text("[An earlier screenshot or image from a tool was here; removed to save space.]"))
+        }
+    }
+
 }
+
+/** Opening line of the message that carries tool images; also how [Agent] finds old ones to prune. */
+const val TOOL_IMAGES_NOTE = "These image(s) came back from your tools (a screenshot, a page, a contact sheet). Look at them directly and " +
+    "continue the user's task. For a still frame of a video, say what a single frame cannot show (motion, audio)."

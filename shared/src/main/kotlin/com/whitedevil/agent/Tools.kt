@@ -43,6 +43,22 @@ class ToolBox(
     /** Memory, skills, MCP servers... Offered to the model alongside the built-in tools. */
     private val extensions: List<ToolExtension> = emptyList(),
 ) {
+    /** Optional single extension constructor used by desktop callers. */
+    constructor(
+        workspaceDir: File,
+        relayBaseUrl: String,
+        relayUser: String,
+        relayPass: String,
+        extension: ToolExtension?,
+    ) : this(
+        workspaceDir = workspaceDir,
+        relayBaseUrl = relayBaseUrl,
+        relayUser = relayUser,
+        relayPass = relayPass,
+        access = AccessConfig(),
+        extensions = listOfNotNull(extension),
+    )
+
     private val json = Json { ignoreUnknownKeys = true }
 
     /** System-prompt text contributed by the extensions (memories, skill index, connected servers). */
@@ -55,9 +71,13 @@ class ToolBox(
         workspaceDir.mkdirs()
     }
 
-    val definitions: List<ToolDefinition> = buildList {
+    val definitions: List<ToolDefinition> get() = buildList {
         addAll(accessTools.definitions)
-        extensions.forEach { addAll(it.definitions) }
+        extensions.forEach { addAll(it.definitions()) }
+        addAll(builtInDefinitions)
+    }
+
+    private val builtInDefinitions: List<ToolDefinition> = buildList {
         // Local device workspace filesystem tools
         add(
             ToolDefinition(
@@ -224,6 +244,31 @@ class ToolBox(
         add(
             ToolDefinition(
                 function = ToolFunctionSpec(
+                    name = "remember",
+                    description = "Save something durable to the Forge Hub's persistent memory, so it is remembered in every later chat on every device: a user preference (give key and value) and/or a free-form note about a decision or a project (give note). Use sparingly, for things worth keeping; never for passwords or keys.",
+                    parameters = buildJsonObject {
+                        put("type", "object")
+                        putJsonObject("properties") {
+                            putJsonObject("note") {
+                                put("type", "string")
+                                put("description", "A short free-form note to keep, e.g. a decision or the state of a project.")
+                            }
+                            putJsonObject("key") {
+                                put("type", "string")
+                                put("description", "Preference name, e.g. preferred_video_length.")
+                            }
+                            putJsonObject("value") {
+                                put("type", "string")
+                                put("description", "The preference's value.")
+                            }
+                        }
+                    },
+                ),
+            ),
+        )
+        add(
+            ToolDefinition(
+                function = ToolFunctionSpec(
                     name = "hub_request",
                     description = "Call ANY Forge Hub API under /api/* (GET/POST/PUT/DELETE). Use when the goal needs Forge Hub (one domain of this app): status, manifest, media, colab, thunder, ltx, gen, setup, term, laptop, agentic, vast, hypno. Pass JSON body as a string for POST/PUT.",
                     parameters = buildJsonObject {
@@ -343,12 +388,18 @@ class ToolBox(
                 "download_civitai_lora" -> ToolExecution(downloadCivitaiLora(argumentsJson))
                 "hub_overview" -> ToolExecution(hubOverview())
                 "hub_request" -> ToolExecution(hubRequest(argumentsJson))
+                "remember" -> ToolExecution(remember(argumentsJson))
                 "queue_gpu_render" -> ToolExecution(queueGpuRender(argumentsJson))
-                else -> ToolExecution(
-                    accessTools.execute(name, argumentsJson)
-                        ?: extensions.firstOrNull { it.handles(name) }?.execute(name, argumentsJson)
-                        ?: "Error: unknown tool '$name'.",
-                )
+                else -> {
+                    val accessRes = accessTools.execute(name, argumentsJson)
+                    if (accessRes != null) {
+                        ToolExecution(accessRes)
+                    } else {
+                        val ext = extensions.firstOrNull { it.handles(name) }
+                        if (ext != null) ext.executeDetailed(name, argumentsJson)
+                        else ToolExecution("Error: unknown tool '$name'.")
+                    }
+                }
             }
             result
         } catch (e: Exception) {
@@ -666,6 +717,14 @@ class ToolBox(
         }.take(24000)
     }
 
+    private fun remember(argumentsJson: String): String {
+        val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
+        val patch = memoryPatch(args.stringOrNull("note"), args.stringOrNull("key"), args.stringOrNull("value"))
+            ?: return "Error: give a note, or a key and a value."
+        val reply = relayHttp("/api/agentic/memory", method = "PUT", postBody = patch, readTimeoutMs = 30_000)
+        return if (reply.startsWith("Error:")) reply else "Saved to the Hub's memory."
+    }
+
     private fun hubRequest(argumentsJson: String): String {
         return try {
             val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
@@ -711,3 +770,19 @@ private fun kotlinx.serialization.json.JsonElement.jsonObjectOrEmpty(): JsonObje
 
 private fun JsonObject.stringOrNull(key: String): String? =
     (this[key] as? kotlinx.serialization.json.JsonPrimitive)?.content
+
+
+/**
+ * The body for PUT /api/agentic/memory: the hub merges `preferences`, appends `append_note`. Null when there is
+ * nothing to save. Public so it can be tested without a hub.
+ */
+fun memoryPatch(note: String?, key: String?, value: String?): String? {
+    val n = note?.trim().orEmpty().take(4000)
+    val k = key?.trim().orEmpty().take(80)
+    val v = value?.trim().orEmpty().take(1000)
+    if (n.isEmpty() && (k.isEmpty() || v.isEmpty())) return null
+    return buildJsonObject {
+        if (n.isNotEmpty()) put("append_note", n)
+        if (k.isNotEmpty() && v.isNotEmpty()) putJsonObject("preferences") { put(k, v) }
+    }.toString()
+}
