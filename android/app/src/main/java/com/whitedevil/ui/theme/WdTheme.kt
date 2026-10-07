@@ -10,16 +10,16 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-/** UX Pilot “Deep Space” — https://uxpilot.ai/a/ui-design?page=KWVlind9DyhFkDfRaXEf */
+/** Forge Hub tokens, shared with hub/static/ui/tokens.css and desktop/Theme.kt. */
 object WdPalette {
     val bg = Color(0xFF0A0B0F)
     val surface = Color(0xFF141722)
     val bgElevated = Color(0xFF141722)
     val surfaceHover = Color(0xFF1B1F2C)
     val stroke = Color(0xFF646D8C)
-    val accent = Color(0xFF5B4BE8)
+    val accent = Color(0xFF8F82FF)
     val accentLight = Color(0xFFB3A9FF)
-    val onAccent = Color(0xFFFFFFFF)
+    val onAccent = Color(0xFF0A0B0F)
     val onLightButton = Color(0xFF0B0E14)
     val text = Color(0xFFFFFFFF)
     val textSecondary = Color(0xFFA9AFC2)

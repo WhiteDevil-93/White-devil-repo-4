@@ -3,8 +3,6 @@ package com.whitedevil.desktop
 import androidx.compose.runtime.*
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.ChatMessage
-import com.whitedevil.agent.MessageContent
-import com.whitedevil.agent.textContent
 import com.whitedevil.agent.stripBlobs
 import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString

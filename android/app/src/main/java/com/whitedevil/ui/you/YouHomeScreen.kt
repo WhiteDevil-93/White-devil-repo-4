@@ -33,16 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.whitedevil.ui.components.WdHairline
 import com.whitedevil.ui.components.WdListChevron
 import com.whitedevil.ui.components.WdScreenBackground
 import com.whitedevil.ui.theme.WdPalette
-
-private const val AVATAR = "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg"
 
 @Composable
 fun YouHomeScreen(

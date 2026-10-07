@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
  */
 val WhiteDevilColors = darkColorScheme(
     primary = Color(0xFF8F82FF),
-    onPrimary = Color(0xFFFFFFFF),
+    onPrimary = Color(0xFF0A0B0F),
     secondary = Color(0xFFB3A9FF),
     onSecondary = Color(0xFF0A0B0F),
     background = Color(0xFF0A0B0F),
