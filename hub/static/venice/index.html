@@ -399,6 +399,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
 
   <script src="/app/ui/forge.js"></script>
   <div id="chat-sync" role="status" aria-live="polite" style="padding:8px 16px">Hub sync not checked</div>
+  <div id="chat-local-save" role="status" aria-live="polite" style="padding:0 16px"></div>
   <button type="button" id="chat-sync-retry" class="btn sm" style="margin:0 16px">Retry chat sync</button>
   <script src="/app/ui/workflow.js"></script>
   <script>
@@ -669,8 +670,11 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       return {activeId: null, chats: []};
     }
     function writeLocalStore() {
-      try { localStorage.setItem(LS_THREADS, JSON.stringify(store)); } catch (e) {}
-      try { localStorage.setItem(LS_CHAT, JSON.stringify(messages.slice(-80))); } catch (e) {}
+      try {
+        localStorage.setItem(LS_THREADS, JSON.stringify(store));
+        localStorage.setItem(LS_CHAT, JSON.stringify(messages.slice(-80)));
+        return true;
+      } catch (e) { return false; }
     }
     function mergeStores(a, b) {
       const map = {};
@@ -782,7 +786,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
     function persist(now) {
       putCurrent();
       showThread();
-      writeLocalStore();
+      const localSaved = writeLocalStore();
       const send = () => saveToHub(JSON.stringify(store));
       if (now) { clearTimeout(persistTimer); send(); }
       else {
@@ -790,6 +794,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
         persistTimer = setTimeout(send, 250);
       }
       if (onHistoryChange) try { onHistoryChange(); } catch (e) {}
+      document.getElementById('chat-local-save').textContent = localSaved ? '' : 'Local save failed — keep this page open; hub sync is still being attempted';
     }
     function pushUi(role, content, extra) {
       const rec = Object.assign({role, content}, extra || {});

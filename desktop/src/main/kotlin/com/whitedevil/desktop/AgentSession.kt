@@ -25,6 +25,8 @@ class AgentSession(private val file: File = File(Settings.dir, "agent-history.js
         private set
     var saveStatus by mutableStateOf("No saved conversation")
         private set
+    var loadFailed by mutableStateOf(false)
+        private set
     private val json = Json { ignoreUnknownKeys = true }
 
     init {
@@ -40,7 +42,7 @@ class AgentSession(private val file: File = File(Settings.dir, "agent-history.js
                 }
                 saveStatus = "Saved locally"
             } catch (e: Exception) {
-                Files.copy(file.toPath(), File(file.parentFile, "${file.name}.unreadable-${System.currentTimeMillis()}").toPath())
+                loadFailed = true
                 saveStatus = "History could not be loaded; original file preserved: ${e.javaClass.simpleName}"
             }
         }
@@ -53,6 +55,7 @@ class AgentSession(private val file: File = File(Settings.dir, "agent-history.js
     }
 
     fun save() {
+        if (loadFailed) return // Explicit Clear is required; never overwrite unreadable history.
         try {
             file.parentFile?.mkdirs()
             val temporary = File(file.parentFile, "${file.name}.tmp")
@@ -70,6 +73,7 @@ class AgentSession(private val file: File = File(Settings.dir, "agent-history.js
 
     fun clear() {
         if (busy) return
+        loadFailed = false
         history = emptyList()
         lines.clear()
         save()

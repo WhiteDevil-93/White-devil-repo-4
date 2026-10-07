@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whitedevil.ui.theme.WdPalette
@@ -60,16 +61,16 @@ fun WdBottomBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             tabDefs.forEach { tab ->
-                val selected = tab.id == selectedId
+                val isSelected = tab.id == selectedId
                 Column(
                     Modifier
                         .weight(1f)
                         .clickable { onSelect(tab.id) }
-                        .semantics { role = Role.Tab }
+                        .semantics { role = Role.Tab; selected = isSelected }
                         .padding(vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    if (selected) {
+                    if (isSelected) {
                         Box(
                             Modifier
                                 .width(32.dp)
@@ -85,12 +86,12 @@ fun WdBottomBar(
                         modifier = Modifier
                             .padding(top = 6.dp)
                             .size(22.dp),
-                        tint = if (selected) WdPalette.accent else WdPalette.textMetadata,
+                        tint = if (isSelected) WdPalette.accentLight else WdPalette.textMetadata,
                     )
                     Text(
                         tab.label.uppercase(),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (selected) WdPalette.text else WdPalette.textMetadata,
+                        color = if (isSelected) WdPalette.text else WdPalette.textMetadata,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 4.dp),
                     )

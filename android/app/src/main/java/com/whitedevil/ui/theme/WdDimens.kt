@@ -9,7 +9,7 @@ object WdDimens {
     val rowVertical = 10.dp
     val navBarHeight = 44.dp
     val navIcon = 20.dp
-    val iconTap = 32.dp
+    val iconTap = 48.dp
     val composerRadius = 8.dp
     val composerVertical = 6.dp
     val bubbleRadius = 10.dp

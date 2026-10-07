@@ -36,6 +36,7 @@ dependencies {
 
     // Ktor client + kotlinx-serialization arrive transitively via :shared (api).
     testImplementation(kotlin("test"))
+    testImplementation(compose.desktop.uiTestJUnit4)
     testImplementation("io.ktor:ktor-client-mock:2.3.12")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 }

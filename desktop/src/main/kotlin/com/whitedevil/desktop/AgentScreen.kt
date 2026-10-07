@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.AgentEvent
 import com.whitedevil.agent.ToolBox
@@ -40,6 +42,12 @@ fun AgentScreen(settings: Settings, session: AgentSession, onOpenSettings: () ->
     var input by session::input
     var busy by session::busy
     val listState = rememberLazyListState()
+    var confirmClear by remember { mutableStateOf(false) }
+    if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false },
+        title = { Text("Clear conversation?") },
+        text = { Text("This removes saved and on-screen history. Stop does not clear it.") },
+        confirmButton = { TextButton(onClick = { session.clear(); confirmClear = false }) { Text("Clear") } },
+        dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Cancel") } })
 
     // Keep the newest line in view as the agent works.
     LaunchedEffect(lines.size) {
@@ -50,6 +58,10 @@ fun AgentScreen(settings: Settings, session: AgentSession, onOpenSettings: () ->
     fun send() {
         val text = input.trim()
         if (text.isEmpty() || busy) return
+        if (session.loadFailed) {
+            lines += ChatLine(ROLE_ERROR, "History unavailable", "Unreadable history was preserved. Clear conversation explicitly to start again.")
+            return
+        }
         val blocked = settings.blockedReason()
         if (blocked != null) {
             lines += ChatLine(ROLE_ERROR, "Not configured", blocked)
@@ -106,7 +118,7 @@ fun AgentScreen(settings: Settings, session: AgentSession, onOpenSettings: () ->
             busy = busy,
             model = settings.model,
             onStop = { session.job?.cancel() },
-            onClear = session::clear,
+            onClear = { confirmClear = true },
             onOpenSettings = onOpenSettings,
         )
 
@@ -186,6 +198,8 @@ private fun EmptyState(settings: Settings) {
 
 @Composable
 private fun Bubble(line: ChatLine) {
+    var expanded by remember(line) { mutableStateOf(false) }
+    val clipboard = LocalClipboardManager.current
     val tone = MaterialTheme.colorScheme
     val (bg, fg) = when (line.role) {
         ROLE_USER -> tone.secondary.copy(alpha = 0.10f) to tone.onBackground
@@ -201,10 +215,16 @@ private fun Bubble(line: ChatLine) {
             .padding(horizontal = 14.dp, vertical = 10.dp)
     ) {
         Text(line.title, style = MaterialTheme.typography.labelSmall, color = tone.onSurfaceVariant)
+        Row {
+            TextButton(onClick = { clipboard.setText(AnnotatedString(line.body)) }) { Text("Copy") }
+            if (mono || line.body.length > 4000) TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Collapse" else "Expand") }
+        }
+        if (mono) Text(if (line.role == ROLE_TOOL_CALL) "Tool requested" else "Result received — inspect output for outcome", style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(4.dp))
         // Tool output can be enormous; the full text stays in the agent's history,
         // only the rendering is capped so one blob cannot lock the UI.
-        val body = if (line.body.length > 4000) line.body.take(4000) + "\n… truncated for display" else line.body
+        val body = if (!expanded && line.body.length > 4000) line.body.take(4000) + "\n… expand for full output" else line.body
+        if (mono && !expanded) return@Column
         if (mono) {
             // Tool arguments and output are data — render them verbatim, since
             // markdown styling there would misrepresent what actually ran.
@@ -224,6 +244,7 @@ private fun Composer(value: String, busy: Boolean, onValueChange: (String) -> Un
         ) {
             OutlinedTextField(
                 value = value,
+                label = { Text("Goal") },
                 onValueChange = onValueChange,
                 modifier = Modifier.weight(1f),
                 placeholder = { Text("Give Venice a goal…") },

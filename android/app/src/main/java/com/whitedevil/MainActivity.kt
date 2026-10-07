@@ -131,7 +131,7 @@ class MainActivity : FragmentActivity() {
     internal var hubScreenError by mutableStateOf<String?>(null)
     internal var hubLastUpdated by mutableStateOf(0L)
     internal val hubPendingActions = mutableStateListOf<String>()
-    private var hubRequestGeneration = 0L
+    private val hubRequestGate = com.whitedevil.agent.LatestRequestGate()
     internal var hubBlockedByUpdate by mutableStateOf(false)
     internal var hubForceUpdateVersion by mutableIntStateOf(0)
     internal var hubForceUpdateApkUrl: String? = null
@@ -392,7 +392,7 @@ class MainActivity : FragmentActivity() {
 
     private fun initAgentWelcomeMessages() {
         if (chatMessages.isNotEmpty()) return
-        val restoredHistory = loadAgentHistory()
+        val restoredHistory = try { loadAgentHistory() } catch (_: IllegalStateException) { return }
         if (restoredHistory.isEmpty()) {
             agentStatusSubtitle = "On-device agent"
         } else {
@@ -668,18 +668,21 @@ class MainActivity : FragmentActivity() {
     private fun agentHistoryFile() = File(filesDir, "agent_history.json")
 
     private val historyJson = Json { ignoreUnknownKeys = true }
+    private val agentHistoryLock = Any()
+    private var agentHistoryCache: List<ChatMessage>? = null
 
     internal fun stopAgentRun() {
         currentAgentJob?.cancel()
     }
 
     /** Persists the conversation (image blobs stripped) so it survives app restarts. */
-    private fun persistAgentHistory(messages: List<ChatMessage>) {
+    private fun persistAgentHistory(messages: List<ChatMessage>) = synchronized(agentHistoryLock) {
         try {
             val lean = messages
                 .filter { it.role in setOf("user", "assistant", "tool") }
                 .takeLast(Agent.MAX_HISTORY_MESSAGES)
                 .map { it.copy(content = stripBlobs(it.content)) }
+            agentHistoryCache = lean // Keep context between turns even if the disk is unavailable.
             val temporary = File(filesDir, "agent_history.json.tmp")
             temporary.writeText(
                 historyJson.encodeToString(ListSerializer(ChatMessage.serializer()), lean),
@@ -690,14 +693,15 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    private fun loadAgentHistory(): List<ChatMessage> {
+    private fun loadAgentHistory(): List<ChatMessage> = synchronized(agentHistoryLock) {
+        agentHistoryCache?.let { return@synchronized it }
         return runCatching {
             val file = agentHistoryFile()
             if (!file.isFile) return emptyList()
             historyJson.decodeFromString(ListSerializer(ChatMessage.serializer()), file.readText())
                 .filter { it.role in setOf("user", "assistant", "tool") }
                 .takeLast(Agent.MAX_HISTORY_MESSAGES)
-        }.getOrElse { e ->
+        }.onSuccess { agentHistoryCache = it }.getOrElse { e ->
             main.post { addMessageBubble("History unavailable", "Saved history could not be read (${e.javaClass.simpleName}). File preserved; clear chat explicitly before starting again.", ROLE_ERROR) }
             throw IllegalStateException("Could not read saved conversation; clear chat to reset", e)
         }
@@ -771,6 +775,7 @@ class MainActivity : FragmentActivity() {
         val generation = ++agentGeneration
         currentAgentJob = scope.launch {
             var finishedAgent: Agent? = null
+            var submitted = false
             try {
                 // Heavy lifting (image downscale, file copies) off the main thread.
                 val (fullText, imageDataUrls) = withContext(Dispatchers.IO) {
@@ -792,6 +797,7 @@ class MainActivity : FragmentActivity() {
                     systemPrompt = sysPrompt,
                     enableWebSearch = webSearch,
                     onEvent = { event ->
+                        if (event is AgentEvent.User) submitted = true
                         main.post {
                             if (generation != agentGeneration) return@post
                             when (event) {
@@ -821,6 +827,11 @@ class MainActivity : FragmentActivity() {
                 currentClient.close()
                 if (generation == agentGeneration) {
                     finishedAgent?.let { persistAgentHistory(it.snapshot()) }
+                    if (!submitted) {
+                        agentInputText = text
+                        pendingAttachments.addAll(attachmentSnapshot)
+                        syncPendingAttachmentsUi()
+                    }
                     agentShowProgress = false
                     agentThinking = false
                     setAgentComposerEnabled(true)
@@ -1156,19 +1167,19 @@ class MainActivity : FragmentActivity() {
     internal fun refreshHubNativeScreen() {
         if (hubBlockedByUpdate) return
         val id = currentHubScreenId ?: return
-        val generation = ++hubRequestGeneration
+        val generation = hubRequestGate.next()
         hubScreenLoading = true
         hubScreenError = null
         scope.launch {
             try {
                 val json = withContext(Dispatchers.IO) { fetchHubScreenJson(id) }
-                if (generation != hubRequestGeneration || id != currentHubScreenId) return@launch
+                if (!hubRequestGate.accepts(generation) || id != currentHubScreenId) return@launch
                 hubScreenJson = json
                 hubLastUpdated = System.currentTimeMillis()
                 hubScreenLoading = false
                 updateHubConnectionPill(online = true)
             } catch (e: Exception) {
-                if (generation != hubRequestGeneration || id != currentHubScreenId) return@launch
+                if (!hubRequestGate.accepts(generation) || id != currentHubScreenId) return@launch
                 hubScreenLoading = false
                 hubScreenError = when (e) {
                     is RelayHttpException -> e.message?.take(500) ?: "HTTP ${e.code}"
@@ -1288,16 +1299,9 @@ class MainActivity : FragmentActivity() {
                 val response = withContext(Dispatchers.IO) {
                     RelayHttp.post(relayBase, basicAuth("wan"), path, jsonBody)
                 }
-                val reply = runCatching { JSONObject(response) }.getOrNull()
-                if (reply?.optBoolean("ok", true) == false || reply?.optBoolean("success", true) == false ||
-                    reply?.optString("status") in setOf("error", "failed")) {
-                    throw IllegalStateException(reply?.optString("error")?.takeIf { it.isNotBlank() } ?: "Request rejected")
-                }
+                val summary = com.whitedevil.agent.actionReplySummary(response)
                 if (refreshAfter) refreshHubNativeScreen()
-                val status = reply?.optString("status")?.takeIf { it.isNotBlank() } ?: "Request accepted"
-                val jobId = reply?.optString("job_id")?.takeIf { it.isNotBlank() }
-                    ?: reply?.optString("id")?.takeIf { it.isNotBlank() }
-                UiFeedback.snackbar(snackbarAnchor, "$status${jobId?.let { " · $it" } ?: ""}")
+                UiFeedback.snackbar(snackbarAnchor, summary)
             } catch (e: Exception) {
                 UiFeedback.snackbar(snackbarAnchor, e.message?.take(120) ?: "Request failed")
             } finally {
@@ -1307,6 +1311,8 @@ class MainActivity : FragmentActivity() {
     }
 
     internal fun hubRelayPostWithResponse(path: String, jsonBody: String, onResult: (String) -> Unit) {
+        if (path in hubPendingActions) return
+        hubPendingActions.add(path)
         scope.launch {
             val text = try {
                 withContext(Dispatchers.IO) {
@@ -1314,6 +1320,8 @@ class MainActivity : FragmentActivity() {
                 }
             } catch (e: Exception) {
                 e.message ?: "Request failed"
+            } finally {
+                hubPendingActions.remove(path)
             }
             main.post { onResult(text) }
         }

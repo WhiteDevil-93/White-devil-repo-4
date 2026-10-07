@@ -339,6 +339,7 @@ async function jobs(){
     </div>`;
   }).join('') : '<div class="small mut">No clips yet.</div>';
   window._jobs = js;
+  updateCycleSources();
   if (D.cont && !cont) { const c = js.find(x => x.id === D.cont), p = $('prompt').value; if (c) { setCont(c); $('prompt').value = p; saveDraft(); } D.cont = null; }
   clearTimeout(timer); timer = setTimeout(() => { jobs(); if (live) status(); }, live ? 8000 : 60000);
 }
