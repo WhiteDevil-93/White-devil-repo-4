@@ -236,11 +236,28 @@ private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier)
                 .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            var shotwriterOpen by remember { mutableStateOf(false) }
+            ShotwriterDialog(
+                expanded = shotwriterOpen,
+                onDismissRequest = { shotwriterOpen = false },
+                onRewrite = { model, res, ratio, len ->
+                    val currentText = host.agentInputTextPublic()
+                    val configStr = listOf(model.name, res, ratio, len).filter { it.isNotBlank() }.joinToString(", ")
+                    host.setAgentInputText("[Shotwriter: $configStr]\n$currentText")
+                }
+            )
+
             IconButton(
                 onClick = { host.showAttachSheet() },
                 modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Attach file" },
             ) {
                 Icon(Icons.Outlined.AttachFile, null, tint = WdPalette.textMetadata, modifier = Modifier.size(18.dp))
+            }
+            IconButton(
+                onClick = { shotwriterOpen = true },
+                modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Shotwriter" },
+            ) {
+                Icon(androidx.compose.material.icons.Icons.Outlined.AutoAwesome, null, tint = WdPalette.textMetadata, modifier = Modifier.size(18.dp))
             }
             IconButton(
                 onClick = { host.startVoiceInput() },

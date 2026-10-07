@@ -586,6 +586,20 @@ private fun Composer(
             ShelfButton("ATTACH", Icons.Outlined.AttachFile, !busy, onAttach)
             ShelfButton("/", null, !busy) { onInsert("/") }
             ShelfButton("@", null, !busy) { onInsert("@") }
+            
+            var shotwriterOpen by remember { mutableStateOf(false) }
+            Box {
+                ShelfButton("SHOTWRITER", Icons.Outlined.AutoAwesome, !busy) { shotwriterOpen = true }
+                ShotwriterDropdown(
+                    expanded = shotwriterOpen,
+                    onDismissRequest = { shotwriterOpen = false },
+                    onRewrite = { model, res, ratio, len ->
+                        val configStr = listOf(model.name, res, ratio, len).filter { it.isNotBlank() }.joinToString(", ")
+                        onValueChange("[Shotwriter: $configStr]\n$value")
+                    }
+                )
+            }
+            
             Spacer(Modifier.weight(1f))
             Text(tokens, color = if (nearFull) Forge.Warn else Forge.Dim, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
         }
