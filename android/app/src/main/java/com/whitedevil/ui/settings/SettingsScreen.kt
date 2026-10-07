@@ -114,6 +114,14 @@ fun SettingsScreen(
                 Field("API key", form.veniceKey, secret = true, keyboardType = KeyboardType.Password) {
                     onFormChange(form.copy(veniceKey = it))
                 }
+                Field("OpenRouter API key", form.openRouterKey, secret = true, keyboardType = KeyboardType.Password) {
+                    onFormChange(form.copy(openRouterKey = it))
+                }
+                Text(
+                    "Used automatically when an OpenRouter model is selected. Model picker markers: T text, V vision/VL, F tools, W web, R reasoning, U uncensored.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = WdPalette.textSecondary,
+                )
                 Field("System prompt", form.systemPrompt, minLines = 4) { onFormChange(form.copy(systemPrompt = it)) }
                 RowSwitch("Web search", form.webSearch) { onFormChange(form.copy(webSearch = it)) }
             }

@@ -147,16 +147,7 @@ class MainActivity : FragmentActivity() {
     internal var chatScrollTrigger by mutableIntStateOf(0)
     internal var agentThinking by mutableStateOf(false)
     private var nextChatId = 1L
-    private val agentModels = listOf(
-        "zai-org-glm-5-2",
-        "zai-org-glm-5",
-        "venice-uncensored",
-        "venice-uncensored-1-2",
-        "qwen3-vl-235b-a22b",
-        "mistral-31-24b",
-        "kimi-k2-6",
-        "claude-opus-4-8",
-    )
+    private val agentModels = AgentModelCatalog.entries.map { it.id }
     internal var agentSelectedModel by mutableStateOf(SettingsManager.DEFAULT_MODEL)
     private var currentAgentJob: Job? = null
 
@@ -354,8 +345,11 @@ class MainActivity : FragmentActivity() {
         window.statusBarColor = Color.BLACK
         @Suppress("DEPRECATION")
         window.navigationBarColor = Color.BLACK
-        agentSelectedModel = prefs.getString(SettingsManager.KEY_VENICE_MODEL, SettingsManager.DEFAULT_MODEL)
-            ?: SettingsManager.DEFAULT_MODEL
+        val savedModel = prefs.getString(SettingsManager.KEY_VENICE_MODEL, SettingsManager.DEFAULT_MODEL)
+        agentSelectedModel = savedModel?.takeIf { it in agentModels } ?: SettingsManager.DEFAULT_MODEL
+        if (agentSelectedModel != savedModel) {
+            prefs.edit().putString(SettingsManager.KEY_VENICE_MODEL, agentSelectedModel).apply()
+        }
         snackbarAnchor = window.decorView
         setContent { WhiteDevilApp(this@MainActivity) }
         initAgentWelcomeMessages()
@@ -399,6 +393,7 @@ class MainActivity : FragmentActivity() {
 
     internal fun readSettingsFormFromPrefs(): SettingsFormState = SettingsFormState(
         veniceKey = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "").orEmpty(),
+        openRouterKey = prefs.getString(SettingsManager.KEY_OPENROUTER_API_KEY, "").orEmpty(),
         systemPrompt = prefs.getString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, SettingsManager.DEFAULT_SYSTEM_PROMPT).orEmpty(),
         webSearch = prefs.getBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, false),
         relayUrl = prefs.getString(SettingsManager.KEY_RELAY_URL, SettingsManager.DEFAULT_RELAY_URL).orEmpty(),
@@ -426,6 +421,7 @@ class MainActivity : FragmentActivity() {
                 onSuccess = {
                     prefs.edit()
                         .putString(SettingsManager.KEY_VENICE_API_KEY, form.veniceKey.trim())
+                        .putString(SettingsManager.KEY_OPENROUTER_API_KEY, form.openRouterKey.trim())
                         .putString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, form.systemPrompt.trim())
                         .putBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, form.webSearch)
                         .putString(SettingsManager.KEY_RELAY_URL, form.relayUrl.trim().trimEnd('/'))
@@ -449,6 +445,7 @@ class MainActivity : FragmentActivity() {
         }
         prefs.edit()
             .putString(SettingsManager.KEY_VENICE_API_KEY, form.veniceKey.trim())
+            .putString(SettingsManager.KEY_OPENROUTER_API_KEY, form.openRouterKey.trim())
             .putString(SettingsManager.KEY_VENICE_SYSTEM_PROMPT, form.systemPrompt.trim())
             .putBoolean(SettingsManager.KEY_VENICE_WEB_SEARCH, form.webSearch)
             .putString(SettingsManager.KEY_RELAY_URL, form.relayUrl.trim().trimEnd('/'))
@@ -570,7 +567,10 @@ class MainActivity : FragmentActivity() {
 
 
     internal fun veniceKeyConfigured(): Boolean =
-        !prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim().isNullOrEmpty()
+        when (AgentModelCatalog.providerFor(agentSelectedModel)) {
+            AgentProvider.OPENROUTER -> !prefs.getString(SettingsManager.KEY_OPENROUTER_API_KEY, "")?.trim().isNullOrEmpty()
+            AgentProvider.VENICE -> !prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim().isNullOrEmpty()
+        }
 
     private fun updateAgentSetupState() {
         // Compose Agent screen reads veniceKeyConfigured() directly.
@@ -590,6 +590,24 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    internal fun showSelectedProviderKeySheet() {
+        if (AgentModelCatalog.providerFor(agentSelectedModel) == AgentProvider.OPENROUTER) {
+            val current = prefs.getString(SettingsManager.KEY_OPENROUTER_API_KEY, "") ?: ""
+            UiSheets.showSecretFieldSheet(
+                this,
+                title = "OpenRouter API key",
+                hint = "Paste your OpenRouter API key",
+                initial = current,
+            ) { key ->
+                prefs.edit().putString(SettingsManager.KEY_OPENROUTER_API_KEY, key).apply()
+                updateAgentSetupState()
+                UiFeedback.snackbar(snackbarAnchor, "OpenRouter API key saved")
+            }
+        } else {
+            showVeniceKeySheet()
+        }
+    }
+
     internal fun confirmClearAgentChat() {
         AlertDialog.Builder(this)
             .setTitle("Clear chat?")
@@ -600,7 +618,11 @@ class MainActivity : FragmentActivity() {
     }
 
     internal fun showModelPicker() {
-        val labels = agentModels.map { UiPolish.modelLabel(it) }.toTypedArray()
+        val labels = agentModels.map { id ->
+            AgentModelCatalog.find(id)?.let { model ->
+                "${model.name} · ${model.provider.label} · ${AgentModelCatalog.priceLabel(model)} · ${AgentModelCatalog.capabilityLabel(model)}"
+            } ?: UiPolish.modelLabel(id)
+        }.toTypedArray()
         // Prefer a real AlertDialog when the bottom sheet theme is invisible / behind Compose.
         AlertDialog.Builder(this)
             .setTitle("Venice model")
@@ -708,10 +730,16 @@ class MainActivity : FragmentActivity() {
     internal fun sendAgentMessage() {
         val text = agentInputText.trim()
         if (text.isEmpty() && pendingAttachments.isEmpty()) return
-        val apiKey = prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim() ?: ""
+        val provider = AgentModelCatalog.providerFor(agentSelectedModel)
+        val apiKey = if (provider == AgentProvider.OPENROUTER) {
+            prefs.getString(SettingsManager.KEY_OPENROUTER_API_KEY, "")?.trim() ?: ""
+        } else {
+            prefs.getString(SettingsManager.KEY_VENICE_API_KEY, "")?.trim() ?: ""
+        }
         if (apiKey.isEmpty()) {
             updateAgentSetupState()
-            UiFeedback.snackbar(snackbarAnchor, "Add a Venice API key to send messages", "Add key") { showVeniceKeySheet() }
+            val label = if (provider == AgentProvider.OPENROUTER) "OpenRouter" else "Venice"
+            UiFeedback.snackbar(snackbarAnchor, "Add a $label API key to send messages", "Settings") { showYouSub(YouSub.SETTINGS) }
             return
         }
 
@@ -748,7 +776,8 @@ class MainActivity : FragmentActivity() {
         agentThinking = true
         setAgentComposerEnabled(false)
 
-        val currentClient = VeniceClient(apiKey = apiKey)
+        val baseUrl = if (provider == AgentProvider.OPENROUTER) "https://openrouter.ai/api/v1" else "https://api.venice.ai/api/v1"
+        val currentClient = VeniceClient(apiKey = apiKey, baseUrl = baseUrl)
         currentAgentJob = scope.launch {
             var finishedAgent: Agent? = null
             try {

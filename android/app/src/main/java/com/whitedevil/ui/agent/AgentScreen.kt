@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.DropdownMenu
@@ -94,7 +95,7 @@ fun AgentScreen(host: MainActivity) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when {
                     !hasKey -> AgentSetupEmptyState(
-                        onAddKey = { host.showVeniceKeySheet() },
+                        onAddKey = { host.showSelectedProviderKeySheet() },
                         onPickModel = { host.showModelPicker() },
                         modelLabel = UiPolish.modelLabel(host.agentSelectedModelPublic()),
                     )
@@ -229,6 +230,12 @@ private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier)
                 modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Attach file" },
             ) {
                 Icon(Icons.Outlined.AttachFile, null, tint = WdPalette.textMetadata, modifier = Modifier.size(18.dp))
+            }
+            IconButton(
+                onClick = { host.pasteFromClipboard() },
+                modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Paste from clipboard" },
+            ) {
+                Icon(Icons.Outlined.ContentPaste, null, tint = WdPalette.textMetadata, modifier = Modifier.size(18.dp))
             }
             BasicTextField(
                 value = input,

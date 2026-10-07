@@ -17,6 +17,7 @@ data class HubScreenUi(val id: String, val title: String)
 /** Settings form bound to Compose (mirrors encrypted prefs). */
 data class SettingsFormState(
     val veniceKey: String = "",
+    val openRouterKey: String = "",
     val systemPrompt: String = "",
     val webSearch: Boolean = false,
     val relayUrl: String = "",

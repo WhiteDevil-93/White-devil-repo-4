@@ -20,7 +20,8 @@ data class Settings(
     val relayUser: String = "anon3",
     val relayPass: String = "",
     val veniceApiKey: String = "",
-    val model: String = "zai-org-glm-5-2",
+    val openRouterApiKey: String = "",
+    val model: String = "zai-org-glm-5",
     val enableWebSearch: Boolean = false,
     val deviceId: String = "",
     val deviceName: String = "",
@@ -64,7 +65,8 @@ data class Settings(
 
     /** Everything the agent needs before it can be started, or null when ready. */
     fun blockedReason(): String? = when {
-        veniceApiKey.isBlank() -> "Add your Venice API key in Settings."
+        ModelCatalog.providerFor(model) == ModelProvider.OPENROUTER && openRouterApiKey.isBlank() -> "Add your OpenRouter API key in Settings."
+        ModelCatalog.providerFor(model) == ModelProvider.VENICE && veniceApiKey.isBlank() -> "Add your Venice API key in Settings."
         hubUrl.isBlank() -> "Set the hub URL in Settings."
         else -> null
     }

@@ -17,6 +17,7 @@ fun SettingsScreen(initial: Settings, onSave: (Settings) -> Unit, onBack: () -> 
     var relayUser by remember { mutableStateOf(initial.relayUser) }
     var relayPass by remember { mutableStateOf(initial.relayPass) }
     var veniceKey by remember { mutableStateOf(initial.veniceApiKey) }
+    var openRouterKey by remember { mutableStateOf(initial.openRouterApiKey) }
     var model by remember { mutableStateOf(initial.model) }
     var webSearch by remember { mutableStateOf(initial.enableWebSearch) }
     var status by remember { mutableStateOf<String?>(null) }
@@ -69,7 +70,25 @@ fun SettingsScreen(initial: Settings, onSave: (Settings) -> Unit, onBack: () -> 
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(autoCorrect = false),
             )
-            OutlinedTextField(model, { model = it }, label = { Text("Model") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            Text("OpenRouter", style = MaterialTheme.typography.labelLarge)
+            OutlinedTextField(
+                openRouterKey, { openRouterKey = it },
+                label = { Text("OpenRouter API key") },
+                supportingText = { Text("Used automatically for models marked OpenRouter.") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(autoCorrect = false),
+            )
+
+            ModelPicker(model, { model = it })
+            OutlinedTextField(
+                model, { model = it },
+                label = { Text("Custom model ID (optional)") },
+                supportingText = { Text("Use a provider/model ID, for example openai/gpt-4o-mini for OpenRouter.") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(checked = webSearch, onCheckedChange = { webSearch = it })
                 Spacer(Modifier.width(12.dp))
@@ -107,6 +126,7 @@ fun SettingsScreen(initial: Settings, onSave: (Settings) -> Unit, onBack: () -> 
                     relayUser = relayUser.trim(),
                     relayPass = relayPass,
                     veniceApiKey = veniceKey.trim(),
+                    openRouterApiKey = openRouterKey.trim(),
                     model = model.trim().ifBlank { initial.model },
                     enableWebSearch = webSearch,
                     deviceId = deviceId,
@@ -118,6 +138,33 @@ fun SettingsScreen(initial: Settings, onSave: (Settings) -> Unit, onBack: () -> 
                     // with no sign anything went wrong.
                     .onFailure { status = "Could not save: ${it.message}" }
             }) { Text("Save") }
+        }
+    }
+}
+
+@Composable
+private fun ModelPicker(selected: String, onSelect: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        OutlinedButton(onClick = { expanded = true }) {
+            Text(ModelCatalog.find(selected)?.name ?: "Choose a catalog model")
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            ModelCatalog.entries.forEach { info ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text("${info.name} · ${info.provider.label}")
+                            Text(
+                                "${ModelCatalog.priceLabel(info)}  •  ${ModelCatalog.capabilityLabel(info)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                    onClick = { onSelect(info.id); expanded = false },
+                )
+            }
         }
     }
 }

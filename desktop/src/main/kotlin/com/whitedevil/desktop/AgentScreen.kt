@@ -23,6 +23,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.awt.Toolkit
+import java.awt.datatransfer.DataFlavor
+import java.awt.datatransfer.StringSelection
 
 /** One rendered line of the conversation. Mirrors the Android bubble roles. */
 data class ChatLine(val role: String, val title: String, val body: String)
@@ -62,7 +65,10 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
             // UI dispatcher is what stops the window freezing mid-run.
             try {
                 withContext(Dispatchers.IO) {
-                    VeniceClient(apiKey = settings.veniceApiKey).use { client ->
+                    val provider = ModelCatalog.providerFor(settings.model)
+                    val apiKey = if (provider == ModelProvider.OPENROUTER) settings.openRouterApiKey else settings.veniceApiKey
+                    val baseUrl = if (provider == ModelProvider.OPENROUTER) "https://openrouter.ai/api/v1" else "https://api.venice.ai/api/v1"
+                    VeniceClient(apiKey = apiKey, baseUrl = baseUrl).use { client ->
                         val agent = Agent(
                             client = client,
                             model = settings.model,
@@ -103,7 +109,7 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
     Column(Modifier.fillMaxSize()) {
         TopBar(
             busy = busy,
-            model = settings.model,
+            model = ModelCatalog.find(settings.model)?.let { "${it.name} · ${it.provider.label} · ${ModelCatalog.capabilityLabel(it)}" } ?: settings.model,
             onStop = { job?.cancel() },
             onClear = { if (!busy) lines.clear() },
             onOpenSettings = onOpenSettings,
@@ -128,6 +134,7 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
             value = input,
             busy = busy,
             onValueChange = { input = it },
+            onPaste = { readClipboardText()?.let { input += it } },
             onSend = ::send,
         )
     }
@@ -192,7 +199,11 @@ private fun Bubble(line: ChatLine) {
             .background(bg, RoundedCornerShape(12.dp))
             .padding(horizontal = 14.dp, vertical = 10.dp)
     ) {
-        Text(line.title, style = MaterialTheme.typography.labelSmall, color = tone.onSurfaceVariant)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(line.title, style = MaterialTheme.typography.labelSmall, color = tone.onSurfaceVariant)
+            Spacer(Modifier.weight(1f))
+            TextButton(onClick = { copyToClipboard(line.body) }, contentPadding = PaddingValues(0.dp)) { Text("Copy") }
+        }
         Spacer(Modifier.height(4.dp))
         // Tool output can be enormous; the full text stays in the agent's history,
         // only the rendering is capped so one blob cannot lock the UI.
@@ -208,7 +219,7 @@ private fun Bubble(line: ChatLine) {
 }
 
 @Composable
-private fun Composer(value: String, busy: Boolean, onValueChange: (String) -> Unit, onSend: () -> Unit) {
+private fun Composer(value: String, busy: Boolean, onValueChange: (String) -> Unit, onPaste: () -> Unit, onSend: () -> Unit) {
     Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
         Row(
             Modifier.fillMaxWidth().padding(16.dp),
@@ -224,12 +235,26 @@ private fun Composer(value: String, busy: Boolean, onValueChange: (String) -> Un
                 keyboardActions = KeyboardActions(onSend = { onSend() }),
             )
             Spacer(Modifier.width(12.dp))
+            TextButton(onClick = onPaste, enabled = !busy) { Text("Paste") }
+            Spacer(Modifier.width(4.dp))
             Button(onClick = onSend, enabled = !busy && value.isNotBlank(), modifier = Modifier.height(56.dp)) {
                 Text(if (busy) "Working" else "Send")
             }
         }
     }
 }
+
+private fun copyToClipboard(text: String) {
+    if (text.isBlank()) return
+    Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(text), null)
+}
+
+private fun readClipboardText(): String? = runCatching {
+    val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+    if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
+        clipboard.getData(DataFlavor.stringFlavor) as? String
+    } else null
+}.getOrNull()
 
 private const val DEFAULT_SYSTEM_PROMPT =
     "You are WhiteDevil — an agentic app. Forge Hub, the laptop, Shell, Colab/Thunder, LTX/Wan, media and Setup " +

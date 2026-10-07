@@ -26,6 +26,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -131,22 +135,38 @@ private fun UserBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
                 .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
                 .padding(horizontal = 10.dp, vertical = 7.dp),
         )
+        CopyButton(msg.message, onCopy)
     }
 }
 
 @Composable
 private fun AssistantBubble(msg: ChatUiMessage, onCopy: (String) -> Unit) {
     val fg = if (msg.role == MainActivity.ROLE_ERROR) WdPalette.errorText else WdPalette.text
-    Text(
-        msg.message,
-        style = MaterialTheme.typography.bodyMedium,
-        color = fg,
-        modifier = Modifier
-            .fillMaxWidth()
-            .widthIn(max = 340.dp)
-            .clickable(enabled = msg.message.length > 24) { onCopy(msg.message) }
-            .padding(end = 4.dp),
-    )
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+        Text(
+            msg.message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = fg,
+            modifier = Modifier.weight(1f).widthIn(max = 340.dp).padding(end = 4.dp),
+        )
+        CopyButton(msg.message, onCopy)
+    }
+}
+
+@Composable
+private fun CopyButton(text: String, onCopy: (String) -> Unit) {
+    IconButton(
+        onClick = { onCopy(text) },
+        enabled = text.isNotBlank(),
+        modifier = Modifier.size(32.dp),
+    ) {
+        Icon(
+            Icons.Outlined.ContentCopy,
+            contentDescription = "Copy message",
+            tint = WdPalette.textMetadata,
+            modifier = Modifier.size(16.dp),
+        )
+    }
 }
 
 @Composable
@@ -170,6 +190,7 @@ private fun ToolBubble(msg: ChatUiMessage, onToggleTool: (Long) -> Unit, onCopy:
                 style = MaterialTheme.typography.titleMedium,
                 color = WdPalette.textMetadata,
             )
+            CopyButton(msg.message, onCopy)
         }
         if (msg.toolExpanded) {
             Spacer(Modifier.height(8.dp))

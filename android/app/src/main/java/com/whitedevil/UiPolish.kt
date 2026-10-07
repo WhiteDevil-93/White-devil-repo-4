@@ -21,9 +21,11 @@ object UiPolish {
     fun modelLabel(modelId: String): String = when (modelId) {
         "zai-org-glm-5-2" -> "GLM 5.2"
         "zai-org-glm-5" -> "GLM 5"
-        "venice-uncensored" -> "Uncensored"
         "venice-uncensored-1-2" -> "Uncensored 1.2"
+        "venice-uncensored-role-play" -> "Uncensored Role Play"
+        "gemma-4-uncensored" -> "Gemma 4 Uncensored"
         "kimi-k2-6" -> "Kimi K2.6"
+        "mistral-small-3-2-24b-instruct" -> "Mistral Small 3.2 24B"
         "claude-opus-4-8" -> "Opus 4.8"
         else -> modelId.substringAfterLast('-').replaceFirstChar { it.uppercase() }
     }
