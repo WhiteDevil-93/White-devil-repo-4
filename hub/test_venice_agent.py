@@ -163,6 +163,18 @@ def test_unknown_tool():
     assert "unknown tool" in j["output"]
 
 
+def test_win_to_wsl_path_conversion():
+    # Regression: upload_to_colab called re.match without importing re, so every
+    # Windows path (and every path — re.match ran unconditionally) returned
+    # "Error: name 're' is not defined" from the tool dispatcher.
+    assert venice._win_to_wsl(r"C:\Users\x\a.safetensors") == "/mnt/c/Users/x/a.safetensors"
+    assert venice._win_to_wsl(r"D:/models/lora.safetensors") == "/mnt/d/models/lora.safetensors"
+    assert venice._win_to_wsl("/mnt/c/Users/x/a.safetensors") == "/mnt/c/Users/x/a.safetensors"
+    out = venice.execute_tool("upload_to_colab", {"local_path": r"C:\Users\x\missing.safetensors"})
+    assert "name 're' is not defined" not in out
+    assert out.startswith("Error:")  # real path/ssh failure is fine; the NameError is not
+
+
 def test_chats_keep_tool_events(tmp_path, monkeypatch):
     dest = tmp_path / "chats.json"
     monkeypatch.setattr(venice, "CHAT_FILES", (dest, tmp_path / "alt.json"))
