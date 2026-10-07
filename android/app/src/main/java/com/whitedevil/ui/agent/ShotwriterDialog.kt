@@ -23,7 +23,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.whitedevil.agent.ShotwriterCatalog
 import com.whitedevil.agent.VideoModel
-import com.whitedevil.ui.theme.Forge
+import com.whitedevil.ui.theme.WdPalette
 
 @Composable
 fun ShotwriterDialog(
@@ -48,8 +48,8 @@ fun ShotwriterDialog(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .clip(RoundedCornerShape(12.dp))
-                .background(Forge.Bg)
-                .border(1.dp, Forge.Line, RoundedCornerShape(12.dp))
+                .background(WdPalette.bg)
+                .border(1.dp, WdPalette.stroke, RoundedCornerShape(12.dp))
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -57,12 +57,12 @@ fun ShotwriterDialog(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Forge.Panel)
-                        .border(1.dp, Forge.Line, RoundedCornerShape(8.dp))
+                        .background(WdPalette.surface)
+                        .border(1.dp, WdPalette.stroke, RoundedCornerShape(8.dp))
                         .clickable { showingModelList = !showingModelList }
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
-                    Text(selectedModel.name, color = Forge.Fg, fontSize = 14.sp)
+                    Text(selectedModel.name, color = WdPalette.text, fontSize = 14.sp)
                 }
                 
                 Spacer(Modifier.weight(1f))
@@ -72,7 +72,7 @@ fun ShotwriterDialog(
                         onRewrite(selectedModel, selectedResolution, selectedRatio, selectedLength)
                         onDismissRequest() 
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Forge.AccSoft, contentColor = Forge.Acc3),
+                    colors = ButtonDefaults.buttonColors(containerColor = WdPalette.surfaceHover, contentColor = WdPalette.accentLight),
                     shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                 ) {
@@ -88,13 +88,13 @@ fun ShotwriterDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (selectedResolution.isNotEmpty()) {
-                    Text(selectedResolution, color = Forge.Dim, fontSize = 12.sp)
+                    Text(selectedResolution, color = WdPalette.textSecondary, fontSize = 12.sp)
                 }
                 if (selectedLength.isNotEmpty()) {
-                    Text(selectedLength, color = Forge.Dim, fontSize = 12.sp)
+                    Text(selectedLength, color = WdPalette.textSecondary, fontSize = 12.sp)
                 }
                 if (selectedRatio.isNotEmpty()) {
-                    Text(selectedRatio, color = Forge.Dim, fontSize = 12.sp)
+                    Text(selectedRatio, color = WdPalette.textSecondary, fontSize = 12.sp)
                 }
             }
 
@@ -103,13 +103,13 @@ fun ShotwriterDialog(
                     modifier = Modifier.heightIn(max = 400.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    item { Text("Featured Models", color = Forge.Fg, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp)) }
+                    item { Text("Featured Models", color = WdPalette.text, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp)) }
                     items(ShotwriterCatalog.models) { model ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (model.id == selectedModel.id) Forge.Panel else Color.Transparent)
+                                .background(if (model.id == selectedModel.id) WdPalette.surface else Color.Transparent)
                                 .clickable { 
                                     selectedModel = model 
                                     showingModelList = false
@@ -119,33 +119,33 @@ fun ShotwriterDialog(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(model.name, color = Forge.Fg, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text(model.description, color = Forge.Dim, fontSize = 12.sp)
+                                Text(model.name, color = WdPalette.text, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text(model.description, color = WdPalette.textSecondary, fontSize = 12.sp)
                             }
                             if (model.id == selectedModel.id) {
-                                Icon(Icons.Outlined.Check, null, tint = Forge.Acc, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Outlined.Check, null, tint = WdPalette.accent, modifier = Modifier.size(16.dp))
                             }
                         }
                     }
                 }
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Settings for ${selectedModel.name}", color = Forge.Dim, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("Settings for ${selectedModel.name}", color = WdPalette.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     
                     if (selectedModel.supportedResolutions.isNotEmpty()) {
                         Column {
-                            Text("Resolution", color = Forge.Fg, fontSize = 13.sp, modifier = Modifier.padding(bottom = 4.dp))
+                            Text("Resolution", color = WdPalette.text, fontSize = 13.sp, modifier = Modifier.padding(bottom = 4.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 selectedModel.supportedResolutions.forEach { res ->
                                     val isSelected = res == selectedResolution
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(6.dp))
-                                            .background(if (isSelected) Forge.Acc else Forge.Panel2)
+                                            .background(if (isSelected) WdPalette.accent else WdPalette.surfaceHover)
                                             .clickable { selectedResolution = res }
                                             .padding(horizontal = 10.dp, vertical = 6.dp)
                                     ) {
-                                        Text(res, color = if (isSelected) Color.White else Forge.Fg, fontSize = 12.sp)
+                                        Text(res, color = if (isSelected) Color.White else WdPalette.text, fontSize = 12.sp)
                                     }
                                 }
                             }
@@ -154,18 +154,18 @@ fun ShotwriterDialog(
 
                     if (selectedModel.supportedRatios.isNotEmpty()) {
                         Column {
-                            Text("Aspect Ratio", color = Forge.Fg, fontSize = 13.sp, modifier = Modifier.padding(bottom = 4.dp))
+                            Text("Aspect Ratio", color = WdPalette.text, fontSize = 13.sp, modifier = Modifier.padding(bottom = 4.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 selectedModel.supportedRatios.forEach { ratio ->
                                     val isSelected = ratio == selectedRatio
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(6.dp))
-                                            .background(if (isSelected) Forge.Acc else Forge.Panel2)
+                                            .background(if (isSelected) WdPalette.accent else WdPalette.surfaceHover)
                                             .clickable { selectedRatio = ratio }
                                             .padding(horizontal = 10.dp, vertical = 6.dp)
                                     ) {
-                                        Text(ratio, color = if (isSelected) Color.White else Forge.Fg, fontSize = 12.sp)
+                                        Text(ratio, color = if (isSelected) Color.White else WdPalette.text, fontSize = 12.sp)
                                     }
                                 }
                             }
@@ -174,18 +174,18 @@ fun ShotwriterDialog(
 
                     if (selectedModel.supportedLengths.isNotEmpty()) {
                         Column {
-                            Text("Length", color = Forge.Fg, fontSize = 13.sp, modifier = Modifier.padding(bottom = 4.dp))
+                            Text("Length", color = WdPalette.text, fontSize = 13.sp, modifier = Modifier.padding(bottom = 4.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 selectedModel.supportedLengths.forEach { len ->
                                     val isSelected = len == selectedLength
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(6.dp))
-                                            .background(if (isSelected) Forge.Acc else Forge.Panel2)
+                                            .background(if (isSelected) WdPalette.accent else WdPalette.surfaceHover)
                                             .clickable { selectedLength = len }
                                             .padding(horizontal = 10.dp, vertical = 6.dp)
                                     ) {
-                                        Text(len, color = if (isSelected) Color.White else Forge.Fg, fontSize = 12.sp)
+                                        Text(len, color = if (isSelected) Color.White else WdPalette.text, fontSize = 12.sp)
                                     }
                                 }
                             }

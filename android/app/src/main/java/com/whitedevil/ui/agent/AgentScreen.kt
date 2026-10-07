@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Tune
@@ -257,7 +258,7 @@ private fun DeepSpaceComposer(host: MainActivity, modifier: Modifier = Modifier)
                 onClick = { shotwriterOpen = true },
                 modifier = Modifier.size(WdDimens.iconTap).semantics { contentDescription = "Shotwriter" },
             ) {
-                Icon(androidx.compose.material.icons.Icons.Outlined.AutoAwesome, null, tint = WdPalette.textMetadata, modifier = Modifier.size(18.dp))
+                Icon(Icons.Outlined.AutoAwesome, null, tint = WdPalette.textMetadata, modifier = Modifier.size(18.dp))
             }
             IconButton(
                 onClick = { host.startVoiceInput() },
