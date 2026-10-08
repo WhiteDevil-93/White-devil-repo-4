@@ -64,9 +64,7 @@ def ensure_requests():
 
 ensure_requests()
 import requests  # noqa: E402
-import urllib3  # noqa: E402
 
-urllib3.disable_warnings()
 
 
 def token() -> str:
@@ -106,7 +104,6 @@ def get(url: str, tok: str, stream: bool = False, extra: dict[str, str] | None =
     return requests.get(
         url,
         headers=h,
-        verify=False,
         stream=stream,
         timeout=180,
         allow_redirects=True,

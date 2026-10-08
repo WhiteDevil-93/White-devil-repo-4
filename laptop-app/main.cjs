@@ -11,7 +11,7 @@ const fs = require("fs");
 const path = require("path");
 const {
   mergeSettings, isLaptopPath, normalizeHubUrl, DEFAULT_HUB, needsRelayPassword,
-  isAllowedNavigation, isTrustedAppPage,
+  isAllowedNavigation, isTrustedAppPage, maySendHubCredentials,
 } = require("./config.cjs");
 
 if (process.platform === "win32") {
@@ -75,6 +75,7 @@ async function firstRunDefaults() {
 
 function credsFor(url) {
   const s = cached || loadSettings();
+  if (!maySendHubCredentials(url, hubTarget(s))) return null;
   if (isLaptopPath(url)) return { user: s.laptopUser, pass: s.laptopPass };
   return { user: s.relayUser, pass: s.relayPass };
 }
@@ -82,13 +83,9 @@ function credsFor(url) {
 function attachAuth() {
   session.defaultSession.webRequest.onBeforeSendHeaders({ urls: ["https://*/*", "http://*/*"] }, (details, cb) => {
     try {
-      const dest = new URL(details.url);
-      const s = cached || loadSettings();
-      if (dest.host === new URL(hubTarget(s)).host) {
-        const c = credsFor(details.url);
-        if (c.user && c.pass) {
-          details.requestHeaders.Authorization = "Basic " + Buffer.from(c.user + ":" + c.pass, "utf8").toString("base64");
-        }
+      const c = credsFor(details.url);
+      if (c && c.user && c.pass) {
+        details.requestHeaders.Authorization = "Basic " + Buffer.from(c.user + ":" + c.pass, "utf8").toString("base64");
       }
     } catch { /* ignore */ }
     cb({ requestHeaders: details.requestHeaders });
@@ -280,6 +277,9 @@ ipcMain.handle("settings:test", async (e, raw) => {
   try {
     const headers = {};
     if (s.relayUser && s.relayPass) {
+      if (!maySendHubCredentials(url, s.hubUrl)) {
+        return { ok: false, status: 0, message: "Credentials require HTTPS or a local loopback Hub URL." };
+      }
       headers.Authorization = "Basic " + Buffer.from(s.relayUser + ":" + s.relayPass).toString("base64");
     }
     const r = await net.fetch(new URL("/api/manifest", url).toString(), { headers });
@@ -292,14 +292,14 @@ ipcMain.handle("settings:test", async (e, raw) => {
 });
 
 app.on("login", (event, webContents, details, _authInfo, callback) => {
-  event.preventDefault();
   const c = credsFor(details.url);
-  if (c.user && c.pass) {
+  if (c && c.user && c.pass) {
+    event.preventDefault();
     callback(c.user, c.pass);
     return;
   }
   callback();
-  if (mainWindow && !mainWindow.isDestroyed() && webContents.id === mainWindow.webContents.id && !isStartPage()) {
+  if (c && mainWindow && !mainWindow.isDestroyed() && webContents.id === mainWindow.webContents.id && !isStartPage()) {
     showStart("Relay asked for a password. Paste it below — a blank password is a black page.");
   }
 });

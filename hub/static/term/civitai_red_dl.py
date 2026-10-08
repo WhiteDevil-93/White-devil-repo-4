@@ -64,9 +64,7 @@ def ensure_requests():
 
 ensure_requests()
 import requests  # noqa: E402
-import urllib3  # noqa: E402
 
-urllib3.disable_warnings()
 
 
 def token() -> str:
@@ -94,11 +92,18 @@ def rewrite(url: str) -> str:
     return re.sub(r"https?://(?:www\.)?civitai\.com", HOST, url, flags=re.I)
 
 
-def get(url: str, tok: str, stream: bool = False):
+def mask(url: str) -> str:
+    """Strip the API token out of a URL before it reaches a log or an error."""
+    return re.sub(r"(token=)[^&\s]+", r"\1***", url)
+
+
+def get(url: str, tok: str, stream: bool = False, extra: dict[str, str] | None = None):
+    h = headers(tok)
+    if extra:
+        h.update(extra)
     return requests.get(
         url,
-        headers=headers(tok),
-        verify=False,
+        headers=h,
         stream=stream,
         timeout=180,
         allow_redirects=True,
@@ -162,7 +167,7 @@ def download_url(ver: dict, f: dict) -> str:
 def looks_like_file(r: requests.Response) -> bool:
     ct = (r.headers.get("content-type") or "").lower()
     cd = (r.headers.get("content-disposition") or "").lower()
-    if r.status_code != 200:
+    if r.status_code not in (200, 206):  # 206 = resumed range request
         return False
     if "text/html" in ct:
         return False
@@ -179,14 +184,31 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def save(url: str, dest: Path, tok: str, expect_sha: str | None) -> Path:
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    r = get(url, tok, stream=True)
+def total_from(r: requests.Response, resume: int) -> int:
+    """Full file size in bytes, 0 if the server did not say."""
+    cr = r.headers.get("content-range") or ""
+    m = re.search(r"/\s*(\d+)\s*$", cr)
+    if m:
+        return int(m.group(1))
+    length = int(r.headers.get("content-length") or 0)
+    if not length:
+        return 0
+    return length + resume if r.status_code == 206 else length
+
+
+def open_stream(url: str, tok: str, resume: int):
+    """GET the file, asking to resume at [resume] bytes. Returns (response, resume_honoured)."""
+    rng = {"Range": f"bytes={resume}-"} if resume else None
+    r = get(url, tok, stream=True, extra=rng)
     if r.status_code in (401, 403) and tok:
         # some proxies strip Authorization; query param is the documented fallback
         joiner = "&" if "?" in url else "?"
         r.close()
-        r = get(f"{url}{joiner}token={tok}", "", stream=True)
+        r = get(f"{url}{joiner}token={tok}", "", stream=True, extra=rng)
+    if resume and r.status_code == 416:
+        # stale/oversized .part — start over rather than keep a file we cannot verify
+        r.close()
+        return open_stream(url, tok, 0)[0], False
     if r.status_code in (401, 403) or not looks_like_file(r):
         hint = (
             "Civitai blocks file downloads without an API token. "
@@ -194,12 +216,31 @@ def save(url: str, dest: Path, tok: str, expect_sha: str | None) -> Path:
             "(Account settings → API Keys on civitai.com). "
             "If this LoRA is early-access/paid, that same account must own it."
         )
-        sys.exit(f"download refused {r.status_code} {(r.headers.get('content-type') or '')} {r.url}\n{hint}")
-    total = int(r.headers.get("content-length") or 0)
-    print(f"downloading {dest.name}  {round(total / 1e6, 1)} MB")
+        sys.exit(
+            f"download refused {r.status_code} {(r.headers.get('content-type') or '')} "
+            f"{mask(r.url)}\n{hint}"
+        )
+    return r, bool(resume) and r.status_code == 206
+
+
+def save(url: str, dest: Path, tok: str, expect_sha: str | None) -> Path:
+    dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_suffix(dest.suffix + ".part")
-    got = 0
-    with tmp.open("wb") as fh:
+    # A dropped connection used to leave a truncated file under the real name and
+    # print "saved". Now: partial bytes stay in .part, the next run resumes them,
+    # and only a byte-complete (and hash-checked, when Civitai gives a hash) file
+    # is ever promoted to [dest].
+    resume = tmp.stat().st_size if tmp.is_file() else 0
+    r, resumed = open_stream(url, tok, resume)
+    if not resumed:
+        resume = 0
+    total = total_from(r, resume)
+    if resume:
+        print(f"resuming {dest.name} at {round(resume / 1e6, 1)} MB of {round(total / 1e6, 1)} MB")
+    else:
+        print(f"downloading {dest.name}  {round(total / 1e6, 1)} MB")
+    got = resume
+    with tmp.open("ab" if resume else "wb") as fh:
         for chunk in r.iter_content(1 << 20):
             if not chunk:
                 continue
@@ -209,13 +250,21 @@ def save(url: str, dest: Path, tok: str, expect_sha: str | None) -> Path:
                 pct = min(100, int(got * 100 / total))
                 print(f"\r  {pct:3d}%  {round(got / 1e6, 1)} MB", end="", flush=True)
     print()
-    tmp.replace(dest)
+    on_disk = tmp.stat().st_size
+    if total and on_disk != total:
+        sys.exit(
+            f"incomplete download: {on_disk} of {total} bytes in {tmp}\n"
+            "The partial file was kept — re-run the same command to resume it."
+        )
+    if not total:
+        print(f"WARNING: server sent no size for {dest.name}; cannot prove the download is complete")
     if expect_sha:
-        got_sha = sha256_file(dest)
+        got_sha = sha256_file(tmp)
         if got_sha.lower() != expect_sha.lower():
-            dest.unlink(missing_ok=True)
-            sys.exit(f"sha256 mismatch: got {got_sha} expected {expect_sha}")
+            tmp.unlink(missing_ok=True)  # our own .part, never a finished model file
+            sys.exit(f"sha256 mismatch: got {got_sha} expected {expect_sha} (discarded {tmp.name})")
         print("sha256 ok")
+    tmp.replace(dest)
     print(f"saved {dest}  {dest.stat().st_size} bytes")
     return dest
 

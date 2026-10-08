@@ -521,9 +521,8 @@ fun HubLtxBody(json: String, host: MainActivity) {
 @Composable
 fun HubVastBody(json: String, host: MainActivity) {
     val root = runCatching { JSONObject(json) }.getOrNull() ?: return
-    val queue = root.optJSONObject("queue") ?: root
-    val jobs = queue.optJSONArray("jobs") ?: JSONArray()
-    val comfy = queue.optJSONObject("comfy")
+    val state = root.optJSONObject("state") ?: root
+    val instances = state.optJSONArray("instances") ?: JSONArray()
     val library = root.optJSONArray("library")?.toString()
     val relay = host.relayBasePublic()
     val auth = host.relayAuthPublic()
@@ -544,19 +543,19 @@ fun HubVastBody(json: String, host: MainActivity) {
         }
         item {
             HubCard {
-                HubSectionTitle("14B runner", null)
-                HubStatRow("Runner up", if (queue.optBoolean("runner")) "yes" else "no")
-                comfy?.let {
-                    HubStatRow("Comfy online", if (it.optBoolean("online")) "yes" else "no")
-                    HubStatRow("Queue", "${it.optInt("pending")} pending")
-                }
+                HubSectionTitle("Vast account")
+                HubStatRow("Credit", "\$${state.optString("credit", "—")}")
+                HubStatRow("Instances", instances.length().toString())
             }
         }
-        item { HubSectionTitle("Wanbot jobs") }
-        items((0 until jobs.length()).map { jobs.getJSONObject(it) }) { j ->
+        item { HubSectionTitle("Vast instances") }
+        if (instances.length() == 0) item { Text("No Vast instances", color = WdPalette.textSecondary) }
+        items((0 until instances.length()).map { instances.getJSONObject(it) }) { instance ->
             HubCard {
-                Text(j.optString("name", j.optString("chain_id", j.optString("id"))), fontWeight = FontWeight.SemiBold)
-                HubStatRow("Status", j.optString("status"))
+                Text(instance.optString("label", instance.optString("id")), fontWeight = FontWeight.SemiBold)
+                HubStatRow("Status", instance.optString("status", "unknown"))
+                HubStatRow("GPU", instance.optString("gpu", "unknown"))
+                HubStatRow("Hourly price", "\$${instance.optString("price", "—")}")
             }
         }
     }

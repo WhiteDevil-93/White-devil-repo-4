@@ -107,7 +107,13 @@ def test_workspace_file_tools(tmp_path, monkeypatch):
     before = bool(agentic_store.permissions().get("allow_file_delete"))
     agentic_store.save_permissions({"allow_file_delete": True})
     try:
-        deleted = client.post("/api/venice/tool", json={"name": "delete_file", "arguments": {"path": "notes/hi.txt"}}).json()
+        delete_call = {"name": "delete_file", "arguments": {"path": "notes/hi.txt"}}
+        assert client.post("/api/venice/tool", json=delete_call).json()["ok"] is False
+        approval = client.post("/api/venice/approval", json=delete_call)
+        assert approval.status_code == 200
+        deleted = client.post("/api/venice/tool", json={
+            **delete_call, "approval_token": approval.json()["token"],
+        }).json()
         assert deleted["output"] == "Deleted notes/hi.txt"
     finally:
         agentic_store.save_permissions({"allow_file_delete": before})

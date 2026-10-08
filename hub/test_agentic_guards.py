@@ -100,9 +100,14 @@ def test_schedule_next_run_does_not_drift(tmp_path, monkeypatch):
         "id": "s2", "enabled": True, "goal": "do y", "every_minutes": 5, "next_run": due,
     }])
 
-    runner.tick_due_schedules(now)
+    fired = runner.tick_due_schedules(now)
     nxt = store.list_schedules()[0]["next_run"]
     assert abs(nxt - (due + 300)) < 1, f"drifted: {nxt - due}s after the due time"
+    assert len(fired) == 1
+    worker = runner._active.get(fired[0]["job"])
+    if worker is not None:
+        worker.join(timeout=5)
+    assert store.get_job(fired[0]["job"])["status"] == "done"
 
 
 def test_subagents_cannot_delegate_further(tmp_path, monkeypatch):

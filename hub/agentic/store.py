@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import json
 import os
+import posixpath
 import threading
 import time
 import uuid
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlsplit
 
 DATA = Path.home() / "hub" / "agentic_data"
 LOCK = threading.RLock()
@@ -53,10 +55,48 @@ CONFIRM_TOOLS = {
     "hub_request": "Mutating Forge Hub API call",
     "run_laptop_command": "Potentially destructive laptop command",
     "run_in_terminal": "Potentially destructive laptop command",
+    "queue_gpu_render": "Queue GPU work (may spend cloud credits)",
 }
 
 # Laptop/terminal commands matching this pattern are considered destructive.
 DANGEROUS_CMD = r"rm\s+-[rf]|mkfs|shutdown|reboot|sudo\s|>\s*/dev/|curl[^|]*\|\s*(bash|sh)"
+
+
+def hub_api_path(raw: Any) -> str:
+    """Normalize a model supplied Hub path before applying policy to it."""
+    path = str(raw or "").strip()
+    for _ in range(3):
+        decoded = unquote(path)
+        if decoded == path:
+            break
+        path = decoded
+    return posixpath.normpath(urlsplit(path).path).rstrip("/").lower()
+
+
+def hub_request_is_spend(method: str, path: str) -> bool:
+    if method == "GET":
+        return False
+    path = hub_api_path(path)
+    if path == "/api/colab/stop-runtime" or path == "/api/ltx/cycle/stop":
+        return False
+    if path.endswith(("/stop", "/cancel", "/delete")):
+        return False
+    # Unknown cloud mutations must also be treated as potentially billable:
+    # new instance and resume endpoints should not silently bypass the switch.
+    return any(path == base or path.startswith(base + "/") for base in (
+        "/api/colab", "/api/thunder", "/api/ltx", "/api/gen", "/api/vast",
+    ))
+
+
+def hub_request_is_control_mutation(method: str, path: str) -> bool:
+    if method == "GET":
+        return False
+    path = hub_api_path(path)
+    return path == "/api/agentic" or path.startswith("/api/agentic/") or path in {
+        "/api/venice/approval",
+        "/api/venice/tool",
+        "/api/venice/key",
+    }
 
 
 def confirm_reason(tool: str, args: dict[str, Any] | None = None) -> str | None:
@@ -93,6 +133,20 @@ def permission_block(
     this, so a permission turned off in the UI is off on every path.
     """
     perms = permissions() if perms is None else perms
+    args = args or {}
+    if tool == "hub_request":
+        method = str(args.get("method") or "GET").strip().upper()
+        path = str(args.get("path") or "")
+        if hub_request_is_control_mutation(method, path):
+            return "Blocked by agentic permissions: agents cannot change Hub control settings"
+        if hub_request_is_spend(method, path) and not perms.get("allow_spend"):
+            return "Blocked by agentic permissions: allow_spend=false"
+    if tool == "queue_gpu_render" and not perms.get("allow_spend"):
+        return "Blocked by agentic permissions: allow_spend=false"
+    if (tool == "render_assess_adjust_cycle" and
+            str(args.get("action") or "status").strip().lower() == "start" and
+            not perms.get("allow_spend")):
+        return "Blocked by agentic permissions: allow_spend=false"
     if tool == "delete_file" and not perms.get("allow_file_delete"):
         return "Blocked by agentic permissions: allow_file_delete=false"
     if tool == "write_file" and not perms.get("allow_file_write"):
@@ -109,7 +163,7 @@ def permission_block(
         if reason:
             return (
                 f"Blocked by agentic permissions: {reason} — needs in-chat user "
-                "confirmation or reviewer sub-agent approval "
+                "confirmation "
                 "(require_confirm_destructive=true)"
             )
     return None
