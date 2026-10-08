@@ -1,8 +1,8 @@
 {
-  "apk_version": 21,
+  "apk_version": 26,
   "apk_url": "/app/forgehub.apk",
   "force_update": true,
-  "web_rev": 49,
+  "web_rev": 50,
   "screens": [
     {
       "id": "agent",
@@ -71,6 +71,13 @@
       "title": "Setup",
       "icon": "setup",
       "url": "/app/setup/",
+      "group": "Forge Hub"
+    },
+    {
+      "id": "loratrain",
+      "title": "Train LoRA",
+      "icon": "setup",
+      "url": "/app/loratrain/",
       "group": "Forge Hub"
     },
     {

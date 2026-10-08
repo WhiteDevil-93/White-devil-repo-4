@@ -50,7 +50,7 @@ compose.desktop {
             packageName = "WhiteDevil"
             // MSI needs numeric major.minor.build (major <= 255). Bump this for every
             // MSI you hand out: an upgrade is keyed on upgradeUuid + a higher version.
-            packageVersion = "1.0.0"
+            packageVersion = "1.0.4"
             description = "WhiteDevil desktop: agent, shell and render tools"
             vendor = "WhiteDevil"
 
