@@ -123,6 +123,7 @@ class ToolBoxTest {
                 relayBaseUrl = "http://127.0.0.1:${server.localPort}",
                 relayUser = "",
                 relayPass = "",
+                access = AccessConfig(confirm = { _, _ -> true }),
             )
             val result = box.execute(
                 "run_laptop_command",
@@ -146,7 +147,8 @@ class ToolBoxTest {
             workspaceDir = dir,
             relayBaseUrl = "https://84-12-112-249.sslip.io",
             relayUser = "anon3",
-            relayPass = "secret"
+            relayPass = "secret",
+            access = AccessConfig(confirm = { _, _ -> true }),
         )
 
         val writeRes = box.execute("write_file", """{"path": "notes.txt", "content": "hello from android"}""")
@@ -256,16 +258,17 @@ class ToolBoxTest {
     }
 
     @Test
-    fun existingRiskyToolsAskFirstWhenThereIsAUiAndStayUngatedWithout() {
+    fun existingRiskyToolsRequireAConfirmationUi() {
         // delete_file on the app workspace: denied when the user says no, file survives.
         val ws = folder.newFolder("ws-gate")
         File(ws, "keep.txt").writeText("x")
         val deny = ToolBox(ws, "", "", "", AccessConfig(confirm = { _, _ -> false }))
         assertTrue(deny.execute("delete_file", """{"path":"keep.txt"}""").startsWith("Denied"))
         assertTrue(File(ws, "keep.txt").exists())
-        // With no UI the old behaviour is unchanged (desktop / CLI).
+        // With no UI, desktop / CLI cannot silently approve a destructive tool.
         val legacy = ToolBox(ws, "", "", "")
-        assertTrue(legacy.execute("delete_file", """{"path":"keep.txt"}""").startsWith("Deleted"))
+        assertTrue(legacy.execute("delete_file", """{"path":"keep.txt"}""").startsWith("Denied"))
+        assertTrue(File(ws, "keep.txt").exists())
         // A GET hub_request is never prompted; a POST is.
         var prompts = 0
         val counting = ToolBox(folder.newFolder("ws-gate2"), "", "", "", AccessConfig(confirm = { _, _ -> prompts++; false }))
@@ -340,7 +343,7 @@ class ToolBoxTest {
     @Test
     fun gitCommitStagesOnlyExplicitPathsAndQuotesTheMessage() {
         val posted = decoded(
-            postedToRelay(AccessConfig()) {
+            postedToRelay(AccessConfig(confirm = { _, _ -> true })) {
                 it.execute("git_commit", """{"message":"it's fixed","paths":["a.kt","b/c.py"],"repo":"wd-ui"}""")
             },
         )
@@ -357,6 +360,14 @@ class ToolBoxTest {
             }
             assertEquals("$bad must not reach the laptop", "", sent)
         }
+    }
+
+    @Test
+    fun gitCommitWithoutConfirmationNeverReachesTheLaptop() {
+        val sent = postedToRelay(AccessConfig()) { box ->
+            assertTrue(box.execute("git_commit", """{"message":"m","paths":["a.kt"]}""").startsWith("Denied"))
+        }
+        assertEquals("", sent)
     }
 
     @Test
@@ -377,6 +388,102 @@ class ToolBoxTest {
     fun gitToolsAreAlwaysListed() {
         val names = boxWith(AccessConfig(), "gl").definitions.map { it.function.name }
         assertTrue(names.containsAll(listOf("git_status", "git_diff", "git_log", "git_commit", "git_push")))
+    }
+
+    @Test
+    fun testQueueGpuRenderLtxSendsFormUrlEncoded() {
+        val server = ServerSocket(0).apply { soTimeout = 2000 }
+        var receivedContentType = ""
+        var receivedBody = ""
+        var requestPath = ""
+        var permissionPath = ""
+        val serving = thread(start = true, isDaemon = true) {
+            repeat(2) { requestIndex ->
+                server.accept().use { socket ->
+                    val reader = socket.getInputStream().bufferedReader()
+                    val path = reader.readLine().split(" ")[1]
+                    if (requestIndex == 0) permissionPath = path else requestPath = path
+                    var len = 0
+                    while (true) {
+                        val line = reader.readLine()
+                        if (line.isEmpty()) break
+                        if (line.startsWith("Content-Type:", ignoreCase = true) && requestIndex == 1) {
+                            receivedContentType = line.substringAfter(":").trim()
+                        }
+                        if (line.startsWith("Content-Length:", ignoreCase = true)) {
+                            len = line.substringAfter(":").trim().toInt()
+                        }
+                    }
+                    if (requestIndex == 1) {
+                        val chars = CharArray(len)
+                        reader.read(chars)
+                        receivedBody = String(chars)
+                    }
+                    val resp = if (requestIndex == 0) """{"allow_spend":true}""".toByteArray()
+                        else """{"id":"fake123","status":"queued"}""".toByteArray()
+                    socket.getOutputStream().use { out ->
+                        out.write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${resp.size}\r\nConnection: close\r\n\r\n".toByteArray())
+                        out.write(resp)
+                    }
+                }
+            }
+        }
+        try {
+            val box = ToolBox(
+                workspaceDir = folder.newFolder("ltx-render"),
+                relayBaseUrl = "http://127.0.0.1:${server.localPort}",
+                relayUser = "",
+                relayPass = "",
+                access = AccessConfig(confirm = { _, _ -> true }),
+            )
+            val result = box.execute("queue_gpu_render", """{"cloud":"ltx","prompt":"a cinematic drone shot of mountains"}""")
+            serving.join(2500)
+            assertEquals("/api/agentic/permissions", permissionPath)
+            assertEquals("/api/ltx/render", requestPath)
+            assertEquals("application/x-www-form-urlencoded", receivedContentType)
+            assertTrue(receivedBody.contains("prompt=a+cinematic+drone+shot+of+mountains"))
+            assertTrue(receivedBody.contains("frames=49"))
+            assertTrue(receivedBody.contains("size=landscape"))
+            assertTrue(result.contains("fake123"))
+        } finally {
+            server.close()
+        }
+    }
+
+    @Test
+    fun gpuQueueDoesNotPostWhenHubDisablesSpending() {
+        val server = ServerSocket(0).apply { soTimeout = 2000 }
+        var requestPath = ""
+        var requests = 0
+        val serving = thread(start = true, isDaemon = true) {
+            server.accept().use { socket ->
+                val reader = socket.getInputStream().bufferedReader()
+                requestPath = reader.readLine().split(" ")[1]
+                requests++
+                while (reader.readLine().isNotEmpty()) Unit
+                val body = """{"allow_spend":false}""".toByteArray()
+                socket.getOutputStream().use { out ->
+                    out.write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${body.size}\r\nConnection: close\r\n\r\n".toByteArray())
+                    out.write(body)
+                }
+            }
+        }
+        try {
+            val box = ToolBox(
+                workspaceDir = folder.newFolder("gpu-denied"),
+                relayBaseUrl = "http://127.0.0.1:${server.localPort}",
+                relayUser = "",
+                relayPass = "",
+                access = AccessConfig(confirm = { _, _ -> true }),
+            )
+            val result = box.execute("queue_gpu_render", """{"cloud":"ltx","prompt":"test"}""")
+            serving.join(2500)
+            assertEquals("/api/agentic/permissions", requestPath)
+            assertEquals(1, requests)
+            assertTrue(result.contains("allow_spend=false"))
+        } finally {
+            server.close()
+        }
     }
 
 }

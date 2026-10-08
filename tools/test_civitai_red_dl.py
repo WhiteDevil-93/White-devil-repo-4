@@ -1,5 +1,23 @@
 import civitai_red_dl
 from civitai_red_dl import parse_ids, pick_files
+from pathlib import Path
+
+
+def test_deployed_copy_matches_authoritative_downloader():
+    deployed = Path(__file__).resolve().parents[1] / "hub/static/term/civitai_red_dl.py"
+    assert deployed.read_bytes() == Path(civitai_red_dl.__file__).read_bytes()
+
+
+def test_civitai_requests_keep_tls_verification_enabled(monkeypatch):
+    seen = {}
+
+    def fake_get(url, **kwargs):
+        seen.update(kwargs)
+        return object()
+
+    monkeypatch.setattr(civitai_red_dl.requests, "get", fake_get)
+    civitai_red_dl.get("https://civitai.red/api/v1/models/123", "synthetic-token")
+    assert seen.get("verify", True) is True
 
 
 def test_parse_ids_urls_and_commas():

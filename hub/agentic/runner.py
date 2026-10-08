@@ -32,12 +32,11 @@ ROLE_GUIDANCE = {
 }
 
 
-def _permission_blocks(tool: str, perms: dict[str, Any], args: Optional[dict[str, Any]] = None, preapproved: bool = False) -> Optional[str]:
+def _permission_blocks(tool: str, perms: dict[str, Any], args: Optional[dict[str, Any]] = None) -> Optional[str]:
     # Delegates to the shared gate in store.py so the background runner and the
     # Venice chat executor can never drift apart. Unattended background jobs
-    # cannot show the in-chat permission card, so require_confirm_destructive
-    # blocks here unless the reviewer sub-agent pre-approved the call.
-    return store.permission_block(tool, perms, args or {}, preapproved=preapproved)
+    # cannot collect a user confirmation, so risky actions remain blocked.
+    return store.permission_block(tool, perms, args or {})
 
 
 def _tool_allowed(name: str) -> bool:
@@ -47,8 +46,7 @@ def _tool_allowed(name: str) -> bool:
     return any(t["function"]["name"] == name for t in AGENT_TOOLS)
 
 
-def _run_tool(name: str, arguments: Any, perms: dict[str, Any], preapproved: bool = False,
-              role: Optional[str] = None) -> str:
+def _run_tool(name: str, arguments: Any, perms: dict[str, Any], role: Optional[str] = None) -> str:
     # delegate_to_subagent is in AGENT_TOOLS, so a sub-agent could fan out more
     # sub-agents. MAX_SUBAGENTS caps only what runs at once — the overflow queues,
     # and kick_queued keeps draining it, so a self-similar task could enqueue work
@@ -56,7 +54,7 @@ def _run_tool(name: str, arguments: Any, perms: dict[str, Any], preapproved: boo
     if role and name == "delegate_to_subagent":
         store.audit("gate", {"tool": name, "args": str(arguments)[:400], "decision": "blocked:no-nested-delegation"})
         return "Error: sub-agents cannot delegate further. Report back to the parent job instead."
-    block = _permission_blocks(name, perms, arguments if isinstance(arguments, dict) else None, preapproved=preapproved)
+    block = _permission_blocks(name, perms, arguments if isinstance(arguments, dict) else None)
     if block:
         store.audit("gate", {"tool": name, "args": str(arguments)[:400], "decision": "blocked:permission"})
         return block
@@ -64,6 +62,8 @@ def _run_tool(name: str, arguments: Any, perms: dict[str, Any], preapproved: boo
         return f"Error: tool '{name}' is not available to the side agentic runner."
     from venice import execute_tool
 
+    # Recheck the current policy in the executor. Permissions may have changed
+    # since this background job took its initial snapshot.
     return execute_tool(name, arguments)
 
 
@@ -107,25 +107,6 @@ def _step_chat(job: dict[str, Any], messages: list[dict[str, Any]], model: str) 
     if r.status_code >= 400:
         raise RuntimeError(f"Venice {r.status_code}: {r.text[:500]}")
     return r.json()
-
-
-def _reviewer_pass(job: dict[str, Any], name: str, args: dict[str, Any], model: str) -> tuple[bool, str]:
-    """A reviewer sub-agent (one-shot chat) gates a risky action in an unattended job.
-    Returns (allowed, verdict). Fails closed: any error means DENY."""
-    prompt = (
-        "You are the reviewer sub-agent gating a risky action proposed by another agent in an unattended background job.\n"
-        f"Main goal: {str(job.get('goal') or '')[:800]}\n"
-        f"Proposed tool: {name}\nArguments: {json.dumps(args, default=str)[:1500]}\n"
-        "Reply with exactly one line: ALLOW or DENY, then a short reason. DENY anything that deletes user data, "
-        "spends money or cloud credits without clear need, changes credentials, or is irreversible and not clearly "
-        "required by the goal."
-    )
-    try:
-        data = _step_chat(job, [{"role": "user", "content": prompt}], model)
-        text = str(((data.get("choices") or [{}])[0].get("message") or {}).get("content") or "")
-    except Exception as e:
-        return False, f"reviewer unavailable: {e}"
-    return text.strip().upper().startswith("ALLOW"), text.strip()[:300]
 
 
 def _running_jobs(kind: Optional[str] = None) -> list[dict[str, Any]]:
@@ -271,17 +252,9 @@ def _job_loop(jid: str) -> None:
                 except ValueError:
                     args = {}
                 block = _permission_blocks(name, perms, args)
-                if block and "needs in-chat user confirmation" in block:
-                    allow, verdict = _reviewer_pass(job, name, args, model)
-                    log.append({"t": time.time(), "event": "review", "name": name, "verdict": verdict[:300], "allowed": allow})
-                    store.audit("gate", {"tool": name, "args": json.dumps(args, default=str)[:400],
-                                         "decision": "executed:review-approved" if allow else "blocked:review-denied"})
-                    if allow:
-                        out = _run_tool(name, args, perms, preapproved=True, role=job.get("role"))
-                    else:
-                        out = f"Blocked by reviewer sub-agent: {verdict}"
-                else:
-                    out = _run_tool(name, args, perms, role=job.get("role"))
+                # A second model's verdict is advice, not user approval. Never
+                # promote it into the preapproved flag for unattended work.
+                out = block or _run_tool(name, args, perms, role=job.get("role"))
                 log.append({"t": time.time(), "event": "tool", "name": name, "out": out[:1500]})
                 job["log"] = log[-80:]
                 store.upsert_job(job)

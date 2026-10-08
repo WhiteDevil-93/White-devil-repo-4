@@ -107,17 +107,27 @@ def test_workspace_file_tools(tmp_path, monkeypatch):
     before = bool(agentic_store.permissions().get("allow_file_delete"))
     agentic_store.save_permissions({"allow_file_delete": True})
     try:
-        deleted = client.post("/api/venice/tool", json={"name": "delete_file", "arguments": {"path": "notes/hi.txt"}}).json()
+        delete_call = {"name": "delete_file", "arguments": {"path": "notes/hi.txt"}}
+        assert client.post("/api/venice/tool", json=delete_call).json()["ok"] is False
+        approval = client.post("/api/venice/approval", json=delete_call)
+        assert approval.status_code == 200
+        deleted = client.post("/api/venice/tool", json={
+            **delete_call, "approval_token": approval.json()["token"],
+        }).json()
         assert deleted["output"] == "Deleted notes/hi.txt"
     finally:
         agentic_store.save_permissions({"allow_file_delete": before})
 
 
-def test_run_in_terminal_returns_paste_payload():
+def test_run_in_terminal_returns_paste_payload(tmp_path, monkeypatch):
+    from agentic import store
+
+    monkeypatch.setattr(store, "DATA", tmp_path / "agentic_data")
     client = TestClient(app)
+    args = {"command": "ls -la ~/venice_run"}
+    token = client.post("/api/venice/approval", json={"name": "run_in_terminal", "arguments": args}).json()["token"]
     j = client.post("/api/venice/tool", json={
-        "name": "run_in_terminal",
-        "arguments": {"command": "ls -la ~/venice_run"},
+        "name": "run_in_terminal", "arguments": args, "approval_token": token,
     }).json()
     assert j["ok"] is True
     payload = json.loads(j["output"])
@@ -125,7 +135,10 @@ def test_run_in_terminal_returns_paste_payload():
     assert payload["command"] == "ls -la ~/venice_run"
 
 
-def test_run_laptop_command_tool(monkeypatch):
+def test_run_laptop_command_tool(monkeypatch, tmp_path):
+    from agentic import store
+
+    monkeypatch.setattr(store, "DATA", tmp_path / "agentic_data")
     seen = {}
 
     def fake_run(body):
@@ -135,9 +148,10 @@ def test_run_laptop_command_tool(monkeypatch):
 
     monkeypatch.setattr("laptop.run", fake_run)
     client = TestClient(app)
+    args = {"code": "echo hi", "lang": "bash"}
+    token = client.post("/api/venice/approval", json={"name": "run_laptop_command", "arguments": args}).json()["token"]
     j = client.post("/api/venice/tool", json={
-        "name": "run_laptop_command",
-        "arguments": {"code": "echo hi", "lang": "bash"},
+        "name": "run_laptop_command", "arguments": args, "approval_token": token,
     }).json()
     assert seen["code"] == "echo hi"
     out = json.loads(j["output"])
@@ -161,6 +175,18 @@ def test_unknown_tool():
     j = client.post("/api/venice/tool", json={"name": "explode_server", "arguments": {}}).json()
     assert j["ok"] is False
     assert "unknown tool" in j["output"]
+
+
+def test_win_to_wsl_path_conversion():
+    # Regression: upload_to_colab called re.match without importing re, so every
+    # Windows path (and every path — re.match ran unconditionally) returned
+    # "Error: name 're' is not defined" from the tool dispatcher.
+    assert venice._win_to_wsl(r"C:\Users\x\a.safetensors") == "/mnt/c/Users/x/a.safetensors"
+    assert venice._win_to_wsl(r"D:/models/lora.safetensors") == "/mnt/d/models/lora.safetensors"
+    assert venice._win_to_wsl("/mnt/c/Users/x/a.safetensors") == "/mnt/c/Users/x/a.safetensors"
+    out = venice.execute_tool("upload_to_colab", {"local_path": r"C:\Users\x\missing.safetensors"})
+    assert "name 're' is not defined" not in out
+    assert out.startswith("Error:")  # real path/ssh failure is fine; the NameError is not
 
 
 def test_chats_keep_tool_events(tmp_path, monkeypatch):

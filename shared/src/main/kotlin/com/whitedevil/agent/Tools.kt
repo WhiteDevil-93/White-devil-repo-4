@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
@@ -18,6 +19,7 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URLEncoder
+import java.net.URLDecoder
 import java.util.Base64
 
 data class ToolExecution(
@@ -301,7 +303,7 @@ class ToolBox(
 
     /**
      * Confirm-before-acting for the older tools that delete, run code, change the hub or spend money.
-     * Only active when the host supplied a confirmation UI, so desktop/CLI behaviour is unchanged.
+     * A host without a confirmation UI cannot run these actions.
      * Returns a refusal message, or null if the call may proceed.
      */
     private fun gateLegacy(name: String, argumentsJson: String): String? {
@@ -321,9 +323,11 @@ class ToolBox(
             }
             "queue_gpu_render" -> "Queue a GPU render (spends money)" to
                 "cloud=${args.stringOrNull("cloud")} ${args.stringOrNull("prompt") ?: args.stringOrNull("packs") ?: ""}".trim()
+            "download_civitai_lora" -> "Download Civitai files" to
+                "model_id=${args.stringOrNull("model_id") ?: "?"}"
             else -> return null
         }
-        return if (accessTools.approve(title, detail, requireUi = false)) null
+        return if (accessTools.approve(title, detail)) null
         else "Denied: the user did not approve '$title'. Do not retry it; ask the user what they want instead."
     }
 
@@ -410,6 +414,7 @@ class ToolBox(
         path: String,
         method: String = "GET",
         postBody: String? = null,
+        contentType: String = "application/json",
         readTimeoutMs: Int = 30000,
     ): String {
         val cleanBase = relayBaseUrl.trimEnd('/')
@@ -427,7 +432,7 @@ class ToolBox(
         }
         if (postBody != null) {
             conn.doOutput = true
-            conn.setRequestProperty("Content-Type", "application/json")
+            conn.setRequestProperty("Content-Type", contentType)
             conn.outputStream.use { it.write(postBody.toByteArray()) }
         }
         val code = conn.responseCode
@@ -565,7 +570,7 @@ class ToolBox(
             // These values come from the model and are pasted into a bash command on
             // the laptop; unquoted, a space or a ';' in either one runs as a command.
             val cmd = buildString {
-                append("python3 tools/civitai_red_dl.py")
+                append("python3 ~/hub/static/term/civitai_red_dl.py")
                 id.split(Regex("[\\s,;]+")).filter { it.isNotBlank() }.forEach { append(" --id " + shellQuote(it)) }
                 if (slug.isNotBlank()) append(" --slug " + shellQuote(slug))
             }
@@ -583,6 +588,7 @@ class ToolBox(
 
     private fun queueGpuRender(argumentsJson: String): String {
         return try {
+            if (!spendAllowed()) return "Denied: allow_spend=false or Hub permissions are unavailable."
             val args = json.parseToJsonElement(argumentsJson).jsonObjectOrEmpty()
             val cloud = args.stringOrNull("cloud")?.trim()?.lowercase().orEmpty()
             if (cloud.isEmpty()) return "Error: 'cloud' is required (colab|thunder|ltx|gen|vast)."
@@ -609,14 +615,18 @@ class ToolBox(
                         }.getOrNull().orEmpty()
                     }
                     if (p.length < 10) return "Error: ltx needs a prompt (10+ chars)."
-                    // Form-urlencoded via hub_request shape — use JSON fields the FastAPI Form accepts poorly;
-                    // post as multipart-ish query body through a small JSON wrapper endpoint isn't available,
-                    // so use hub_request with path and let relay accept form: build urlencoded.
+                    // Form-urlencoded via hub_request shape matching FastAPI Form(...)
                     val form = buildString {
                         append("prompt=").append(java.net.URLEncoder.encode(p, "UTF-8"))
                         append("&frames=49&size=landscape")
                     }
-                    relayHttp("/api/ltx/render", method = "POST", postBody = form, readTimeoutMs = 120_000)
+                    relayHttp(
+                        "/api/ltx/render",
+                        method = "POST",
+                        postBody = form,
+                        contentType = "application/x-www-form-urlencoded",
+                        readTimeoutMs = 120_000,
+                    )
                 }
                 "gen" -> {
                     if (bodyJson.isEmpty()) return "Error: gen needs body_json."
@@ -626,6 +636,9 @@ class ToolBox(
                     val path = runCatching {
                         json.parseToJsonElement(bodyJson).jsonObjectOrEmpty().stringOrNull("path")
                     }.getOrNull() ?: "/api/vast/state"
+                    if (!canonicalHubPath(path).startsWith("/api/vast/") || ".." in canonicalHubPath(path)) {
+                        return "Error: vast path must stay under /api/vast/."
+                    }
                     if (bodyJson.isEmpty() || path == "/api/vast/state") {
                         relayHttp("/api/vast/state")
                     } else {
@@ -676,12 +689,43 @@ class ToolBox(
             if (method !in setOf("GET", "POST", "PUT", "DELETE", "PATCH")) {
                 return "Error: unsupported method $method"
             }
+            val canonical = canonicalHubPath(path)
+            if (!canonical.startsWith("/api/") || ".." in canonical) return "Error: invalid path"
+            if (method != "GET" && (canonical.startsWith("/api/agentic/") || canonical in setOf(
+                    "/api/agentic", "/api/venice/approval", "/api/venice/tool", "/api/venice/key"))) {
+                return "Blocked: agents cannot change Hub control settings."
+            }
+            if (method != "GET" && isCloudMutation(canonical) && !spendAllowed()) {
+                return "Denied: allow_spend=false or Hub permissions are unavailable."
+            }
             val body = args.stringOrNull("body")?.trim()?.takeIf { it.isNotEmpty() }
             relayHttp(path, method = method, postBody = body, readTimeoutMs = 120_000).take(24000)
         } catch (e: Exception) {
             "Error: hub_request failed: ${e.message}"
         }
     }
+
+    private fun canonicalHubPath(raw: String): String {
+        var path = raw.substringBefore('?').trim()
+        repeat(3) {
+            val decoded = runCatching { URLDecoder.decode(path, "UTF-8") }.getOrDefault(path)
+            if (decoded == path) return@repeat
+            path = decoded
+        }
+        return path.trimEnd('/').lowercase()
+    }
+
+    private fun isCloudMutation(path: String): Boolean {
+        if (path == "/api/colab/stop-runtime" || path == "/api/ltx/cycle/stop") return false
+        if (listOf("/stop", "/cancel", "/delete").any { path.endsWith(it) }) return false
+        return listOf("/api/colab", "/api/thunder", "/api/ltx", "/api/gen", "/api/vast")
+            .any { path == it || path.startsWith("$it/") }
+    }
+
+    private fun spendAllowed(): Boolean = runCatching {
+        val response = relayHttp("/api/agentic/permissions")
+        json.parseToJsonElement(response).jsonObjectOrEmpty()["allow_spend"]?.jsonPrimitive?.booleanOrNull == true
+    }.getOrDefault(false)
 
     private fun objectSchema(vararg params: Pair<String, String>): JsonObject = buildJsonObject {
         put("type", "object")

@@ -12,6 +12,11 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
+import secrets
+import shlex
+import threading
+import time
 from pathlib import Path
 from typing import Any, Optional
 
@@ -19,6 +24,36 @@ import httpx
 from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+
+_APPROVAL_LOCK = threading.Lock()
+_APPROVALS: dict[str, tuple[float, str]] = {}
+_APPROVAL_TTL_SECONDS = 90
+
+
+def _approval_identity(name: str, args: dict[str, Any]) -> str:
+    return json.dumps([name, args], sort_keys=True, separators=(",", ":"), default=str)
+
+
+def _issue_approval(name: str, args: dict[str, Any]) -> str:
+    token = secrets.token_urlsafe(32)
+    now = time.monotonic()
+    with _APPROVAL_LOCK:
+        for old, (expires, _) in list(_APPROVALS.items()):
+            if expires <= now:
+                _APPROVALS.pop(old, None)
+        if len(_APPROVALS) >= 256:
+            _APPROVALS.pop(next(iter(_APPROVALS)))
+        _APPROVALS[token] = (now + _APPROVAL_TTL_SECONDS, _approval_identity(name, args))
+    return token
+
+
+def _consume_approval(token: str, name: str, args: dict[str, Any]) -> bool:
+    if not token:
+        return False
+    with _APPROVAL_LOCK:
+        approved = _APPROVALS.pop(token, None)
+    return bool(approved and approved[0] > time.monotonic() and
+                secrets.compare_digest(approved[1], _approval_identity(name, args)))
 
 HUB = Path(__file__).resolve().parent
 ROOT = HUB.parent
@@ -1343,6 +1378,12 @@ def _hub_request(method: str, path: str, body: Any = None) -> str:
         return "Error: path must start with /api/"
     if ".." in path:
         return "Error: invalid path"
+    try:
+        from agentic import store as agentic_store
+        if agentic_store.hub_request_is_control_mutation(method, path):
+            return "Blocked: agents cannot change Hub control settings"
+    except Exception:
+        return "Blocked: permission policy unavailable"
     data = None
     headers = {}
     if body is not None and body != "":
@@ -1361,13 +1402,13 @@ def _hub_request(method: str, path: str, body: Any = None) -> str:
             return _clip(raw if len(raw) < 24000 else raw[:24000])
     except urllib.error.HTTPError as e:
         err = e.read().decode("utf-8", "replace")
-        return _clip(f"HTTP {e.code}: {err or e.reason}")
+        return _clip(f"Error: HTTP {e.code}: {err or e.reason}")
     except Exception as e:
         return f"Error: hub_request failed: {e}"
 
 
-def execute_tool(name: str, arguments: Any = None) -> str:
-    text, _images = execute_tool_detailed(name, arguments)
+def execute_tool(name: str, arguments: Any = None, *, preapproved: bool = False) -> str:
+    text, _images = execute_tool_detailed(name, arguments, preapproved=preapproved)
     return text
 
 
@@ -1382,7 +1423,7 @@ def _audit_gate(tool: str, args: Any, decision: str) -> None:
         pass
 
 
-def _permission_block(name: str, args: Any) -> Optional[str]:
+def _permission_block(name: str, args: Any, *, preapproved: bool = False) -> Optional[str]:
     """Enforce the agentic allow_* permissions at the chat tool choke point.
 
     Previously only the background runner honoured these, so a tool denied in
@@ -1392,18 +1433,13 @@ def _permission_block(name: str, args: Any) -> Optional[str]:
     try:
         from agentic import store as agentic_store
 
-        # preapproved=True: require_confirm_destructive exists for unattended
-        # background jobs that cannot show the in-chat permission card. This is
-        # the chat path — the card has already confirmed, which is what the
-        # "executed:confirmed-tool" audit line records. The allow_* switches
-        # still apply here, and previously did not.
         blocked = agentic_store.permission_block(
             name,
             args=args if isinstance(args, dict) else None,
-            preapproved=True,
+            preapproved=preapproved,
         )
     except Exception:
-        return None  # store unavailable -> fall back to prior behaviour
+        return "Blocked: permission policy unavailable"
     if blocked:
         _audit_gate(name, args, "blocked:permission")
     return blocked
@@ -1427,13 +1463,13 @@ def _budget_block(name: str, args: Any) -> Optional[str]:
             "via PUT /api/agentic/permissions."
         )
     except Exception:
-        return None  # store unavailable -> do not block tools
+        return "Blocked: tool budget unavailable"
 
 
-def execute_tool_detailed(name: str, arguments: Any = None) -> tuple[str, list[str]]:
+def execute_tool_detailed(name: str, arguments: Any = None, *, preapproved: bool = False) -> tuple[str, list[str]]:
     """Run one Venice Agent tool. Same names as the Android app, plus run_in_terminal."""
     args = _as_args(arguments)
-    blocked = _permission_block(name, args)
+    blocked = _permission_block(name, args, preapproved=preapproved)
     if blocked:
         return blocked, []
     blocked = _budget_block(name, args)
@@ -1446,7 +1482,7 @@ def execute_tool_detailed(name: str, arguments: Any = None) -> tuple[str, list[s
         reason = agentic_store.confirm_reason(name, args)
     except Exception:
         reason = None
-    if reason:
+    if reason and preapproved:
         _audit_gate(name, args, "executed:confirmed-tool")
     try:
         if name == "read_file":
@@ -1660,9 +1696,11 @@ def execute_tool_detailed(name: str, arguments: Any = None) -> tuple[str, list[s
                 return "Error: 'model_id' argument is required.", []
             slug = str(args.get("slug") or "").strip()
             ids = [p for p in mid.replace(",", " ").split() if p]
-            flags = " ".join(f"--id {p}" for p in ids)
+            if not ids or any(not re.fullmatch(r"[0-9]{1,12}", p) for p in ids):
+                return "Error: model_id must contain only numeric Civitai IDs.", []
+            flags = " ".join(f"--id {shlex.quote(p)}" for p in ids)
             if slug:
-                flags += f" --slug {slug}"
+                flags += f" --slug {shlex.quote(slug)}"
             script = "~/hub/static/term/civitai_red_dl.py"
             cmd = f"mkdir -p ~/civitai_dl && python3 {script} {flags}"
             return _laptop_run(cmd, "bash", 180), []
@@ -1688,6 +1726,29 @@ def list_tools():
 class ToolIn(BaseModel):
     name: str
     arguments: Any = {}
+    approval_token: Optional[str] = None
+
+
+@router.post("/approval")
+def approve_tool(body: ToolIn):
+    """Issue a short-lived, one-use token after the browser's confirmation click.
+
+    Model-operated generic Hub requests cannot reach this endpoint. This token
+    binds the approval to the exact tool call and prevents bare /tool requests
+    from inheriting the browser's UI approval assumption.
+    """
+    args = _as_args(body.arguments)
+    try:
+        from agentic import store as agentic_store
+        reason = agentic_store.confirm_reason(body.name, args)
+        blocked = agentic_store.permission_block(body.name, args=args, preapproved=True)
+    except Exception:
+        raise HTTPException(503, "permission policy unavailable")
+    if blocked:
+        raise HTTPException(403, blocked)
+    if not reason:
+        raise HTTPException(400, "this tool does not need an approval token")
+    return {"token": _issue_approval(body.name, args), "expires_in": _APPROVAL_TTL_SECONDS}
 
 
 @router.post("/tool")
@@ -1695,10 +1756,21 @@ def run_tool(body: ToolIn):
     name = (body.name or "").strip()
     if not name:
         raise HTTPException(400, "Tool name is required.")
-    output, images = execute_tool_detailed(name, body.arguments)
+    args = _as_args(body.arguments)
+    blocked = _permission_block(name, args, preapproved=True)
+    if blocked:
+        return {"ok": False, "name": name, "output": blocked, "images": []}
+    try:
+        from agentic import store as agentic_store
+        reason = agentic_store.confirm_reason(name, args)
+    except Exception:
+        reason = "permission policy unavailable"
+    if reason and not _consume_approval(body.approval_token or "", name, args):
+        return {"ok": False, "name": name, "output": "Blocked: tool requires a fresh user approval", "images": []}
+    output, images = execute_tool_detailed(name, args, preapproved=True)
     out_s = str(output)
     return {
-        "ok": not (out_s.startswith("Error:") or out_s.startswith("Blocked:")),
+        "ok": not (out_s.startswith(("Error:", "Blocked:", "HTTP "))),
         "name": name,
         "output": output,
         "images": images,

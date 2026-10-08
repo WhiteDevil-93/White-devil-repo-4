@@ -1,0 +1,3053 @@
+# a:\New folder (4)\white-devil-repo-4\llms - Part 1 of 3
+
+# WhiteDevil Repo 4 - LLMs Context
+
+This file provides a high-level overview of the functions in the codebase. For full details with docstrings, see llms-full.txt.
+
+### android\app\build\reports\tests\testDebugUnitTest\js\report.js
+Functions: changeElementClass, getClassAttribute, addClass, removeClass, getCheckBox, getLabelForCheckBox, findCodeBlocks, forAllCodeBlocks, toggleLineWrapping, initControls, getTabContainers, initTabs, createTab, findTabs, findHeaders, findTitles, findChildElements
+
+### android\app\src\main\java\com\whitedevil\ConnectionHealth.kt
+Functions: multiline, evaluate, probeRelay
+
+### android\app\src\main\java\com\whitedevil\MainActivity.kt
+Functions: openWebFileChooser, onCreate, onResume, onPause, onDestroy, onNewIntent, buildUi, maybeShowOnboarding, completeOnboarding, selectTab, showYouSub, initAgentWelcomeMessages, readSettingsFormFromPrefs, saveSettingsFromCompose, offerPasswordsToSystemManager, openTerminalPasteSheetPublic, removePendingAttachmentAt, dismissHubBanner, agentHasConversation, onHubBannerClick, syncPendingAttachmentsUi, syncHubScreensUi, refreshYouHomeSummary, runQuickConnectionTest, veniceKeyConfigured, updateAgentSetupState, showVeniceKeySheet, confirmClearAgentChat, showModelPicker, showSystemPromptDialog, resetAgentChat, agentHistoryFile, stopAgentRun, persistAgentHistory, loadAgentHistory, retryAgentHistorySave, renderHistoryBubbles, sendAgentMessage, toggleToolMessage, setAgentComposerEnabled, showAttachSheet, withCapturePermission, launchCamera, addContentAttachment, renderAttachmentStrip, buildMessageContent, uniqueFile, loadScaledJpeg, copyToUploads, copyToClipboard, pasteFromClipboard, handleSharedIntent, copySharedToCache, addMessageBubble, renderHubChips, reloadCurrentHubScreen, downloadHubUpdate, refreshHubNativeScreen, fetchHubScreenJson, relayBaseUrl, relayAuthorization, hubRelayPost, hubRelayPostWithResponse, updateHubConnectionPill, showHubScreen, loadHubManifest, applyHubManifest, showHubOffline, checkHubUpdate, sendPasteToTerminal, runTerminalCommand, onBackPressed, downloadApk, onReceive, basicAuth, absoluteRelayUrl, dp, createGlassDrawable, biometricEnabled, biometricStatusLabel, evaluateAppLock, promptBiometricUnlock, refreshDeviceAuthState, enrolDeviceAuth, signInDeviceAuth, forgetDeviceAuth, unlockViaSettingsFallback, phoneFolderUri, persistPhoneFolder, pickPhoneFolder, pickPhoneFiles, pickPhoneMedia, requestPhoneMediaPermission, attachPhoneUri
+
+### android\app\src\main\java\com\whitedevil\SettingsManager.kt
+Functions: getPrefs, isStoringPlaintext
+
+### android\app\src\main\java\com\whitedevil\UiFeedback.kt
+Functions: snackbar
+
+### android\app\src\main\java\com\whitedevil\UiPolish.kt
+Functions: dp, dpInt, modelLabel, glass, screenGradient, bubbleDrawable, avatar, iconCircle, sectionCard
+
+### android\app\src\main\java\com\whitedevil\UiSheets.kt
+Functions: showListSheet, showSecretFieldSheet
+
+### android\app\src\main\java\com\whitedevil\relay\RelayHttp.kt
+Functions: get, post, request
+
+### android\app\src\main\java\com\whitedevil\security\BiometricAuth.kt
+Functions: status, available, statusLabel, signingAuthenticators, signingBlockedReason, authorizeSigning, onAuthenticationSucceeded, onAuthenticationError, onAuthenticationFailed, prompt, onAuthenticationSucceeded, onAuthenticationError, onAuthenticationFailed, isCancellation
+
+### android\app\src\main\java\com\whitedevil\security\DeviceAuth.kt
+Functions: defaultDeviceName, prefs, state, cachedToken, clearToken, forget, enrolAndSignIn, ensureToken, signIn, failureText, short
+
+### android\app\src\main\java\com\whitedevil\security\DeviceAuthClient.kt
+Functions: isMissingEndpoint, config, enrol, challenge, token, whoami
+
+### android\app\src\main\java\com\whitedevil\security\DeviceAuthCodec.kt
+Functions: encodeEnrol, encodeChallenge, encodeToken, decodeConfig, normaliseEnrolCode, hubDetail, decodeEnrol, decodeChallenge, decodeTokenResponse, decodeWhoami, publicKeyPem, signatureBase64, looksLikeEcdsaDer, expiryAtMs, tokenUsable, nonceBytes
+
+### android\app\src\main\java\com\whitedevil\security\DeviceKeystore.kt
+Functions: store, hasKey, deleteKey, createKeyPair, generate, publicKeyPem, signatureForSigning, signNonce
+
+### android\app\src\main\java\com\whitedevil\security\PasswordManagerBridge.kt
+Functions: offerSave, offerAll
+
+### android\app\src\main\java\com\whitedevil\ui\agent\AgentEmptyState.kt
+Functions: AgentSetupEmptyState, AgentReadyEmptyState, ConfigBlock, ConfigRow
+
+### android\app\src\main\java\com\whitedevil\ui\agent\AgentScreen.kt
+Functions: AgentScreen, AgentChatHeader, DeepSpaceComposer
+
+### android\app\src\main\java\com\whitedevil\ui\app\WhiteDevilApp.kt
+Functions: WhiteDevilApp
+
+### android\app\src\main\java\com\whitedevil\ui\chat\AgentChatScreen.kt
+Functions: AgentChatScreen, TypingRow, ThinkingDots, ChatBubbleRow, InfoLine, UserBubble, AssistantBubble, ToolBubble
+
+### android\app\src\main\java\com\whitedevil\ui\components\WdBottomBar.kt
+Functions: WdBottomBar
+
+### android\app\src\main\java\com\whitedevil\ui\components\WdLayout.kt
+Functions: WdScreenTitle, WdSectionLabel, WdGroupedList, WdListDivider, WdListChevron
+
+### android\app\src\main\java\com\whitedevil\ui\components\WdStarkGrid.kt
+Functions: WdStarkGridScreen
+
+### android\app\src\main\java\com\whitedevil\ui\components\WdSurfaces.kt
+Functions: WdScreenBackground, WdSurfaceCard, WdInputDock, WdInlineField, WdGlassCard, WdComposerDock, WdGlassBar
+
+### android\app\src\main\java\com\whitedevil\ui\components\WdTopBar.kt
+Functions: WdTopBar, WdHairline
+
+### android\app\src\main\java\com\whitedevil\ui\files\PhoneFilesScreen.kt
+Functions: PhoneFilesScreen, reload, formatBytes
+
+### android\app\src\main\java\com\whitedevil\ui\hub\DownloadAuth.kt
+Functions: relayDownloadHeaders
+
+### android\app\src\main\java\com\whitedevil\ui\hub\ForgeHubScreen.kt
+Functions: ForgeHubScreen
+
+### android\app\src\main\java\com\whitedevil\ui\hub\HubNativeContent.kt
+Functions: HubNativeContent, HubFallbackBody, HubMessage, HubForceUpdate
+
+### android\app\src\main\java\com\whitedevil\ui\hub\HubRelayWebBody.kt
+Functions: HubRelayWebBody, onShowFileChooser, onReceivedHttpAuthRequest
+
+### android\app\src\main\java\com\whitedevil\ui\hub\HubScreenBodies.kt
+Functions: HubHomeBody, HubRendersBody, HubGalleryBody, HubSetupBody, HubThunderBody, HubColabBody, HubHypnoBody, HubLtxBody, HubVastBody, HubFilesBody, HubShotwriterBody, HubBotBody, parseLibrary
+
+### android\app\src\main\java\com\whitedevil\ui\hub\HubUiCommon.kt
+Functions: hubThumbUrl, hubClipUrl, hubContactUrl, hubClipPipeline, hubFlatClips, formatAgo, HubSectionTitle, HubCard, HubPill, HubStatRow, HubProgressRow, HubRelayThumb, HubClipViewer, HubPrimaryButton, HubVideoReviewSection
+
+### android\app\src\main\java\com\whitedevil\ui\onboarding\OnboardingScreen.kt
+Functions: OnboardingScreen, OnboardingPageContent, RowDots
+
+### android\app\src\main\java\com\whitedevil\ui\security\BiometricLockScreen.kt
+Functions: BiometricLockScreen
+
+### android\app\src\main\java\com\whitedevil\ui\settings\SettingsScreen.kt
+Functions: SettingsScreen, DeviceAuthSection, SettingsSection, Field, RowSwitch
+
+### android\app\src\main\java\com\whitedevil\ui\terminal\TerminalScreen.kt
+Functions: TerminalScreen
+
+### android\app\src\main\java\com\whitedevil\ui\theme\WdTheme.kt
+Functions: WhiteDevilTheme
+
+### android\app\src\main\java\com\whitedevil\ui\you\YouHomeScreen.kt
+Functions: YouHomeScreen, compactStatus, ProfileRow
+
+### android\app\src\test\java\com\whitedevil\DeviceAuthCodecTest.kt
+Functions: p256, pemHasHeadersAndWrapsAtSixtyFour, pemRoundTripsBackToTheSameKey, assertArrayEquals, realP256SignatureIsRecognisedAsDer, rawConcatenatedSignatureIsRejected, enrolBodyEscapesPemNewlinesProperly, enrolBodyCarriesTheEnrolmentCodeOnlyWhenThereIsOne, enrolmentCodeIsTrimmedAndBlankMeansNone, authConfigSaysWhetherTheHubWantsACode, hubDetailGivesTheSentenceNotTheJson, requestBodiesUseServerFieldNames, responsesDecodeAndTolerateUnknownFields, tokenExpiryLeavesSkewBeforeTheDeadline, missingOrNegativeExpiryIsNeverUsable
+
+### android\app\src\test\java\com\whitedevil\DeviceIntegrationTest.kt
+Functions: testPlainTextContentRoundTrip, testMultimodalContentShape, testMultimodalWithoutImagesFallsBackToText, testAttachmentKindMapping, testSafeFileNameBlocksTraversal, testFormatSize, testWorkspaceNoteMentionsPath, testStripBlobsRemovesImageData, testStripBlobsKeepsPlainText, testAgentHistorySnapshotRestore
+
+### android\app\src\test\java\com\whitedevil\ToolBoxTest.kt
+Functions: testToolDefinitions, testLatestRenderIncludesActualPreviewImage, testLaptopCommandForwardsCwdLanguageAndTimeout, testFileOperationsAndSandboxing, testParseSlashCommands
+
+### android\app\src\test\java\com\whitedevil\ui\hub\DownloadAuthTest.kt
+Functions: headers
+
+### desktop\build\reports\tests\test\js\report.js
+Functions: changeElementClass, getClassAttribute, addClass, removeClass, getCheckBox, getLabelForCheckBox, findCodeBlocks, forAllCodeBlocks, toggleLineWrapping, initControls, getTabContainers, initTabs, createTab, findTabs, findHeaders, findTitles, findChildElements
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\AgentScreen.kt
+Functions: AgentScreen, send, TopBar, EmptyState, Bubble, Composer
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\AgentSession.kt
+Functions: adopt, save, clear, close
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ColabScreen.kt
+Functions: ColabScreen, tone, StatusCard, SessionCard, ServicesCard, JobsCard, JobRow, ControlsCard, PacksCard
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\DeviceAuth.kt
+Functions: enrol, signIn, signOut, probeHub, clampDeviceName, defaultDeviceName, settingsAfterEnrol, start, remainingSeconds, clear
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\DeviceKeySection.kt
+Functions: DeviceKeySection, launchAction, enrol, signIn, checkHello, formatClock
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\GalleryScreen.kt
+Functions: GalleryScreen, SectionHeader, ThumbTile, rememberBitmapOutcome, BitmapBox, PreviewPane, ContactSheetSection
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\HelloHelper.kt
+Functions: defaultAppDir, defaultDevRoot, helperCandidates, locateHelper, toString, toString, unavailableReason, status, createKey, sign, parseWire, clean, status, createdKey, signature, run, run, execute, destroyTree, run, bytes, locatedExecutable, unavailableReason, status, createKey, sign, createDefault
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\HubAuthClient.kt
+Functions: toString, config, probeDevices, enrol, challenge, token, whoami, close, describe, normalizeBaseUrl, extractDetail, retryAfterSeconds
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\LtxScreen.kt
+Functions: LtxScreen, StatusCard, CycleCard, sourceLabel, JobsCard, JobRow, cancelSpec
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\Main.kt
+Functions: main, NavRail
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\Markdown.kt
+Functions: renderMarkdown
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\MediaClient.kt
+Functions: library, thumb, contactSheet, image, fetch, errorText, tooLarge, close, encodePathSegment, parseHub
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\MediaErrors.kt
+Functions: forOp, config, fromStatus, fromException, hubDetail
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\MediaLibrary.kt
+Functions: parseLibrary, parseGroup, describe, firstLine, snippet
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\MediaState.kt
+Functions: libraryStateFrom, buildGallerySections, unique, formatAge, formatAbsolute, formatMb, kindLabel
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\MediaUi.kt
+Functions: rememberMediaClient, reload, rememberLibrary, rememberNowMs, MediaTopBar, LoadingPanel, ErrorPanel, EmptyPanel, WarningsBanner, Tag
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\RendersScreen.kt
+Functions: RendersScreen, RenderList, GroupHeader, ClipRow
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\Settings.kt
+Functions: load, save, blockedReason
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\SettingsScreen.kt
+Functions: SettingsScreen
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\SetupScreen.kt
+Functions: SetupScreen, PhaseCard, LorasCard
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\Terminal.kt
+Functions: commandLine, environment, isValidSize, isWslAvailable, terminateProcess, getName, resize, close, ensureStarted, start, restart, clear, focusTerminal, shutdown, launchShell, spawn, installFreshWidget, attach, onSessionClosed, takeConnector
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\TerminalScreen.kt
+Functions: TerminalScreen
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\TerminalTheme.kt
+Functions: getForegroundByColorIndex, getBackgroundByColorIndex, terminalColor, choose, warmUp, getTerminalColorPalette, getTerminalFont, getTerminalFontSize, getDefaultStyle, getHyperlinkColor, getBufferMaxLinesCount, getClearBufferActionPresentation, getFindActionPresentation
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ThumbCache.kt
+Functions: get, put, remove, clear, keysOldestFirst, cached, failure, retry, clearFailures, load, record, bitmapBytes, decodeToBitmap, mediaCacheKey
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ThunderScreen.kt
+Functions: ThunderScreen, statusTone, InstancesCard, InstanceRow, NewInstanceCard, SnapshotsCard, SnapshotRow, QueueCard, JobRow, pickFiles, chooseAndReadChain, SendChainCard
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\TokenCache.kt
+Functions: toString, store, get, validUntil, clear, clear
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\VastScreen.kt
+Functions: VastScreen, statusTone, AccountCard, InstancesCard, InstanceRow, OfferSearchCard, OffersCard, OfferRow
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\ActionOutcomes.kt
+Functions: notAnObject, interpretGeneric
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\ColabModels.kt
+Functions: parse, parseJob, progressText, shapeError, parseList, state, packs, stopRuntime, recover, interpretColabStop, interpretColabRecover
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\ConfirmDialog.kt
+Functions: ActionDialog, OutcomeView
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\LtxModels.kt
+Functions: parse, isValidId, parseList, parseJob, parse, of, status, jobs, cycle, startCycle, stopCycle, cancelJob, interpretLtxCycleStart, interpretLtxCycleStop, interpretLtxCancel
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\OpsFormat.kt
+Functions: formatClock, formatAge, ageOfEpochSec, money, plainNumber, orUnknown, yesNoUnknown
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\OpsHttp.kt
+Functions: capBody, execute, timeoutError, close, getJson, post, parseJsonOrNull, snippet, extractDetail, describeHttpFailure
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\OpsState.kt
+Functions: refresh, loadOnce, adopt, shouldPoll, request, updateTyped, canConfirm, confirm, dismiss
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\OpsUi.kt
+Functions: rememberOpsClients, LoadOnce, PollWhileVisible, OpsScreenFrame, SectionCard, Pill, Tile, KeyValue, MonoBlock, Note, LoadingCard, ErrorCard, EmptyLine, TileRow, Picker
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\SetupModels.kt
+Functions: parse, state, save, interpretSetupSave
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\ThunderModels.kt
+Functions: ratePerHour, gpuTypes, gpuLabel, parse, parseInstance, parseSnapshot, parseSpec, parseTemplates, parse, state, queue, fromFiles, err, submit, jobAction, createInstance, deleteInstance, createSnapshot, deleteSnapshot, submitBody, localRefusal, interpretThunderSubmit
+
+### desktop\src\main\kotlin\com\whitedevil\desktop\ops\VastModels.kt
+Functions: parse, parseInstance, path, parse, state, offers, rent, start, stop, delete, instanceAction, interpretVastRent
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\AgentSessionTest.kt
+Functions: file, message
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\DeviceAuthTest.kt
+Functions: unavailableReason, status, createKey, sign, client, body, ok, route, auth
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\HelloHelperTest.kt
+Functions: existsOnly, run, helper, requireSh, waitDead, readPid
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\HubAuthClientTest.kt
+Functions: rig, jsonReply, bodyText, bodyJson, basic, errFor
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\LruCacheTest.kt
+Functions: countBound, byteBound, puttingOnePastTheEntryBoundEvictsTheOldest, aRecentlyReadEntrySurvivesEviction, rePuttingAKeyRefreshesItsRecency, theByteBoundEvictsOldestUntilItHoldsAgain, oneBigValueCanEvictSeveralSmallOnes, aValueLargerThanTheWholeBudgetIsNotStoredAndDropsTheStaleOne, replacingAKeyAdjustsTheByteCount, clearAndRemoveResetAccounting, boundsMustBePositive, boundsHoldUnderConcurrentUse
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\MediaClientTest.kt
+Functions: libraryIsFetchedFromTheRealRouteWithRelayBasicAuth, emptyLibraryIsOkAndEmpty, noAuthorizationHeaderIsSentWhenNoCredentialsAreConfigured, thumbnailAndContactSheetUseTheirOwnRoutesAndReturnTheBytes, anImageWithNoContentTypeIsPassedToTheDecoderToJudge, clipNamesArePercentEncodedAndRoundTripToTheOriginalName, encodePathSegmentEncodesEverythingButUnreserved, hubUrlTrailingSlashAndPathPrefixAreHandled, failureFor, http401MapsToASignInMessageWithTheStatusCode, blankRelayPasswordIsCalledOutOn401, http404DiffersBetweenTheLibraryRouteAndAMissingClip, http500CarriesTheHubsOwnReason, otherStatusesAreEachMappedToTheirOwnKind, aRedirectIsReportedNotFollowedSoCredentialsAreNotReplayed, the401404500AndTimeoutMessagesAreAllDistinct, failureThrowing, timeoutsOfEveryFlavourMapToATimeoutError, timeoutMessagesQuoteTheConfiguredLimit, aRealRequestTimeoutFiresAndIsReportedNotSwallowed, connectionLevelFailuresAreNetworkErrorsThatNameTheHost, anUnexpectedExceptionIsStillAFailureNotACrashOrAnEmptyResult, aBadJsonBodyOn200IsAVisibleParseError, aNonImageThumbnailBodyIsRejectedEvenOn200, anEnormousDeclaredBodyIsRefusedBeforeItIsRead, anUnusableHubUrlFailsVisiblyWithoutMakingARequest, cancellingTheCallerCancelsTheRequestInsteadOfReturningAFailure
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\MediaParserTest.kt
+Functions: parsesRealShapedLibrary, emptyListIsAGenuinelyEmptyLibrary, unknownFieldsAreIgnoredAndMissingOptionalFieldsAreNullNotInvented, groupUpdatedIsDerivedFromClipsOnlyWhenTheHubOmittedIt, wrongTypedFieldsBecomeNullRatherThanCrashing, integralFloatIdxIsAccepted, malformedEntriesAreSkippedWithAVisibleWarningAndGoodOnesSurvive, manyWarningsAreCappedButTheHiddenCountIsStated, badBodiesAreParseErrorsNotEmptyLists, aBareWordOrTagWithoutSpacesIsNotMistakenForANumber, byteOrderMarkIsTolerated
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\MediaStateTest.kt
+Functions: everyKindOfFailureBecomesAnErrorStateAndNeverEmpty, onlyASuccessfulEmptyAnswerIsEmpty, aResponseWhoseEntriesAreAllUnreadableIsAnErrorNotEmpty, aLibraryWithClipsIsLoadedAndKeepsItsWarnings, parseFailuresFlowThroughToAnErrorState, errorTitlesCarryTheStatusCodeAndSummariesTheHubsReason, hubDetailUnderstandsFastApiBodiesAndPlainText, galleryKeysAreUniqueEvenWhenTheHubRepeatsGroupIdsAndClipNames, ageIsRelativeToNow, missingOrImplausibleTimestampsAreSaidPlainlyNotFabricated, absoluteTimeAndSizeFormatting, kindLabelsKnownKindsAndPassesUnknownOnesThrough
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\TerminalLaunchTest.kt
+Functions: defaultCommandIsBareWslExe, distributionAndStartingDirAreForwardedInOrder, blankDistributionAndDirAreIgnored, environmentForcesXterm256colorAndKeepsTheRest, environmentReplacesAnyExistingTermSpellingInsteadOfDuplicatingIt, environmentDoesNotMutateItsInput, onlyPositiveSizesAreValid, fontChoiceFollowsPreferenceOrder, fontChoiceFallsBackToLogicalMonospacedNeverAProportionalFont, paletteCoversAllSixteenAnsiColours, terminateProcessLeavesAnAlreadyDeadProcessAlone, terminateProcessDoesNotForceAProcessThatExitsOnDestroy, terminateProcessForceKillsAProcessThatIgnoresDestroy, terminateProcessSurvivesADestroyThatThrows, isAlive, destroy, destroyForcibly, waitFor, waitFor, exitValue, getOutputStream, getInputStream, getErrorStream
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\TestSupport.kt
+Functions: client
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\ThumbLoaderTest.kt
+Functions: cache, loader, ok, fail, aSecondLoadOfTheSameKeyComesFromTheCacheWithoutARequest, aFailureIsReportedNotCachedAndNotRepeatedUntilExplicitRetry, clearFailuresLetsEveryFailedKeyRetry, aDecodeErrorIsAFailureNotABlankSuccess, anExceptionEscapingTheFetcherIsAVisibleFailureNotACrash, atMostFourRequestsRunAtOnce, cancellingALoadReleasesItsPermitAndIsNotRememberedAsAFailure, loadsQueuedBehindTheLimitAreCancelledWithoutEverRequesting, theCacheStaysBoundedAndEvictedImagesAreFetchedAgain, cacheKeysChangeWhenTheClipIsReRendered
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\ops\ActionGateGuardTest.kt
+Functions: sources, balancedBlockAfter, filesContaining
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\ops\ActionOutcomesTest.kt
+Functions: reply
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\ops\ColabTest.kt
+Functions: parse, stopWith, rec
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\ops\LtxTest.kt
+Functions: status, jobs, cycle, sent, start, stop, cancel
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\ops\OpsStateTest.kt
+Functions: spec
+
+### desktop\src\test\kotlin\com\whitedevil\desktop\ops\ThunderTest.kt
+Functions: chain, submit
+
+### hub\agentic\router.py
+Functions: status, get_config, put_config, get_permissions, get_gates, put_permissions, get_memory, put_memory, get_jobs, get_job, post_job, post_stop, get_schedules, post_schedule, delete_schedule, tick_schedules, get_watchers, post_watcher, delete_watcher
+
+### hub\agentic\runner.py
+Functions: _permission_blocks, _tool_allowed, _run_tool, _memory_preamble, _step_chat, _reviewer_pass, _running_jobs, _launch, start_subagent, _job_loop, start_job, stop_job, kick_queued, tick_due_schedules, _render_newest, tick_watchers, mark_interrupted, start_scheduler, _loop
+
+### hub\agentic\store.py
+Functions: confirm_reason, permission_block, default_files, ensure, _read, _write, config, save_config, permissions, save_permissions, memory, save_memory, bump_tool_usage, list_jobs, get_job, upsert_job, new_job_id, list_schedules, save_schedules, list_watchers, save_watchers, audit
+
+### hub\app.py
+Functions: _lifespan, _mount, no_store_hub, root, laptop_term_shim, bot_screens, manifest, _mtime, status, generator_html
+
+### hub\auth.py
+Functions: _now, _config_path, config, enrol_code_required, _save_config, _atomic_write_json, _tokens_path, _load_state, _save_tokens, _client_ip, _too_many, _rate_check, _check_locked, _fail, reset_rate_limits, _codes_dir, _normalise_code, _hash_code, mint_enrol_code, _prune_codes, _void_all_codes, _code_state, _spend_code, _ensure, _read, _write, list_devices, _find, _load_public_key, _basic_credential, _basic_file, _plain_bcrypt, _load_basic, _check_basic_file, _basic_configured, _check_basic, _note_legacy, _deny, _decide, require_admin, forward_auth, _mint_guard, issue_enrol_code, _require_live_code, enrol, get_devices, revoke, challenge, token, _hash_token, resolve_token, require_device, whoami, get_config, set_config, _cli
+
+### hub\colab.py
+Functions: _token, runner, usage, session_info, billing_active, status_summary, hb_status, tail, _recover_running, state, runner_token, packs, job, queue, job_action, comfy_tunnel, comfy_tunnel_api, recover, stop_runtime
+
+### hub\gen.py
+Functions: save, read_job, load, chain_msg, plain_words, extract_json, call_model, notify, slug, run, start, view, get, recent, resume, safe_name, key_status, save_key, put_file, get_file, mark_interrupted, resume_interrupted, mtime
+
+### hub\hypno.py
+Functions: ssh, decode, hf, load_jobs, save_jobs, overview, check_project, start_job, render, queue, captions, assist, ingest, jobs, job_log, chat, library, info
+
+### hub\laptop.py
+Functions: decode, ssh, ping, run
+
+### hub\ltx.py
+Functions: comfy, choices, pick, norm_opts, parse_opts, job_opts, _colab_billing_note, status, trigger, with_triggers, gay_reinforce, graph, men_only, fix_men, parse_director, assist, direct, plan, compile_clip, ask, save, load, wait_video, view, mute_mp4, set_status, watch, start_watch, slug, submit, sharpen_graph, sharpen_clip, run_sharpen, sharpen, last_frame, ref_stats, colour_fix, handoff, join, write_part, cast_of, part_name, run_chain, chain, render, jobs, job_input, cancel, save_installs, install, run_install, watch_install, stage_get, install_local, run_install_local, _cycle_pid, _cycle_stop, cycle_status, cycle_start, cycle_stop, resume, verb, sharp, has_audio
+
+### hub\ltx_qa_cycle.py
+Functions: log, save_state, openrouter, beatify, queue, wait_job, has_audio, repair_join, extract_frames, assess, is_keep, clamp, adjust, wait_comfy, main, apply_cli, write_pid, clear_pid
+
+### hub\media.py
+Functions: pack_titles, chain_titles, pretty, classify, clip_source, _safe_clip, library, thumb, _contact_frame_count, _contact_fractions, _assemble_contact_grid, contact_sheet
+
+### hub\ratelimit.py
+Functions: __init__, _bound, hit, locked_for, fail, reset, clear
+
+### hub\rebuild_phone_publish.py
+Functions: keep, tarball, main
+
+### hub\setup.py
+Functions: _lightricks, _content, catalog, load_state, merge, get_setup, save_setup, download_script
+
+### hub\setupbot.py
+Functions: as_lf_bytes, write_lf, recipes, recipe, spec_key, thunder_state, hourly, render_target, catalog, get_catalog, ssh, scp, rssh, sudo, remote_disk, colab, colab_active, instance, clean_options, disk_need, active_14b, preview, put_secret, post_preview, catalog_brief, chat, save, read_run, load, secret, hf_access, mask, stage, cancelled, env_file, launch_cmd, ensure_coachbate_on_colab, poll_cmd, work, start_thread, create_run, view, list_runs, get_run, cancel_run, resume_runs, redirect_request, step, _vast_bits
+
+### hub\static\generator_relay.js
+Functions: apply, store, api, status, follow, remember, target
+
+### hub\static\shotwriter\app.js
+Functions: model, renderModel, setTog, renderInputs, segHandler, setTheme, cfg, renderKeyBadge, openSettings, buildMessages, callLLM, clip, clampTake, parseOut, generate, renderSettingsCard, wc, renderTakes, copy, saveHistory, renderHistory, openDrawer, esc, toast
+
+### hub\static\shotwriter\sw.js
+Functions: handle
+
+### hub\static\term\civitai_red_dl.py
+Functions: ensure_requests, token, headers, rewrite, get, load_model, _is_weight_file, pick_files, download_url, looks_like_file, sha256_file, save, parse_ids, dest_for, one_model, main
+
+### hub\static\term\patch.js
+Functions: block, tuneArea, scanAreas, viewport, root, onStart, onMove, attach
+
+### hub\static\ui\forge.js
+Functions: check, show, close, onPop, isFinal, load
+
+### hub\static\ui\workflow.js
+Functions: eligibleCycleSource, cyclePlan, chatSaver
+
+### hub\term_bridge.py
+Functions: _purge_old, paste, paste_status, poll, status
+
+### hub\test_agentic_guards.py
+Functions: _fast_chat, _isolate, test_run_in_terminal_obeys_allow_laptop_commands, test_permission_gate_is_shared_by_runner_and_chat, test_restart_orphaned_jobs_release_their_slot, test_schedule_does_not_stack_on_a_slow_run, test_schedule_next_run_does_not_drift, test_subagents_cannot_delegate_further
+
+### hub\test_app_mounts.py
+Functions: test_every_module_the_hub_expects_is_mounted_in_a_full_install, test_the_route_families_behind_the_optional_modules_exist, test_the_manifest_lists_modules_that_failed_to_mount
+
+### hub\test_auth_devices.py
+Functions: _keypair, _sign, isolate, _enrol, test_enrol_sign_and_get_a_token, test_a_different_key_is_rejected, test_challenge_is_single_use, test_expired_challenge_is_refused, test_revoking_one_device_leaves_the_other_working, test_keys_are_never_listed_and_weak_curves_refused, test_unknown_device_and_garbage_key_are_clean_errors
+
+### hub\test_auth_hardening.py
+Functions: _keypair, _sign, isolate, _enrol, _enrolled, _token_for, test_challenge_rate_limit_actually_blocks_one_device, test_failed_signatures_burn_the_token_allowance, test_one_ip_cannot_escape_the_limit_by_cycling_device_ids, _require_codes, test_enrolment_code_cannot_be_reused, test_relay_password_alone_no_longer_enrols_a_device, test_expired_enrolment_code_is_refused, test_a_guessed_enrolment_code_is_refused, test_forward_auth_refuses_a_revoked_device, test_forward_auth_refuses_a_token_whose_device_vanished, test_forward_auth_strict_refuses_the_relay_password, test_forward_auth_basic_or_token_refuses_a_wrong_password, test_basic_or_token_without_a_credential_refuses_rather_than_waving_through, test_forward_auth_refuses_a_request_with_no_credentials_at_all, test_cannot_lock_yourself_out_with_no_devices_enrolled, test_env_var_overrides_a_locked_out_config_file, test_revoke_and_config_are_not_open_once_caddy_stops_checking, test_a_revoked_device_cannot_administer_with_its_old_token, _simulate_restart, test_a_restart_no_longer_logs_every_device_out, test_a_revoked_token_does_not_come_back_after_a_restart, test_the_persisted_token_file_holds_no_usable_token, test_an_expired_persisted_token_is_not_rehydrated, test_a_corrupt_token_file_does_not_take_the_hub_down, _bogus_basic, test_unrecognised_mode_in_the_file_refuses_basic, test_the_fallback_is_the_strictest_mode_not_the_default, test_a_good_mode_in_the_file_is_still_honoured, test_case_and_whitespace_variants_are_honoured_not_discarded, test_typo_in_the_env_override_does_not_downgrade, test_env_override_still_works_when_spelled_correctly, test_bad_mode_and_bad_env_together_still_fail_closed, test_the_operator_is_told_why, _write_users, _basic, _hash, test_a_user_from_the_file_is_accepted_and_a_wrong_password_is_not, test_a_base64_wrapped_hash_from_an_older_caddyfile_still_matches, test_deleting_a_line_takes_effect_immediately, test_comments_and_blank_lines_are_ignored, test_basic_or_token_no_longer_503s_when_only_the_file_is_configured, test_no_users_file_means_no_basic_credential, test_legacy_password_use_is_logged_once_a_minute, test_rotating_a_password_invalidates_the_cached_old_one, test_leaving_permissive_does_not_leave_enrolment_open, test_permissive_with_the_flag_off_still_enrols_without_a_code, test_a_lockout_recovery_env_mode_does_not_open_enrolment, test_the_config_reports_the_code_requirement_clients_will_actually_meet, test_the_device_list_is_not_public_once_caddy_stops_checking
+
+### hub\test_auth_ports.py
+Functions: _keypair, _sign, env, client, _via, _bearer, _basic, _enrolled, _login, _gate_on, _enrol_with, _restart, test_a_token_of_a_device_that_is_no_longer_enrolled_is_dead_everywhere, test_concurrent_enrolments_are_all_persisted, test_a_revoke_landing_mid_token_exchange_is_not_undone, test_a_revoke_does_not_drop_an_enrolment_that_lands_during_it, test_a_leaked_password_cannot_mint_its_own_enrolment_code, test_the_first_device_can_still_bootstrap_over_http_when_none_exist, test_a_duplicate_key_does_not_burn_the_code, test_an_unparsable_key_does_not_burn_the_code, test_the_code_is_checked_before_the_key_is_parsed, test_racing_enrolments_spend_one_code_exactly_once, test_a_code_minted_by_the_cli_is_spendable_survives_restart_and_is_single_use, test_codes_have_no_lookalike_glyphs_and_are_typo_tolerant, test_guessing_codes_locks_the_guesser_but_not_other_addresses, test_distributed_guessing_voids_every_live_code, test_a_missing_code_is_not_a_guess, test_flooding_a_device_id_from_one_address_does_not_starve_the_real_device, test_attackers_each_below_their_own_lock_cannot_starve_the_real_device_at_token, test_someone_who_knows_a_device_id_cannot_clobber_its_sign_in_or_get_it_locked_out, test_a_challenge_is_only_good_for_the_address_that_asked_for_it, test_expired_challenges_do_not_pile_up_when_addresses_are_rotated, test_bad_signatures_lock_the_pair_and_the_lock_holds_against_a_good_one, test_a_good_login_clears_the_failure_count, test_a_client_prefixed_forwarded_for_entry_does_not_dodge_the_per_ip_limit, test_limiter_memory_is_bounded_when_keys_are_rotated, test_password_guessing_in_basic_or_token_locks_that_address_only_for_basic, test_state_files_are_owner_only, test_require_device_is_applied_to_no_existing_route, test_cli_lists_enrolled_devices, test_cli_revoke_needs_no_credentials_and_kills_the_devices_tokens, __init__, __call__, worker, find, read, do_token, do_revoke, read, worker, bad, uses
+
+### hub\test_autonomy.py
+Functions: _fast_chat, test_due_schedule_fires_without_http_tick, test_tick_noop_when_runners_disabled, test_new_render_watcher_fires_once, test_watchers_crud
+
+### hub\test_control.py
+Functions: test_budget_blocks_the_over_limit_call_and_logs, test_budget_resets_on_a_new_day, test_gates_endpoint_is_the_shared_blocklist, test_confirm_reason_matches_shared_list, test_runner_blocks_confirmation_tools_in_background
+
+### hub\test_findings.py
+Functions: test_b1_colab_state_missing_token, test_b1_thunder_queue_missing_token, test_b1_colab_packs_missing_jsonl, test_b2_thunder_queue14_action_routing, test_b3_generator_route, test_b3_shotwriter_routes, test_m1_venice_model_default, test_m2_gitignore_credentials, test_desktop_app_caching_and_manifest, test_setup_saves_full_ltx_lora_pack, fake_wanbot14
+
+### hub\test_laptop_run.py
+Functions: test_run_rejects_empty_and_bad_lang, test_run_ssh_payload, test_ping_offline, fake_ssh, boom
+
+### hub\test_memory.py
+Functions: test_remember_note_then_injected_into_next_turn_payload, test_remember_preference_key_and_preamble_format, test_memory_injection_inert_when_store_empty, test_remember_requires_text
+
+### hub\test_multiagent.py
+Functions: _fake_done_chat, _wait_done, test_delegate_fans_out_3_children_and_collects, test_delegate_validates_input, test_reviewer_pass_allows_safe_denies_dangerous, test_reviewer_fails_closed, test_preapproved_skips_confirmation_but_not_permission_flags, fake_review_chat, broken
+
+### hub\test_ratelimit.py
+Functions: _throttle, test_hit_allows_the_limit_then_blocks_with_a_wait_then_reopens, test_fail_locks_at_the_threshold_and_the_lock_expires, test_failures_outside_the_window_do_not_add_up, test_reset_forgets_failures_and_lifts_a_lock, test_clear_drops_everything, test_rotating_keys_cannot_grow_state_without_limit, __init__, __call__
+
+### hub\test_senses.py
+Functions: _run_result, _patch_laptop, test_transcribe_voice_note_with_whispercpp, test_transcribe_chunks_large_payloads, test_engine_unavailable_is_a_clean_error, test_transcribe_laptop_path_skips_transfer, test_transcribe_requires_input_and_caps_size, test_transcribe_surfaces_engine_failure, fake_run, handler, handler, handler, handler, handler
+
+### hub\test_theme.py
+Functions: _defined, _used, test_tokens_file_is_the_single_source_and_forge_css_imports_it, test_tokens_css_is_served_uncached_like_the_other_shared_assets, test_migrated_pages_carry_no_warm_palette_colours, test_every_var_a_page_uses_is_defined_by_the_tokens_or_the_page, test_venice_does_not_link_all_of_forge_css, test_venice_keeps_both_embed_detection_paths, test_venice_alpha_steps_do_not_rely_on_tailwind_opacity_modifiers_over_var
+
+### hub\test_venice_agent.py
+Functions: test_tools_catalog_matches_android_plus_terminal, test_models_report_tool_capability_and_ui_gates_on_it, test_workspace_file_tools, test_run_in_terminal_returns_paste_payload, test_run_laptop_command_tool, test_payload_includes_tools, test_unknown_tool, test_chats_keep_tool_events, fake_run
+
+### hub\test_venice_chats.py
+Functions: test_normalize_drops_junk_and_keeps_order, test_chats_roundtrip
+
+### hub\thunder.py
+Functions: call, cached, restart_tunnel, follow_instance, state, create, check, delete, modify, ports, snapshot, snapshot_delete, wanbot14, comfy_online, queue14, submit14, queue14_action
+
+### hub\vast.py
+Functions: call, ssh_addr, slim, instances, instance, state, offer_price, search, offers, ensure_ssh_key, rent, create, check, start, stop, delete, label
+
+### hub\venice.py
+Functions: load_dotenv, _clean_key, _file_key, server_key, base_url, _fmt_price, price_label, _enrich_model, is_openrouter_model, openrouter_key, _venice_price_from_item, _model_sort_key, resolve_key, payload_of, _model_supports_vision, _memory_preamble, _apply_memory, _sanitize_messages, _chat_path, empty_store, _clean_msg, normalize_store, load_chats, save_chats, status, get_chats, put_chats, save_key, models, chat, _err_text, _object_schema, _tool, _as_args, _workspace_root, _within_workspace, _clip, _ensure_gallery_workspace, _render_status_text, _packs_text, _win_to_wsl, _upload_to_colab, _laptop_run, _laptop_json, _parse_probe, _transcribe_audio, _review_latest_render, _hub_base, _hub_overview, _queue_gpu_render, _hub_request, execute_tool, _audit_gate, _permission_block, _budget_block, execute_tool_detailed, list_tools, run_tool, stream, _slim
+
+### laptop-app\node_modules\@electron\asar\lib\asar.d.ts
+Functions: createPackage, createPackageWithOptions, createPackageFromFiles, createPackageFromStreams, statFile, getRawHeader, listPackage, extractFile, extractAll, uncache, uncacheAll
+
+### laptop-app\node_modules\@electron\asar\lib\asar.js
+Functions: isUnpackedDir, createPackage, createPackageWithOptions, createPackageFromFiles, createPackageFromStreams, statFile, getRawHeader, listPackage, extractFile, extractAll, uncache, uncacheAll
+
+### laptop-app\node_modules\@electron\asar\lib\crawlfs.d.ts
+Functions: determineFileType, crawl
+
+### laptop-app\node_modules\@electron\asar\lib\crawlfs.js
+Functions: determineFileType, crawl
+
+### laptop-app\node_modules\@electron\asar\lib\disk.d.ts
+Functions: writeFilesystem, streamFilesystem, readArchiveHeaderSync, readFilesystemSync, uncacheFilesystem, uncacheAll, readFileSync
+
+### laptop-app\node_modules\@electron\asar\lib\disk.js
+Functions: verb, settle, copyFile, streamTransformedFile, writeFilesystem, streamFilesystem, readArchiveHeaderSync, readFilesystemSync, uncacheFilesystem, uncacheAll, readFileSync, createFilesystemWriteStream, createSymlink
+
+### laptop-app\node_modules\@electron\asar\lib\integrity.d.ts
+Functions: getFileIntegrity
+
+### laptop-app\node_modules\@electron\asar\lib\integrity.js
+Functions: hashBlock, getFileIntegrity, handleChunk
+
+### laptop-app\node_modules\@electron\asar\node_modules\balanced-match\index.js
+Functions: balanced, maybeMatch, range
+
+### laptop-app\node_modules\@electron\asar\node_modules\brace-expansion\index.js
+Functions: numeric, escapeBraces, unescapeBraces, pushAll, parseCommaParts, expandTop, identity, embrace, isPadded, lte, gte, combine, expandSequence, expand
+
+### laptop-app\node_modules\@electron\asar\node_modules\minimatch\minimatch.js
+Functions: charSet, filter, ext, minimatch, Minimatch, defaults, filter, defaults, makeRe, braceExpand, minimatch, Minimatch, make, debug, parseNegate, braceExpand, parse, clearStateChar, makeRe, match, globUnescape, regExpEscape
+
+### laptop-app\node_modules\@electron\fuses\dist\bin.js
+Functions: stringForState, adaptConfig
+
+### laptop-app\node_modules\@electron\fuses\dist\index.js
+Functions: state, buildFuseV1Wire, pathToFuseFile, setFuseWire, getCurrentFuseWire, flipFuses
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\copy-sync\copy-sync.js
+Functions: copySync, handleFilterAndCopy, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestamps, fileIsNotWritable, makeFileWritable, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\copy\copy.js
+Functions: copy, checkParentDir, handleFilter, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestampsAndMode, fileIsNotWritable, makeFileWritable, setDestTimestampsAndMode, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItems, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\empty\index.js
+Functions: emptyDir, deleteItem, emptyDirSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\ensure\file.js
+Functions: createFile, makeFile, createFileSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\ensure\link.js
+Functions: createLink, makeLink, createLinkSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\ensure\symlink-paths.js
+Functions: symlinkPaths, symlinkPathsSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\ensure\symlink-type.js
+Functions: symlinkType, symlinkTypeSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\ensure\symlink.js
+Functions: createSymlink, createSymlinkSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\json\output-json-sync.js
+Functions: outputJsonSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\json\output-json.js
+Functions: outputJson
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\mkdirs\make-dir.js
+Functions: checkPath, processOptions, permissionError, make, make
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\move-sync\move-sync.js
+Functions: moveSync, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\move\move.js
+Functions: move, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\output\index.js
+Functions: outputFile, outputFileSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\path-exists\index.js
+Functions: pathExists
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\remove\rimraf.js
+Functions: defaults, rimraf, CB, rimraf_, fixWinEPERM, fixWinEPERMSync, rmdir, rmkids, rimrafSync, rmdirSync, rmkidsSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\util\stat.js
+Functions: stat, statSync, getStats, getStatsSync, checkPaths, checkPathsSync, checkParentPaths, callback, checkParentPathsSync, areIdentical, isSrcSubdir, errMsg
+
+### laptop-app\node_modules\@electron\fuses\node_modules\fs-extra\lib\util\utimes.js
+Functions: utimesMillis, utimesMillisSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\jsonfile\index.js
+Functions: _readFile, readFileSync, _writeFile, writeFileSync
+
+### laptop-app\node_modules\@electron\fuses\node_modules\jsonfile\utils.js
+Functions: stringify, stripBom
+
+### laptop-app\node_modules\@electron\get\dist\cjs\artifact-utils.d.ts
+Functions: getArtifactFileName, getArtifactRemoteURL, getArtifactVersion
+
+### laptop-app\node_modules\@electron\get\dist\cjs\artifact-utils.js
+Functions: getArtifactFileName, mirrorVar, getArtifactRemoteURL, getArtifactVersion
+
+### laptop-app\node_modules\@electron\get\dist\cjs\downloader-resolver.d.ts
+Functions: getDownloaderForSystem
+
+### laptop-app\node_modules\@electron\get\dist\cjs\downloader-resolver.js
+Functions: getDownloaderForSystem
+
+### laptop-app\node_modules\@electron\get\dist\cjs\index.d.ts
+Functions: downloadArtifact, download
+
+### laptop-app\node_modules\@electron\get\dist\cjs\index.js
+Functions: validateArtifact, downloadArtifact, download
+
+### laptop-app\node_modules\@electron\get\dist\cjs\proxy.d.ts
+Functions: initializeProxy
+
+### laptop-app\node_modules\@electron\get\dist\cjs\proxy.js
+Functions: initializeProxy
+
+### laptop-app\node_modules\@electron\get\dist\cjs\utils.d.ts
+Functions: normalizeVersion, uname, getNodeArch, getHostArch, isOfficialLinuxIA32Download, getEnv, setEnv
+
+### laptop-app\node_modules\@electron\get\dist\cjs\utils.js
+Functions: useAndRemoveDirectory, withTempDirectoryIn, withTempDirectory, normalizeVersion, uname, getNodeArch, getHostArch, ensureIsTruthyString, isOfficialLinuxIA32Download, getEnv, setEnv
+
+### laptop-app\node_modules\@electron\get\dist\esm\artifact-utils.d.ts
+Functions: getArtifactFileName, getArtifactRemoteURL, getArtifactVersion
+
+### laptop-app\node_modules\@electron\get\dist\esm\artifact-utils.js
+Functions: getArtifactFileName, mirrorVar, getArtifactRemoteURL, getArtifactVersion
+
+### laptop-app\node_modules\@electron\get\dist\esm\downloader-resolver.d.ts
+Functions: getDownloaderForSystem
+
+### laptop-app\node_modules\@electron\get\dist\esm\downloader-resolver.js
+Functions: getDownloaderForSystem
+
+### laptop-app\node_modules\@electron\get\dist\esm\index.d.ts
+Functions: downloadArtifact, download
+
+### laptop-app\node_modules\@electron\get\dist\esm\index.js
+Functions: validateArtifact, downloadArtifact, download
+
+### laptop-app\node_modules\@electron\get\dist\esm\proxy.d.ts
+Functions: initializeProxy
+
+### laptop-app\node_modules\@electron\get\dist\esm\proxy.js
+Functions: initializeProxy
+
+### laptop-app\node_modules\@electron\get\dist\esm\utils.d.ts
+Functions: normalizeVersion, uname, getNodeArch, getHostArch, isOfficialLinuxIA32Download, getEnv, setEnv
+
+### laptop-app\node_modules\@electron\get\dist\esm\utils.js
+Functions: useAndRemoveDirectory, withTempDirectoryIn, withTempDirectory, normalizeVersion, uname, getNodeArch, getHostArch, ensureIsTruthyString, isOfficialLinuxIA32Download, getEnv, setEnv
+
+### laptop-app\node_modules\@electron\notarize\lib\check-signature.d.ts
+Functions: checkSignatures
+
+### laptop-app\node_modules\@electron\notarize\lib\check-signature.js
+Functions: adopt, fulfilled, rejected, step, codesignDisplay, codesign, checkSignatures
+
+### laptop-app\node_modules\@electron\notarize\lib\helpers.d.ts
+Functions: makeSecret, isSecret, parseNotarizationInfo, delay
+
+### laptop-app\node_modules\@electron\notarize\lib\helpers.js
+Functions: adopt, fulfilled, rejected, step, withTempDir, makeSecret, isSecret, parseNotarizationInfo, matchToProperty, delay
+
+### laptop-app\node_modules\@electron\notarize\lib\index.d.ts
+Functions: notarize, notarize
+
+### laptop-app\node_modules\@electron\notarize\lib\index.js
+Functions: adopt, fulfilled, rejected, step, notarize
+
+### laptop-app\node_modules\@electron\notarize\lib\legacy.d.ts
+Functions: startLegacyNotarize, waitForLegacyNotarize
+
+### laptop-app\node_modules\@electron\notarize\lib\legacy.js
+Functions: adopt, fulfilled, rejected, step, startLegacyNotarize, waitForLegacyNotarize
+
+### laptop-app\node_modules\@electron\notarize\lib\notarytool.d.ts
+Functions: isNotaryToolAvailable, notarizeAndWaitForNotaryTool
+
+### laptop-app\node_modules\@electron\notarize\lib\notarytool.js
+Functions: adopt, fulfilled, rejected, step, runNotaryTool, authorizationArgs, getNotarizationLogs, isNotaryToolAvailable, notarizeAndWaitForNotaryTool
+
+### laptop-app\node_modules\@electron\notarize\lib\spawn.js
+Functions: spawn, dataHandler
+
+### laptop-app\node_modules\@electron\notarize\lib\staple.d.ts
+Functions: stapleApp
+
+### laptop-app\node_modules\@electron\notarize\lib\staple.js
+Functions: adopt, fulfilled, rejected, step, stapleApp
+
+### laptop-app\node_modules\@electron\notarize\lib\validate-args.d.ts
+Functions: isLegacyPasswordCredentials, isLegacyApiKeyCredentials, validateLegacyAuthorizationArgs, isNotaryToolPasswordCredentials, isNotaryToolApiKeyCredentials, isNotaryToolKeychainCredentials, validateNotaryToolAuthorizationArgs
+
+### laptop-app\node_modules\@electron\notarize\lib\validate-args.js
+Functions: isLegacyPasswordCredentials, isLegacyApiKeyCredentials, validateLegacyAuthorizationArgs, isNotaryToolPasswordCredentials, isNotaryToolApiKeyCredentials, isNotaryToolKeychainCredentials, validateNotaryToolAuthorizationArgs
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\copy-sync\copy-sync.js
+Functions: copySync, handleFilterAndCopy, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestamps, fileIsNotWritable, makeFileWritable, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\copy\copy.js
+Functions: copy, checkParentDir, handleFilter, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestampsAndMode, fileIsNotWritable, makeFileWritable, setDestTimestampsAndMode, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItems, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\empty\index.js
+Functions: emptyDir, deleteItem, emptyDirSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\ensure\file.js
+Functions: createFile, makeFile, createFileSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\ensure\link.js
+Functions: createLink, makeLink, createLinkSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\ensure\symlink-paths.js
+Functions: symlinkPaths, symlinkPathsSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\ensure\symlink-type.js
+Functions: symlinkType, symlinkTypeSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\ensure\symlink.js
+Functions: createSymlink, createSymlinkSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\json\output-json-sync.js
+Functions: outputJsonSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\json\output-json.js
+Functions: outputJson
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\mkdirs\make-dir.js
+Functions: checkPath, processOptions, permissionError, make, make
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\move-sync\move-sync.js
+Functions: moveSync, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\move\move.js
+Functions: move, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\output\index.js
+Functions: outputFile, outputFileSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\path-exists\index.js
+Functions: pathExists
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\remove\rimraf.js
+Functions: defaults, rimraf, CB, rimraf_, fixWinEPERM, fixWinEPERMSync, rmdir, rmkids, rimrafSync, rmdirSync, rmkidsSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\util\stat.js
+Functions: stat, statSync, getStats, getStatsSync, checkPaths, checkPathsSync, checkParentPaths, callback, checkParentPathsSync, areIdentical, isSrcSubdir, errMsg
+
+### laptop-app\node_modules\@electron\notarize\node_modules\fs-extra\lib\util\utimes.js
+Functions: utimesMillis, utimesMillisSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\jsonfile\index.js
+Functions: _readFile, readFileSync, _writeFile, writeFileSync
+
+### laptop-app\node_modules\@electron\notarize\node_modules\jsonfile\utils.js
+Functions: stringify, stripBom
+
+### laptop-app\node_modules\@electron\osx-sign\bin\electron-osx-flat.js
+Functions: done
+
+### laptop-app\node_modules\@electron\osx-sign\bin\electron-osx-sign.js
+Functions: done
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\flat.d.ts
+Functions: buildPkg
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\flat.js
+Functions: validateFlatOpts, buildApplicationPkg, buildPkg, flat
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\sign.d.ts
+Functions: signApp
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\sign.js
+Functions: validateOptsBinaries, validateOptsIgnore, validateSignOpts, verifySignApplication, defaultOptionsForFile, mergeOptionsForFile, signApplication, shouldIgnoreFilePath, signApp, sign
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\util-entitlements.d.ts
+Functions: preAutoEntitlements
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\util-entitlements.js
+Functions: preAutoEntitlements
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\util-identities.d.ts
+Functions: findIdentities
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\util-identities.js
+Functions: findIdentities
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\util-provisioning-profiles.d.ts
+Functions: getProvisioningProfile, findProvisioningProfiles, preEmbedProvisioningProfile
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\util-provisioning-profiles.js
+Functions: getProvisioningProfile, findProvisioningProfiles, preEmbedProvisioningProfile, embedProvisioningProfile
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\util.d.ts
+Functions: execFileAsync, getAppContentsPath, getAppFrameworksPath, detectElectronPlatform, validateOptsApp, validateOptsPlatform, walkAsync
+
+### laptop-app\node_modules\@electron\osx-sign\dist\cjs\util.js
+Functions: execFileAsync, compactFlattenedList, populateResult, getAppContentsPath, getAppFrameworksPath, detectElectronPlatform, getFilePathIfBinary, validateOptsApp, validateOptsPlatform, walkAsync, _walkAsync
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\flat.d.ts
+Functions: buildPkg
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\flat.js
+Functions: validateFlatOpts, buildApplicationPkg, buildPkg, flat
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\sign.d.ts
+Functions: signApp
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\sign.js
+Functions: validateOptsBinaries, validateOptsIgnore, validateSignOpts, verifySignApplication, defaultOptionsForFile, mergeOptionsForFile, signApplication, shouldIgnoreFilePath, signApp, sign
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\util-entitlements.d.ts
+Functions: preAutoEntitlements
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\util-entitlements.js
+Functions: preAutoEntitlements
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\util-identities.d.ts
+Functions: findIdentities
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\util-identities.js
+Functions: findIdentities
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\util-provisioning-profiles.d.ts
+Functions: getProvisioningProfile, findProvisioningProfiles, preEmbedProvisioningProfile
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\util-provisioning-profiles.js
+Functions: getProvisioningProfile, findProvisioningProfiles, preEmbedProvisioningProfile, embedProvisioningProfile
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\util.d.ts
+Functions: execFileAsync, getAppContentsPath, getAppFrameworksPath, detectElectronPlatform, validateOptsApp, validateOptsPlatform, walkAsync
+
+### laptop-app\node_modules\@electron\osx-sign\dist\esm\util.js
+Functions: execFileAsync, compactFlattenedList, populateResult, getAppContentsPath, getAppFrameworksPath, detectElectronPlatform, getFilePathIfBinary, validateOptsApp, validateOptsPlatform, walkAsync, _walkAsync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\copy\copy-sync.js
+Functions: copySync, handleFilterAndCopy, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestamps, fileIsNotWritable, makeFileWritable, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\copy\copy.js
+Functions: copy, checkParentDir, handleFilter, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestampsAndMode, fileIsNotWritable, makeFileWritable, setDestTimestampsAndMode, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItems, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\empty\index.js
+Functions: emptyDir, emptyDirSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\ensure\file.js
+Functions: createFile, makeFile, createFileSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\ensure\link.js
+Functions: createLink, makeLink, createLinkSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\ensure\symlink-paths.js
+Functions: symlinkPaths, symlinkPathsSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\ensure\symlink-type.js
+Functions: symlinkType, symlinkTypeSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\ensure\symlink.js
+Functions: createSymlink, _createSymlink, createSymlinkSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\json\output-json-sync.js
+Functions: outputJsonSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\json\output-json.js
+Functions: outputJson
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\mkdirs\make-dir.js
+Functions: getMode
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\mkdirs\utils.js
+Functions: checkPath
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\move\move-sync.js
+Functions: moveSync, isParentRoot, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\move\move.js
+Functions: move, isParentRoot, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\output-file\index.js
+Functions: outputFile, outputFileSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\path-exists\index.js
+Functions: pathExists
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\remove\index.js
+Functions: remove, removeSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\remove\rimraf.js
+Functions: defaults, rimraf, CB, rimraf_, fixWinEPERM, fixWinEPERMSync, rmdir, rmkids, rimrafSync, rmdirSync, rmkidsSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\util\stat.js
+Functions: getStats, getStatsSync, checkPaths, checkPathsSync, checkParentPaths, checkParentPathsSync, areIdentical, isSrcSubdir, errMsg
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\fs-extra\lib\util\utimes.js
+Functions: utimesMillis, utimesMillisSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\isbinaryfile\lib\index.d.ts
+Functions: isBinaryFile, isBinaryFileSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\isbinaryfile\lib\index.js
+Functions: adopt, fulfilled, rejected, step, readProtoVarInt, readProtoMessage, isBinaryProto, isBinaryFile, isBinaryFileSync, isBinaryCheck, isString, isStatFile
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\jsonfile\index.js
+Functions: _readFile, readFileSync, _writeFile, writeFileSync
+
+### laptop-app\node_modules\@electron\osx-sign\node_modules\jsonfile\utils.js
+Functions: stringify, stripBom
+
+### laptop-app\node_modules\@electron\rebuild\lib\arch.d.ts
+Functions: uname, getNodeArch
+
+### laptop-app\node_modules\@electron\rebuild\lib\arch.js
+Functions: uname, getNodeArch
+
+### laptop-app\node_modules\@electron\rebuild\lib\cache.d.ts
+Functions: generateCacheKey
+
+### laptop-app\node_modules\@electron\rebuild\lib\cache.js
+Functions: takeSnapshot, writeSnapshot, serialize, unserialize, cacheModuleState, lookupModuleState, applyDiff, dHashTree, hashDirectory, generateCacheKey
+
+### laptop-app\node_modules\@electron\rebuild\lib\clang-fetcher.d.ts
+Functions: getClangEnvironmentVars
+
+### laptop-app\node_modules\@electron\rebuild\lib\clang-fetcher.js
+Functions: getPlatformUrlPrefix, getClangDownloadURL, getSDKRoot, getClangEnvironmentVars, clangVersionFromRevision, clangVersionFromSVN, downloadClangVersion
+
+### laptop-app\node_modules\@electron\rebuild\lib\cli.js
+Functions: handler
+
+### laptop-app\node_modules\@electron\rebuild\lib\detect-libc.d.ts
+Functions: detectLibcFamily
+
+### laptop-app\node_modules\@electron\rebuild\lib\detect-libc.js
+Functions: detectLibcFamily
+
+### laptop-app\node_modules\@electron\rebuild\lib\electron-locator.d.ts
+Functions: locateElectronModule
+
+### laptop-app\node_modules\@electron\rebuild\lib\electron-locator.js
+Functions: locateModuleByImport, locateElectronModule
+
+### laptop-app\node_modules\@electron\rebuild\lib\fetcher.js
+Functions: fetchUrl
+
+### laptop-app\node_modules\@electron\rebuild\lib\module-type\index.d.ts
+Functions: locateBinary
+
+### laptop-app\node_modules\@electron\rebuild\lib\module-type\index.js
+Functions: locateBinary
+
+### laptop-app\node_modules\@electron\rebuild\lib\module-type\prebuildify.d.ts
+Functions: determineNativePrebuildArch, determineNativePrebuildExtension
+
+### laptop-app\node_modules\@electron\rebuild\lib\module-type\prebuildify.js
+Functions: determineNativePrebuildArch, determineNativePrebuildExtension
+
+### laptop-app\node_modules\@electron\rebuild\lib\read-package-json.d.ts
+Functions: readPackageJson
+
+### laptop-app\node_modules\@electron\rebuild\lib\read-package-json.js
+Functions: readPackageJson
+
+### laptop-app\node_modules\@electron\rebuild\lib\rebuild.d.ts
+Functions: rebuild
+
+### laptop-app\node_modules\@electron\rebuild\lib\rebuild.js
+Functions: rebuild
+
+### laptop-app\node_modules\@electron\rebuild\lib\search-module.d.ts
+Functions: searchForModule, searchForNodeModules, getProjectRootPath
+
+### laptop-app\node_modules\@electron\rebuild\lib\search-module.js
+Functions: shouldContinueSearch, traverseAncestorDirectories, searchForModule, pathGenerator, searchForNodeModules, pathGenerator, getProjectRootPath, pathGenerator
+
+### laptop-app\node_modules\@electron\rebuild\lib\sysroot-fetcher.d.ts
+Functions: downloadLinuxSysroot
+
+### laptop-app\node_modules\@electron\rebuild\lib\sysroot-fetcher.js
+Functions: downloadLinuxSysroot
+
+### laptop-app\node_modules\@electron\universal\dist\cjs\asar-utils.js
+Functions: detectAsarMode, generateAsarIntegrity, toRelativePath, isDirectory, checkSingleArch, mergeASARs, buildUnpacked, isUniversalMachO
+
+### laptop-app\node_modules\@electron\universal\dist\cjs\file-utils.js
+Functions: verb, settle, verb, resume, step, fulfill, reject, settle, getAllAppFiles, traverse, readMachOHeader
+
+### laptop-app\node_modules\@electron\universal\dist\cjs\index.js
+Functions: dupedFiles, makeUniversalApp
+
+### laptop-app\node_modules\@electron\universal\dist\cjs\integrity.d.ts
+Functions: computeIntegrityData
+
+### laptop-app\node_modules\@electron\universal\dist\cjs\integrity.js
+Functions: computeIntegrityData
+
+### laptop-app\node_modules\@electron\universal\dist\cjs\sha.js
+Functions: sha
+
+### laptop-app\node_modules\@electron\universal\dist\esm\asar-utils.js
+Functions: detectAsarMode, generateAsarIntegrity, toRelativePath, isDirectory, checkSingleArch, mergeASARs, buildUnpacked, isUniversalMachO
+
+### laptop-app\node_modules\@electron\universal\dist\esm\file-utils.js
+Functions: verb, settle, verb, resume, step, fulfill, reject, settle, getAllAppFiles, traverse, readMachOHeader
+
+### laptop-app\node_modules\@electron\universal\dist\esm\index.js
+Functions: dupedFiles, makeUniversalApp
+
+### laptop-app\node_modules\@electron\universal\dist\esm\integrity.d.ts
+Functions: computeIntegrityData
+
+### laptop-app\node_modules\@electron\universal\dist\esm\integrity.js
+Functions: computeIntegrityData
+
+### laptop-app\node_modules\@electron\universal\dist\esm\sha.js
+Functions: sha
+
+### laptop-app\node_modules\@electron\universal\entry-asar\has-asar.js
+Functions: setPaths
+
+### laptop-app\node_modules\@electron\universal\entry-asar\no-asar.js
+Functions: setPaths
+
+### laptop-app\node_modules\@electron\universal\node_modules\balanced-match\index.js
+Functions: balanced, maybeMatch, range
+
+### laptop-app\node_modules\@electron\universal\node_modules\brace-expansion\index.js
+Functions: numeric, escapeBraces, unescapeBraces, pushAll, parseCommaParts, expandTop, embrace, isPadded, lte, gte, combine, expandSequence, expand
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\copy\copy-sync.js
+Functions: copySync, getStats, onFile, mayCopyFile, copyFile, handleTimestamps, fileIsNotWritable, makeFileWritable, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\copy\copy.js
+Functions: copy, runFilter, getStatsAndPerformCopy, onFile, copyFile, fileIsNotWritable, makeFileWritable, onDir, if, onLink
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\empty\index.js
+Functions: emptyDir, emptyDirSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\ensure\file.js
+Functions: createFile, createFileSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\ensure\link.js
+Functions: createLink, createLinkSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\ensure\symlink-paths.js
+Functions: symlinkPaths, symlinkPathsSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\ensure\symlink-type.js
+Functions: symlinkType, symlinkTypeSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\ensure\symlink.js
+Functions: createSymlink, createSymlinkSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\json\output-json-sync.js
+Functions: outputJsonSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\json\output-json.js
+Functions: outputJson
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\mkdirs\make-dir.js
+Functions: getMode
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\mkdirs\utils.js
+Functions: checkPath
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\move\move-sync.js
+Functions: moveSync, isParentRoot, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\move\move.js
+Functions: move, doRename, moveAcrossDevice
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\output-file\index.js
+Functions: outputFile, outputFileSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\path-exists\index.js
+Functions: pathExists
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\remove\index.js
+Functions: remove, removeSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\util\async.js
+Functions: asyncIteratorConcurrentProcess
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\util\stat.js
+Functions: getStats, getStatsSync, checkPaths, checkPathsSync, isCosmeticRename, checkParentPaths, checkParentPathsSync, areIdentical, isSrcSubdir, errMsg
+
+### laptop-app\node_modules\@electron\universal\node_modules\fs-extra\lib\util\utimes.js
+Functions: utimesMillis, utimesMillisSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\jsonfile\index.js
+Functions: _readFile, readFileSync, _writeFile, writeFileSync
+
+### laptop-app\node_modules\@electron\universal\node_modules\jsonfile\utils.js
+Functions: stringify, stripBom
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\commonjs\assert-valid-pattern.js
+Functions: assertValidPattern
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\commonjs\ast.js
+Functions: isExtglobType, isExtglobAST, regExpEscape, deslash
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\commonjs\brace-expressions.js
+Functions: braceEscape, regexpEscape, rangesToString, parseClass
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\commonjs\escape.js
+Functions: escape
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\commonjs\index.js
+Functions: minimatch, starDotExtTest, starDotExtTestDot, starDotExtTestNocase, starDotExtTestNocaseDot, starDotStarTest, starDotStarTestDot, dotStarTest, starTest, starTestDot, qmarksTestNocase, qmarksTestNocaseDot, qmarksTestDot, qmarksTest, qmarksTestNoExt, qmarksTestNoExtDot, filter, ext, defaults, m, braceExpand, makeRe, match, regExpEscape
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\commonjs\unescape.js
+Functions: unescape
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\esm\assert-valid-pattern.js
+Functions: assertValidPattern
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\esm\ast.js
+Functions: isExtglobType, isExtglobAST, regExpEscape, deslash
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\esm\brace-expressions.js
+Functions: braceEscape, regexpEscape, rangesToString, parseClass
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\esm\escape.js
+Functions: escape
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\esm\index.js
+Functions: minimatch, starDotExtTest, starDotExtTestDot, starDotExtTestNocase, starDotExtTestNocaseDot, starDotStarTest, starDotStarTestDot, dotStarTest, starTest, starTestDot, qmarksTestNocase, qmarksTestNocaseDot, qmarksTestDot, qmarksTest, qmarksTestNoExt, qmarksTestNoExtDot, filter, ext, defaults, m, braceExpand, makeRe, match, regExpEscape
+
+### laptop-app\node_modules\@electron\universal\node_modules\minimatch\dist\esm\unescape.js
+Functions: unescape
+
+### laptop-app\node_modules\@electron\windows-sign\bin\electron-windows-sign.js
+Functions: done
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\files.d.ts
+Functions: getFilesToSign
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\files.js
+Functions: getFilesToSign, isSignOptionsForFiles
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\sea.d.ts
+Functions: createSeaSignTool
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\sea.js
+Functions: main, createSeaSignTool, createSeaReceiver, createFiles, createBlob, createBinary, cleanup, getOptions, checkCompatibility, escapeMaybe
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\sign-with-hook.d.ts
+Functions: signWithHook
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\sign-with-hook.js
+Functions: getHookFunction, signWithHook
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\sign-with-signtool.d.ts
+Functions: signWithSignTool
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\sign-with-signtool.js
+Functions: getSigntoolArgs, execute, signWithSignTool
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\sign.d.ts
+Functions: sign
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\sign.js
+Functions: sign
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\spawn.d.ts
+Functions: spawnPromise
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\spawn.js
+Functions: spawnPromise
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\utils\log.d.ts
+Functions: enableDebugging
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\utils\log.js
+Functions: enableDebugging
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\utils\parse-env.d.ts
+Functions: booleanFromEnv
+
+### laptop-app\node_modules\@electron\windows-sign\dist\cjs\utils\parse-env.js
+Functions: booleanFromEnv
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\files.d.ts
+Functions: getFilesToSign
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\files.js
+Functions: getFilesToSign, isSignOptionsForFiles
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\sea.d.ts
+Functions: createSeaSignTool
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\sea.js
+Functions: main, createSeaSignTool, createSeaReceiver, createFiles, createBlob, createBinary, cleanup, getOptions, checkCompatibility, escapeMaybe
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\sign-with-hook.d.ts
+Functions: signWithHook
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\sign-with-hook.js
+Functions: getHookFunction, signWithHook
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.d.ts
+Functions: signWithSignTool
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\sign-with-signtool.js
+Functions: getSigntoolArgs, execute, signWithSignTool
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\sign.d.ts
+Functions: sign
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\sign.js
+Functions: sign
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\spawn.d.ts
+Functions: spawnPromise
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\spawn.js
+Functions: spawnPromise
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\utils\log.d.ts
+Functions: enableDebugging
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\utils\log.js
+Functions: enableDebugging
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\utils\parse-env.d.ts
+Functions: booleanFromEnv
+
+### laptop-app\node_modules\@electron\windows-sign\dist\esm\utils\parse-env.js
+Functions: booleanFromEnv
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\copy\copy-sync.js
+Functions: copySync, getStats, onFile, mayCopyFile, copyFile, handleTimestamps, fileIsNotWritable, makeFileWritable, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\copy\copy.js
+Functions: copy, runFilter, getStatsAndPerformCopy, onFile, copyFile, fileIsNotWritable, makeFileWritable, onDir, if, onLink
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\empty\index.js
+Functions: emptyDir, emptyDirSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\ensure\file.js
+Functions: createFile, createFileSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\ensure\link.js
+Functions: createLink, createLinkSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\ensure\symlink-paths.js
+Functions: symlinkPaths, symlinkPathsSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\ensure\symlink-type.js
+Functions: symlinkType, symlinkTypeSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\ensure\symlink.js
+Functions: createSymlink, createSymlinkSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\json\output-json-sync.js
+Functions: outputJsonSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\json\output-json.js
+Functions: outputJson
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\mkdirs\make-dir.js
+Functions: getMode
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\mkdirs\utils.js
+Functions: checkPath
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\move\move-sync.js
+Functions: moveSync, isParentRoot, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\move\move.js
+Functions: move, doRename, moveAcrossDevice
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\output-file\index.js
+Functions: outputFile, outputFileSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\path-exists\index.js
+Functions: pathExists
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\remove\index.js
+Functions: remove, removeSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\util\async.js
+Functions: asyncIteratorConcurrentProcess
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\util\stat.js
+Functions: getStats, getStatsSync, checkPaths, checkPathsSync, isCosmeticRename, checkParentPaths, checkParentPathsSync, areIdentical, isSrcSubdir, errMsg
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\fs-extra\lib\util\utimes.js
+Functions: utimesMillis, utimesMillisSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\jsonfile\index.js
+Functions: _readFile, readFileSync, _writeFile, writeFileSync
+
+### laptop-app\node_modules\@electron\windows-sign\node_modules\jsonfile\utils.js
+Functions: stringify, stripBom
+
+### laptop-app\node_modules\@malept\cross-spawn-promise\dist\src\index.d.ts
+Functions: spawn
+
+### laptop-app\node_modules\@malept\cross-spawn-promise\dist\src\index.js
+Functions: stringifyCommand, spawn
+
+### laptop-app\node_modules\@malept\flatpak-bundler\index.js
+Functions: kebabify, translateArch, getOptionsWithDefaults, spawnWithLogging, addCommandLineOption, checkInstalled, flatpakBuilderVersion, addAssumeYesArg, ensureRef, ensureRuntime, ensureSdk, ensureBase, ensureWorkingDir, writeJsonFile, copyFiles, createSymlinks, copyExports, flatpakBuilder, flatpakBuildExport, flatpakBuildBundle
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\copy-sync\copy-sync.js
+Functions: copySync, handleFilterAndCopy, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestamps, fileIsNotWritable, makeFileWritable, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\copy\copy.js
+Functions: copy, checkParentDir, handleFilter, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestampsAndMode, fileIsNotWritable, makeFileWritable, setDestTimestampsAndMode, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItems, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\empty\index.js
+Functions: emptyDir, deleteItem, emptyDirSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\ensure\file.js
+Functions: createFile, makeFile, createFileSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\ensure\link.js
+Functions: createLink, makeLink, createLinkSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\ensure\symlink-paths.js
+Functions: symlinkPaths, symlinkPathsSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\ensure\symlink-type.js
+Functions: symlinkType, symlinkTypeSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\ensure\symlink.js
+Functions: createSymlink, createSymlinkSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\json\output-json-sync.js
+Functions: outputJsonSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\json\output-json.js
+Functions: outputJson
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\mkdirs\make-dir.js
+Functions: checkPath, processOptions, permissionError, make, make
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\move-sync\move-sync.js
+Functions: moveSync, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\move\move.js
+Functions: move, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\output\index.js
+Functions: outputFile, outputFileSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\path-exists\index.js
+Functions: pathExists
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\remove\rimraf.js
+Functions: defaults, rimraf, CB, rimraf_, fixWinEPERM, fixWinEPERMSync, rmdir, rmkids, rimrafSync, rmdirSync, rmkidsSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\util\stat.js
+Functions: stat, statSync, getStats, getStatsSync, checkPaths, checkPathsSync, checkParentPaths, callback, checkParentPathsSync, areIdentical, isSrcSubdir, errMsg
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\fs-extra\lib\util\utimes.js
+Functions: utimesMillis, utimesMillisSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\jsonfile\index.js
+Functions: _readFile, readFileSync, _writeFile, writeFileSync
+
+### laptop-app\node_modules\@malept\flatpak-bundler\node_modules\jsonfile\utils.js
+Functions: stringify, stripBom
+
+### laptop-app\node_modules\@noble\hashes\_blake.d.ts
+Functions: G1s, G2s
+
+### laptop-app\node_modules\@noble\hashes\_blake.js
+Functions: G1s, G2s
+
+### laptop-app\node_modules\@noble\hashes\_md.d.ts
+Functions: Chi, Maj
+
+### laptop-app\node_modules\@noble\hashes\_md.js
+Functions: Chi, Maj
+
+### laptop-app\node_modules\@noble\hashes\_u64.d.ts
+Functions: fromBig, split, setU64FromNum, add
+
+### laptop-app\node_modules\@noble\hashes\_u64.js
+Functions: fromBig, split, toBig, fromNumH, fromNumL, setU64FromNum, shrSH, shrSL, rotrSH, rotrSL, rotrBH, rotrBL, rotr32H, rotr32L, add, add3L, add3H, add4L, add4H, add5L, add5H
+
+### laptop-app\node_modules\@noble\hashes\argon2.js
+Functions: abytesOrZero, G, P, block, Hp, indexAlpha, isU32, argon2Opts, argon2InitialHash, rememberOwned, argon2Init, argon2Output, argon2, argon2d, argon2i, argon2id, argon2Async, abort, argon2dAsync, argon2iAsync, argon2idAsync
+
+### laptop-app\node_modules\@noble\hashes\blake1.js
+Functions: generateTBL256, generateTBL512, G1b, G2b
+
+### laptop-app\node_modules\@noble\hashes\blake2.d.ts
+Functions: _compress
+
+### laptop-app\node_modules\@noble\hashes\blake2.js
+Functions: G1b, G2b, checkBlake2Opts, _compress
+
+### laptop-app\node_modules\@noble\hashes\blake3.js
+Functions: permute
+
+### laptop-app\node_modules\@noble\hashes\eskdf.d.ts
+Functions: scrypt, pbkdf2, deriveMainSeed, eskdf
+
+### laptop-app\node_modules\@noble\hashes\eskdf.js
+Functions: scrypt, pbkdf2, xor32, strHasLength, deriveMainSeed, getSaltInfo, countBytes, getKeyLength, modReduceKey, eskdf, deriveCK, expire
+
+### laptop-app\node_modules\@noble\hashes\hkdf.d.ts
+Functions: extract, expand
+
+### laptop-app\node_modules\@noble\hashes\hkdf.js
+Functions: extract, expand, hkdf
+
+### laptop-app\node_modules\@noble\hashes\hmac.js
+Functions: hmac_
+
+### laptop-app\node_modules\@noble\hashes\legacy.js
+Functions: ripemd_f
+
+### laptop-app\node_modules\@noble\hashes\pbkdf2.d.ts
+Functions: pbkdf2, pbkdf2Async
+
+### laptop-app\node_modules\@noble\hashes\pbkdf2.js
+Functions: pbkdf2Init, pbkdf2Engine, pbkdf2, pbkdf2Async, abort
+
+### laptop-app\node_modules\@noble\hashes\scrypt.d.ts
+Functions: scrypt, scryptAsync
+
+### laptop-app\node_modules\@noble\hashes\scrypt.js
+Functions: XorAndSalsa, BlockMix, scryptInit, scryptOutput, scrypt, scryptAsync, abort
+
+### laptop-app\node_modules\@noble\hashes\sha3-addons.js
+Functions: encodeBytes, leftEncode, rightEncode, chooseLen, abytesOrZero, getPadding, bytepadUpdate, cshakePers, gencShake, genKmac, kmac, genTuple, tuple, genPrl, parallel, genTurbo, rightEncodeK12, genHopMAC, keccakprg
+
+### laptop-app\node_modules\@noble\hashes\sha3.d.ts
+Functions: keccakP
+
+### laptop-app\node_modules\@noble\hashes\sha3.js
+Functions: rotlSH, rotlSL, rotlBH, rotlBL, rotlH, rotlL, keccakP, genKeccak, genShake
+
+### laptop-app\node_modules\@noble\hashes\src\_blake.ts
+Functions: G1s, G2s
+
+### laptop-app\node_modules\@noble\hashes\src\_md.ts
+Functions: Chi, Maj
+
+### laptop-app\node_modules\@noble\hashes\src\_u64.ts
+Functions: fromBig, split, setU64FromNum, add
+
+### laptop-app\node_modules\@noble\hashes\src\argon2.ts
+Functions: G, P, block, Hp, indexAlpha, isU32, argon2Opts, argon2InitialHash, argon2Init, argon2Output, argon2, argon2Async, abort
+
+### laptop-app\node_modules\@noble\hashes\src\blake1.ts
+Functions: generateTBL256, generateTBL512, G1b, G2b
+
+### laptop-app\node_modules\@noble\hashes\src\blake2.ts
+Functions: G1b, G2b, checkBlake2Opts, _compress
+
+### laptop-app\node_modules\@noble\hashes\src\blake3.ts
+Functions: permute
+
+### laptop-app\node_modules\@noble\hashes\src\eskdf.ts
+Functions: scrypt, pbkdf2, xor32, strHasLength, deriveMainSeed, getSaltInfo, countBytes, getKeyLength, modReduceKey, eskdf, deriveCK, expire
+
+### laptop-app\node_modules\@noble\hashes\src\hkdf.ts
+Functions: extract, expand
+
+### laptop-app\node_modules\@noble\hashes\src\legacy.ts
+Functions: ripemd_f
+
+### laptop-app\node_modules\@noble\hashes\src\pbkdf2.ts
+Functions: pbkdf2Init, pbkdf2Engine, pbkdf2, pbkdf2Async, abort
+
+### laptop-app\node_modules\@noble\hashes\src\scrypt.ts
+Functions: XorAndSalsa, BlockMix, scryptInit, scryptOutput, scrypt, scryptAsync, abort
+
+### laptop-app\node_modules\@noble\hashes\src\sha3-addons.ts
+Functions: encodeBytes, leftEncode, rightEncode, chooseLen, abytesOrZero, getPadding, bytepadUpdate, cshakePers, genKmac, genTuple, genPrl, genTurbo, rightEncodeK12
+
+### laptop-app\node_modules\@noble\hashes\src\sha3.ts
+Functions: rotlH, rotlL, keccakP, genKeccak, genShake
+
+### laptop-app\node_modules\@noble\hashes\src\utils.ts
+Functions: isBytes, anumber, abool, abytes, copyBytes, ahash, aobject, aopts, aexists, aoutput, u8, u32, clean, createView, rotr, rotl, byteSwap, byteSwap32, bytesToHex, asciiToBase16, hexToBytes, nextTick, asyncLoop, utf8ToBytes, kdfInputToBytes, concatBytes, checkField, iter, randomBytes
+
+### laptop-app\node_modules\@noble\hashes\src\webcrypto.ts
+Functions: _subtle, createWebHash, ahashWeb, hkdf, pbkdf2
+
+### laptop-app\node_modules\@noble\hashes\utils.d.ts
+Functions: isBytes, anumber, abool, abytes, copyBytes, ahash, aexists, aoutput, u8, u32, clean, createView, rotr, rotl, byteSwap, byteSwap32, bytesToHex, hexToBytes, nextTick, asyncLoop, utf8ToBytes, kdfInputToBytes, concatBytes, randomBytes
+
+### laptop-app\node_modules\@noble\hashes\utils.js
+Functions: isBytes, atitle, anumber, abool, abytes, copyBytes, ahash, aobject, aopts, aexists, aoutput, u8, u32, clean, createView, rotr, rotl, byteSwap, byteSwap32, bytesToHex, asciiToBase16, hexToBytes, nextTick, asyncLoop, utf8ToBytes, kdfInputToBytes, concatBytes, validateObject, checkField, iter, checkOpts, createHasher, hashC, randomBytes, oidNist
+
+### laptop-app\node_modules\@noble\hashes\webcrypto.d.ts
+Functions: hkdf, pbkdf2
+
+### laptop-app\node_modules\@noble\hashes\webcrypto.js
+Functions: _subtle, createWebHash, hashC, ahashWeb, hmac_, hkdf, pbkdf2
+
+### laptop-app\node_modules\@peculiar\asn1-schema\build\cjs\converters.js
+Functions: createStringConverter, defaultConverter
+
+### laptop-app\node_modules\@peculiar\asn1-schema\build\cjs\decorators.js
+Functions: AsnType, AsnChoiceType, AsnSetType, AsnSequenceType, AsnProp
+
+### laptop-app\node_modules\@peculiar\asn1-schema\build\cjs\helper.js
+Functions: isConvertible, isTypeOfArray, isArrayEqual
+
+### laptop-app\node_modules\@peculiar\asn1-schema\build\es2015\converters.js
+Functions: createStringConverter, defaultConverter
+
+### laptop-app\node_modules\@peculiar\asn1-schema\build\es2015\decorators.js
+Functions: AsnType, AsnChoiceType, AsnSetType, AsnSequenceType, AsnProp
+
+### laptop-app\node_modules\@peculiar\asn1-schema\build\es2015\helper.js
+Functions: isConvertible, isTypeOfArray, isArrayEqual
+
+### laptop-app\node_modules\@peculiar\asn1-schema\build\types\converters.d.ts
+Functions: defaultConverter
+
+### laptop-app\node_modules\@peculiar\asn1-schema\build\types\helper.d.ts
+Functions: isConvertible, isConvertible, isTypeOfArray, isArrayEqual
+
+### laptop-app\node_modules\@peculiar\json-schema\build\index.es.js
+Functions: checkType, throwIfTypeIsWrong, isConvertible, getValidations, JsonProp
+
+### laptop-app\node_modules\@peculiar\json-schema\build\index.js
+Functions: checkType, throwIfTypeIsWrong, isConvertible, getValidations, JsonProp
+
+### laptop-app\node_modules\@peculiar\json-schema\build\types\helper.d.ts
+Functions: checkType, throwIfTypeIsWrong, isConvertible
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\bytes\buffer-source.js
+Functions: tagOf, isDataViewConstructor, bytesPerElement, isArrayBufferViewLike, copyBytes, isArrayBuffer, isSharedArrayBuffer, isArrayBufferLike, isArrayBufferView, isBufferSource, assertBufferSource, toUint8Array, toUint8ArrayCopy, toArrayBuffer, toArrayBufferLike, toView, toViewCopy
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\bytes\concat.js
+Functions: concatToUint8Array, concat
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\bytes\equal.js
+Functions: equal
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\bytes\sequence.js
+Functions: clampIndex, normalizeForwardRange, normalizeReverseRange, normalizeSliceIndex, encodeAscii, encodeUtf8, toPatternBytes, bytesEqualAt, indexOf, lastIndexOf, includes, startsWith, endsWith, slice, tail, copy, compare
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\converters\convert.js
+Functions: encode, decode, tryDecode, normalize, parse, format, transcode, detect, normalizeEncodingName
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\converters\registry.js
+Functions: keyOf, toError, removeConverter, requireCapability, detectConfidence, createConverterRegistry
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\encoding\base64.js
+Functions: nodeBuffer, normalize, pad, is, encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\encoding\base64url.js
+Functions: normalize, is, encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\encoding\binary.js
+Functions: encode, decode, is
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\encoding\hex.js
+Functions: resolveSeparators, validateSeparator, matchSeparator, detectCase, detectLineSeparator, compactForDetection, detectGroup, detectFormat, normalizeText, groupPairs, normalize, is, encode, decode, parse, format
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\encoding\utf16.js
+Functions: encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\encoding\utf8.js
+Functions: encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\legacy\convert.js
+Functions: normalizeTextEncoding
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\legacy\functions.js
+Functions: assign, combine, isEqual
+
+### laptop-app\node_modules\@peculiar\utils\build\cjs\pem\pem.js
+Functions: assertLabel, wrap, parseBody, detectNewline, collectBlocks, encode, encodeMany, decode, find, findAll, decodeFirst, parse, format
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\bytes\buffer-source.js
+Functions: tagOf, isDataViewConstructor, bytesPerElement, isArrayBufferViewLike, copyBytes, isArrayBuffer, isSharedArrayBuffer, isArrayBufferLike, isArrayBufferView, isBufferSource, assertBufferSource, toUint8Array, toUint8ArrayCopy, toArrayBuffer, toArrayBufferLike, toView, toViewCopy
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\bytes\concat.js
+Functions: concatToUint8Array, concat
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\bytes\equal.js
+Functions: equal
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\bytes\sequence.js
+Functions: clampIndex, normalizeForwardRange, normalizeReverseRange, normalizeSliceIndex, encodeAscii, encodeUtf8, toPatternBytes, bytesEqualAt, indexOf, lastIndexOf, includes, startsWith, endsWith, slice, tail, copy, compare
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\converters\convert.js
+Functions: encode, decode, tryDecode, normalize, parse, format, transcode, detect, normalizeEncodingName
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\converters\registry.js
+Functions: keyOf, toError, removeConverter, requireCapability, detectConfidence, createConverterRegistry
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\encoding\base64.js
+Functions: nodeBuffer, normalize, pad, is, encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\encoding\base64url.js
+Functions: normalize, is, encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\encoding\binary.js
+Functions: encode, decode, is
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\encoding\hex.js
+Functions: resolveSeparators, validateSeparator, matchSeparator, detectCase, detectLineSeparator, compactForDetection, detectGroup, detectFormat, normalizeText, groupPairs, normalize, is, encode, decode, parse, format
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\encoding\utf16.js
+Functions: encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\encoding\utf8.js
+Functions: encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\legacy\convert.js
+Functions: normalizeTextEncoding
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\legacy\functions.js
+Functions: assign, combine, isEqual
+
+### laptop-app\node_modules\@peculiar\utils\build\esm\pem\pem.js
+Functions: assertLabel, wrap, parseBody, detectNewline, collectBlocks, encode, encodeMany, decode, find, findAll, decodeFirst, parse, format
+
+### laptop-app\node_modules\@peculiar\utils\build\types\bytes\buffer-source.d.ts
+Functions: isArrayBuffer, isSharedArrayBuffer, isArrayBufferLike, isArrayBufferView, isBufferSource, assertBufferSource, toUint8Array, toUint8ArrayCopy, toArrayBuffer, toArrayBufferLike
+
+### laptop-app\node_modules\@peculiar\utils\build\types\bytes\concat.d.ts
+Functions: concatToUint8Array, concat, concat
+
+### laptop-app\node_modules\@peculiar\utils\build\types\bytes\equal.d.ts
+Functions: equal
+
+### laptop-app\node_modules\@peculiar\utils\build\types\bytes\sequence.d.ts
+Functions: indexOf, lastIndexOf, includes, startsWith, endsWith, slice, tail, copy, compare
+
+### laptop-app\node_modules\@peculiar\utils\build\types\converters\registry.d.ts
+Functions: createConverterRegistry
+
+### laptop-app\node_modules\@peculiar\utils\build\types\encoding\base64.d.ts
+Functions: normalize, pad, is, encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\types\encoding\base64url.d.ts
+Functions: normalize, is, encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\types\encoding\binary.d.ts
+Functions: encode, decode, is
+
+### laptop-app\node_modules\@peculiar\utils\build\types\encoding\hex.d.ts
+Functions: normalize, is, encode, decode, parse, format
+
+### laptop-app\node_modules\@peculiar\utils\build\types\encoding\utf16.d.ts
+Functions: encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\types\encoding\utf8.d.ts
+Functions: encode, decode
+
+### laptop-app\node_modules\@peculiar\utils\build\types\legacy\functions.d.ts
+Functions: combine, isEqual
+
+### laptop-app\node_modules\@peculiar\utils\build\types\pem\pem.d.ts
+Functions: encode, encodeMany, decode, find, findAll, decodeFirst, parse, format
+
+### laptop-app\node_modules\@peculiar\webcrypto\build\webcrypto.es.js
+Functions: getCryptoKey, setCryptoKey, bitShiftLeft, xor, aes, getMessageBlock, getPaddedMessageBlock, generateSubkeys, aesCmac, getJwkAlgorithm, getOidByNamedCurve
+
+### laptop-app\node_modules\@peculiar\webcrypto\build\webcrypto.js
+Functions: _interopNamespaceDefault, getCryptoKey, setCryptoKey, bitShiftLeft, xor, aes, getMessageBlock, getPaddedMessageBlock, generateSubkeys, aesCmac, getJwkAlgorithm, getOidByNamedCurve
+
+### laptop-app\node_modules\@sindresorhus\is\dist\index.d.ts
+Functions: is
+
+### laptop-app\node_modules\@sindresorhus\is\dist\index.js
+Functions: isTypedArrayName, isObjectTypeName, isPrimitiveTypeName, isOfType, getObjectType, isObjectOfType, is, hasPromiseAPI, isValidLength, isAbsoluteMod2, isWhiteSpaceString, predicateOnArray, assertType
+
+### laptop-app\node_modules\@szmarczak\http-timer\dist\source\index.js
+Functions: timer, handleError, onAbort, onSocket, lookupListener, onUpload, writableFinished
+
+### laptop-app\node_modules\@types\fs-extra\index.d.ts
+Functions: copy, copy, copy, copySync, copyFile, copyFile, copyFile, move, move, move, moveSync, createFile, createFile, createFileSync, createSymlink, createSymlink, createSymlinkSync, ensureDir, ensureDir, ensureDir, ensureDirSync, mkdirs, mkdirs, mkdirp, mkdirp, mkdirsSync, mkdirpSync, outputFile, outputFile, outputFile, outputFileSync, readJson, readJson, readJson, readJSON, readJSON, readJSON, readJsonSync, readJSONSync, remove, remove, removeSync, outputJSON, outputJSON, outputJSON, outputJson, outputJson, outputJson, outputJsonSync, outputJSONSync, writeJSON, writeJSON, writeJSON, writeJson, writeJson, writeJson, writeJsonSync, writeJSONSync, ensureFile, ensureFile, ensureFileSync, ensureLink, ensureLink, ensureLinkSync, ensureSymlink, ensureSymlink, ensureSymlink, ensureSymlinkSync, emptyDir, emptyDir, emptyDirSync, pathExists, pathExists, pathExistsSync, access, access, access, appendFile, appendFile, appendFile, chmod, chmod, chown, chown, close, close, fchmod, fchmod, fchown, fchown, fdatasync, fdatasync, fstat, fstat, fsync, fsync, ftruncate, ftruncate, ftruncate, futimes, futimes, futimes, futimes, lchown, lchown, link, link, lstat, lstat, mkdir, mkdir, mkdir, mkdirSync, open, open, open, opendir, opendir, opendir, readFile, readFile, readFile, readFile, readFile, readFile, readdir, readdir, readdir, readdir, readdir, readlink, readlink, realpath, realpath, realpath, rename, rename, rm, rmdir, rmdir, stat, stat, symlink, symlink, symlink, truncate, truncate, truncate, unlink, unlink, utimes, utimes, utimes, utimes, write, write, write, write, writeFile, writeFile, writeFile, writev, writev, writev, mkdtemp, mkdtemp
+
+### laptop-app\node_modules\@types\ms\index.d.ts
+Functions: ms, ms
+
+### laptop-app\node_modules\@types\node\assert.d.ts
+Functions: assert, func, func, func, func, func, fail, fail, ok, equal, notEqual, deepEqual, notDeepEqual, notStrictEqual, notDeepStrictEqual, throwingFirst, throwingSecond, notThrowing, throws, throws, doesNotThrow, doesNotThrow, errorFrame, ifErrorFrame, ifError, rejects, rejects, doesNotReject, doesNotReject, match, doesNotMatch, partialDeepStrictEqual
+
+### laptop-app\node_modules\@types\node\assert\strict.d.ts
+Functions: strict
+
+### laptop-app\node_modules\@types\node\async_hooks.d.ts
+Functions: executionAsyncId, executionAsyncResource, triggerAsyncId, createHook, logWithId
+
+### laptop-app\node_modules\@types\node\buffer.d.ts
+Functions: isUtf8, isAscii, transcode, resolveObjectURL, atob, btoa
+
+### laptop-app\node_modules\@types\node\child_process.d.ts
+Functions: spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, spawn, lsExample, exec, exec, exec, exec, __promisify__, __promisify__, __promisify__, __promisify__, getVersion, execFile, execFile, execFile, execFile, execFile, execFile, execFile, execFile, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, fork, fork, spawnSync, spawnSync, spawnSync, spawnSync, spawnSync, spawnSync, spawnSync, spawnSync, execSync, execSync, execSync, execSync, execFileSync, execFileSync, execFileSync, execFileSync, execFileSync, execFileSync, execFileSync, execFileSync
+
+### laptop-app\node_modules\@types\node\crypto.d.ts
+Functions: createHash, createHmac, createCipheriv, createCipheriv, createCipheriv, createCipheriv, createCipheriv, createDecipheriv, createDecipheriv, createDecipheriv, createDecipheriv, createDecipheriv, generateKey, generateKeySync, createPrivateKey, createPublicKey, createSecretKey, createSecretKey, createSign, createVerify, createDiffieHellman, createDiffieHellman, createDiffieHellman, createDiffieHellman, createDiffieHellman, getDiffieHellman, createDiffieHellmanGroup, pbkdf2, pbkdf2Sync, randomBytes, randomBytes, pseudoRandomBytes, pseudoRandomBytes, randomInt, randomInt, randomInt, randomInt, scrypt, scrypt, scryptSync, publicEncrypt, publicDecrypt, privateDecrypt, privateEncrypt, getCiphers, getCurves, getFips, setFips, getHashes, createECDH, timingSafeEqual, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPairSync, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, generateKeyPair, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, sign, sign, verify, verify, diffieHellman, hash, hash, hash, getCipherInfo, hkdf, hkdfSync, secureHeapUsed, randomUUID, generatePrime, generatePrime, generatePrime, generatePrime, generatePrimeSync, generatePrimeSync, generatePrimeSync, generatePrimeSync, checkPrime, checkPrime, checkPrimeSync, setEngine
+
+### laptop-app\node_modules\@types\node\dgram.d.ts
+Functions: createSocket, createSocket
+
+### laptop-app\node_modules\@types\node\diagnostics_channel.d.ts
+Functions: hasSubscribers, channel, subscribe, onMessage, unsubscribe, onMessage
+
+### laptop-app\node_modules\@types\node\dns.d.ts
+Functions: lookup, lookup, lookup, lookup, lookup, __promisify__, __promisify__, __promisify__, lookupService, __promisify__, resolve, resolve, resolve, resolve, resolve, resolve, resolve, resolve, resolve, resolve, resolve, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, resolve4, resolve4, resolve4, __promisify__, __promisify__, __promisify__, resolve6, resolve6, resolve6, __promisify__, __promisify__, __promisify__, resolveCname, __promisify__, resolveCaa, __promisify__, resolveMx, __promisify__, resolveNaptr, __promisify__, resolveNs, __promisify__, resolvePtr, __promisify__, resolveSoa, __promisify__, resolveSrv, __promisify__, resolveTlsa, __promisify__, resolveTxt, __promisify__, resolveAny, __promisify__, reverse, getDefaultResultOrder, setServers, getServers, setDefaultResultOrder
+
+### laptop-app\node_modules\@types\node\dns\promises.d.ts
+Functions: getServers, lookup, lookup, lookup, lookup, lookup, lookupService, resolve, resolve, resolve, resolve, resolve, resolve, resolve, resolve, resolve, resolve, resolve, resolve4, resolve4, resolve4, resolve6, resolve6, resolve6, resolveAny, resolveCaa, resolveCname, resolveMx, resolveNaptr, resolveNs, resolvePtr, resolveSoa, resolveSrv, resolveTlsa, resolveTxt, reverse, getDefaultResultOrder, setServers, setDefaultResultOrder
+
+### laptop-app\node_modules\@types\node\domain.d.ts
+Functions: readSomeFile, readSomeFile, create
+
+### laptop-app\node_modules\@types\node\events.d.ts
+Functions: foo, listener, listener, example, callback, callbackA, callbackB, pong, firstListener, secondListener, thirdListener
+
+### laptop-app\node_modules\@types\node\fs.d.ts
+Functions: rename, __promisify__, renameSync, truncate, truncate, __promisify__, truncateSync, closeFd, ftruncate, ftruncate, __promisify__, ftruncateSync, chown, __promisify__, chownSync, fchown, __promisify__, fchownSync, lchown, __promisify__, lchownSync, lutimes, __promisify__, lutimesSync, chmod, __promisify__, chmodSync, fchmod, __promisify__, fchmodSync, lchmod, __promisify__, lchmodSync, stat, stat, stat, stat, __promisify__, __promisify__, __promisify__, fstat, fstat, fstat, fstat, __promisify__, __promisify__, __promisify__, fstatSync, fstatSync, fstatSync, lstat, lstat, lstat, lstat, __promisify__, __promisify__, __promisify__, statfs, statfs, statfs, statfs, __promisify__, __promisify__, __promisify__, statfsSync, statfsSync, statfsSync, link, __promisify__, linkSync, symlink, symlink, __promisify__, symlinkSync, readlink, readlink, readlink, readlink, __promisify__, __promisify__, __promisify__, readlinkSync, readlinkSync, readlinkSync, realpath, realpath, realpath, realpath, __promisify__, __promisify__, __promisify__, native, native, native, native, realpathSync, realpathSync, realpathSync, native, native, native, unlink, __promisify__, unlinkSync, rmdir, rmdir, __promisify__, rmdirSync, rm, rm, __promisify__, rmSync, mkdir, mkdir, mkdir, mkdir, __promisify__, __promisify__, __promisify__, mkdirSync, mkdirSync, mkdirSync, mkdtemp, mkdtemp, mkdtemp, mkdtemp, __promisify__, __promisify__, __promisify__, mkdtempSync, mkdtempSync, mkdtempSync, readdir, readdir, readdir, readdir, readdir, readdir, __promisify__, __promisify__, __promisify__, __promisify__, __promisify__, readdirSync, readdirSync, readdirSync, readdirSync, readdirSync, close, __promisify__, closeSync, open, open, open, __promisify__, openSync, utimes, __promisify__, utimesSync, futimes, __promisify__, futimesSync, fsync, __promisify__, fsyncSync, write, write, write, __promisify__, writeSync, writeSync, read, __promisify__, readSync, readSync, readFile, readFile, readFile, readFile, __promisify__, __promisify__, __promisify__, readFileSync, readFileSync, readFileSync, writeFile, writeFile, __promisify__, writeFileSync, closeFd, appendFile, appendFile, __promisify__, appendFileSync, watchFile, watchFile, watchFile, unwatchFile, unwatchFile, watch, watch, watch, watch, exists, __promisify__, existsSync, access, access, __promisify__, accessSync, createReadStream, createWriteStream, fdatasync, __promisify__, fdatasyncSync, callback, copyFile, copyFile, __promisify__, copyFileSync, writevSync, readvSync, openAsBlob, opendirSync, opendir, opendir, __promisify__, cp, cp, cpSync, glob, glob, glob, glob, globSync, globSync, globSync, globSync
+
+### laptop-app\node_modules\@types\node\fs\promises.d.ts
+Functions: access, copyFile, open, rename, truncate, rmdir, rm, mkdir, mkdir, mkdir, readdir, readdir, readdir, readdir, readdir, readlink, readlink, readlink, symlink, lstat, lstat, lstat, stat, stat, stat, statfs, statfs, statfs, link, unlink, chmod, lchmod, lchown, lutimes, chown, utimes, realpath, realpath, realpath, mkdtemp, mkdtemp, mkdtemp, writeFile, appendFile, readFile, readFile, readFile, opendir, watch, watch, watch, cp, glob, glob, glob, glob
+
+### laptop-app\node_modules\@types\node\globals.d.ts
+Functions: a, b, c
+
+### laptop-app\node_modules\@types\node\http.d.ts
+Functions: earlyHintsCallback, retriableRequest, request, request, get, get, validateHeaderName, validateHeaderValue, setMaxIdleHTTPParsers
+
+### laptop-app\node_modules\@types\node\http2.d.ts
+Functions: statCheck, onError, statCheck, getDefaultSettings, getPackedSettings, getUnpackedSettings, createServer, createSecureServer, connect, connect
+
+### laptop-app\node_modules\@types\node\https.d.ts
+Functions: sha256, request, request, get, get
+
+### laptop-app\node_modules\@types\node\inspector.d.ts
+Functions: open, close, url, waitForDebugger, requestWillBeSent, dataReceived, dataSent, responseReceived, loadingFinished, loadingFailed, setNetworkResources, put
+
+### laptop-app\node_modules\@types\node\module.d.ts
+Functions: createRequire, enableCompileCache, flushCompileCache, getCompileCacheDir, findPackageJSON, isBuiltin, registerHooks, add, stripTypeScriptTypes, newAPI, syncBuiltinESMExports, getSourceMapsSupport, findSourceMap, setSourceMapsSupport, runMain, wrap, foo, main
+
+### laptop-app\node_modules\@types\node\net.d.ts
+Functions: createServer, createServer, connect, connect, connect, createConnection, createConnection, createConnection, getDefaultAutoSelectFamily, setDefaultAutoSelectFamily, getDefaultAutoSelectFamilyAttemptTimeout, setDefaultAutoSelectFamilyAttemptTimeout, isIP, isIPv4, isIPv6
+
+### laptop-app\node_modules\@types\node\os.d.ts
+Functions: hostname, loadavg, uptime, freemem, totalmem, cpus, availableParallelism, type, release, networkInterfaces, homedir, userInfo, userInfo, userInfo, arch, version, platform, machine, tmpdir, endianness, getPriority, setPriority, setPriority
+
+### laptop-app\node_modules\@types\node\perf_hooks.d.ts
+Functions: someFunction, monitorEventLoopDelay, createHistogram
+
+### laptop-app\node_modules\@types\node\process.d.ts
+Functions: MyThing, maybeSync, definitelyAsync
+
+### laptop-app\node_modules\@types\node\punycode.d.ts
+Functions: decode, encode, toUnicode, toASCII
+
+### laptop-app\node_modules\@types\node\querystring.d.ts
+Functions: stringify, parse, escape, unescape
+
+### laptop-app\node_modules\@types\node\readline.d.ts
+Functions: createInterface, createInterface, processLineByLine, processLineByLine, emitKeypressEvents, clearLine, clearScreenDown, cursorTo, moveCursor
+
+### laptop-app\node_modules\@types\node\readline\promises.d.ts
+Functions: createInterface, createInterface
+
+### laptop-app\node_modules\@types\node\repl.d.ts
+Functions: saybye, start
+
+### laptop-app\node_modules\@types\node\sea.d.ts
+Functions: isSea, getAsset, getAsset, getAssetAsBlob, getRawAsset, getAssetKeys
+
+### laptop-app\node_modules\@types\node\sqlite.d.ts
+Functions: backup
+
+### laptop-app\node_modules\@types\node\stream.d.ts
+Functions: parseHeader, onReadable, write, duplexPair, getDefaultHighWaterMark, setDefaultHighWaterMark, finished, finished, __promisify__, pipeline, pipeline, __promisify__, __promisify__, isErrored, isReadable, isWritable
+
+### laptop-app\node_modules\@types\node\stream\consumers.d.ts
+Functions: arrayBuffer, blob, buffer, json, text
+
+### laptop-app\node_modules\@types\node\stream\promises.d.ts
+Functions: finished, pipeline, pipeline
+
+### laptop-app\node_modules\@types\node\test.d.ts
+Functions: test, test, test, test, run, suite, suite, suite, suite, skip, skip, skip, skip, todo, todo, todo, todo, only, only, only, only, skip, skip, skip, skip, todo, todo, todo, todo, only, only, only, only, asyncActivity, before, after, beforeEach, afterEach, addOne, addTwo, addOne, addTwo, addOne, addTwo, register, setDefaultSnapshotSerializers, setResolveSnapshotPath, dot, tap, junit
+
+### laptop-app\node_modules\@types\node\timers.d.ts
+Functions: setImmediate, setInterval, setTimeout, clearImmediate, clearInterval, clearTimeout, queueMicrotask
+
+### laptop-app\node_modules\@types\node\tls.d.ts
+Functions: checkServerIdentity, createServer, createServer, connect, connect, connect, createSecurePair, createSecureContext, getCACertificates, getCiphers, setDefaultCACertificates
+
+### laptop-app\node_modules\@types\node\trace_events.d.ts
+Functions: onSigint, createTracing, getEnabledCategories
+
+### laptop-app\node_modules\@types\node\tty.d.ts
+Functions: isatty
+
+### laptop-app\node_modules\@types\node\url.d.ts
+Functions: parse, parse, parse, parse, format, format, resolve, resolve, domainToASCII, domainToUnicode, fileURLToPath, fileURLToPathBuffer, pathToFileURL, urlToHttpOptions
+
+### laptop-app\node_modules\@types\node\util.d.ts
+Functions: diff, format, formatWithOptions, exampleFunction, anotherFunction, getCallSites, getCallSites, getSystemErrorName, setTraceSigInt, getSystemErrorMap, getSystemErrorMessage, log, toUSVString, transferableAbortController, transferableAbortSignal, aborted, inspect, inspect, isArray, isRegExp, isDate, isError, MyStream, inherits, debuglog, isBoolean, isBuffer, Foo, Bar, isFunction, isNull, isNullOrUndefined, isNumber, isObject, isPrimitive, isString, isSymbol, isUndefined, isDeepStrictEqual, stripVTControlCharacters, fn, fn, callbackify, callStat, promisify, promisify, parseEnv, styleText, isAnyArrayBuffer, foo, isArgumentsObject, isArrayBuffer, isArrayBufferView, foo, foo, isAsyncFunction, isBigInt64Array, isBigIntObject, isBigUint64Array, isBooleanObject, isBoxedPrimitive, isDataView, isDate, isExternal, isFloat16Array, isFloat32Array, isFloat64Array, foo, isGeneratorFunction, isGeneratorObject, isInt8Array, isInt16Array, isInt32Array, isMapIterator, isModuleNamespaceObject, isNativeError, isNumberObject, isPromise, isProxy, isRegExp, isSetIterator, isSharedArrayBuffer, isStringObject, isSymbolObject, isTypedArray, isUint8Array, isUint8ClampedArray, isUint16Array, isUint32Array, isWeakMap, isWeakSet, isKeyObject, isCryptoKey
+
+### laptop-app\node_modules\@types\node\v8.d.ts
+Functions: cachedDataVersionTag, getHeapStatistics, getCppHeapStatistics, getHeapSpaceStatistics, setFlagsFromString, queryObjects, queryObjects, queryObjects, getHeapSnapshot, writeHeapSnapshot, getHeapCodeStatistics, writeString, isStringOneByteRepresentation, serialize, deserialize, takeCoverage, stopCoverage, setHeapSnapshotNearHeapLimit, addSerializeCallback, addDeserializeCallback, setDeserializeMainFunction, isBuildingSnapshot
+
+### laptop-app\node_modules\@types\node\vm.d.ts
+Functions: constructors, add, myFunc, createContext, isContext, runInContext, runInNewContext, runInThisContext, compileFunction, measureMemory, linker
+
+### laptop-app\node_modules\@types\node\web-globals\fetch.d.ts
+Functions: fetch
+
+### laptop-app\node_modules\@types\node\worker_threads.d.ts
+Functions: parseJSAsync, example, markAsUntransferable, isMarkedAsUntransferable, markAsUncloneable, moveMessagePortToContext, receiveMessageOnPort, getEnvironmentData, setEnvironmentData, postMessageToThread, postMessageToThread
+
+### laptop-app\node_modules\@types\node\zlib.d.ts
+Functions: do_gzip, crc32, createBrotliCompress, createBrotliDecompress, createGzip, createGunzip, createDeflate, createInflate, createDeflateRaw, createInflateRaw, createUnzip, createZstdCompress, createZstdDecompress, brotliCompress, brotliCompress, __promisify__, brotliCompressSync, brotliDecompress, brotliDecompress, __promisify__, brotliDecompressSync, deflate, deflate, __promisify__, deflateSync, deflateRaw, deflateRaw, __promisify__, deflateRawSync, gzip, gzip, __promisify__, gzipSync, gunzip, gunzip, __promisify__, gunzipSync, inflate, inflate, __promisify__, inflateSync, inflateRaw, inflateRaw, __promisify__, inflateRawSync, unzip, unzip, __promisify__, unzipSync, zstdCompress, zstdCompress, __promisify__, zstdCompressSync, zstdDecompress, zstdDecompress, __promisify__, zstdDecompressSync
+
+### laptop-app\node_modules\@types\yauzl\index.d.ts
+Functions: open, open, fromFd, fromFd, fromBuffer, fromBuffer, fromRandomAccessReader, fromRandomAccessReader, dosDateTimeToDate, validateFileName
+
+### laptop-app\node_modules\@xmldom\xmldom\lib\conventions.js
+Functions: find, freeze, assign
+
+### laptop-app\node_modules\@xmldom\xmldom\lib\dom-parser.js
+Functions: normalizeLineEndings, DOMParser, buildErrorHandler, build, DOMHandler, position, _locator, _toString, appendElement
+
+### laptop-app\node_modules\@xmldom\xmldom\lib\dom.js
+Functions: notEmptyString, splitOnASCIIWhitespace, orderedSetReducer, toOrderedSet, arrayIncludes, copy, _extends, t, DOMException, NodeList, LiveNodeList, _updateLiveList, NamedNodeMap, _findNodeIndex, _nnmIndexAdd, _nnmIndexRemove, _addNamedNode, _removeNamedNode, DOMImplementation, Node, _xmlEncoder, _visitNode, walkDOM, Document, _onAddAttribute, _onRemoveAttribute, _onUpdateChild, _removeChild, hasValidParentNodeType, hasInsertableNodeType, isDocTypeNode, isElementNode, isTextNode, isElementInsertionPossible, isElementReplacementPossible, hasElementChildThatIsNotChild, assertPreInsertionValidity1to5, assertPreInsertionValidityInDocument, assertPreReplacementValidityInDocument, hasDoctypeChildThatIsNotChild, _insertBefore, _updateOwnerDocument, _appendSingleChild, Element, Attr, CharacterData, Text, Comment, CDATASection, DocumentType, Notation, Entity, EntityReference, DocumentFragment, ProcessingInstruction, XMLSerializer, nodeSerializeToString, needNamespaceDefine, addSerializedAttribute, serializeToString, importNode, cloneNode, __set__
+
+### laptop-app\node_modules\@xmldom\xmldom\lib\sax.js
+Functions: ParseError, XMLReader, parse, fixedFromCharCode, entityReplacer, appendText, position, copyLocator, parseElementStartPart, addAttribute, appendElement, parseHtmlSpecialContent, fixSelfClosed, _copy, parseDCC, parseInstruction, ElementAttributes, split
+
+### laptop-app\node_modules\abbrev\lib\index.js
+Functions: abbrev, lexSort
+
+### laptop-app\node_modules\agent-base\dist\helpers.d.ts
+Functions: toBuffer, json, req
+
+### laptop-app\node_modules\agent-base\dist\helpers.js
+Functions: toBuffer, json, req
+
+### laptop-app\node_modules\ajv\.runkit_example.js
+Functions: test
+
+### laptop-app\node_modules\ajv\dist\compile\codegen\code.d.ts
+Functions: _, str, addCodeArg, strConcat, stringify, safeStringify, getProperty, getEsmExportName, regexpCode
+
+### laptop-app\node_modules\ajv\dist\compile\codegen\code.js
+Functions: _, str, addCodeArg, optimize, mergeExprItems, strConcat, interpolate, stringify, safeStringify, getProperty, getEsmExportName, regexpCode
+
+### laptop-app\node_modules\ajv\dist\compile\codegen\index.d.ts
+Functions: and, or
+
+### laptop-app\node_modules\ajv\dist\compile\codegen\index.js
+Functions: addNames, addExprNames, optimizeExpr, replaceName, canOptimize, subtractNames, not, and, or, mappend, par
+
+### laptop-app\node_modules\ajv\dist\compile\errors.d.ts
+Functions: reportError, reportExtraError, resetErrorsCount, extendErrors
+
+### laptop-app\node_modules\ajv\dist\compile\errors.js
+Functions: reportError, reportExtraError, resetErrorsCount, extendErrors, addError, returnErrors, errorObjectCode, errorObject, errorInstancePath, errorSchemaPath, extraErrorProps
+
+### laptop-app\node_modules\ajv\dist\compile\index.d.ts
+Functions: compileSchema, resolveRef, getCompilingSchema, resolveSchema
+
+### laptop-app\node_modules\ajv\dist\compile\index.js
+Functions: compileSchema, resolveRef, inlineOrCompile, getCompilingSchema, sameSchemaEnv, resolve, resolveSchema, getJsonPointer
+
+### laptop-app\node_modules\ajv\dist\compile\jtd\parse.d.ts
+Functions: compileParser
+
+### laptop-app\node_modules\ajv\dist\compile\jtd\parse.js
+Functions: compileParser, parserFunction, parseCode, parseNullable, parseElements, parseValues, parseItems, tryParseItems, hasItem, parseKeyValue, parseDiscriminator, parseProperties, parseSchemaProperties, parseDefinedProperty, parsePropertyValue, parseType, parseString, parseEnum, parseNumber, parseBooleanToken, parseRef, getParser, parseEmpty, parseWith, partialParse, parseToken, tryParseToken, skipWhitespace, jsonSlice, jsonSyntaxError, parsingError
+
+### laptop-app\node_modules\ajv\dist\compile\jtd\serialize.d.ts
+Functions: compileSerializer
+
+### laptop-app\node_modules\ajv\dist\compile\jtd\serialize.js
+Functions: compileSerializer, serializeCode, serializeNullable, serializeElements, serializeValues, serializeKeyValue, serializeDiscriminator, serializeProperties, serializeSchemaProperties, keys, allProperties, keyValue, serializeProperty, isAdditional, serializeType, serializeString, serializeNumber, serializeRef, getSerialize, serializeEmpty, addComma
+
+### laptop-app\node_modules\ajv\dist\compile\resolve.d.ts
+Functions: inlineRef, getFullPath, _getFullPath, normalizeId, resolveUrl, getSchemaRefs
+
+### laptop-app\node_modules\ajv\dist\compile\resolve.js
+Functions: inlineRef, hasRef, countKeys, getFullPath, _getFullPath, normalizeId, resolveUrl, getSchemaRefs, addRef, addAnchor, checkAmbiguosRef, ambiguos
+
+### laptop-app\node_modules\ajv\dist\compile\rules.d.ts
+Functions: isJSONType, getRules
+
+### laptop-app\node_modules\ajv\dist\compile\rules.js
+Functions: isJSONType, getRules
+
+### laptop-app\node_modules\ajv\dist\compile\util.d.ts
+Functions: alwaysValidSchema, checkUnknownRules, schemaHasRules, schemaHasRulesButRef, schemaRefOrVal, unescapeFragment, escapeFragment, escapeJsonPointer, unescapeJsonPointer, evaluatedPropsToName, setEvaluated, useFunc, getErrorPath, checkStrictMode
+
+### laptop-app\node_modules\ajv\dist\compile\util.js
+Functions: toHash, alwaysValidSchema, checkUnknownRules, schemaHasRules, schemaHasRulesButRef, schemaRefOrVal, unescapeFragment, escapeFragment, escapeJsonPointer, unescapeJsonPointer, eachItem, makeMergeEvaluated, evaluatedPropsToName, setEvaluated, useFunc, getErrorPath, checkStrictMode
+
+### laptop-app\node_modules\ajv\dist\compile\validate\applicability.d.ts
+Functions: schemaHasRulesForType, shouldUseGroup, shouldUseRule
+
+### laptop-app\node_modules\ajv\dist\compile\validate\applicability.js
+Functions: schemaHasRulesForType, shouldUseGroup, shouldUseRule
+
+### laptop-app\node_modules\ajv\dist\compile\validate\boolSchema.d.ts
+Functions: topBoolOrEmptySchema, boolOrEmptySchema
+
+### laptop-app\node_modules\ajv\dist\compile\validate\boolSchema.js
+Functions: topBoolOrEmptySchema, boolOrEmptySchema, falseSchemaError
+
+### laptop-app\node_modules\ajv\dist\compile\validate\dataType.d.ts
+Functions: getSchemaTypes, getJSONTypes, coerceAndCheckDataType, checkDataType, checkDataTypes, reportTypeError
+
+### laptop-app\node_modules\ajv\dist\compile\validate\dataType.js
+Functions: getSchemaTypes, getJSONTypes, coerceAndCheckDataType, coerceToTypes, coerceData, coerceSpecificType, assignParentData, checkDataType, numCond, checkDataTypes, reportTypeError, getTypeErrorContext
+
+### laptop-app\node_modules\ajv\dist\compile\validate\defaults.d.ts
+Functions: assignDefaults
+
+### laptop-app\node_modules\ajv\dist\compile\validate\defaults.js
+Functions: assignDefaults, assignDefault
+
+### laptop-app\node_modules\ajv\dist\compile\validate\index.d.ts
+Functions: validateFunctionCode, getData
+
+### laptop-app\node_modules\ajv\dist\compile\validate\index.js
+Functions: validateFunctionCode, validateFunction, destructureValCxt, destructureValCxtES5, topSchemaObjCode, resetEvaluated, funcSourceUrl, subschemaCode, schemaCxtHasRules, isSchemaObj, subSchemaObjCode, checkKeywords, typeAndKeywords, checkRefsAndKeywords, checkNoDefault, updateContext, checkAsyncSchema, commentKeyword, returnResults, assignEvaluated, schemaKeywords, groupKeywords, iterateKeywords, checkStrictTypes, checkContextTypes, checkMultipleTypes, checkKeywordTypes, hasApplicableType, includesType, narrowSchemaTypes, strictTypesError, keywordCode, getData, errorMsg
+
+### laptop-app\node_modules\ajv\dist\compile\validate\keyword.d.ts
+Functions: macroKeywordCode, funcKeywordCode, validSchemaType, validateKeywordUsage
+
+### laptop-app\node_modules\ajv\dist\compile\validate\keyword.js
+Functions: macroKeywordCode, funcKeywordCode, validateKeyword, validateAsync, validateSync, assignValid, reportErrs, modifyData, addErrs, checkAsyncKeyword, useKeyword, validSchemaType, validateKeywordUsage
+
+### laptop-app\node_modules\ajv\dist\compile\validate\subschema.d.ts
+Functions: getSubschema, extendSubschemaData, extendSubschemaMode
+
+### laptop-app\node_modules\ajv\dist\compile\validate\subschema.js
+Functions: getSubschema, extendSubschemaData, dataContextProps, extendSubschemaMode
+
+### laptop-app\node_modules\ajv\dist\core.js
+Functions: defaultRegExp, requiredOptions, runCompileAsync, loadMetaSchema, _compileAsync, checkLoaded, loadMissingSchema, _loadSchema, checkOptions, getSchEnv, addInitialSchemas, addInitialFormats, addInitialKeywords, getMetaSchemaOptions, getLogger, checkKeyword, addRule, addBeforeRule, keywordMetaschema, schemaOrData
+
+### laptop-app\node_modules\ajv\dist\refs\json-schema-2019-09\index.d.ts
+Functions: addMetaSchema2019
+
+### laptop-app\node_modules\ajv\dist\refs\json-schema-2019-09\index.js
+Functions: addMetaSchema2019
+
+### laptop-app\node_modules\ajv\dist\refs\json-schema-2020-12\index.d.ts
+Functions: addMetaSchema2020
+
+### laptop-app\node_modules\ajv\dist\refs\json-schema-2020-12\index.js
+Functions: addMetaSchema2020
+
+### laptop-app\node_modules\ajv\dist\refs\jtd-schema.js
+Functions: shared, emptyForm, refForm, typeForm, enumForm, elementsForm, propertiesForm, optionalPropertiesForm, discriminatorForm, valuesForm, schema
+
+### laptop-app\node_modules\ajv\dist\runtime\parseJson.d.ts
+Functions: parseJson, parseJsonNumber, parseJsonString
+
+### laptop-app\node_modules\ajv\dist\runtime\parseJson.js
+Functions: parseJson, parseJsonNumber, parseDigits, errorMessage, parseJsonString, errorMessage
+
+### laptop-app\node_modules\ajv\dist\runtime\quote.d.ts
+Functions: quote
+
+### laptop-app\node_modules\ajv\dist\runtime\quote.js
+Functions: quote
+
+### laptop-app\node_modules\ajv\dist\runtime\timestamp.d.ts
+Functions: validTimestamp
+
+### laptop-app\node_modules\ajv\dist\runtime\timestamp.js
+Functions: validTimestamp, validDate, validTime
+
+### laptop-app\node_modules\ajv\dist\runtime\ucs2length.d.ts
+Functions: ucs2length
+
+### laptop-app\node_modules\ajv\dist\runtime\ucs2length.js
+Functions: ucs2length
+
+### laptop-app\node_modules\ajv\dist\standalone\index.d.ts
+Functions: standaloneCode
+
+### laptop-app\node_modules\ajv\dist\standalone\index.js
+Functions: standaloneCode, getValidate, funcExportCode, multiExportsCode, validateCode, refValidateCode, usedState, setUsedState
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\additionalItems.d.ts
+Functions: validateAdditionalItems
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\additionalItems.js
+Functions: validateAdditionalItems, validateItems
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\additionalProperties.js
+Functions: checkAdditionalProperties, isAdditional, deleteAdditional, additionalPropertyCode, applyAdditionalSchema
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\contains.js
+Functions: validateItemsWithCount, validateItems, checkLimits
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\dependencies.d.ts
+Functions: validatePropertyDeps, validateSchemaDeps
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\dependencies.js
+Functions: splitDependencies, validatePropertyDeps, validateSchemaDeps
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\if.js
+Functions: validateIf, validateClause, hasSchema
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\index.d.ts
+Functions: getApplicator
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\index.js
+Functions: getApplicator
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\items.d.ts
+Functions: validateTuple
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\items.js
+Functions: validateTuple, checkStrictTuple
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\oneOf.js
+Functions: validateOneOf
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\patternProperties.js
+Functions: validatePatternProperties, checkMatchingProperties, validateProperties
+
+### laptop-app\node_modules\ajv\dist\vocabularies\applicator\properties.js
+Functions: hasDefault, applyPropertySchema
+
+### laptop-app\node_modules\ajv\dist\vocabularies\code.d.ts
+Functions: checkReportMissingProp, checkMissingProp, reportMissingProp, hasPropFunc, isOwnProperty, propertyInData, noPropertyInData, allSchemaProperties, schemaProperties, callValidateCode, usePattern, validateArray, validateUnion
+
+### laptop-app\node_modules\ajv\dist\vocabularies\code.js
+Functions: checkReportMissingProp, checkMissingProp, reportMissingProp, hasPropFunc, isOwnProperty, propertyInData, noPropertyInData, allSchemaProperties, schemaProperties, callValidateCode, usePattern, validateArray, validateItems, validateUnion
+
+### laptop-app\node_modules\ajv\dist\vocabularies\core\ref.d.ts
+Functions: getValidate, callRef
+
+### laptop-app\node_modules\ajv\dist\vocabularies\core\ref.js
+Functions: callRootRef, callValidate, inlineRefSchema, getValidate, callRef, callAsyncRef, callSyncRef, addErrorsFrom, addEvaluatedFrom
+
+### laptop-app\node_modules\ajv\dist\vocabularies\discriminator\index.js
+Functions: validateMapping, applyTagSchema, getMapping, hasRequired, addMappings, addMapping
+
+### laptop-app\node_modules\ajv\dist\vocabularies\dynamic\dynamicAnchor.d.ts
+Functions: dynamicAnchor
+
+### laptop-app\node_modules\ajv\dist\vocabularies\dynamic\dynamicAnchor.js
+Functions: dynamicAnchor, _getValidate
+
+### laptop-app\node_modules\ajv\dist\vocabularies\dynamic\dynamicRef.d.ts
+Functions: dynamicRef
+
+### laptop-app\node_modules\ajv\dist\vocabularies\dynamic\dynamicRef.js
+Functions: dynamicRef, _dynamicRef, _callRef
+
+### laptop-app\node_modules\ajv\dist\vocabularies\format\format.js
+Functions: unknownFmt, invalidFmt, validateFormat, unknownFormat, unknownMsg, getFormat, validCondition
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\discriminator.js
+Functions: validateDiscriminator, validateMapping, applyTagSchema
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\enum.js
+Functions: loopEnum
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\error.d.ts
+Functions: typeError, typeErrorMessage, typeErrorParams
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\error.js
+Functions: typeError, typeErrorMessage, typeErrorParams
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\metadata.d.ts
+Functions: checkMetadata
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\metadata.js
+Functions: checkMetadata
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\nullable.d.ts
+Functions: checkNullable, checkNullableObject
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\nullable.js
+Functions: checkNullable, checkNullableObject
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\properties.d.ts
+Functions: validateProperties
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\properties.js
+Functions: validateProperties, commonProperties, schemaProperties, validateProps, missingProperty, applyPropertySchema, validateAdditional, isAdditional
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\ref.d.ts
+Functions: hasRef
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\ref.js
+Functions: validateJtdRef, callValidate, inlineRefSchema, hasRef
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\type.js
+Functions: timestampCode
+
+### laptop-app\node_modules\ajv\dist\vocabularies\jtd\values.js
+Functions: validateMap, validateValues
+
+### laptop-app\node_modules\ajv\dist\vocabularies\unevaluated\unevaluatedItems.js
+Functions: validateItems
+
+### laptop-app\node_modules\ajv\dist\vocabularies\unevaluated\unevaluatedProperties.js
+Functions: unevaluatedPropCode, unevaluatedDynamic, unevaluatedStatic
+
+### laptop-app\node_modules\ajv\dist\vocabularies\validation\enum.js
+Functions: getEql, loopEnum, equalCode
+
+### laptop-app\node_modules\ajv\dist\vocabularies\validation\required.js
+Functions: allErrorsMode, exitOnErrorMode, loopAllRequired, loopUntilMissing
+
+### laptop-app\node_modules\ajv\dist\vocabularies\validation\uniqueItems.js
+Functions: validateUniqueItems, canOptimize, loopN, loopN2
+
+### laptop-app\node_modules\ajv\lib\compile\codegen\code.ts
+Functions: _, str, addCodeArg, optimize, mergeExprItems, strConcat, interpolate, stringify, safeStringify, getProperty, getEsmExportName, regexpCode
+
+### laptop-app\node_modules\ajv\lib\compile\codegen\index.ts
+Functions: addNames, addExprNames, optimizeExpr, replaceName, canOptimize, subtractNames, not, and, or, mappend, par
+
+### laptop-app\node_modules\ajv\lib\compile\errors.ts
+Functions: reportError, reportExtraError, resetErrorsCount, extendErrors, addError, returnErrors, errorObjectCode, errorObject, errorInstancePath, errorSchemaPath, extraErrorProps
+
+### laptop-app\node_modules\ajv\lib\compile\index.ts
+Functions: compileSchema, resolveRef, inlineOrCompile, getCompilingSchema, sameSchemaEnv, resolve, resolveSchema, getJsonPointer
+
+### laptop-app\node_modules\ajv\lib\compile\jtd\parse.ts
+Functions: compileParser, parserFunction, parseCode, parseNullable, parseElements, parseValues, parseItems, tryParseItems, hasItem, parseKeyValue, parseDiscriminator, parseProperties, parseSchemaProperties, parseDefinedProperty, parsePropertyValue, parseType, parseString, parseEnum, parseNumber, parseBooleanToken, parseRef, getParser, parseEmpty, parseWith, partialParse, parseToken, tryParseToken, skipWhitespace, jsonSlice, jsonSyntaxError, parsingError
+
+### laptop-app\node_modules\ajv\lib\compile\jtd\serialize.ts
+Functions: compileSerializer, serializeCode, serializeNullable, serializeElements, serializeValues, serializeKeyValue, serializeDiscriminator, serializeProperties, serializeSchemaProperties, keys, allProperties, keyValue, serializeProperty, isAdditional, serializeType, serializeString, serializeNumber, serializeRef, getSerialize, serializeEmpty, addComma
+
+### laptop-app\node_modules\ajv\lib\compile\resolve.ts
+Functions: inlineRef, hasRef, countKeys, getFullPath, _getFullPath, normalizeId, resolveUrl, getSchemaRefs, addRef, addAnchor, checkAmbiguosRef, ambiguos
+
+### laptop-app\node_modules\ajv\lib\compile\rules.ts
+Functions: isJSONType, getRules
+
+### laptop-app\node_modules\ajv\lib\compile\util.ts
+Functions: alwaysValidSchema, checkUnknownRules, schemaHasRules, schemaHasRulesButRef, schemaRefOrVal, unescapeFragment, escapeFragment, escapeJsonPointer, unescapeJsonPointer, evaluatedPropsToName, setEvaluated, useFunc, getErrorPath, checkStrictMode
+
+### laptop-app\node_modules\ajv\lib\compile\validate\applicability.ts
+Functions: schemaHasRulesForType, shouldUseGroup, shouldUseRule
+
+### laptop-app\node_modules\ajv\lib\compile\validate\boolSchema.ts
+Functions: topBoolOrEmptySchema, boolOrEmptySchema, falseSchemaError
+
+### laptop-app\node_modules\ajv\lib\compile\validate\dataType.ts
+Functions: getSchemaTypes, getJSONTypes, coerceAndCheckDataType, coerceToTypes, coerceData, coerceSpecificType, assignParentData, checkDataType, numCond, checkDataTypes, reportTypeError, getTypeErrorContext
+
+### laptop-app\node_modules\ajv\lib\compile\validate\defaults.ts
+Functions: assignDefaults, assignDefault
+
+### laptop-app\node_modules\ajv\lib\compile\validate\index.ts
+Functions: validateFunctionCode, validateFunction, destructureValCxt, destructureValCxtES5, topSchemaObjCode, resetEvaluated, funcSourceUrl, subschemaCode, schemaCxtHasRules, isSchemaObj, subSchemaObjCode, checkKeywords, typeAndKeywords, checkRefsAndKeywords, checkNoDefault, updateContext, checkAsyncSchema, commentKeyword, returnResults, assignEvaluated, schemaKeywords, groupKeywords, iterateKeywords, checkStrictTypes, checkContextTypes, checkMultipleTypes, checkKeywordTypes, hasApplicableType, includesType, narrowSchemaTypes, strictTypesError, keywordCode, getData, errorMsg
+
+### laptop-app\node_modules\ajv\lib\compile\validate\keyword.ts
+Functions: macroKeywordCode, funcKeywordCode, validateKeyword, validateAsync, validateSync, assignValid, reportErrs, modifyData, addErrs, checkAsyncKeyword, useKeyword, validSchemaType, validateKeywordUsage
+
+### laptop-app\node_modules\ajv\lib\compile\validate\subschema.ts
+Functions: getSubschema, extendSubschemaData, dataContextProps, extendSubschemaMode
+
+### laptop-app\node_modules\ajv\lib\core.ts
+Functions: requiredOptions, runCompileAsync, loadMetaSchema, _compileAsync, checkLoaded, loadMissingSchema, _loadSchema, checkOptions, getSchEnv, addInitialSchemas, addInitialFormats, addInitialKeywords, getMetaSchemaOptions, getLogger, checkKeyword, addRule, addBeforeRule, keywordMetaschema, schemaOrData
+
+### laptop-app\node_modules\ajv\lib\refs\json-schema-2019-09\index.ts
+Functions: addMetaSchema2019
+
+### laptop-app\node_modules\ajv\lib\refs\json-schema-2020-12\index.ts
+Functions: addMetaSchema2020
+
+### laptop-app\node_modules\ajv\lib\runtime\parseJson.ts
+Functions: parseJson, parseJsonNumber, parseDigits, errorMessage, parseJsonString, errorMessage
+
+### laptop-app\node_modules\ajv\lib\runtime\quote.ts
+Functions: quote
+
+### laptop-app\node_modules\ajv\lib\runtime\timestamp.ts
+Functions: validTimestamp, validDate, validTime
+
+### laptop-app\node_modules\ajv\lib\runtime\ucs2length.ts
+Functions: ucs2length
+
+### laptop-app\node_modules\ajv\lib\standalone\index.ts
+Functions: standaloneCode, getValidate, funcExportCode, validateCode, refValidateCode, usedState, setUsedState
+
+### laptop-app\node_modules\ajv\lib\vocabularies\applicator\additionalItems.ts
+Functions: validateAdditionalItems, validateItems
+
+### laptop-app\node_modules\ajv\lib\vocabularies\applicator\additionalProperties.ts
+Functions: checkAdditionalProperties, isAdditional, deleteAdditional, additionalPropertyCode, applyAdditionalSchema
+
+### laptop-app\node_modules\ajv\lib\vocabularies\applicator\contains.ts
+Functions: validateItemsWithCount, validateItems, checkLimits
+
+### laptop-app\node_modules\ajv\lib\vocabularies\applicator\dependencies.ts
+Functions: splitDependencies, validatePropertyDeps, validateSchemaDeps
+
+### laptop-app\node_modules\ajv\lib\vocabularies\applicator\if.ts
+Functions: validateIf, validateClause, hasSchema
+
+### laptop-app\node_modules\ajv\lib\vocabularies\applicator\index.ts
+Functions: getApplicator
+
+### laptop-app\node_modules\ajv\lib\vocabularies\applicator\items.ts
+Functions: validateTuple, checkStrictTuple
+
+### laptop-app\node_modules\ajv\lib\vocabularies\applicator\oneOf.ts
+Functions: validateOneOf
+
+### laptop-app\node_modules\ajv\lib\vocabularies\applicator\patternProperties.ts
+Functions: validatePatternProperties, checkMatchingProperties, validateProperties
+
+### laptop-app\node_modules\ajv\lib\vocabularies\applicator\properties.ts
+Functions: hasDefault, applyPropertySchema
+
+### laptop-app\node_modules\ajv\lib\vocabularies\code.ts
+Functions: checkReportMissingProp, checkMissingProp, reportMissingProp, hasPropFunc, isOwnProperty, propertyInData, noPropertyInData, allSchemaProperties, schemaProperties, callValidateCode, usePattern, validateArray, validateItems, validateUnion
+
+### laptop-app\node_modules\ajv\lib\vocabularies\core\ref.ts
+Functions: callRootRef, callValidate, inlineRefSchema, getValidate, callRef, callAsyncRef, callSyncRef, addErrorsFrom, addEvaluatedFrom
+
+### laptop-app\node_modules\ajv\lib\vocabularies\discriminator\index.ts
+Functions: validateMapping, applyTagSchema, getMapping, hasRequired, addMappings, addMapping
+
+### laptop-app\node_modules\ajv\lib\vocabularies\dynamic\dynamicAnchor.ts
+Functions: dynamicAnchor, _getValidate
+
+### laptop-app\node_modules\ajv\lib\vocabularies\dynamic\dynamicRef.ts
+Functions: dynamicRef, _dynamicRef, _callRef
+
+### laptop-app\node_modules\ajv\lib\vocabularies\format\format.ts
+Functions: unknownFmt, invalidFmt, validateFormat, unknownFormat, unknownMsg, getFormat, validCondition
+
+### laptop-app\node_modules\ajv\lib\vocabularies\jtd\discriminator.ts
+Functions: validateDiscriminator, validateMapping, applyTagSchema
+
+### laptop-app\node_modules\ajv\lib\vocabularies\jtd\enum.ts
+Functions: loopEnum
+
+### laptop-app\node_modules\ajv\lib\vocabularies\jtd\error.ts
+Functions: typeError, typeErrorMessage, typeErrorParams
+
+### laptop-app\node_modules\ajv\lib\vocabularies\jtd\metadata.ts
+Functions: checkMetadata
+
+### laptop-app\node_modules\ajv\lib\vocabularies\jtd\nullable.ts
+Functions: checkNullable, checkNullableObject
+
+### laptop-app\node_modules\ajv\lib\vocabularies\jtd\properties.ts
+Functions: validateProperties, commonProperties, schemaProperties, validateProps, missingProperty, applyPropertySchema, validateAdditional, isAdditional
+
+### laptop-app\node_modules\ajv\lib\vocabularies\jtd\ref.ts
+Functions: validateJtdRef, callValidate, inlineRefSchema, hasRef
+
+### laptop-app\node_modules\ajv\lib\vocabularies\jtd\type.ts
+Functions: timestampCode
+
+### laptop-app\node_modules\ajv\lib\vocabularies\jtd\values.ts
+Functions: validateMap, validateValues
+
+### laptop-app\node_modules\ajv\lib\vocabularies\unevaluated\unevaluatedItems.ts
+Functions: validateItems
+
+### laptop-app\node_modules\ajv\lib\vocabularies\unevaluated\unevaluatedProperties.ts
+Functions: unevaluatedPropCode, unevaluatedDynamic, unevaluatedStatic
+
+### laptop-app\node_modules\ajv\lib\vocabularies\validation\enum.ts
+Functions: loopEnum, equalCode
+
+### laptop-app\node_modules\ajv\lib\vocabularies\validation\required.ts
+Functions: allErrorsMode, exitOnErrorMode, loopAllRequired, loopUntilMissing
+
+### laptop-app\node_modules\ajv\lib\vocabularies\validation\uniqueItems.ts
+Functions: validateUniqueItems, canOptimize, loopN, loopN2
+
+### laptop-app\node_modules\ansi-regex\index.d.ts
+Functions: ansiRegex
+
+### laptop-app\node_modules\ansi-styles\index.js
+Functions: wrapAnsi16, wrapAnsi256, wrapAnsi16m, ansi2ansi, rgb2rgb, setLazyProperty, makeDynamicStyles, assembleStyles
+
+### laptop-app\node_modules\app-builder-lib\helpers\dynamic-import.d.ts
+Functions: dynamicImport, dynamicImportMaybe
+
+### laptop-app\node_modules\app-builder-lib\helpers\dynamic-import.js
+Functions: resolveToFileUrl, dynamicImport, dynamicImportMaybe
+
+### laptop-app\node_modules\app-builder-lib\helpers\remote-rebuild.js
+Functions: rebuilder, main
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\cjs\artifact-utils.d.ts
+Functions: getArtifactFileName, getArtifactRemoteURL, getArtifactVersion
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\cjs\artifact-utils.js
+Functions: getArtifactFileName, mirrorVar, getArtifactRemoteURL, getArtifactVersion
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\cjs\downloader-resolver.d.ts
+Functions: getDownloaderForSystem
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\cjs\downloader-resolver.js
+Functions: getDownloaderForSystem
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\cjs\index.d.ts
+Functions: downloadArtifact, download
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\cjs\index.js
+Functions: validateArtifact, downloadArtifact, download
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\cjs\proxy.d.ts
+Functions: initializeProxy
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\cjs\proxy.js
+Functions: initializeProxy
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\cjs\utils.d.ts
+Functions: mkdtemp, normalizeVersion, uname, getNodeArch, getHostArch, isOfficialLinuxIA32Download, getEnv, setEnv, effectiveCacheMode, shouldTryReadCache, shouldWriteCache, doesCallerOwnTemporaryOutput
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\cjs\utils.js
+Functions: useAndRemoveDirectory, mkdtemp, withTempDirectoryIn, withTempDirectory, normalizeVersion, uname, getNodeArch, getHostArch, ensureIsTruthyString, isOfficialLinuxIA32Download, getEnv, setEnv, effectiveCacheMode, shouldTryReadCache, shouldWriteCache, doesCallerOwnTemporaryOutput
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\esm\artifact-utils.d.ts
+Functions: getArtifactFileName, getArtifactRemoteURL, getArtifactVersion
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\esm\artifact-utils.js
+Functions: getArtifactFileName, mirrorVar, getArtifactRemoteURL, getArtifactVersion
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\esm\downloader-resolver.d.ts
+Functions: getDownloaderForSystem
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\esm\downloader-resolver.js
+Functions: getDownloaderForSystem
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\esm\index.d.ts
+Functions: downloadArtifact, download
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\esm\index.js
+Functions: validateArtifact, downloadArtifact, download
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\esm\proxy.d.ts
+Functions: initializeProxy
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\esm\proxy.js
+Functions: initializeProxy
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\esm\utils.d.ts
+Functions: mkdtemp, normalizeVersion, uname, getNodeArch, getHostArch, isOfficialLinuxIA32Download, getEnv, setEnv, effectiveCacheMode, shouldTryReadCache, shouldWriteCache, doesCallerOwnTemporaryOutput
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\dist\esm\utils.js
+Functions: useAndRemoveDirectory, mkdtemp, withTempDirectoryIn, withTempDirectory, normalizeVersion, uname, getNodeArch, getHostArch, ensureIsTruthyString, isOfficialLinuxIA32Download, getEnv, setEnv, effectiveCacheMode, shouldTryReadCache, shouldWriteCache, doesCallerOwnTemporaryOutput
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\copy-sync\copy-sync.js
+Functions: copySync, handleFilterAndCopy, startCopy, getStats, onFile, mayCopyFile, copyFile, copyFileFallback, onDir, mkDirAndCopy, copyDir, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\copy\copy.js
+Functions: copy, checkParentDir, handleFilter, startCopy, getStats, onFile, mayCopyFile, copyFile, copyFileFallback, setDestModeAndTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItems, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\empty\index.js
+Functions: emptyDir, deleteItem, emptyDirSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\ensure\file.js
+Functions: createFile, makeFile, createFileSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\ensure\link.js
+Functions: createLink, makeLink, createLinkSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\ensure\symlink-paths.js
+Functions: symlinkPaths, symlinkPathsSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\ensure\symlink-type.js
+Functions: symlinkType, symlinkTypeSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\ensure\symlink.js
+Functions: createSymlink, createSymlinkSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\json\output-json-sync.js
+Functions: outputJsonSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\json\output-json.js
+Functions: outputJson
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\mkdirs\mkdirs-sync.js
+Functions: mkdirsSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\mkdirs\mkdirs.js
+Functions: mkdirs
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\mkdirs\win32.js
+Functions: getRootPath, invalidWin32Path
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\move-sync\move-sync.js
+Functions: moveSync, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\move\move.js
+Functions: move, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\output\index.js
+Functions: outputFile, outputFileSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\path-exists\index.js
+Functions: pathExists
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\remove\rimraf.js
+Functions: defaults, rimraf, CB, rimraf_, fixWinEPERM, fixWinEPERMSync, rmdir, rmkids, rimrafSync, rmdirSync, rmkidsSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\util\stat.js
+Functions: nodeSupportsBigInt, getStats, getStatsSync, checkPaths, checkPathsSync, checkParentPaths, checkParentPathsSync, isSrcSubdir, errMsg
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\fs-extra\lib\util\utimes.js
+Functions: hasMillisResSync, hasMillisRes, timeRemoveMillis, utimesMillis, utimesMillisSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\semver\bin\semver.js
+Functions: main, failInc, fail, success, help
+
+### laptop-app\node_modules\app-builder-lib\node_modules\@electron\get\node_modules\semver\semver.js
+Functions: tok, makeSafeRe, parse, valid, clean, SemVer, inc, diff, compareIdentifiers, rcompareIdentifiers, major, minor, patch, compare, compareLoose, compareBuild, rcompare, sort, rsort, gt, lt, eq, neq, gte, lte, cmp, Comparator, Range, isSatisfiable, toComparators, parseComparator, isX, replaceTildes, replaceTilde, replaceCarets, replaceCaret, replaceXRanges, replaceXRange, replaceStars, hyphenReplace, testSet, satisfies, maxSatisfying, minSatisfying, minVersion, validRange, ltr, gtr, outside, prerelease, intersects, coerce
+
+### laptop-app\node_modules\app-builder-lib\node_modules\ci-info\index.js
+Functions: checkEnv, checkPR
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\copy\copy-sync.js
+Functions: copySync, handleFilterAndCopy, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestamps, fileIsNotWritable, makeFileWritable, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\copy\copy.js
+Functions: copy, checkParentDir, handleFilter, startCopy, getStats, onFile, mayCopyFile, copyFile, handleTimestampsAndMode, fileIsNotWritable, makeFileWritable, setDestTimestampsAndMode, setDestMode, setDestTimestamps, onDir, mkDirAndCopy, copyDir, copyDirItems, copyDirItem, onLink, copyLink
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\empty\index.js
+Functions: emptyDir, emptyDirSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\ensure\file.js
+Functions: createFile, makeFile, createFileSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\ensure\link.js
+Functions: createLink, makeLink, createLinkSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\ensure\symlink-paths.js
+Functions: symlinkPaths, symlinkPathsSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\ensure\symlink-type.js
+Functions: symlinkType, symlinkTypeSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\ensure\symlink.js
+Functions: createSymlink, _createSymlink, createSymlinkSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\json\output-json-sync.js
+Functions: outputJsonSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\json\output-json.js
+Functions: outputJson
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\mkdirs\make-dir.js
+Functions: getMode
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\mkdirs\utils.js
+Functions: checkPath
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\move\move-sync.js
+Functions: moveSync, isParentRoot, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\move\move.js
+Functions: move, isParentRoot, doRename, rename, moveAcrossDevice
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\output-file\index.js
+Functions: outputFile, outputFileSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\path-exists\index.js
+Functions: pathExists
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\remove\index.js
+Functions: remove, removeSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\remove\rimraf.js
+Functions: defaults, rimraf, CB, rimraf_, fixWinEPERM, fixWinEPERMSync, rmdir, rmkids, rimrafSync, rmdirSync, rmkidsSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\util\stat.js
+Functions: getStats, getStatsSync, checkPaths, checkPathsSync, checkParentPaths, checkParentPathsSync, areIdentical, isSrcSubdir, errMsg
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\lib\util\utimes.js
+Functions: utimesMillis, utimesMillisSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\node_modules\jsonfile\index.js
+Functions: _readFile, readFileSync, _writeFile, writeFileSync
+
+### laptop-app\node_modules\app-builder-lib\node_modules\fs-extra\node_modules\jsonfile\utils.js
+Functions: stringify, stripBom
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\bin\semver.js
+Functions: main, failInc, fail, help
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\classes\range.js
+Functions: isNullSet, isAny, isSatisfiable, parseComparator, isX, replaceTildes, replaceTilde, replaceCarets, replaceCaret, replaceXRanges, replaceXRange, replaceStars, replaceGTE0, hyphenReplace, testSet
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\clean.js
+Functions: clean
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\cmp.js
+Functions: cmp
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\coerce.js
+Functions: coerce
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\compare-build.js
+Functions: compareBuild
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\compare-loose.js
+Functions: compareLoose
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\compare.js
+Functions: compare
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\diff.js
+Functions: diff
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\eq.js
+Functions: eq
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\gt.js
+Functions: gt
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\gte.js
+Functions: gte
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\inc.js
+Functions: inc
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\lt.js
+Functions: lt
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\lte.js
+Functions: lte
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\major.js
+Functions: major
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\minor.js
+Functions: minor
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\neq.js
+Functions: neq
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\parse.js
+Functions: parse
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\patch.js
+Functions: patch
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\prerelease.js
+Functions: prerelease
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\rcompare.js
+Functions: rcompare
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\rsort.js
+Functions: rsort
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\satisfies.js
+Functions: satisfies
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\sort.js
+Functions: sort
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\functions\valid.js
+Functions: valid
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\internal\identifiers.js
+Functions: compareIdentifiers, rcompareIdentifiers
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\internal\parse-options.js
+Functions: parseOptions
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\internal\re.js
+Functions: makeSafeRegex, createToken
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\ranges\gtr.js
+Functions: gtr
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\ranges\intersects.js
+Functions: intersects
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\ranges\ltr.js
+Functions: ltr
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\ranges\max-satisfying.js
+Functions: maxSatisfying
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\ranges\min-satisfying.js
+Functions: minSatisfying
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\ranges\min-version.js
+Functions: minVersion
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\ranges\outside.js
+Functions: outside
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\ranges\subset.js
+Functions: subset, simpleSubset, higherGT, lowerLT
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\ranges\to-comparators.js
+Functions: toComparators
+
+### laptop-app\node_modules\app-builder-lib\node_modules\semver\ranges\valid.js
+Functions: validRange
+
+### laptop-app\node_modules\app-builder-lib\out\Framework.d.ts
+Functions: isElectronBased
+
+### laptop-app\node_modules\app-builder-lib\out\Framework.js
+Functions: isElectronBased
+
+### laptop-app\node_modules\app-builder-lib\out\ProtonFramework.js
+Functions: testOnlyBabel
+
+### laptop-app\node_modules\app-builder-lib\out\appInfo.d.ts
+Functions: smarten
+
+### laptop-app\node_modules\app-builder-lib\out\appInfo.js
+Functions: smarten, generateDefaultAppId, filterCFBundleIdentifier
+
+### laptop-app\node_modules\app-builder-lib\out\asar\asar.d.ts
+Functions: readAsarHeader, readAsar, readAsarJson
+
+### laptop-app\node_modules\app-builder-lib\out\asar\asar.js
+Functions: readAsarHeader, readAsar, readAsarJson, readFileFromAsar
+
+### laptop-app\node_modules\app-builder-lib\out\asar\asarFileChecker.d.ts
+Functions: checkFileInArchive
+
+### laptop-app\node_modules\app-builder-lib\out\asar\asarFileChecker.js
+Functions: checkFileInArchive, error
+
+### laptop-app\node_modules\app-builder-lib\out\asar\asarUtil.js
+Functions: resolvePath, resolvePaths, isUnpacked
+
+### laptop-app\node_modules\app-builder-lib\out\asar\integrity.d.ts
+Functions: computeData
+
+### laptop-app\node_modules\app-builder-lib\out\asar\integrity.js
+Functions: computeData, isAsar, hashHeader
+
+### laptop-app\node_modules\app-builder-lib\out\asar\unpackDetector.d.ts
+Functions: isLibOrExe
+
+### laptop-app\node_modules\app-builder-lib\out\asar\unpackDetector.js
+Functions: isLibOrExe, detectUnpackedDirs
+
+### laptop-app\node_modules\app-builder-lib\out\binDownload.d.ts
+Functions: download, getBinFromCustomLoc, getBinFromUrl, getBin
+
+### laptop-app\node_modules\app-builder-lib\out\binDownload.js
+Functions: download, getBinFromCustomLoc, validateBinaryCustomDir, getBinFromUrl, getBin
+
+### laptop-app\node_modules\app-builder-lib\out\codeSign\certInfo.d.ts
+Functions: rc2CbcDecrypt, pkcs12PbeDeriveKey, pkcs12PasswordToUtf16, readCertInfo
+
+### laptop-app\node_modules\app-builder-lib\out\codeSign\certInfo.js
+Functions: escapeDnValue, toArrayBuffer, rc2ExpandKey, ror16, rc2CbcDecrypt, rMix, rMash, pkcs12PbeDeriveKey, pkcs12PasswordToUtf16, decryptLegacyPkcs12Pbe, readCertInfo
+
+### laptop-app\node_modules\app-builder-lib\out\codeSign\codesign.d.ts
+Functions: importCertificate
+
+### laptop-app\node_modules\app-builder-lib\out\codeSign\codesign.js
+Functions: importCertificate
+
+### laptop-app\node_modules\app-builder-lib\out\codeSign\macCodeSign.d.ts
+Functions: isSignAllowed, reportError, removeKeychain, createKeychain, sign, findIdentity
+
+### laptop-app\node_modules\app-builder-lib\out\codeSign\macCodeSign.js
+Functions: isSignAllowed, reportError, getCacheDirectory, listUserKeychains, removeKeychain, createKeychain, importCerts, sign, getValidIdentities, addKeychain, _findIdentity, parseIdentity, findIdentity, checkPrefix
+
+### laptop-app\node_modules\app-builder-lib\out\codeSign\windowsCodeSign.d.ts
+Functions: signWindows
+
+### laptop-app\node_modules\app-builder-lib\out\codeSign\windowsCodeSign.js
+Functions: signWindows, signWithRetry
+
+### laptop-app\node_modules\app-builder-lib\out\electron\ElectronFramework.d.ts
+Functions: createBrandingOpts, createElectronFrameworkSupport
+
+### laptop-app\node_modules\app-builder-lib\out\electron\ElectronFramework.js
+Functions: createBrandingOpts, createDownloadOpts, beforeCopyExtraFiles, removeUnusedLanguagesIfNeeded, getLocalesConfig, deleteNonMatchedLanguages, createElectronFrameworkSupport, unpack, selectElectron, cleanupAfterUnpack
+
+### laptop-app\node_modules\app-builder-lib\out\electron\electronMac.js
+Functions: doRename, moveHelpers, getAvailableHelperSuffixes, createMacApp, safeParsePlistFile, configureHelper, toPlistObject, configureLocalhostAts
+
+### laptop-app\node_modules\app-builder-lib\out\electron\electronVersion.d.ts
+Functions: getElectronVersion, getElectronVersionFromInstalled, getElectronPackage
+
+### laptop-app\node_modules\app-builder-lib\out\electron\electronVersion.js
+Functions: getElectronVersion, getElectronVersionFromInstalled, getElectronPackage, computeElectronVersion, findFromPackageMetadata
+
+### laptop-app\node_modules\app-builder-lib\out\electron\electronWin.js
+Functions: addWinAsarIntegrity
+
+### laptop-app\node_modules\app-builder-lib\out\electron\search-module.d.ts
+Functions: searchForModule, searchForNodeModules, getProjectRootPath
+
+### laptop-app\node_modules\app-builder-lib\out\electron\search-module.js
+Functions: shouldContinueSearch, traverseAncestorDirectories, searchForModule, pathGenerator, searchForNodeModules, pathGenerator, getProjectRootPath, pathGenerator
+
+### laptop-app\node_modules\app-builder-lib\out\fileMatcher.d.ts
+Functions: getFileMatchers
+
+### laptop-app\node_modules\app-builder-lib\out\fileMatcher.js
+Functions: ensureNoEndSlash, getMainFileMatchers, getNodeModuleFileMatcher, addPatterns, getFileMatchers, addPatterns, copyFiles
+
+### laptop-app\node_modules\app-builder-lib\out\fileTransformer.js
+Functions: isElectronCompileUsed, hasDep, createTransformer, createElectronCompilerHost, cleanupPackageJson, modifyMainPackageJson
+
+### laptop-app\node_modules\app-builder-lib\out\forge-maker.d.ts
+Functions: buildForge
+
+### laptop-app\node_modules\app-builder-lib\out\forge-maker.js
+Functions: buildForge
+
+### laptop-app\node_modules\app-builder-lib\out\frameworks\LibUiFramework.d.ts
+Functions: validateShellEmbeddable, getNodeJsDownloadParams, downloadNodeJsBinary, fetchNodeJsChecksum, getLaunchUiDownloadParams, downloadLaunchUiDir
+
+### laptop-app\node_modules\app-builder-lib\out\frameworks\LibUiFramework.js
+Functions: validateShellEmbeddable, writeExecutableMain, getNodeJsDownloadParams, downloadNodeJsBinary, fetchNodeJsChecksum, getLaunchUiDownloadParams, downloadLaunchUiDir
+
+### laptop-app\node_modules\app-builder-lib\out\index.d.ts
+Functions: checkBuildRequestOptions, build
+
+### laptop-app\node_modules\app-builder-lib\out\index.js
+Functions: checkBuildRequestOptions, build, sigIntHandler
+
+### laptop-app\node_modules\app-builder-lib\out\linuxPackager.d.ts
+Functions: toAppImageOrSnapArch
+
+### laptop-app\node_modules\app-builder-lib\out\linuxPackager.js
+Functions: getHelper, targetClass, toAppImageOrSnapArch
+
+### laptop-app\node_modules\app-builder-lib\out\macPackager.js
+Functions: outDirName, setIcnsFile, readDirectoryAndSign
+
+### laptop-app\node_modules\app-builder-lib\out\mac\MacTargetHelper.js
+Functions: getEntitlements
+
+### laptop-app\node_modules\app-builder-lib\out\node-module-collector\hoist.js
+Functions: makeLocator, makeIdent, hoist, getZeroRoundUsedDependencies, addUsedDependencies, getUsedDependencies, addUsedDependencies, decoupleGraphNode, getHoistIdentMap, getSortedRegularDependencies, hasUnhoistedDependencies, getNodeHoistInfo, getAliasedLocator, hoistGraph, hoistNodeDependencies, addUnhoistableNode, selfCheck, checkNode, prettyPrintTreePath, cloneTree, addNode, markNodeCoupled, getIdentName, shrinkTree, addNode, buildPreferenceMap, getPreferenceKey, getOrCreatePreferenceEntry, addDependent, prettyPrintLocator, dumpDepTree, dumpPackage
+
+### laptop-app\node_modules\app-builder-lib\out\node-module-collector\index.d.ts
+Functions: getCollectorByPackageManager
+
+### laptop-app\node_modules\app-builder-lib\out\node-module-collector\index.js
+Functions: getCollectorByPackageManager, determinePackageManagerEnv, findWorkspaceRoot, findNearestPackageJsonWithWorkspacesField
+
+### laptop-app\node_modules\app-builder-lib\out\node-module-collector\nodeModulesCollector.d.ts
+Functions: buildPowerShellEncodedArgs
+
+### laptop-app\node_modules\app-builder-lib\out\node-module-collector\nodeModulesCollector.js
+Functions: fail, settle, buildPowerShellEncodedArgs, psQuote
+
+### laptop-app\node_modules\app-builder-lib\out\node-module-collector\packageManager.d.ts
+Functions: getPackageManagerCommand, detectPackageManager
+
+### laptop-app\node_modules\app-builder-lib\out\node-module-collector\packageManager.js
+Functions: resolveCommand, getPackageManagerCommand, detectPackageManager, resolveIfYarn, detectPackageManagerByEnv, detectPackageManagerByFile, has, detectYarnBerry, checkBerry
+
+### laptop-app\node_modules\app-builder-lib\out\node-module-collector\pnpmNodeModulesCollector.js
+Functions: promise, visit
+
+### laptop-app\node_modules\app-builder-lib\out\node-module-collector\traversalNodeModulesCollector.js
+Functions: buildFromPackage, buildPackage
+
+### laptop-app\node_modules\app-builder-lib\out\options\CommonWindowsInstallerConfiguration.d.ts
+Functions: getEffectiveOptions
+
+### laptop-app\node_modules\app-builder-lib\out\options\CommonWindowsInstallerConfiguration.js
+Functions: getEffectiveOptions, convertToDesktopShortcutCreationPolicy
+
+### laptop-app\node_modules\app-builder-lib\out\packager.js
+Functions: createFrameworkInfo, processTargets, commonArch, createOutDirIfNeed, getSafeEffectiveConfig
+
+### laptop-app\node_modules\app-builder-lib\out\platformPackager.d.ts
+Functions: isSafeGithubName, computeSafeArtifactNameIfNeeded, normalizeExt
+
+### laptop-app\node_modules\app-builder-lib\out\platformPackager.js
+Functions: computeParsedPatterns, _computeFileSets, combinedTransformer, errorMessage, runner, isSafeGithubName, computeSafeArtifactNameIfNeeded, normalizeExt, chooseNotNull, capitalizeFirstLetter
+
+### laptop-app\node_modules\app-builder-lib\out\presets\rectCra.js
+Functions: reactCra
+
+### laptop-app\node_modules\app-builder-lib\out\publish\PublishManager.d.ts
+Functions: getAppUpdatePublishConfiguration, getPublishConfigsForUpdateInfo, createPublisher, computeDownloadUrl, getPublishConfigs
+
+### laptop-app\node_modules\app-builder-lib\out\publish\PublishManager.js
+Functions: checkOptions, getAppUpdatePublishConfiguration, getPublishConfigsForUpdateInfo, resolveReleaseBody, createPublisher, requireProviderClass, name, computeDownloadUrl, getPublishConfigs, resolvePublishConfigurations, isSuitableWindowsTarget, expandPublishConfig, isDetectUpdateChannel, getResolvedPublishConfig, getInfo
+
+### laptop-app\node_modules\app-builder-lib\out\publish\updateInfoBuilder.d.ts
+Functions: createUpdateInfoTasks, writeUpdateInfoFiles
+
+### laptop-app\node_modules\app-builder-lib\out\publish\updateInfoBuilder.js
+Functions: getReleaseInfo, isGenerateUpdatesFilesForAllChannels, computeChannelNames, getUpdateInfoFileName, getArchPrefixForUpdateFile, computeIsisElectronUpdater1xCompatibility, createUpdateInfoTasks, createUpdateInfo, writeUpdateInfoFiles, writeOldMacInfo
+
+### laptop-app\node_modules\app-builder-lib\out\targets\AppxCapabilities.d.ts
+Functions: isValidCapabilityName
+
+### laptop-app\node_modules\app-builder-lib\out\targets\AppxCapabilities.js
+Functions: createCapability, isValidCapabilityName
+
+### laptop-app\node_modules\app-builder-lib\out\targets\AppxTarget.js
+Functions: resourceLanguageTag, lockScreenTag, defaultTileTag, splashScreenTag, isDefaultAssetIncluded, isScaledAssetsProvided
+
+### laptop-app\node_modules\app-builder-lib\out\targets\FlatpakTarget.js
+Functions: getElectronWrapperScript, filterFlatpakAppIdentifier
+
+### laptop-app\node_modules\app-builder-lib\out\targets\FpmTarget.js
+Functions: bashSingleQuoteEscape, getResource, writeConfigFile, replacer
+
+### laptop-app\node_modules\app-builder-lib\out\targets\LinuxTargetHelper.js
+Functions: desktopStringEscape, desktopExecArgEscape, mapLinuxCompressionToSnap
+
+### laptop-app\node_modules\app-builder-lib\out\targets\MsiTarget.js
+Functions: listToString, xmlAttr
+
+### laptop-app\node_modules\app-builder-lib\out\targets\appimage\appImageUtil.d.ts
+Functions: buildStaticRuntimeAppImage, buildLegacyFuse2AppImage, validateCriticalPathString, generateAppRunScript
+
+### laptop-app\node_modules\app-builder-lib\out\targets\appimage\appImageUtil.js
+Functions: buildStaticRuntimeAppImage, buildLegacyFuse2AppImage, writeRuntimeData, escapeShellString, validateCriticalPathString, writeAppLauncherAndRelatedFiles, hasEula, generateAppRunScript
+
+### laptop-app\node_modules\app-builder-lib\out\targets\appimage\appLauncher.d.ts
+Functions: copyIcons, copyMimeTypes
+
+### laptop-app\node_modules\app-builder-lib\out\targets\appimage\appLauncher.js
+Functions: xmlEscape, copyIcons, copyMimeTypes
+
+### laptop-app\node_modules\app-builder-lib\out\targets\archive.d.ts
+Functions: compute7zCompressArgs
+
+### laptop-app\node_modules\app-builder-lib\out\targets\archive.js
+Functions: validateCompressionLevel, tar, compute7zCompressArgs, archive, debug7zArgs
+
+### laptop-app\node_modules\app-builder-lib\out\targets\blockmap\blockmap.d.ts
+Functions: buildBlockMap
+
+### laptop-app\node_modules\app-builder-lib\out\targets\blockmap\blockmap.js
+Functions: compress, buildBlockMap, emitChunk, processByte
+
+### laptop-app\node_modules\app-builder-lib\out\targets\differentialUpdateInfoBuilder.d.ts
+Functions: createNsisWebDifferentialUpdateInfo, configureDifferentialAwareArchiveOptions, appendBlockmap, createBlockmap
+
+### laptop-app\node_modules\app-builder-lib\out\targets\differentialUpdateInfoBuilder.js
+Functions: createNsisWebDifferentialUpdateInfo, configureDifferentialAwareArchiveOptions, appendBlockmap, createBlockmap
+
+### laptop-app\node_modules\app-builder-lib\out\targets\nsis\NsisTarget.js
+Functions: generateForPreCompressed, ensureNotBusy, isBusy, createPackageFileInfo
+
+### laptop-app\node_modules\app-builder-lib\out\targets\nsis\nsisLang.d.ts
+Functions: createAddLangsMacro, addCustomMessageFileInclude
+
+### laptop-app\node_modules\app-builder-lib\out\targets\nsis\nsisLang.js
+Functions: createAddLangsMacro, writeCustomLangFile, addCustomMessageFileInclude, computeCustomMessageTranslations
+
+### laptop-app\node_modules\app-builder-lib\out\targets\nsis\nsisLicense.d.ts
+Functions: computeLicensePage
+
+### laptop-app\node_modules\app-builder-lib\out\targets\nsis\nsisLicense.js
+Functions: convertFileToUtf8WithBOMSync, computeLicensePage
+
+### laptop-app\node_modules\app-builder-lib\out\targets\nsis\nsisScriptGenerator.d.ts
+Functions: nsisEscapeString
+
+### laptop-app\node_modules\app-builder-lib\out\targets\nsis\nsisScriptGenerator.js
+Functions: nsisEscapeString, getVarNameForFlag
+
+### laptop-app\node_modules\app-builder-lib\out\targets\nsis\nsisValidation.d.ts
+Functions: checkMakensisOutput, verifyInstallerSize
+
+### laptop-app\node_modules\app-builder-lib\out\targets\nsis\nsisValidation.js
+Functions: checkMakensisOutput, verifyInstallerSize
+
+### laptop-app\node_modules\app-builder-lib\out\targets\pkg.d.ts
+Functions: prepareProductBuildArgs, resolvePkgBuildVersion, resolveScriptsDir
+
+### laptop-app\node_modules\app-builder-lib\out\targets\pkg.js
+Functions: archToAppleArchitectures, prepareProductBuildArgs, resolvePkgBuildVersion, resolveScriptsDir
+
+### laptop-app\node_modules\app-builder-lib\out\targets\snap\coreLegacy.d.ts
+Functions: shellQuote, buildCommandShContent
+
+### laptop-app\node_modules\app-builder-lib\out\targets\snap\coreLegacy.js
+Functions: getMksquashfsPath, readDirPaths, shellQuote, buildCommandShContent
+
+### laptop-app\node_modules\app-builder-lib\out\targets\snap\snapcraftBuilder.d.ts
+Functions: buildSnap
+
+### laptop-app\node_modules\app-builder-lib\out\targets\snap\snapcraftBuilder.js
+Functions: validateSnapcraftYamlWithCLI, validateSnapcraftConfig, executeWithRetry, cleanupBuildArtifacts, copySnapToArtifactPath, buildSnap, ensureSnapcraftInstalled, ensureRemoteBuildAuthentication, executeSnapcraftBuild, generateRemoteBuildArgs, runDestructiveBuild
+
+### laptop-app\node_modules\app-builder-lib\out\targets\targetFactory.d.ts
+Functions: computeArchToTargetNamesMap, createTargets, createCommonTarget
+
+### laptop-app\node_modules\app-builder-lib\out\targets\targetFactory.js
+Functions: computeArchToTargetNamesMap, createTargets, mapper, normalizeTargets, createCommonTarget
+
+### laptop-app\node_modules\app-builder-lib\out\targets\targetUtil.d.ts
+Functions: createStageDir, createStageDirPath, getWindowsInstallationDirName, getWindowsInstallationAppPackageName
+
+### laptop-app\node_modules\app-builder-lib\out\targets\targetUtil.js
+Functions: createStageDir, createStageDirPath, getWindowsInstallationDirName, getWindowsInstallationAppPackageName
+
+### laptop-app\node_modules\app-builder-lib\out\toolsets\7zip.d.ts
+Functions: getPath7za
+
+### laptop-app\node_modules\app-builder-lib\out\toolsets\7zip.js
+Functions: getFilename, getPath7za, resolve
+
+### laptop-app\node_modules\app-builder-lib\out\toolsets\icons.d.ts
+Functions: getIconsToolsetPath, runIconsTool
+
+### laptop-app\node_modules\app-builder-lib\out\toolsets\icons.js
+Functions: getIconsToolsetPath, runIconsTool
+
+### laptop-app\node_modules\app-builder-lib\out\toolsets\linux.d.ts
+Functions: getLinuxToolsPath, getLinuxToolsMacToolset, getFpmPath, getAppImageTools
+
+### laptop-app\node_modules\app-builder-lib\out\toolsets\linux.js
+Functions: getLinuxToolsPath, getLinuxToolsMacToolset, bin, getFpmPath, getKey, getAppImageTools, getPaths, getFuse2Paths, download
+
+### laptop-app\node_modules\app-builder-lib\out\toolsets\windows.d.ts
+Functions: getSignToolPath, getWindowsKitsBundle, isOldWin6, getRceditBundle, getMakeNsisPath, getNsisPluginsPath, getNsisElevatePath
+
+### laptop-app\node_modules\app-builder-lib\out\toolsets\windows.js
+Functions: getLegacyWinCodeSignBin, _getWindowsToolsBin, getSignToolPath, getWindowsKitsBundle, isOldWin6, getWindowsSignToolExe, getOsslSigncodeBundle, file, getRceditBundle, getLegacyNsisBin, getLegacyNsisResourcesBin, getNsisBundlePath, getMakeNsisPath, legacyBundle, entrypointBundle, getNsisPluginsPath, resolveCustomBundle, getNsisElevatePath, resolveElevate
+
+### laptop-app\node_modules\app-builder-lib\out\toolsets\wine.d.ts
+Functions: getWineToolset
+
+### laptop-app\node_modules\app-builder-lib\out\toolsets\wine.js
+Functions: getWineToolset, pkgConfig, createWineEnvironment
+
+### laptop-app\node_modules\app-builder-lib\out\util\AppFileWalker.js
+Functions: addAllPatternIfNeed, createAppFilter
+
+### laptop-app\node_modules\app-builder-lib\out\util\appFileCopier.d.ts
+Functions: getDestinationPath, copyAppFiles, transformFiles, computeFileSets
+
+### laptop-app\node_modules\app-builder-lib\out\util\appFileCopier.js
+Functions: getDestinationPath, copyAppFiles, transformFiles, computeFileSets, getNodeModuleExcludedExts, validateFileSet, computeNodeModuleFileSets, collectNodeModules, collectNodeModulesWithLogging, compileUsingElectronCompile
+
+### laptop-app\node_modules\app-builder-lib\out\util\asyncEventEmitter.js
+Functions: emitInternal
+
+### laptop-app\node_modules\app-builder-lib\out\util\bundledTool.d.ts
+Functions: computeEnv, computeToolEnv
+
+### laptop-app\node_modules\app-builder-lib\out\util\bundledTool.js
+Functions: computeEnv, computeToolEnv
+
+### laptop-app\node_modules\app-builder-lib\out\util\cacheManager.d.ts
+Functions: digest
+
+### laptop-app\node_modules\app-builder-lib\out\util\cacheManager.js
+Functions: digest
+
+### laptop-app\node_modules\app-builder-lib\out\util\cacheState.d.ts
+Functions: readCacheStateFile, writeCacheState, computeCacheMetadata, validateCacheDirectory, cleanupCacheDirectory
+
+### laptop-app\node_modules\app-builder-lib\out\util\cacheState.js
+Functions: getStateFilePath, readCacheStateFile, writeCacheState, computeCacheMetadata, validateCacheDirectory, cleanupCacheDirectory
+
+### laptop-app\node_modules\app-builder-lib\out\util\config\config.d.ts
+Functions: getConfig, doMergeConfigs, validateConfiguration, computeDefaultAppDirectory
+
+### laptop-app\node_modules\app-builder-lib\out\util\config\config.js
+Functions: mergePublish, getConfig, asArray, loadParentConfigsRecursively, normalizeFiles, isSimilarFileSet, mergeFilters, mergeFileSets, doMergeConfigs, getDefaultConfig, validateConfiguration, computeDefaultAppDirectory
+
+### laptop-app\node_modules\app-builder-lib\out\util\config\load.d.ts
+Functions: loadEnv
+
+### laptop-app\node_modules\app-builder-lib\out\util\config\load.js
+Functions: readConfig, findAndReadConfig, orNullIfFileNotExist, orIfFileNotExist, loadConfig, getConfig, loadParentConfig, loadEnv
+
+### laptop-app\node_modules\app-builder-lib\out\util\config\schemaValidator.d.ts
+Functions: validateSchema
+
+### laptop-app\node_modules\app-builder-lib\out\util\config\schemaValidator.js
+Functions: validateSchema, filterRelevantErrors, decodePointerSegment, instancePathToLabel, formatError, descriptionSuffix, formatSchemaType, indentNewlines
+
+### laptop-app\node_modules\app-builder-lib\out\util\dynamicImport.js
+Functions: dynamicImport
+
+### laptop-app\node_modules\app-builder-lib\out\util\electronGet.d.ts
+Functions: getCacheDirectory, extractArchive, downloadBuilderToolset, downloadElectronArtifactZip, downloadElectronArtifact, getBinariesMirrorUrl
+
+### laptop-app\node_modules\app-builder-lib\out\util\electronGet.js
+Functions: hashUrlSafe, getCacheDirectory, resolveCacheMode, extractZipStreaming, isSymlink, extractArchive, downloadArtifactToFile, resolveFromArchiveCache, persistToArchiveCache, downloadAndExtract, downloadBuilderToolset, isElectronGetOptions, buildElectronArtifactConfig, downloadElectronArtifactZip, downloadElectronArtifact, getBinariesMirrorUrl
+
+### laptop-app\node_modules\app-builder-lib\out\util\envPath.d.ts
+Functions: validateEnvValue, resolveEnvToolsetPath
+
+### laptop-app\node_modules\app-builder-lib\out\util\envPath.js
+Functions: validateEnvValue, resolveEnvToolsetPath
+
+### laptop-app\node_modules\app-builder-lib\out\util\filter.js
+Functions: hasMagic, ensureEndSlash, getRelativePath, createFilter, minimatchAll
+
+### laptop-app\node_modules\app-builder-lib\out\util\flags.d.ts
+Functions: isUseSystemSigncode, isBuildCacheEnabled, isAutoDiscoveryCodeSignIdentity
+
+### laptop-app\node_modules\app-builder-lib\out\util\flags.js
+Functions: isUseSystemSigncode, isBuildCacheEnabled, isAutoDiscoveryCodeSignIdentity
+
+### laptop-app\node_modules\app-builder-lib\out\util\hash.d.ts
+Functions: hashFile
+
+### laptop-app\node_modules\app-builder-lib\out\util\hash.js
+Functions: hashFile
+
+### laptop-app\node_modules\app-builder-lib\out\util\iconConverter.d.ts
+Functions: convertIcon, getPngSize, buildSourceCandidates
+
+### laptop-app\node_modules\app-builder-lib\out\util\iconConverter.js
+Functions: convertIcon, getPngSize, getIcoMaxSize, remapSetOutput, collectCliOutput, imageHasExtension, buildSourceCandidates, resolveSourceFile, collectIconsFromDir, doConvertIcon, doConvertSingleFile
+
+### laptop-app\node_modules\app-builder-lib\out\util\langs.d.ts
+Functions: toLangWithRegion
+
+### laptop-app\node_modules\app-builder-lib\out\util\langs.js
+Functions: toLangWithRegion
+
+### laptop-app\node_modules\app-builder-lib\out\util\license.d.ts
+Functions: getLicenseAssets, getNotLocalizedLicenseFile, getLicenseFiles
+
+### laptop-app\node_modules\app-builder-lib\out\util\license.js
+Functions: getLicenseAssets, getNotLocalizedLicenseFile, getLicenseFiles
+
+### laptop-app\node_modules\app-builder-lib\out\util\macosIconComposer.d.ts
+Functions: generateAssetCatalogForIcon
+
+### laptop-app\node_modules\app-builder-lib\out\util\macosIconComposer.js
+Functions: checkActoolVersion, generateAssetCatalogForIcon, cleanup
+
+### laptop-app\node_modules\app-builder-lib\out\util\macosVersion.d.ts
+Functions: isMacOsHighSierra, isMacOsSierra, isMacOsCatalina
+
+### laptop-app\node_modules\app-builder-lib\out\util\macosVersion.js
+Functions: clean, isOsVersionGreaterThanOrEqualTo, isMacOsHighSierra, isMacOsSierra, isMacOsCatalina
+
+### laptop-app\node_modules\app-builder-lib\out\util\macroExpander.d.ts
+Functions: expandMacro
+
+### laptop-app\node_modules\app-builder-lib\out\util\macroExpander.js
+Functions: expandMacro
+
+### laptop-app\node_modules\app-builder-lib\out\util\normalizePackageData.d.ts
+Functions: normalizePackageData
+
+### laptop-app\node_modules\app-builder-lib\out\util\normalizePackageData.js
+Functions: normalizePackageData, fixDependencies, fixBugsField, fixModulesField, fixKeywordsField, fixVersionField, fixPeople, fixNameField, fixHomepageField, fixBundleDependenciesField, isValidScopedPackageName, isCorrectlyEncodedName, ensureValidName, modifyPeople, unParsePerson, parsePerson, depObjectify, objectifyDeps, bugsTypos
+
+### laptop-app\node_modules\app-builder-lib\out\util\packageMetadata.js
+Functions: readPackageJson, authors, checkMetadata, reportError, checkNotEmpty, versionSatisfies, checkDependencies
+
+### laptop-app\node_modules\app-builder-lib\out\util\pathManager.d.ts
+Functions: getTemplatePath, getVendorPath
+
+### laptop-app\node_modules\app-builder-lib\out\util\pathManager.js
+Functions: getTemplatePath, getVendorPath, parseUrl
+
+### laptop-app\node_modules\app-builder-lib\out\util\plist.d.ts
+Functions: savePlistFile
+
+### laptop-app\node_modules\app-builder-lib\out\util\plist.js
+Functions: sortObjectKeys, savePlistFile, parsePlistFile
+
+### laptop-app\node_modules\app-builder-lib\out\util\rebuild.js
+Functions: rebuild
+
+### laptop-app\node_modules\app-builder-lib\out\util\repositoryInfo.d.ts
+Functions: getRepositoryInfo
+
+### laptop-app\node_modules\app-builder-lib\out\util\repositoryInfo.js
+Functions: getRepositoryInfo, getGitUrlFromGitConfig, _getInfo, parseRepositoryUrl
+
+### laptop-app\node_modules\app-builder-lib\out\util\resEdit.d.ts
+Functions: editWindowsResources
+
+### laptop-app\node_modules\app-builder-lib\out\util\resEdit.js
+Functions: editWindowsResources, patchManifestExecutionLevel
+
+### laptop-app\node_modules\app-builder-lib\out\util\resolve.js
+Functions: resolveModule, resolveFunction
+
+### laptop-app\node_modules\app-builder-lib\out\util\timer.d.ts
+Functions: time
+
+### laptop-app\node_modules\app-builder-lib\out\util\timer.js
+Functions: time
+
+### laptop-app\node_modules\app-builder-lib\out\util\toolsetLock.js
+Functions: withToolsetLock
+
+### laptop-app\node_modules\app-builder-lib\out\util\yarn.d.ts
+Functions: installOrRebuild, getGypEnv, installDependencies, nodeGypRebuild
+
+### laptop-app\node_modules\app-builder-lib\out\util\yarn.js
+Functions: installOrRebuild, getElectronGypCacheDir, getGypEnv, installDependencies, nodeGypRebuild, rebuild
+
+### laptop-app\node_modules\app-builder-lib\out\vm\ParallelsVm.d.ts
+Functions: macPathToParallelsWindows
+
+### laptop-app\node_modules\app-builder-lib\out\vm\ParallelsVm.js
+Functions: parseVmList, macPathToParallelsWindows
+
+### laptop-app\node_modules\app-builder-lib\out\vm\vm.d.ts
+Functions: getWindowsVm, getLinuxVm
+
+### laptop-app\node_modules\app-builder-lib\out\vm\vm.js
+Functions: getWindowsVm, getLinuxVm, isCommandAvailable
+
+### laptop-app\node_modules\app-builder-lib\out\winPackager.js
+Functions: getCopyElevateHelper, getHelper, targetClass
+
+### laptop-app\node_modules\argparse\argparse.js
+Functions: get_argv, get_terminal_size, hasattr, getattr, setattr, setdefault, delattr, range, splitlines, _string_lstrip, _string_split, _array_equal, _array_remove, _choices_to_array, _callable, _alias, _camelcase_alias, _to_legacy_name, _to_new_name, _parse_opts, get_name, deprecate, _AttributeHolder, _copy_items, format, _get_action_name, identity
+
+### laptop-app\node_modules\argparse\lib\sub.js
+Functions: sub

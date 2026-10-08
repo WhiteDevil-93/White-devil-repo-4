@@ -16,8 +16,7 @@ import java.io.File
  * CLI compile and behave exactly as before.
  *
  * [confirm] is called on a worker thread and must block until the user answers (Android shows a
- * dialog). Without it, the NEW risky tools (phone_write, phone_delete) refuse to run, while the
- * older tools keep their previous ungated behaviour.
+ * dialog). Without it, mutating tools refuse to run.
  */
 class AccessConfig(
     val confirm: ((title: String, detail: String) -> Boolean)? = null,
@@ -111,9 +110,9 @@ internal class AccessTools(
         }
     }
 
-    /** True if the user (or the absence of a UI, for legacy tools) allows it. */
-    fun approve(title: String, detail: String, requireUi: Boolean): Boolean {
-        val c = cfg.confirm ?: return !requireUi
+    /** A missing confirmation UI is a denial, never an implicit grant. */
+    fun approve(title: String, detail: String): Boolean {
+        val c = cfg.confirm ?: return false
         return try {
             c(title, detail.take(1500))
         } catch (e: Exception) {
@@ -156,13 +155,16 @@ internal class AccessTools(
         val raw = args["paths"]?.let { it as? JsonArray ?: (it as? JsonPrimitive)?.content?.let { s -> parseJsonOrNull(s) } }
         val paths = pathList(raw)
             ?: return "Error: 'paths' must be a non-empty JSON array of explicit repo-relative file paths (no '.', no wildcards)."
+        if (!approve("Commit to Git", "Stage ${paths.joinToString(", ")} and commit in '$repo' with message: $message")) {
+            return "Denied: the user did not approve the commit (or no confirmation UI is available)."
+        }
         val code = "${enter(repo)}\ngit add -- ${paths.joinToString(" ") { sq(it) }} && git commit -m ${sq(message)} 2>&1 | head -c 20000"
         return runOnLaptop(code)
     }
 
     private fun push(args: JsonObject): String {
         val repo = repoName(args) ?: return BAD_REPO
-        if (!approve("Push to GitHub", "Push the current branch of '$repo' to origin.\n(main, master and detached HEAD are refused; no force.)", requireUi = true)) {
+        if (!approve("Push to GitHub", "Push the current branch of '$repo' to origin.\n(main, master and detached HEAD are refused; no force.)")) {
             return "Denied: the user did not approve the push (or no confirmation UI is available)."
         }
         val code = "${enter(repo)}\n" +
@@ -236,7 +238,7 @@ internal class AccessTools(
         if (body.length > 1_000_000) return "Error: content is over 1 MB."
         val f = phoneFile(path)
         val state = if (f.exists()) "OVERWRITES existing file (${f.length()} B)" else "new file"
-        if (!approve("Write file on phone", "$path\n${body.length} characters, $state.", requireUi = true)) {
+        if (!approve("Write file on phone", "$path\n${body.length} characters, $state.")) {
             return "Denied: the user did not approve the write (or no confirmation UI is available)."
         }
         if (f.isDirectory) return "Error: that path is a folder."
@@ -251,7 +253,7 @@ internal class AccessTools(
         if (f.path == cfg.phoneRoot!!.canonicalFile.path) return "Error: refusing to delete the storage root."
         if (!f.exists()) return "Error: not found: $path"
         if (f.isDirectory && (f.list()?.isNotEmpty() == true)) return "Error: folder is not empty; delete its files first."
-        if (!approve("Delete on phone", "$path (${if (f.isDirectory) "empty folder" else "${f.length()} B file"})", requireUi = true)) {
+        if (!approve("Delete on phone", "$path (${if (f.isDirectory) "empty folder" else "${f.length()} B file"})")) {
             return "Denied: the user did not approve the delete (or no confirmation UI is available)."
         }
         return if (f.delete()) "Deleted $path" else "Failed to delete $path"

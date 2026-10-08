@@ -75,6 +75,18 @@ function hubHost(raw) {
   }
 }
 
+function maySendHubCredentials(targetUrl, hubUrl) {
+  try {
+    const target = new URL(String(targetUrl));
+    const hub = new URL(normalizeHubUrl(hubUrl));
+    if (target.origin !== hub.origin) return false;
+    if (target.protocol === "https:") return true;
+    return target.protocol === "http:" && ["127.0.0.1", "localhost", "[::1]"].includes(target.hostname);
+  } catch {
+    return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Which pages may talk to the main process.
 //
@@ -140,4 +152,5 @@ module.exports = {
   mergeSettings,
   needsRelayPassword,
   hubHost,
+  maySendHubCredentials,
 };

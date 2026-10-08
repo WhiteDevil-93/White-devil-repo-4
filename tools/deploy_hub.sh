@@ -13,6 +13,11 @@ if [[ ! -d "$HUB" ]]; then
   exit 1
 fi
 
+if ! cmp -s "$ROOT/tools/civitai_red_dl.py" "$HUB/static/term/civitai_red_dl.py"; then
+  echo "Civitai downloader copies differ; sync the tested tools/ version before deploying" >&2
+  exit 1
+fi
+
 # Bump web_rev so phone/desktop reload the UI. Keep apk_version from screens.json
 # unless --apk N is passed (build_and_publish sets that).
 APK_OVERRIDE=""

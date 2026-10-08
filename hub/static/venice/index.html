@@ -995,10 +995,13 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       let args = {};
       const rawArgs = (call.function && call.function.arguments) || call.arguments || '{}';
       try { args = typeof rawArgs === 'string' ? JSON.parse(rawArgs || '{}') : (rawArgs || {}); } catch (e) { args = {}; }
+      if (name === 'run_in_terminal') args = {command: String(args.command || args.code || '').trim()};
+      let approvalToken = null;
       if (beforeToolExec) {
         let allow = true;
         try { allow = await beforeToolExec(name, args); } catch (e) { allow = false; }
         if (!allow) return {output: 'Action declined by user.', images: []};
+        if (typeof allow === 'string') approvalToken = allow;
       }
       if (onTermLog && name !== 'run_in_terminal') {
         try { onTermLog('# ' + name, 'tl-note'); } catch (e) {}
@@ -1009,7 +1012,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
         // Ask the hub first: the permission gate, the daily tool budget and the
         // audit log all live there. Pasting straight into ttyd skipped all three,
         // so allow_laptop_commands=false did not actually stop this tool.
-        const gate = await F.post('/api/venice/tool', {name, arguments: {command: cmd}}, {timeout: 30000});
+        const gate = await F.post('/api/venice/tool', {name, arguments: args, approval_token: approvalToken}, {timeout: 30000});
         const gateOut = (gate && gate.output) != null ? String(gate.output) : '';
         let approved = false;
         try { approved = !!JSON.parse(gateOut).paste; } catch (e) { approved = false; }
@@ -1019,7 +1022,13 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
           if (onTermLog) try { onTermLog('→ typed into live Shell', 'tl-ok'); } catch (e) {}
           return {output: 'Typed into the live Shell (ttyd). Switch to the Shell tab to watch it.', images: []};
         }
-        const fallback = await F.post('/api/venice/tool', {name: 'run_laptop_command', arguments: {code: cmd, lang: 'bash'}}, {timeout: 120000});
+        const fallbackArgs = {code: cmd, lang: 'bash'};
+        const fallbackApproval = beforeToolExec ? await beforeToolExec('run_laptop_command', fallbackArgs) : true;
+        if (!fallbackApproval) return {output: 'Fallback action declined by user.', images: []};
+        const fallback = await F.post('/api/venice/tool', {
+          name: 'run_laptop_command', arguments: fallbackArgs,
+          approval_token: typeof fallbackApproval === 'string' ? fallbackApproval : null
+        }, {timeout: 120000});
         const fbOut = (fallback && fallback.output) || 'Shell unavailable; laptop SSH also failed.';
         if (onTermLog) try { onTermLog(String(fbOut).split('\n').slice(0, 8).join('\n').slice(0, 1200), 'tl-out'); } catch (e) {}
         return {
@@ -1027,7 +1036,7 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
           images: (fallback && fallback.images) || []
         };
       }
-      const j = await F.post('/api/venice/tool', {name, arguments: args}, {timeout: 120000});
+      const j = await F.post('/api/venice/tool', {name, arguments: args, approval_token: approvalToken}, {timeout: 120000});
       const output = (j && j.output) != null ? String(j.output) : JSON.stringify(j);
       const images = (j && Array.isArray(j.images)) ? j.images : [];
       if (name === 'run_laptop_command') {
@@ -1515,10 +1524,10 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       download_civitai_lora: 'Download LoRA files from Civitai to the laptop',
       render_assess_adjust_cycle: 'Start an LTX render QA cycle (spends GPU time)',
       hub_request: 'Mutating Forge Hub API call',
-      run_laptop_command: 'Potentially destructive laptop command',
-      run_in_terminal: 'Potentially destructive laptop command',
+      run_laptop_command: 'Run a command on the laptop',
+      run_in_terminal: 'Run a command on the laptop',
+      queue_gpu_render: 'Queue GPU work (may spend cloud credits)',
     };
-    const DANGEROUS_CMD = /rm\s+-[rf]|mkfs|shutdown|reboot|sudo\s|>\s*\/dev\/|curl[^|]*\|\s*(bash|sh)/i;
     let sitrepTimer = 0;
     let lastSitrepAt = 0;
     let lastTermPasteId = null;
@@ -1528,10 +1537,6 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       if (!(tool in CONFIRM_TOOLS)) return null;
       if (tool === 'render_assess_adjust_cycle' && String(args.action || 'status') !== 'start') return null;
       if (tool === 'hub_request' && String(args.method || 'GET').toUpperCase() === 'GET') return null;
-      if (tool === 'run_laptop_command' || tool === 'run_in_terminal') {
-        const cmd = String(args.code || args.command || '');
-        if (!DANGEROUS_CMD.test(cmd)) return null;
-      }
       let base = CONFIRM_TOOLS[tool];
       if (tool === 'hub_request') base += ' (' + String(args.method || '').toUpperCase() + ' ' + String(args.path || '') + ')';
       return base;
@@ -1772,7 +1777,14 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       const reason = confirmReason(name, args);
       if (!reason) return true;
       appendTermLine('<span class="text-warntext"># permission: ' + esc(name) + '</span>');
-      return showPermissionCard(name, args, reason);
+      if (!await showPermissionCard(name, args, reason)) return false;
+      try {
+        const approval = await F.post('/api/venice/approval', {name, arguments: args}, {timeout: 30000});
+        return approval && approval.token ? approval.token : false;
+      } catch (e) {
+        F.toast('Approval could not be recorded: ' + (e.message || e));
+        return false;
+      }
     };
 
     onBusyChange = (on) => {

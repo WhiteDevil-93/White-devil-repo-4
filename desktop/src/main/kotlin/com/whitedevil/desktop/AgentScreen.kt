@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.whitedevil.agent.Agent
 import com.whitedevil.agent.AgentEvent
+import com.whitedevil.agent.ChatMessage
 import com.whitedevil.agent.ToolBox
 import com.whitedevil.agent.VeniceClient
 import kotlinx.coroutines.CancellationException
@@ -37,6 +38,7 @@ private const val ROLE_ERROR = "error"
 fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
     val scope = rememberCoroutineScope()
     val lines = remember { mutableStateListOf<ChatLine>() }
+    var conversation by remember { mutableStateOf<List<ChatMessage>>(emptyList()) }
     var input by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var job by remember { mutableStateOf<Job?>(null) }
@@ -86,7 +88,14 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
                                 }
                             },
                         )
-                        agent.send(text)
+                        agent.restore(conversation)
+                        try {
+                            agent.send(text)
+                        } finally {
+                            // Keep the actual model conversation, including tool results,
+                            // rather than reconstructing it from display-only lines.
+                            conversation = agent.snapshot()
+                        }
                     }
                 }
             } catch (e: CancellationException) {
@@ -105,7 +114,7 @@ fun AgentScreen(settings: Settings, onOpenSettings: () -> Unit) {
             busy = busy,
             model = settings.model,
             onStop = { job?.cancel() },
-            onClear = { if (!busy) lines.clear() },
+            onClear = { if (!busy) { lines.clear(); conversation = emptyList() } },
             onOpenSettings = onOpenSettings,
         )
 

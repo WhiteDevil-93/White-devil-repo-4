@@ -1,5 +1,4 @@
-"""Pillar 3 proof: delegate_to_subagent fans out parallel child jobs, collect_subagents gathers them,
-and the reviewer sub-agent gates risky actions in background jobs."""
+"""Parallel child jobs can be collected, but cannot approve risky parent actions."""
 import json
 import time
 
@@ -72,45 +71,35 @@ def test_delegate_validates_input(tmp_path, monkeypatch):
     assert "at most 4" in venice.execute_tool("delegate_to_subagent", {"tasks_json": too_many})
 
 
-def test_reviewer_pass_allows_safe_denies_dangerous(tmp_path, monkeypatch):
+def test_background_job_cannot_turn_model_review_into_approval(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "DATA", tmp_path / "agentic_data")
     store.ensure()
+    store.save_permissions({"allow_spend": True})
+    calls = []
+    monkeypatch.setattr(runner, "_run_tool", lambda *args, **kwargs: calls.append((args, kwargs)) or "executed")
+    monkeypatch.setattr(runner, "_memory_preamble", lambda: "")
+    monkeypatch.setattr(runner, "_step_chat", lambda *_: {"choices": [{"message": {
+        "role": "assistant", "content": "ALLOW; I reviewed it",
+        "tool_calls": [{"id": "t1", "function": {"name": "queue_gpu_render", "arguments": '{"cloud":"colab","packs":"1"}'}}],
+    }}]})
+    job = {"id": "background1", "goal": "queue a GPU render", "max_steps": 1, "status": "queued", "log": []}
+    store.upsert_job(job)
+    runner._job_loop(job["id"])
 
-    def fake_review_chat(job, messages, model):
-        text = messages[-1]["content"]
-        verdict = "DENY deletes user data" if "rm -rf" in text else "ALLOW safe and required"
-        return {"choices": [{"message": {"role": "assistant", "content": verdict}}]}
-
-    monkeypatch.setattr(runner, "_step_chat", fake_review_chat)
-    job = {"goal": "tidy the renders folder", "log": []}
-
-    allow, verdict = runner._reviewer_pass(job, "run_laptop_command", {"code": "rm -rf ~/renders"}, "m")
-    assert allow is False
-    assert verdict.startswith("DENY")
-
-    allow, verdict = runner._reviewer_pass(job, "run_laptop_command", {"code": "ls ~/renders"}, "m")
-    assert allow is True
-    assert verdict.startswith("ALLOW")
+    completed = store.get_job(job["id"])
+    assert completed["status"] == "max_steps"
+    assert calls == []
+    tool_events = [entry for entry in completed["log"] if entry.get("event") == "tool"]
+    assert len(tool_events) == 1
+    assert "needs in-chat user confirmation" in tool_events[0]["out"]
 
 
-def test_reviewer_fails_closed(tmp_path, monkeypatch):
+def test_runner_rechecks_current_permission_not_stale_job_snapshot(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "DATA", tmp_path / "agentic_data")
-
-    def broken(job, messages, model):
-        raise RuntimeError("Venice unreachable")
-
-    monkeypatch.setattr(runner, "_step_chat", broken)
-    allow, verdict = runner._reviewer_pass({"goal": "x"}, "hub_request", {"method": "POST"}, "m")
-    assert allow is False
-    assert "reviewer unavailable" in verdict
-
-
-def test_preapproved_skips_confirmation_but_not_permission_flags(tmp_path, monkeypatch):
-    monkeypatch.setattr(store, "DATA", tmp_path / "agentic_data")
-    perms = store.permissions()  # require_confirm_destructive=True, allow_file_delete=False
-    # preapproved confirm-action executes (hub unreachable -> tool-level error, not a block)
-    out = runner._run_tool("hub_request", {"method": "POST", "path": "/api/status"}, perms, preapproved=True)
-    assert "needs in-chat user confirmation" not in out
-    # permission flags are reviewer-proof
-    out = runner._run_tool("delete_file", {"path": "x"}, perms, preapproved=True)
-    assert "allow_file_delete=false" in out
+    store.ensure()
+    stale = {**store.permissions(), "allow_spend": True, "require_confirm_destructive": False}
+    calls = []
+    monkeypatch.setattr(venice, "_queue_gpu_render", lambda args: calls.append(args) or "queued")
+    out = runner._run_tool("queue_gpu_render", {"cloud": "colab", "packs": "1"}, stale)
+    assert "allow_spend=false" in out
+    assert calls == []

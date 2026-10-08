@@ -12,6 +12,19 @@ def _fast_chat(job, messages, model):
     return {"choices": [{"message": {"role": "assistant", "content": "DONE: scheduled tick ok"}}]}
 
 
+def _wait_job(job_id, timeout=15):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        job = store.get_job(job_id) or {}
+        if job.get("status") in ("done", "error", "max_steps", "stopped", "needs_user"):
+            worker = runner._active.get(job_id)
+            if worker is not None:
+                worker.join(timeout=2)
+            return job
+        time.sleep(0.05)
+    raise AssertionError(f"job did not finish: {job_id}: {store.get_job(job_id)}")
+
+
 def test_due_schedule_fires_without_http_tick(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "DATA", tmp_path / "agentic_data")
     store.ensure()
@@ -41,10 +54,7 @@ def test_due_schedule_fires_without_http_tick(tmp_path, monkeypatch):
     assert row["last_run"]
     assert float(row["next_run"]) > time.time()
 
-    deadline = time.time() + 15
-    while time.time() < deadline and (store.get_job(job_id) or {}).get("status") not in ("done", "error"):
-        time.sleep(0.1)
-    job = store.get_job(job_id)
+    job = _wait_job(job_id)
     assert job["status"] == "done", job.get("error")
     assert "scheduled tick ok" in (job.get("result") or "")
 
@@ -80,6 +90,8 @@ def test_new_render_watcher_fires_once(tmp_path, monkeypatch):
     fired = runner.tick_watchers()
     assert len(fired) == 1
     assert fired[0]["render"] == "smoke_0001.mp4"
+    job = _wait_job(fired[0]["job"])
+    assert job["status"] == "done"
 
     jobs = {j["id"]: j for j in client.get("/api/agentic/jobs").json()["jobs"]}
     job = jobs.get(fired[0]["job"])
@@ -92,6 +104,7 @@ def test_new_render_watcher_fires_once(tmp_path, monkeypatch):
     monkeypatch.setattr(runner, "_render_newest", lambda: "smoke_0002.mp4")
     fired2 = runner.tick_watchers()
     assert len(fired2) == 1 and fired2[0]["render"] == "smoke_0002.mp4"
+    assert _wait_job(fired2[0]["job"])["status"] == "done"
 
     audit = (tmp_path / "agentic_data" / "audit.jsonl").read_text()
     assert "watcher_fire" in audit

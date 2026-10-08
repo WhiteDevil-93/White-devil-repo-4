@@ -63,16 +63,20 @@ def test_confirm_reason_matches_shared_list():
     assert store.confirm_reason("render_assess_adjust_cycle", {"action": "start"})
     assert store.confirm_reason("render_assess_adjust_cycle", {"action": "status"}) is None
     assert store.confirm_reason("run_laptop_command", {"code": "rm -rf ~/"})
-    assert store.confirm_reason("run_laptop_command", {"code": "ls -la"}) is None
+    assert store.confirm_reason("run_laptop_command", {"code": "ls -la"})
     assert store.confirm_reason("list_directory", {"path": "."}) is None
 
 
 def test_runner_blocks_confirmation_tools_in_background(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "DATA", tmp_path / "agentic_data")
     perms = store.permissions()  # require_confirm_destructive defaults to True
+    assert "allow_spend=false" in (runner._permission_blocks("hub_request", perms, {"method": "POST", "path": "/api/ltx/jobs"}) or "")
+    assert "allow_spend=false" in (runner._permission_blocks("queue_gpu_render", perms, {"cloud": "colab"}) or "")
+    perms = {**perms, "allow_spend": True}
     assert "needs in-chat user confirmation" in (runner._permission_blocks("hub_request", perms, {"method": "POST", "path": "/api/ltx/jobs"}) or "")
+    assert "needs in-chat user confirmation" in (runner._permission_blocks("queue_gpu_render", perms, {"cloud": "colab"}) or "")
     assert runner._permission_blocks("hub_request", perms, {"method": "GET", "path": "/api/status"}) is None
     assert "needs in-chat user confirmation" in (runner._permission_blocks("run_laptop_command", perms, {"code": "rm -rf ~/"}) or "")
-    assert runner._permission_blocks("run_laptop_command", perms, {"code": "ls -la"}) is None
+    assert "needs in-chat user confirmation" in (runner._permission_blocks("run_laptop_command", perms, {"code": "ls -la"}) or "")
     assert "needs in-chat user confirmation" in (runner._permission_blocks("render_assess_adjust_cycle", perms, {"action": "start"}) or "")
     assert runner._permission_blocks("render_assess_adjust_cycle", perms, {"action": "status"}) is None

@@ -1427,10 +1427,10 @@ class MainActivity : FragmentActivity() {
                 }.toString()
             }
             "vast" -> {
-                val queue = RelayHttp.get(relayBase, auth, "/api/thunder/queue")
+                val state = RelayHttp.get(relayBase, auth, "/api/vast/state")
                 val library = runCatching { RelayHttp.get(relayBase, auth, "/api/media/library") }.getOrDefault("[]")
                 JSONObject().apply {
-                    put("queue", JSONObject(queue))
+                    put("state", JSONObject(state))
                     put("library", JSONArray(library))
                 }.toString()
             }
