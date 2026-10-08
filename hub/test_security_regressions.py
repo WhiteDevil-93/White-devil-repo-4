@@ -116,6 +116,24 @@ def test_risky_tool_requires_exact_single_use_approval(tmp_path, monkeypatch):
     assert len(calls) == 1
 
 
+def test_every_laptop_shell_command_requires_approval(tmp_path, monkeypatch):
+    _isolate_permissions(tmp_path, monkeypatch)
+    calls = []
+    monkeypatch.setattr(venice, "_laptop_run", lambda code, lang, timeout: calls.append(code) or "ran")
+    client = TestClient(app.app)
+    tool = {"name": "run_laptop_command", "arguments": {"code": "python -c 'print(1)'", "lang": "bash"}}
+
+    denied = client.post("/api/venice/tool", json=tool)
+    assert denied.json()["ok"] is False
+    assert "requires a fresh user approval" in denied.json()["output"]
+    assert calls == []
+
+    token = client.post("/api/venice/approval", json=tool).json()["token"]
+    approved = client.post("/api/venice/tool", json={**tool, "approval_token": token})
+    assert approved.json()["ok"] is True
+    assert calls == ["python -c 'print(1)'"]
+
+
 def test_corrupt_permission_store_blocks_mutation(tmp_path, monkeypatch):
     _isolate_permissions(tmp_path, monkeypatch)
     workspace = tmp_path / "workspace"

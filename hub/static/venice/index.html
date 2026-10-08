@@ -1524,11 +1524,10 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       download_civitai_lora: 'Download LoRA files from Civitai to the laptop',
       render_assess_adjust_cycle: 'Start an LTX render QA cycle (spends GPU time)',
       hub_request: 'Mutating Forge Hub API call',
-      run_laptop_command: 'Potentially destructive laptop command',
-      run_in_terminal: 'Potentially destructive laptop command',
+      run_laptop_command: 'Run a command on the laptop',
+      run_in_terminal: 'Run a command on the laptop',
       queue_gpu_render: 'Queue GPU work (may spend cloud credits)',
     };
-    const DANGEROUS_CMD = /rm\s+-[rf]|mkfs|shutdown|reboot|sudo\s|>\s*\/dev\/|curl[^|]*\|\s*(bash|sh)/i;
     let sitrepTimer = 0;
     let lastSitrepAt = 0;
     let lastTermPasteId = null;
@@ -1538,10 +1537,6 @@ catch (e) { document.documentElement.dataset.embedded = '1'; }
       if (!(tool in CONFIRM_TOOLS)) return null;
       if (tool === 'render_assess_adjust_cycle' && String(args.action || 'status') !== 'start') return null;
       if (tool === 'hub_request' && String(args.method || 'GET').toUpperCase() === 'GET') return null;
-      if (tool === 'run_laptop_command' || tool === 'run_in_terminal') {
-        const cmd = String(args.code || args.command || '');
-        if (!DANGEROUS_CMD.test(cmd)) return null;
-      }
       let base = CONFIRM_TOOLS[tool];
       if (tool === 'hub_request') base += ' (' + String(args.method || '').toUpperCase() + ' ' + String(args.path || '') + ')';
       return base;

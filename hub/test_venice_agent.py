@@ -119,11 +119,15 @@ def test_workspace_file_tools(tmp_path, monkeypatch):
         agentic_store.save_permissions({"allow_file_delete": before})
 
 
-def test_run_in_terminal_returns_paste_payload():
+def test_run_in_terminal_returns_paste_payload(tmp_path, monkeypatch):
+    from agentic import store
+
+    monkeypatch.setattr(store, "DATA", tmp_path / "agentic_data")
     client = TestClient(app)
+    args = {"command": "ls -la ~/venice_run"}
+    token = client.post("/api/venice/approval", json={"name": "run_in_terminal", "arguments": args}).json()["token"]
     j = client.post("/api/venice/tool", json={
-        "name": "run_in_terminal",
-        "arguments": {"command": "ls -la ~/venice_run"},
+        "name": "run_in_terminal", "arguments": args, "approval_token": token,
     }).json()
     assert j["ok"] is True
     payload = json.loads(j["output"])
@@ -131,7 +135,10 @@ def test_run_in_terminal_returns_paste_payload():
     assert payload["command"] == "ls -la ~/venice_run"
 
 
-def test_run_laptop_command_tool(monkeypatch):
+def test_run_laptop_command_tool(monkeypatch, tmp_path):
+    from agentic import store
+
+    monkeypatch.setattr(store, "DATA", tmp_path / "agentic_data")
     seen = {}
 
     def fake_run(body):
@@ -141,9 +148,10 @@ def test_run_laptop_command_tool(monkeypatch):
 
     monkeypatch.setattr("laptop.run", fake_run)
     client = TestClient(app)
+    args = {"code": "echo hi", "lang": "bash"}
+    token = client.post("/api/venice/approval", json={"name": "run_laptop_command", "arguments": args}).json()["token"]
     j = client.post("/api/venice/tool", json={
-        "name": "run_laptop_command",
-        "arguments": {"code": "echo hi", "lang": "bash"},
+        "name": "run_laptop_command", "arguments": args, "approval_token": token,
     }).json()
     assert seen["code"] == "echo hi"
     out = json.loads(j["output"])

@@ -53,8 +53,8 @@ CONFIRM_TOOLS = {
     "download_civitai_lora": "Download LoRA files from Civitai to the laptop",
     "render_assess_adjust_cycle": "Start an LTX render QA cycle (spends GPU time)",
     "hub_request": "Mutating Forge Hub API call",
-    "run_laptop_command": "Potentially destructive laptop command",
-    "run_in_terminal": "Potentially destructive laptop command",
+    "run_laptop_command": "Run a command on the laptop",
+    "run_in_terminal": "Run a command on the laptop",
     "queue_gpu_render": "Queue GPU work (may spend cloud credits)",
 }
 
@@ -108,12 +108,8 @@ def confirm_reason(tool: str, args: dict[str, Any] | None = None) -> str | None:
         return None
     if tool == "hub_request" and str(args.get("method") or "GET").upper() == "GET":
         return None
-    if tool in ("run_laptop_command", "run_in_terminal"):
-        import re
-
-        cmd = str(args.get("code") or args.get("command") or "")
-        if not re.search(DANGEROUS_CMD, cmd):
-            return None
+    # There is no reliable read-only classifier for arbitrary shell text, so
+    # run_laptop_command and run_in_terminal always need explicit approval.
     base = CONFIRM_TOOLS[tool]
     if tool == "hub_request":
         base += " (" + str(args.get("method") or "").upper() + " " + str(args.get("path") or "") + ")"

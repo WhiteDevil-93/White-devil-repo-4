@@ -3,7 +3,10 @@ tool path, a hub restart cannot wedge the runner, schedules do not stack or drif
 and sub-agents cannot fan out further sub-agents."""
 import time
 
+from fastapi.testclient import TestClient
+
 from agentic import runner, store
+from app import app
 
 
 def _fast_chat(job, messages, model):
@@ -33,8 +36,15 @@ def test_run_in_terminal_obeys_allow_laptop_commands(tmp_path, monkeypatch):
         assert "allow_laptop_commands=false" in out, f"{tool} bypassed the gate: {out}"
 
     store.save_permissions({"allow_laptop_commands": True})
-    out, _ = venice.execute_tool_detailed("run_in_terminal", {"command": "echo hi"})
-    assert '"paste": true' in out
+    client = TestClient(app)
+    args = {"command": "echo hi"}
+    approval = client.post("/api/venice/approval", json={"name": "run_in_terminal", "arguments": args})
+    assert approval.status_code == 200
+    result = client.post("/api/venice/tool", json={
+        "name": "run_in_terminal", "arguments": args, "approval_token": approval.json()["token"],
+    }).json()
+    assert result["ok"] is True
+    assert '"paste": true' in result["output"]
 
 
 def test_permission_gate_is_shared_by_runner_and_chat(tmp_path, monkeypatch):
